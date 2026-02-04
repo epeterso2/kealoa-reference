@@ -1,0 +1,58 @@
+<?php
+/**
+ * Uninstall KEALOA Reference
+ *
+ * This file is executed when the plugin is deleted via the WordPress admin.
+ * It removes all plugin data including database tables and options.
+ *
+ * @package KEALOA_Reference
+ */
+
+// Exit if uninstall not called from WordPress
+if (!defined('WP_UNINSTALL_PLUGIN')) {
+    exit;
+}
+
+// Check user permissions
+if (!current_user_can('activate_plugins')) {
+    return;
+}
+
+global $wpdb;
+
+// Drop all custom tables
+$tables = [
+    $wpdb->prefix . 'kealoa_guesses',
+    $wpdb->prefix . 'kealoa_clues',
+    $wpdb->prefix . 'kealoa_round_guessers',
+    $wpdb->prefix . 'kealoa_round_solutions',
+    $wpdb->prefix . 'kealoa_rounds',
+    $wpdb->prefix . 'kealoa_puzzle_constructors',
+    $wpdb->prefix . 'kealoa_puzzles',
+    $wpdb->prefix . 'kealoa_persons',
+];
+
+foreach ($tables as $table) {
+    $wpdb->query("DROP TABLE IF EXISTS {$table}");
+}
+
+// Delete all options
+$options = [
+    'kealoa_db_version',
+    'kealoa_items_per_page',
+    'kealoa_date_format',
+];
+
+foreach ($options as $option) {
+    delete_option($option);
+}
+
+// Delete all transients
+$wpdb->query(
+    "DELETE FROM {$wpdb->options} 
+    WHERE option_name LIKE '_transient_kealoa_%' 
+    OR option_name LIKE '_transient_timeout_kealoa_%'"
+);
+
+// Flush rewrite rules
+flush_rewrite_rules();

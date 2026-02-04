@@ -1,0 +1,381 @@
+/**
+ * KEALOA Reference - Frontend Styles
+ *
+ * Styles for shortcodes and blocks displayed on the frontend.
+ *
+ * @package KEALOA_Reference
+ */
+
+/* ==========================================================================
+   General Styles
+   ========================================================================== */
+
+.kealoa-page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.kealoa-no-data,
+.kealoa-error,
+.kealoa-block-placeholder {
+    padding: 20px;
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+    color: #666;
+}
+
+.kealoa-error {
+    background: #fef7f7;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+/* ==========================================================================
+   Tables
+   ========================================================================== */
+
+.kealoa-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.kealoa-table th,
+.kealoa-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.kealoa-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+}
+
+.kealoa-table tbody tr:hover {
+    background: #fafafa;
+}
+
+.kealoa-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Responsive table wrapper */
+.kealoa-rounds-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ==========================================================================
+   Links
+   ========================================================================== */
+
+.kealoa-person-link,
+.kealoa-round-link,
+.kealoa-episode-link,
+.kealoa-xwordinfo-link,
+.kealoa-homepage-link {
+    color: #0073aa;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.kealoa-person-link:hover,
+.kealoa-round-link:hover,
+.kealoa-episode-link:hover,
+.kealoa-xwordinfo-link:hover,
+.kealoa-homepage-link:hover {
+    color: #005177;
+    text-decoration: underline;
+}
+
+.kealoa-episode-link {
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   Guesses
+   ========================================================================== */
+
+.kealoa-guess-correct {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.kealoa-guess-incorrect {
+    color: #dc3545;
+}
+
+.kealoa-guess-correct::before,
+.kealoa-guess-incorrect::before {
+    margin-right: 4px;
+}
+
+/* ==========================================================================
+   Round View
+   ========================================================================== */
+
+.kealoa-round-view {
+    margin: 20px 0;
+}
+
+.kealoa-round-header {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.kealoa-round-title {
+    margin: 0 0 15px 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.kealoa-round-meta p {
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+.kealoa-round-meta strong {
+    display: inline-block;
+    min-width: 140px;
+    color: #555;
+}
+
+.kealoa-clues-section h3 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #0073aa;
+    color: #333;
+}
+
+.kealoa-clues-table .kealoa-clue-number {
+    font-weight: 700;
+    text-align: center;
+    width: 40px;
+}
+
+.kealoa-clues-table .kealoa-correct-answer {
+    color: #28a745;
+}
+
+.kealoa-clues-table .kealoa-clue-text {
+    font-style: italic;
+}
+
+.kealoa-clues-table .kealoa-guesser-col {
+    text-align: center;
+    min-width: 100px;
+}
+
+.kealoa-clues-table .kealoa-guess {
+    text-align: center;
+}
+
+/* ==========================================================================
+   Person View
+   ========================================================================== */
+
+.kealoa-person-view {
+    margin: 20px 0;
+}
+
+.kealoa-person-header {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    padding: 30px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.kealoa-person-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.kealoa-person-image {
+    flex-shrink: 0;
+}
+
+.kealoa-xwordinfo-image {
+    width: 150px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.kealoa-person-details {
+    flex: 1;
+    min-width: 250px;
+}
+
+.kealoa-person-name {
+    margin: 0 0 15px 0;
+    font-size: 28px;
+    color: #333;
+}
+
+.kealoa-person-xwordinfo,
+.kealoa-person-homepage {
+    margin: 8px 0;
+}
+
+/* Stats Grid */
+.kealoa-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin: 20px 0 30px 0;
+}
+
+.kealoa-stat-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kealoa-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.kealoa-stat-value {
+    display: block;
+    font-size: 32px;
+    font-weight: 700;
+    color: #0073aa;
+    margin-bottom: 5px;
+}
+
+.kealoa-stat-label {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Section Headers */
+.kealoa-person-stats h3,
+.kealoa-clue-number-stats h3,
+.kealoa-day-of-week-stats h3,
+.kealoa-round-history h3 {
+    margin: 30px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #0073aa;
+    color: #333;
+}
+
+.kealoa-person-stats h4 {
+    margin: 25px 0 10px 0;
+    color: #555;
+}
+
+/* Summary Stats Table */
+.kealoa-summary-stats-table {
+    max-width: 600px;
+}
+
+.kealoa-summary-stats-table td:first-child {
+    font-weight: 600;
+}
+
+/* Clue Number and Day of Week Tables */
+.kealoa-clue-number-table,
+.kealoa-day-of-week-table {
+    max-width: 500px;
+}
+
+.kealoa-clue-number-table td:first-child,
+.kealoa-day-of-week-table td:first-child {
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   Responsive Styles
+   ========================================================================== */
+
+@media screen and (max-width: 768px) {
+    .kealoa-table {
+        font-size: 13px;
+    }
+    
+    .kealoa-table th,
+    .kealoa-table td {
+        padding: 8px 10px;
+    }
+    
+    .kealoa-person-info {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .kealoa-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .kealoa-stat-value {
+        font-size: 24px;
+    }
+    
+    .kealoa-round-meta strong {
+        display: block;
+        min-width: auto;
+    }
+    
+    .kealoa-round-header,
+    .kealoa-person-header {
+        padding: 15px;
+    }
+    
+    .kealoa-clues-table .kealoa-guesser-col {
+        min-width: 80px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .kealoa-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .kealoa-page-container {
+        padding: 10px;
+    }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+    .kealoa-table {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .kealoa-stat-card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .kealoa-person-link,
+    .kealoa-round-link,
+    .kealoa-episode-link {
+        color: #000;
+        text-decoration: underline;
+    }
+}

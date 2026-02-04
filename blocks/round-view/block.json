@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "kealoa/round-view",
+    "version": "1.0.0",
+    "title": "KEALOA Round View",
+    "category": "widgets",
+    "icon": "media-document",
+    "description": "Displays a single KEALOA round with all clues, guesses, and results.",
+    "keywords": ["kealoa", "round", "clues", "crossword"],
+    "supports": {
+        "html": false,
+        "align": ["wide", "full"]
+    },
+    "textdomain": "kealoa-reference",
+    "attributes": {
+        "roundId": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "editorScript": "file:../../assets/js/blocks-editor.js",
+    "render": "file:./render.php"
+}

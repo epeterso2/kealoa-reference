@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "kealoa/person-view",
+    "version": "1.0.0",
+    "title": "KEALOA Person View",
+    "category": "widgets",
+    "icon": "admin-users",
+    "description": "Displays a person's KEALOA statistics, round history, and performance metrics.",
+    "keywords": ["kealoa", "person", "player", "statistics"],
+    "supports": {
+        "html": false,
+        "align": ["wide", "full"]
+    },
+    "textdomain": "kealoa-reference",
+    "attributes": {
+        "personId": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "editorScript": "file:../../assets/js/blocks-editor.js",
+    "render": "file:./render.php"
+}

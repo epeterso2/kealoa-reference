@@ -1,0 +1,67 @@
+/**
+ * KEALOA Reference - Block Editor Styles
+ *
+ * Styles for the Gutenberg block editor.
+ *
+ * @package KEALOA_Reference
+ */
+
+/* Block placeholder styling */
+.kealoa-block-placeholder {
+    padding: 40px 20px;
+    background: #f0f0f1;
+    border: 2px dashed #c3c4c7;
+    border-radius: 4px;
+    text-align: center;
+    color: #757575;
+}
+
+/* Editor preview container */
+.editor-styles-wrapper .kealoa-rounds-table-wrapper,
+.editor-styles-wrapper .kealoa-round-view,
+.editor-styles-wrapper .kealoa-person-view {
+    pointer-events: none;
+}
+
+/* Table styling in editor */
+.editor-styles-wrapper .kealoa-table {
+    font-size: 13px;
+}
+
+.editor-styles-wrapper .kealoa-table th,
+.editor-styles-wrapper .kealoa-table td {
+    padding: 8px 10px;
+}
+
+/* Stats grid in editor */
+.editor-styles-wrapper .kealoa-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/* Person image in editor */
+.editor-styles-wrapper .kealoa-xwordinfo-image {
+    max-width: 100px;
+}
+
+/* Links should be non-interactive in editor */
+.editor-styles-wrapper .kealoa-person-link,
+.editor-styles-wrapper .kealoa-round-link,
+.editor-styles-wrapper .kealoa-episode-link,
+.editor-styles-wrapper .kealoa-xwordinfo-link {
+    pointer-events: none;
+    text-decoration: none;
+}
+
+/* Block selection indicator */
+.wp-block[data-type="kealoa/rounds-table"],
+.wp-block[data-type="kealoa/round-view"],
+.wp-block[data-type="kealoa/person-view"] {
+    max-width: 100%;
+}
+
+.wp-block[data-type="kealoa/rounds-table"].is-selected,
+.wp-block[data-type="kealoa/round-view"].is-selected,
+.wp-block[data-type="kealoa/person-view"].is-selected {
+    outline: 2px solid #007cba;
+    outline-offset: 2px;
+}

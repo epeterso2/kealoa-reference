@@ -1,0 +1,175 @@
+<?php
+/**
+ * Gutenberg Blocks
+ *
+ * Registers and handles Gutenberg blocks for KEALOA data display.
+ *
+ * @package KEALOA_Reference
+ */
+
+declare(strict_types=1);
+
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+/**
+ * Class Kealoa_Blocks
+ *
+ * Registers Gutenberg blocks for KEALOA data display.
+ */
+class Kealoa_Blocks {
+
+    private Kealoa_Shortcodes $shortcodes;
+
+    /**
+     * Constructor
+     */
+    public function __construct() {
+        $this->shortcodes = new Kealoa_Shortcodes();
+        
+        add_action('init', [$this, 'register_blocks']);
+        add_action('enqueue_block_editor_assets', [$this, 'enqueue_editor_assets']);
+    }
+
+    /**
+     * Register all blocks
+     */
+    public function register_blocks(): void {
+        // Register blocks directory
+        if (file_exists(KEALOA_PLUGIN_DIR . 'blocks/rounds-table/block.json')) {
+            register_block_type(KEALOA_PLUGIN_DIR . 'blocks/rounds-table');
+        }
+        
+        if (file_exists(KEALOA_PLUGIN_DIR . 'blocks/round-view/block.json')) {
+            register_block_type(KEALOA_PLUGIN_DIR . 'blocks/round-view');
+        }
+        
+        if (file_exists(KEALOA_PLUGIN_DIR . 'blocks/person-view/block.json')) {
+            register_block_type(KEALOA_PLUGIN_DIR . 'blocks/person-view');
+        }
+        
+        // Fallback registration if block.json files don't exist yet
+        if (!file_exists(KEALOA_PLUGIN_DIR . 'blocks/rounds-table/block.json')) {
+            register_block_type('kealoa/rounds-table', [
+                'render_callback' => [$this, 'render_rounds_table_block'],
+                'attributes' => [
+                    'limit' => [
+                        'type' => 'number',
+                        'default' => 50,
+                    ],
+                    'order' => [
+                        'type' => 'string',
+                        'default' => 'DESC',
+                    ],
+                ],
+            ]);
+        }
+        
+        if (!file_exists(KEALOA_PLUGIN_DIR . 'blocks/round-view/block.json')) {
+            register_block_type('kealoa/round-view', [
+                'render_callback' => [$this, 'render_round_view_block'],
+                'attributes' => [
+                    'roundId' => [
+                        'type' => 'number',
+                        'default' => 0,
+                    ],
+                ],
+            ]);
+        }
+        
+        if (!file_exists(KEALOA_PLUGIN_DIR . 'blocks/person-view/block.json')) {
+            register_block_type('kealoa/person-view', [
+                'render_callback' => [$this, 'render_person_view_block'],
+                'attributes' => [
+                    'personId' => [
+                        'type' => 'number',
+                        'default' => 0,
+                    ],
+                ],
+            ]);
+        }
+    }
+
+    /**
+     * Enqueue editor assets
+     */
+    public function enqueue_editor_assets(): void {
+        wp_enqueue_script(
+            'kealoa-blocks-editor',
+            KEALOA_PLUGIN_URL . 'assets/js/blocks-editor.js',
+            ['wp-blocks', 'wp-element', 'wp-editor', 'wp-components', 'wp-i18n', 'wp-block-editor', 'wp-server-side-render'],
+            KEALOA_VERSION,
+            true
+        );
+        
+        // Get data for the editor
+        $db = new Kealoa_DB();
+        $rounds = $db->get_rounds(['limit' => 100]);
+        $persons = $db->get_persons(['limit' => 100]);
+        
+        wp_localize_script('kealoa-blocks-editor', 'kealoaBlocksData', [
+            'rounds' => array_map(function($round) {
+                return [
+                    'id' => (int) $round->id,
+                    'date' => Kealoa_Formatter::format_date($round->round_date),
+                    'episode' => (int) $round->episode_number,
+                ];
+            }, $rounds),
+            'persons' => array_map(function($person) {
+                return [
+                    'id' => (int) $person->id,
+                    'name' => $person->full_name,
+                ];
+            }, $persons),
+        ]);
+        
+        wp_enqueue_style(
+            'kealoa-blocks-editor',
+            KEALOA_PLUGIN_URL . 'assets/css/blocks-editor.css',
+            ['wp-edit-blocks'],
+            KEALOA_VERSION
+        );
+    }
+
+    /**
+     * Render rounds table block
+     */
+    public function render_rounds_table_block(array $attributes): string {
+        return $this->shortcodes->render_rounds_table([
+            'limit' => $attributes['limit'] ?? 50,
+            'order' => $attributes['order'] ?? 'DESC',
+        ]);
+    }
+
+    /**
+     * Render round view block
+     */
+    public function render_round_view_block(array $attributes): string {
+        $round_id = $attributes['roundId'] ?? 0;
+        
+        if (!$round_id) {
+            return '<p class="kealoa-block-placeholder">' . 
+                esc_html__('Please select a round from the block settings.', 'kealoa-reference') . 
+                '</p>';
+        }
+        
+        return $this->shortcodes->render_round(['id' => $round_id]);
+    }
+
+    /**
+     * Render person view block
+     */
+    public function render_person_view_block(array $attributes): string {
+        $person_id = $attributes['personId'] ?? 0;
+        
+        if (!$person_id) {
+            return '<p class="kealoa-block-placeholder">' . 
+                esc_html__('Please select a person from the block settings.', 'kealoa-reference') . 
+                '</p>';
+        }
+        
+        return $this->shortcodes->render_person(['id' => $person_id]);
+    }
+}

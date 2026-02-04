@@ -1,0 +1,28 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "kealoa/rounds-table",
+    "version": "1.0.0",
+    "title": "KEALOA Rounds Table",
+    "category": "widgets",
+    "icon": "editor-table",
+    "description": "Displays a table of all KEALOA rounds with dates, episodes, solutions, and results.",
+    "keywords": ["kealoa", "rounds", "table", "crossword"],
+    "supports": {
+        "html": false,
+        "align": ["wide", "full"]
+    },
+    "textdomain": "kealoa-reference",
+    "attributes": {
+        "limit": {
+            "type": "number",
+            "default": 50
+        },
+        "order": {
+            "type": "string",
+            "default": "DESC"
+        }
+    },
+    "editorScript": "file:../../assets/js/blocks-editor.js",
+    "render": "file:./render.php"
+}
