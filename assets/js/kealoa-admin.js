@@ -63,16 +63,6 @@
         });
 
         /**
-         * Handle inline clue editing (placeholder for future implementation)
-         */
-        $(document).on('click', '.kealoa-edit-clue', function (e) {
-            e.preventDefault();
-            var clueId = $(this).data('clue-id');
-            // For now, redirect to a clue edit page or show a modal
-            alert('Clue editing will be implemented in a future update. Clue ID: ' + clueId);
-        });
-
-        /**
          * Auto-uppercase solution words input
          */
         $('#solution_words').on('blur', function () {
@@ -189,6 +179,79 @@
         // Trigger day display on page load if value exists
         if ($('#publication_date').val()) {
             $('#publication_date').trigger('change');
+        }
+
+        /**
+         * Refresh constructors list when returning from Add Person page
+         * Track when the Add Person link is clicked and refresh on window focus
+         */
+        var waitingForPersonRefresh = false;
+        var constructorSelects = $('#puzzle_constructors, #new_puzzle_constructors, #constructors');
+        
+        // When the Add new person link is clicked, set flag
+        $(document).on('click', 'a[href*="page=kealoa-persons&action=add"]', function () {
+            waitingForPersonRefresh = true;
+        });
+        
+        // On window focus, check if we need to refresh the persons list
+        $(window).on('focus', function () {
+            if (waitingForPersonRefresh && constructorSelects.length > 0) {
+                waitingForPersonRefresh = false;
+                refreshPersonsDropdown();
+            }
+        });
+        
+        /**
+         * Fetch updated persons list via AJAX and update dropdowns
+         */
+        function refreshPersonsDropdown() {
+            if (typeof kealoaAdmin === 'undefined') {
+                return;
+            }
+            
+            $.ajax({
+                url: kealoaAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'kealoa_get_persons',
+                    nonce: kealoaAdmin.nonce
+                },
+                success: function (response) {
+                    if (response.success && response.data) {
+                        updateConstructorSelects(response.data);
+                    }
+                }
+            });
+        }
+        
+        /**
+         * Update all constructor select elements with new persons data
+         */
+        function updateConstructorSelects(persons) {
+            constructorSelects.each(function () {
+                var $select = $(this);
+                var selectedValues = $select.val() || [];
+                
+                // Clear and rebuild options
+                $select.empty();
+                
+                persons.forEach(function (person) {
+                    var isSelected = selectedValues.indexOf(String(person.id)) !== -1;
+                    $select.append(
+                        $('<option>', {
+                            value: person.id,
+                            text: person.full_name,
+                            selected: isSelected
+                        })
+                    );
+                });
+                
+                // Flash the select to indicate it was updated
+                $select.css('background-color', '#e7f5e7');
+                setTimeout(function () {
+                    $select.css('background-color', '');
+                }, 1500);
+            });
         }
 
     });
