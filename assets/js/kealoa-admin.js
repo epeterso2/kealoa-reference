@@ -80,11 +80,11 @@
             
             if (source === 'new') {
                 $('.kealoa-existing-puzzle-row').hide();
-                $('.kealoa-new-puzzle-row').show();
+                $('.kealoa-new-puzzle-row').css('display', 'table-row');
                 $('#puzzle_id').prop('required', false);
                 $('#new_puzzle_date').prop('required', true);
             } else {
-                $('.kealoa-existing-puzzle-row').show();
+                $('.kealoa-existing-puzzle-row').css('display', 'table-row');
                 $('.kealoa-new-puzzle-row').hide();
                 $('#puzzle_id').prop('required', true);
                 $('#new_puzzle_date').prop('required', false);
