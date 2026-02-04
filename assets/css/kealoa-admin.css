@@ -196,6 +196,50 @@
 }
 
 /* ==========================================================================
+   Inline Create Section
+   ========================================================================== */
+
+.kealoa-inline-create-section {
+    background: #f9f9f9;
+    border: 1px solid #c3c4c7;
+    border-left: 4px solid #2271b1;
+    border-radius: 0 4px 4px 0;
+    padding: 15px 20px;
+    margin: 10px 0;
+}
+
+.kealoa-inline-create-section h4 {
+    margin: 0 0 15px 0;
+    padding: 0;
+    color: #1d2327;
+    font-size: 14px;
+    font-weight: 600;
+    border-bottom: 1px solid #dcdcde;
+    padding-bottom: 10px;
+}
+
+.kealoa-inline-create-section .form-table {
+    background: transparent;
+}
+
+.kealoa-inline-create-section .form-table th {
+    padding: 10px 10px 10px 0;
+    vertical-align: top;
+}
+
+.kealoa-inline-create-section .form-table td {
+    padding: 8px 0;
+}
+
+.kealoa-inline-create-section .description {
+    margin-top: 5px;
+}
+
+.kealoa-inline-create-section .description a {
+    margin-left: 10px;
+}
+
+/* ==========================================================================
    Responsive Admin Styles
    ========================================================================== */
 
