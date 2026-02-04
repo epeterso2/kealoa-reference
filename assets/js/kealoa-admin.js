@@ -73,30 +73,6 @@
         });
 
         /**
-         * Toggle between existing puzzle and new puzzle creation
-         */
-        $(document).on('change', '.kealoa-puzzle-source', function () {
-            var source = $('input[name="puzzle_source"]:checked').val();
-            
-            if (source === 'new') {
-                $('.kealoa-existing-puzzle-row').hide();
-                $('.kealoa-new-puzzle-row').css('display', 'table-row');
-                $('#puzzle_id').prop('required', false);
-                $('#new_puzzle_date').prop('required', true);
-            } else {
-                $('.kealoa-existing-puzzle-row').css('display', 'table-row');
-                $('.kealoa-new-puzzle-row').hide();
-                $('#puzzle_id').prop('required', true);
-                $('#new_puzzle_date').prop('required', false);
-            }
-        });
-
-        // Initialize puzzle source toggle on page load
-        if ($('.kealoa-puzzle-source').length) {
-            $('.kealoa-puzzle-source:checked').trigger('change');
-        }
-
-        /**
          * Auto-uppercase solution words input
          */
         $('#solution_words').on('blur', function () {
