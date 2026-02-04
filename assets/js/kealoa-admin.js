@@ -75,7 +75,7 @@
         /**
          * Toggle between existing puzzle and new puzzle creation
          */
-        $('.kealoa-puzzle-source').on('change', function () {
+        $(document).on('change', '.kealoa-puzzle-source', function () {
             var source = $('input[name="puzzle_source"]:checked').val();
             
             if (source === 'new') {
