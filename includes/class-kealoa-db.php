@@ -22,6 +22,7 @@ if (!defined('ABSPATH')) {
 class Kealoa_DB {
 
     private \wpdb $wpdb;
+    private string $constructors_table;
     private string $persons_table;
     private string $puzzles_table;
     private string $puzzle_constructors_table;
@@ -38,6 +39,7 @@ class Kealoa_DB {
         global $wpdb;
         $this->wpdb = $wpdb;
         
+        $this->constructors_table = $wpdb->prefix . 'kealoa_constructors';
         $this->persons_table = $wpdb->prefix . 'kealoa_persons';
         $this->puzzles_table = $wpdb->prefix . 'kealoa_puzzles';
         $this->puzzle_constructors_table = $wpdb->prefix . 'kealoa_puzzle_constructors';
@@ -46,6 +48,153 @@ class Kealoa_DB {
         $this->round_guessers_table = $wpdb->prefix . 'kealoa_round_guessers';
         $this->clues_table = $wpdb->prefix . 'kealoa_clues';
         $this->guesses_table = $wpdb->prefix . 'kealoa_guesses';
+    }
+
+    // =========================================================================
+    // CONSTRUCTORS CRUD
+    // =========================================================================
+
+    /**
+     * Get a constructor by ID
+     */
+    public function get_constructor(int $id): ?object {
+        $sql = $this->wpdb->prepare(
+            "SELECT * FROM {$this->constructors_table} WHERE id = %d",
+            $id
+        );
+        $result = $this->wpdb->get_row($sql);
+        return $result ?: null;
+    }
+
+    /**
+     * Get all constructors
+     */
+    public function get_constructors(array $args = []): array {
+        $defaults = [
+            'orderby' => 'full_name',
+            'order' => 'ASC',
+            'limit' => 100,
+            'offset' => 0,
+            'search' => '',
+        ];
+        $args = wp_parse_args($args, $defaults);
+        
+        $sql = "SELECT * FROM {$this->constructors_table}";
+        $where = [];
+        $values = [];
+        
+        if (!empty($args['search'])) {
+            $where[] = "full_name LIKE %s";
+            $values[] = '%' . $this->wpdb->esc_like($args['search']) . '%';
+        }
+        
+        if (!empty($where)) {
+            $sql .= " WHERE " . implode(' AND ', $where);
+        }
+        
+        $allowed_orderby = ['id', 'full_name', 'created_at'];
+        $orderby = in_array($args['orderby'], $allowed_orderby) ? $args['orderby'] : 'full_name';
+        $order = strtoupper($args['order']) === 'DESC' ? 'DESC' : 'ASC';
+        
+        $sql .= " ORDER BY {$orderby} {$order}";
+        $sql .= " LIMIT %d OFFSET %d";
+        $values[] = $args['limit'];
+        $values[] = $args['offset'];
+        
+        if (!empty($values)) {
+            $sql = $this->wpdb->prepare($sql, ...$values);
+        }
+        
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Count total constructors
+     */
+    public function count_constructors(string $search = ''): int {
+        $sql = "SELECT COUNT(*) FROM {$this->constructors_table}";
+        
+        if (!empty($search)) {
+            $sql .= $this->wpdb->prepare(
+                " WHERE full_name LIKE %s",
+                '%' . $this->wpdb->esc_like($search) . '%'
+            );
+        }
+        
+        return (int) $this->wpdb->get_var($sql);
+    }
+
+    /**
+     * Create a constructor
+     */
+    public function create_constructor(array $data): int|false {
+        $result = $this->wpdb->insert(
+            $this->constructors_table,
+            [
+                'full_name' => sanitize_text_field($data['full_name']),
+                'xwordinfo_profile_name' => isset($data['xwordinfo_profile_name']) 
+                    ? sanitize_text_field($data['xwordinfo_profile_name']) 
+                    : null,
+                'xwordinfo_image_url' => isset($data['xwordinfo_image_url']) 
+                    ? esc_url_raw($data['xwordinfo_image_url']) 
+                    : null,
+            ],
+            ['%s', '%s', '%s']
+        );
+        
+        return $result ? $this->wpdb->insert_id : false;
+    }
+
+    /**
+     * Update a constructor
+     */
+    public function update_constructor(int $id, array $data): bool {
+        $update_data = [];
+        $format = [];
+        
+        if (isset($data['full_name'])) {
+            $update_data['full_name'] = sanitize_text_field($data['full_name']);
+            $format[] = '%s';
+        }
+        if (array_key_exists('xwordinfo_profile_name', $data)) {
+            $update_data['xwordinfo_profile_name'] = $data['xwordinfo_profile_name'] 
+                ? sanitize_text_field($data['xwordinfo_profile_name']) 
+                : null;
+            $format[] = '%s';
+        }
+        if (array_key_exists('xwordinfo_image_url', $data)) {
+            $update_data['xwordinfo_image_url'] = $data['xwordinfo_image_url'] 
+                ? esc_url_raw($data['xwordinfo_image_url']) 
+                : null;
+            $format[] = '%s';
+        }
+        
+        if (empty($update_data)) {
+            return false;
+        }
+        
+        $result = $this->wpdb->update(
+            $this->constructors_table,
+            $update_data,
+            ['id' => $id],
+            $format,
+            ['%d']
+        );
+        
+        return $result !== false;
+    }
+
+    /**
+     * Delete a constructor
+     */
+    public function delete_constructor(int $id): bool {
+        $result = $this->wpdb->delete(
+            $this->constructors_table,
+            ['id' => $id],
+            ['%d']
+        );
+        
+        return $result !== false;
     }
 
     // =========================================================================
@@ -130,17 +279,11 @@ class Kealoa_DB {
             $this->persons_table,
             [
                 'full_name' => sanitize_text_field($data['full_name']),
-                'xwordinfo_profile_name' => isset($data['xwordinfo_profile_name']) 
-                    ? sanitize_text_field($data['xwordinfo_profile_name']) 
-                    : null,
                 'home_page_url' => isset($data['home_page_url']) 
                     ? esc_url_raw($data['home_page_url']) 
                     : null,
-                'xwordinfo_image_url' => isset($data['xwordinfo_image_url']) 
-                    ? esc_url_raw($data['xwordinfo_image_url']) 
-                    : null,
             ],
-            ['%s', '%s', '%s', '%s']
+            ['%s', '%s']
         );
         
         return $result ? $this->wpdb->insert_id : false;
@@ -157,21 +300,9 @@ class Kealoa_DB {
             $update_data['full_name'] = sanitize_text_field($data['full_name']);
             $format[] = '%s';
         }
-        if (array_key_exists('xwordinfo_profile_name', $data)) {
-            $update_data['xwordinfo_profile_name'] = $data['xwordinfo_profile_name'] 
-                ? sanitize_text_field($data['xwordinfo_profile_name']) 
-                : null;
-            $format[] = '%s';
-        }
         if (array_key_exists('home_page_url', $data)) {
             $update_data['home_page_url'] = $data['home_page_url'] 
                 ? esc_url_raw($data['home_page_url']) 
-                : null;
-            $format[] = '%s';
-        }
-        if (array_key_exists('xwordinfo_image_url', $data)) {
-            $update_data['xwordinfo_image_url'] = $data['xwordinfo_image_url'] 
-                ? esc_url_raw($data['xwordinfo_image_url']) 
                 : null;
             $format[] = '%s';
         }
@@ -319,8 +450,8 @@ class Kealoa_DB {
      */
     public function get_puzzle_constructors(int $puzzle_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT p.* FROM {$this->persons_table} p
-            INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.person_id
+            "SELECT c.* FROM {$this->constructors_table} c
+            INNER JOIN {$this->puzzle_constructors_table} pc ON c.id = pc.constructor_id
             WHERE pc.puzzle_id = %d
             ORDER BY pc.constructor_order ASC",
             $puzzle_id
@@ -332,18 +463,18 @@ class Kealoa_DB {
     /**
      * Set constructors for a puzzle
      */
-    public function set_puzzle_constructors(int $puzzle_id, array $person_ids): bool {
+    public function set_puzzle_constructors(int $puzzle_id, array $constructor_ids): bool {
         // Delete existing constructors
         $this->wpdb->delete($this->puzzle_constructors_table, ['puzzle_id' => $puzzle_id], ['%d']);
         
         // Insert new constructors
         $order = 1;
-        foreach ($person_ids as $person_id) {
+        foreach ($constructor_ids as $constructor_id) {
             $this->wpdb->insert(
                 $this->puzzle_constructors_table,
                 [
                     'puzzle_id' => $puzzle_id,
-                    'person_id' => (int) $person_id,
+                    'constructor_id' => (int) $constructor_id,
                     'constructor_order' => $order++,
                 ],
                 ['%d', '%d', '%d']
@@ -417,13 +548,16 @@ class Kealoa_DB {
             [
                 'round_date' => sanitize_text_field($data['round_date']),
                 'episode_number' => (int) $data['episode_number'],
+                'episode_url' => isset($data['episode_url']) && $data['episode_url']
+                    ? esc_url_raw($data['episode_url'])
+                    : null,
                 'episode_start_seconds' => (int) ($data['episode_start_seconds'] ?? 0),
                 'clue_giver_id' => (int) $data['clue_giver_id'],
                 'description' => isset($data['description']) 
                     ? sanitize_textarea_field($data['description']) 
                     : null,
             ],
-            ['%s', '%d', '%d', '%d', '%s']
+            ['%s', '%d', '%s', '%d', '%d', '%s']
         );
         
         return $result ? $this->wpdb->insert_id : false;
@@ -443,6 +577,12 @@ class Kealoa_DB {
         if (isset($data['episode_number'])) {
             $update_data['episode_number'] = (int) $data['episode_number'];
             $format[] = '%d';
+        }
+        if (array_key_exists('episode_url', $data)) {
+            $update_data['episode_url'] = $data['episode_url']
+                ? esc_url_raw($data['episode_url'])
+                : null;
+            $format[] = '%s';
         }
         if (isset($data['episode_start_seconds'])) {
             $update_data['episode_start_seconds'] = (int) $data['episode_start_seconds'];
@@ -950,6 +1090,51 @@ class Kealoa_DB {
     }
 
     /**
+     * Get person results by puzzle publication decade
+     */
+    public function get_person_results_by_decade(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT 
+                FLOOR(YEAR(pz.publication_date) / 10) * 10 as decade,
+                COUNT(*) as total_answered,
+                SUM(g.is_correct) as correct_count
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
+            WHERE g.guesser_person_id = %d
+            GROUP BY FLOOR(YEAR(pz.publication_date) / 10) * 10
+            ORDER BY decade ASC",
+            $person_id
+        );
+        
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get person results by constructor
+     */
+    public function get_person_results_by_constructor(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT 
+                con.id as constructor_id,
+                con.full_name,
+                con.xwordinfo_profile_name,
+                COUNT(*) as total_answered,
+                SUM(g.is_correct) as correct_count
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->puzzle_constructors_table} pc ON c.puzzle_id = pc.puzzle_id
+            INNER JOIN {$this->constructors_table} con ON pc.constructor_id = con.id
+            WHERE g.guesser_person_id = %d
+            GROUP BY con.id, con.full_name, con.xwordinfo_profile_name
+            ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC",
+            $person_id
+        );
+        
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get person's round history
      */
     public function get_person_round_history(int $person_id): array {
@@ -958,6 +1143,7 @@ class Kealoa_DB {
                 r.id as round_id,
                 r.round_date,
                 r.episode_number,
+                r.episode_url,
                 r.episode_start_seconds,
                 COUNT(c.id) as total_clues,
                 SUM(g.is_correct) as correct_count
@@ -966,7 +1152,7 @@ class Kealoa_DB {
             INNER JOIN {$this->clues_table} c ON r.id = c.round_id
             LEFT JOIN {$this->guesses_table} g ON c.id = g.clue_id AND g.guesser_person_id = rg.person_id
             WHERE rg.person_id = %d
-            GROUP BY r.id, r.round_date, r.episode_number, r.episode_start_seconds
+            GROUP BY r.id, r.round_date, r.episode_number, r.episode_url, r.episode_start_seconds
             ORDER BY r.round_date DESC",
             $person_id
         );

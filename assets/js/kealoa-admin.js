@@ -1,4 +1,4 @@
-/**
+https://www.xwordinfo.com/images/cons//**
  * KEALOA Reference - Admin JavaScript
  *
  * Handles admin interface functionality.
@@ -79,15 +79,15 @@
         /**
          * Episode link preview
          */
-        $('#episode_number, #episode_start_seconds').on('change keyup', function () {
-            var episodeNumber = $('#episode_number').val();
+        $('#episode_url, #episode_start_seconds').on('change keyup', function () {
+            var episodeUrl = $('#episode_url').val();
             var startSeconds = $('#episode_start_seconds').val() || 0;
             
-            if (episodeNumber) {
-                var url = 'https://bemoresmarter.libsyn.com/player?episode=' + episodeNumber + '&startTime=' + startSeconds;
+            if (episodeUrl) {
+                var url = episodeUrl + '?t=' + startSeconds;
                 
                 if (!$('#episode-preview').length) {
-                    $('#episode_number').closest('td').append(
+                    $('#episode_url').closest('td').append(
                         '<p id="episode-preview" class="description" style="margin-top: 10px;">' +
                         '<a href="' + url + '" target="_blank">Preview Episode Link</a>' +
                         '</p>'
@@ -95,13 +95,44 @@
                 } else {
                     $('#episode-preview a').attr('href', url);
                 }
+            } else {
+                $('#episode-preview').remove();
             }
         });
 
         // Trigger episode preview on page load if values exist
-        if ($('#episode_number').val()) {
-            $('#episode_number').trigger('change');
+        if ($('#episode_url').val()) {
+            $('#episode_url').trigger('change');
         }
+
+        /**
+         * Auto-populate XWordInfo fields from constructor name
+         * Profile URL: https://www.xwordinfo.com/Author/{name with spaces as underscores}
+         * Image URL: https://www.xwordinfo.com/images/cons/{name with spaces removed}.jpg
+         */
+        $('#full_name').on('change blur', function () {
+            var fullName = $(this).val().trim();
+            var $profileField = $('#xwordinfo_profile_name');
+            var $imageField = $('#xwordinfo_image_url');
+            
+            // Only auto-populate if on constructor form (both fields exist) and they're empty
+            if ($profileField.length && fullName) {
+                if (!$profileField.val()) {
+                    var profileName = fullName.replace(/ /g, '_');
+                    $profileField.val(profileName);
+                    $profileField.trigger('change');
+                }
+            }
+            
+            if ($imageField.length && fullName) {
+                if (!$imageField.val()) {
+                    var imageName = fullName.replace(/ /g, '');
+                    var imageUrl = 'https://www.xwordinfo.com/images/cons/' + imageName + '.jpg';
+                    $imageField.val(imageUrl);
+                    $imageField.trigger('change');
+                }
+            }
+        });
 
         /**
          * XWordInfo profile link preview
@@ -110,8 +141,8 @@
             var profileName = $(this).val();
             
             if (profileName) {
-                var urlName = profileName.replace(/ /g, '_');
-                var url = 'https://www.xwordinfo.com/Author/' + urlName;
+                // Profile name already has underscores, use as-is
+                var url = 'https://www.xwordinfo.com/Author/' + profileName;
                 
                 if (!$('#xwordinfo-preview').length) {
                     $(this).closest('td').find('.description').first().after(
@@ -130,6 +161,32 @@
         // Trigger XWordInfo preview on page load if value exists
         if ($('#xwordinfo_profile_name').val()) {
             $('#xwordinfo_profile_name').trigger('change');
+        }
+
+        /**
+         * XWordInfo image preview
+         */
+        $('#xwordinfo_image_url').on('change blur', function () {
+            var imageUrl = $(this).val();
+            
+            if (imageUrl) {
+                if (!$('#xwordinfo-image-preview').length) {
+                    $(this).closest('td').find('.description').first().after(
+                        '<p id="xwordinfo-image-preview" style="margin-top: 10px;">' +
+                        '<img src="' + imageUrl + '" alt="Constructor photo" style="max-width: 150px;" />' +
+                        '</p>'
+                    );
+                } else {
+                    $('#xwordinfo-image-preview img').attr('src', imageUrl);
+                }
+            } else {
+                $('#xwordinfo-image-preview').remove();
+            }
+        });
+
+        // Trigger XWordInfo image preview on page load if value exists
+        if ($('#xwordinfo_image_url').val()) {
+            $('#xwordinfo_image_url').trigger('change');
         }
 
         /**
@@ -182,29 +239,29 @@
         }
 
         /**
-         * Refresh constructors list when returning from Add Person page
-         * Track when the Add Person link is clicked and refresh on window focus
+         * Refresh constructors list when returning from Add Constructor page
+         * Track when the Add Constructor link is clicked and refresh on window focus
          */
-        var waitingForPersonRefresh = false;
+        var waitingForConstructorRefresh = false;
         var constructorSelects = $('#puzzle_constructors, #new_puzzle_constructors, #constructors');
         
-        // When the Add new person link is clicked, set flag
-        $(document).on('click', 'a[href*="page=kealoa-persons&action=add"]', function () {
-            waitingForPersonRefresh = true;
+        // When the Add new constructor link is clicked, set flag
+        $(document).on('click', 'a[href*="page=kealoa-constructors&action=add"]', function () {
+            waitingForConstructorRefresh = true;
         });
         
-        // On window focus, check if we need to refresh the persons list
+        // On window focus, check if we need to refresh the constructors list
         $(window).on('focus', function () {
-            if (waitingForPersonRefresh && constructorSelects.length > 0) {
-                waitingForPersonRefresh = false;
-                refreshPersonsDropdown();
+            if (waitingForConstructorRefresh && constructorSelects.length > 0) {
+                waitingForConstructorRefresh = false;
+                refreshConstructorsDropdown();
             }
         });
         
         /**
-         * Fetch updated persons list via AJAX and update dropdowns
+         * Fetch updated constructors list via AJAX and update dropdowns
          */
-        function refreshPersonsDropdown() {
+        function refreshConstructorsDropdown() {
             if (typeof kealoaAdmin === 'undefined') {
                 return;
             }
@@ -213,7 +270,7 @@
                 url: kealoaAdmin.ajaxUrl,
                 type: 'POST',
                 data: {
-                    action: 'kealoa_get_persons',
+                    action: 'kealoa_get_constructors',
                     nonce: kealoaAdmin.nonce
                 },
                 success: function (response) {
@@ -225,9 +282,9 @@
         }
         
         /**
-         * Update all constructor select elements with new persons data
+         * Update all constructor select elements with new constructors data
          */
-        function updateConstructorSelects(persons) {
+        function updateConstructorSelects(constructors) {
             constructorSelects.each(function () {
                 var $select = $(this);
                 var selectedValues = $select.val() || [];
@@ -235,12 +292,12 @@
                 // Clear and rebuild options
                 $select.empty();
                 
-                persons.forEach(function (person) {
-                    var isSelected = selectedValues.indexOf(String(person.id)) !== -1;
+                constructors.forEach(function (constructor) {
+                    var isSelected = selectedValues.indexOf(String(constructor.id)) !== -1;
                     $select.append(
                         $('<option>', {
-                            value: person.id,
-                            text: person.full_name,
+                            value: constructor.id,
+                            text: constructor.full_name,
                             selected: isSelected
                         })
                     );

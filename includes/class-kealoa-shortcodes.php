@@ -80,7 +80,7 @@ class Kealoa_Shortcodes {
                                 <?php echo Kealoa_Formatter::format_round_date_link((int) $round->id, $round->round_date); ?>
                             </td>
                             <td class="kealoa-episode-cell">
-                                <?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, (int) $round->episode_start_seconds); ?>
+                                <?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null, (int) $round->episode_start_seconds); ?>
                             </td>
                             <td class="kealoa-solutions-cell">
                                 <?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?>
@@ -146,7 +146,7 @@ class Kealoa_Shortcodes {
                     </p>
                     <p>
                         <strong><?php esc_html_e('Episode:', 'kealoa-reference'); ?></strong>
-                        <?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, (int) $round->episode_start_seconds); ?>
+                        <?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null, (int) $round->episode_start_seconds); ?>
                     </p>
                     <p>
                         <strong><?php esc_html_e('Solution Words:', 'kealoa-reference'); ?></strong>
@@ -207,7 +207,7 @@ class Kealoa_Shortcodes {
                                         <?php echo esc_html(Kealoa_Formatter::format_date($clue->puzzle_date)); ?>
                                     </td>
                                     <td class="kealoa-constructors">
-                                        <?php echo Kealoa_Formatter::format_person_list($constructors); ?>
+                                        <?php echo Kealoa_Formatter::format_constructor_list($constructors); ?>
                                     </td>
                                     <td class="kealoa-clue-ref">
                                         <?php echo esc_html(Kealoa_Formatter::format_clue_direction((int) $clue->puzzle_clue_number, $clue->puzzle_clue_direction)); ?>
@@ -270,6 +270,8 @@ class Kealoa_Shortcodes {
         $stats = $this->db->get_person_stats($person_id);
         $clue_number_results = $this->db->get_person_results_by_clue_number($person_id);
         $day_of_week_results = $this->db->get_person_results_by_day_of_week($person_id);
+        $decade_results = $this->db->get_person_results_by_decade($person_id);
+        $constructor_results = $this->db->get_person_results_by_constructor($person_id);
         $round_history = $this->db->get_person_round_history($person_id);
         
         ob_start();
@@ -424,6 +426,74 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
             
+            <?php if (!empty($decade_results)): ?>
+                <div class="kealoa-decade-stats">
+                    <h3><?php esc_html_e('Results by Puzzle Decade', 'kealoa-reference'); ?></h3>
+                    
+                    <table class="kealoa-table kealoa-decade-table">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Decade', 'kealoa-reference'); ?></th>
+                                <th><?php esc_html_e('Times Answered', 'kealoa-reference'); ?></th>
+                                <th><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($decade_results as $result): ?>
+                                <tr>
+                                    <td><?php echo esc_html($result->decade . 's'); ?></td>
+                                    <td><?php echo esc_html($result->total_answered); ?></td>
+                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td>
+                                        <?php 
+                                        $pct = $result->total_answered > 0 
+                                            ? ($result->correct_count / $result->total_answered) * 100 
+                                            : 0;
+                                        echo Kealoa_Formatter::format_percentage($pct);
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($constructor_results)): ?>
+                <div class="kealoa-constructor-stats">
+                    <h3><?php esc_html_e('Results by Constructor', 'kealoa-reference'); ?></h3>
+                    
+                    <table class="kealoa-table kealoa-constructor-table">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
+                                <th><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($constructor_results as $result): ?>
+                                <tr>
+                                    <td><?php echo Kealoa_Formatter::format_constructor_link($result->full_name, $result->xwordinfo_profile_name ?? null); ?></td>
+                                    <td><?php echo esc_html($result->total_answered); ?></td>
+                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td>
+                                        <?php 
+                                        $pct = $result->total_answered > 0 
+                                            ? ($result->correct_count / $result->total_answered) * 100 
+                                            : 0;
+                                        echo Kealoa_Formatter::format_percentage($pct);
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+            
             <?php if (!empty($round_history)): ?>
                 <div class="kealoa-round-history">
                     <h3><?php esc_html_e('Round History', 'kealoa-reference'); ?></h3>
@@ -447,7 +517,7 @@ class Kealoa_Shortcodes {
                                         <?php echo Kealoa_Formatter::format_round_date_link((int) $history->round_id, $history->round_date); ?>
                                     </td>
                                     <td>
-                                        <?php echo Kealoa_Formatter::format_episode_link((int) $history->episode_number, (int) $history->episode_start_seconds); ?>
+                                        <?php echo Kealoa_Formatter::format_episode_link((int) $history->episode_number, $history->episode_url ?? null, (int) $history->episode_start_seconds); ?>
                                     </td>
                                     <td><?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?></td>
                                     <td><?php echo esc_html($history->total_clues); ?></td>

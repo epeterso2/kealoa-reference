@@ -64,6 +64,44 @@ class Kealoa_Formatter {
     }
 
     /**
+     * Format a constructor name as a link to XWordInfo profile
+     *
+     * @param string $full_name The constructor's full name
+     * @param string|null $xwordinfo_profile_name The XWordInfo profile name (with underscores)
+     * @return string HTML link to XWordInfo profile, or plain text if no profile
+     */
+    public static function format_constructor_link(string $full_name, ?string $xwordinfo_profile_name = null): string {
+        if (empty($xwordinfo_profile_name)) {
+            return esc_html($full_name);
+        }
+        
+        $url = 'https://www.xwordinfo.com/Author/' . $xwordinfo_profile_name;
+        
+        return sprintf(
+            '<a href="%s" class="kealoa-constructor-link" target="_blank" rel="noopener noreferrer">%s</a>',
+            esc_url($url),
+            esc_html($full_name)
+        );
+    }
+
+    /**
+     * Format a list of constructors as XWordInfo links
+     *
+     * @param array $constructors Array of constructor objects with full_name and xwordinfo_profile_name properties
+     * @return string Formatted list with links
+     */
+    public static function format_constructor_list(array $constructors): string {
+        $links = array_map(function($constructor) {
+            return self::format_constructor_link(
+                $constructor->full_name, 
+                $constructor->xwordinfo_profile_name ?? null
+            );
+        }, $constructors);
+        
+        return self::format_list_with_and($links);
+    }
+
+    /**
      * Format a list of persons as links
      *
      * @param array $persons Array of person objects with id and full_name properties
@@ -81,15 +119,18 @@ class Kealoa_Formatter {
      * Format Fill Me In episode number as a link
      *
      * @param int $episode_number The episode number
+     * @param string|null $episode_url The raw episode URL
      * @param int $start_seconds Seconds after episode start where KEALOA begins
      * @return string HTML link to episode player
      */
-    public static function format_episode_link(int $episode_number, int $start_seconds = 0): string {
-        $url = sprintf(
-            'https://bemoresmarter.libsyn.com/player?episode=%d&startTime=%d',
-            $episode_number,
-            $start_seconds
-        );
+    public static function format_episode_link(int $episode_number, ?string $episode_url = null, int $start_seconds = 0): string {
+        if (empty($episode_url)) {
+            // No URL provided, just return the episode number without a link
+            return sprintf('<span class="kealoa-episode-number">%d</span>', $episode_number);
+        }
+        
+        // Append start time parameter
+        $url = $episode_url . '?t=' . $start_seconds;
         
         return sprintf(
             '<a href="%s" class="kealoa-episode-link" target="_blank" rel="noopener noreferrer">%d</a>',

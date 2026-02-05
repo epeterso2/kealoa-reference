@@ -35,6 +35,7 @@ class Kealoa_Admin {
         
         // AJAX handlers
         add_action('wp_ajax_kealoa_get_persons', [$this, 'ajax_get_persons']);
+        add_action('wp_ajax_kealoa_get_constructors', [$this, 'ajax_get_constructors']);
     }
 
     /**
@@ -78,6 +79,15 @@ class Kealoa_Admin {
             'manage_options',
             'kealoa-persons',
             [$this, 'render_persons_page']
+        );
+        
+        add_submenu_page(
+            'kealoa-reference',
+            __('Constructors', 'kealoa-reference'),
+            __('Constructors', 'kealoa-reference'),
+            'manage_options',
+            'kealoa-constructors',
+            [$this, 'render_constructors_page']
         );
         
         add_submenu_page(
@@ -137,6 +147,9 @@ class Kealoa_Admin {
             'create_person' => $this->handle_create_person(),
             'update_person' => $this->handle_update_person(),
             'delete_person' => $this->handle_delete_person(),
+            'create_constructor' => $this->handle_create_constructor(),
+            'update_constructor' => $this->handle_update_constructor(),
+            'delete_constructor' => $this->handle_delete_constructor(),
             'create_puzzle' => $this->handle_create_puzzle(),
             'update_puzzle' => $this->handle_update_puzzle(),
             'delete_puzzle' => $this->handle_delete_puzzle(),
@@ -161,6 +174,7 @@ class Kealoa_Admin {
     public function render_dashboard_page(): void {
         $rounds_count = $this->db->count_rounds();
         $persons_count = $this->db->count_persons();
+        $constructors_count = $this->db->count_constructors();
         $puzzles_count = $this->db->count_puzzles();
         ?>
         <div class="wrap kealoa-admin-wrap">
@@ -180,6 +194,14 @@ class Kealoa_Admin {
                     <p><?php esc_html_e('Persons', 'kealoa-reference'); ?></p>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons')); ?>" class="button">
                         <?php esc_html_e('Manage Persons', 'kealoa-reference'); ?>
+                    </a>
+                </div>
+                
+                <div class="kealoa-card">
+                    <h2><?php echo esc_html($constructors_count); ?></h2>
+                    <p><?php esc_html_e('Constructors', 'kealoa-reference'); ?></p>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-constructors')); ?>" class="button">
+                        <?php esc_html_e('Manage Constructors', 'kealoa-reference'); ?>
                     </a>
                 </div>
                 
@@ -285,7 +307,6 @@ class Kealoa_Admin {
                 <tr>
                     <th><?php esc_html_e('ID', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Full Name', 'kealoa-reference'); ?></th>
-                    <th><?php esc_html_e('XWordInfo Profile', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Home Page', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Actions', 'kealoa-reference'); ?></th>
                 </tr>
@@ -293,20 +314,13 @@ class Kealoa_Admin {
             <tbody>
                 <?php if (empty($persons)): ?>
                     <tr>
-                        <td colspan="5"><?php esc_html_e('No persons found.', 'kealoa-reference'); ?></td>
+                        <td colspan="4"><?php esc_html_e('No persons found.', 'kealoa-reference'); ?></td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($persons as $person): ?>
                         <tr>
                             <td><?php echo esc_html($person->id); ?></td>
                             <td><?php echo esc_html($person->full_name); ?></td>
-                            <td>
-                                <?php if ($person->xwordinfo_profile_name): ?>
-                                    <?php echo Kealoa_Formatter::format_xwordinfo_link($person->xwordinfo_profile_name); ?>
-                                <?php else: ?>
-                                    —
-                                <?php endif; ?>
-                            </td>
                             <td>
                                 <?php if ($person->home_page_url): ?>
                                     <?php echo Kealoa_Formatter::format_home_page_link($person->home_page_url); ?>
@@ -382,15 +396,8 @@ class Kealoa_Admin {
                     <td>
                         <input type="text" name="full_name" id="full_name" class="regular-text" required
                                value="<?php echo esc_attr($person->full_name ?? ''); ?>" />
-                    </td>
-                </tr>
-                <tr>
-                    <th><label for="xwordinfo_profile_name"><?php esc_html_e('XWordInfo Profile Name', 'kealoa-reference'); ?></label></th>
-                    <td>
-                        <input type="text" name="xwordinfo_profile_name" id="xwordinfo_profile_name" class="regular-text"
-                               value="<?php echo esc_attr($person->xwordinfo_profile_name ?? ''); ?>" />
                         <p class="description">
-                            <?php esc_html_e('The name as it appears in XWordInfo URLs (e.g., "John_Smith" for xwordinfo.com/Author/John_Smith)', 'kealoa-reference'); ?>
+                            <?php esc_html_e('Persons are podcast hosts, clue givers, and guessers (not puzzle constructors).', 'kealoa-reference'); ?>
                         </p>
                     </td>
                 </tr>
@@ -401,16 +408,174 @@ class Kealoa_Admin {
                                value="<?php echo esc_attr($person->home_page_url ?? ''); ?>" />
                     </td>
                 </tr>
+            </table>
+            
+            <p class="submit">
+                <input type="submit" class="button button-primary" 
+                       value="<?php echo $is_edit ? esc_attr__('Update Person', 'kealoa-reference') : esc_attr__('Add Person', 'kealoa-reference'); ?>" />
+            </p>
+        </form>
+        <?php
+    }
+
+    /**
+     * Render constructors page
+     */
+    public function render_constructors_page(): void {
+        $action = $_GET['action'] ?? 'list';
+        $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+        
+        echo '<div class="wrap kealoa-admin-wrap">';
+        
+        match($action) {
+            'add' => $this->render_constructor_form(),
+            'edit' => $this->render_constructor_form($id),
+            default => $this->render_constructors_list(),
+        };
+        
+        echo '</div>';
+    }
+
+    /**
+     * Render constructors list
+     */
+    private function render_constructors_list(): void {
+        $paged = max(1, (int) ($_GET['paged'] ?? 1));
+        $per_page = 20;
+        $offset = ($paged - 1) * $per_page;
+        
+        $constructors = $this->db->get_constructors([
+            'limit' => $per_page,
+            'offset' => $offset,
+        ]);
+        
+        $total = $this->db->count_constructors();
+        $total_pages = ceil($total / $per_page);
+        ?>
+        <h1 class="wp-heading-inline"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></h1>
+        <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-constructors&action=add')); ?>" class="page-title-action">
+            <?php esc_html_e('Add New', 'kealoa-reference'); ?>
+        </a>
+        
+        <p class="description"><?php esc_html_e('Crossword puzzle constructors with XWordInfo profiles.', 'kealoa-reference'); ?></p>
+        
+        <table class="wp-list-table widefat fixed striped">
+            <thead>
+                <tr>
+                    <th><?php esc_html_e('ID', 'kealoa-reference'); ?></th>
+                    <th><?php esc_html_e('Name', 'kealoa-reference'); ?></th>
+                    <th><?php esc_html_e('XWordInfo Profile', 'kealoa-reference'); ?></th>
+                    <th><?php esc_html_e('Actions', 'kealoa-reference'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($constructors)): ?>
+                    <tr>
+                        <td colspan="4"><?php esc_html_e('No constructors found.', 'kealoa-reference'); ?></td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($constructors as $constructor): ?>
+                        <tr>
+                            <td><?php echo esc_html($constructor->id); ?></td>
+                            <td>
+                                <strong><?php echo Kealoa_Formatter::format_constructor_link($constructor->full_name, $constructor->xwordinfo_profile_name ?? null); ?></strong>
+                            </td>
+                            <td>
+                                <?php if (!empty($constructor->xwordinfo_profile_name)): ?>
+                                    <a href="<?php echo esc_url('https://www.xwordinfo.com/Author/' . $constructor->xwordinfo_profile_name); ?>" target="_blank">
+                                        <?php echo esc_html($constructor->xwordinfo_profile_name); ?>
+                                    </a>
+                                <?php else: ?>
+                                    —
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-constructors&action=edit&id=' . $constructor->id)); ?>">
+                                    <?php esc_html_e('Edit', 'kealoa-reference'); ?>
+                                </a> |
+                                <a href="#" class="kealoa-delete-link" 
+                                   data-type="constructor" 
+                                   data-id="<?php echo esc_attr($constructor->id); ?>"
+                                   data-nonce="<?php echo wp_create_nonce('kealoa_admin_action'); ?>">
+                                    <?php esc_html_e('Delete', 'kealoa-reference'); ?>
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+        
+        <?php if ($total_pages > 1): ?>
+            <div class="tablenav bottom">
+                <div class="tablenav-pages">
+                    <?php
+                    echo paginate_links([
+                        'base' => add_query_arg('paged', '%#%'),
+                        'format' => '',
+                        'prev_text' => '&laquo;',
+                        'next_text' => '&raquo;',
+                        'total' => $total_pages,
+                        'current' => $paged,
+                    ]);
+                    ?>
+                </div>
+            </div>
+        <?php endif;
+    }
+
+    /**
+     * Render constructor form (add/edit)
+     */
+    private function render_constructor_form(int $id = 0): void {
+        $constructor = $id ? $this->db->get_constructor($id) : null;
+        $is_edit = $constructor !== null;
+        ?>
+        <h1>
+            <?php echo $is_edit 
+                ? esc_html__('Edit Constructor', 'kealoa-reference') 
+                : esc_html__('Add New Constructor', 'kealoa-reference'); ?>
+        </h1>
+        
+        <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-constructors')); ?>" class="button">
+            &larr; <?php esc_html_e('Back to Constructors', 'kealoa-reference'); ?>
+        </a>
+        
+        <form method="post" class="kealoa-form">
+            <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
+            <input type="hidden" name="kealoa_action" value="<?php echo $is_edit ? 'update_constructor' : 'create_constructor'; ?>" />
+            <?php if ($is_edit): ?>
+                <input type="hidden" name="constructor_id" value="<?php echo esc_attr($id); ?>" />
+            <?php endif; ?>
+            
+            <table class="form-table">
+                <tr>
+                    <th><label for="full_name"><?php esc_html_e('Full Name', 'kealoa-reference'); ?> *</label></th>
+                    <td>
+                        <input type="text" name="full_name" id="full_name" class="regular-text" required
+                               value="<?php echo esc_attr($constructor->full_name ?? ''); ?>" />
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="xwordinfo_profile_name"><?php esc_html_e('XWordInfo Profile Name', 'kealoa-reference'); ?></label></th>
+                    <td>
+                        <input type="text" name="xwordinfo_profile_name" id="xwordinfo_profile_name" class="regular-text"
+                               value="<?php echo esc_attr($constructor->xwordinfo_profile_name ?? ''); ?>" />
+                        <p class="description">
+                            <?php esc_html_e('Auto-populated from name (spaces become underscores). Used for xwordinfo.com/Author/{name}', 'kealoa-reference'); ?>
+                        </p>
+                    </td>
+                </tr>
                 <tr>
                     <th><label for="xwordinfo_image_url"><?php esc_html_e('XWordInfo Image URL', 'kealoa-reference'); ?></label></th>
                     <td>
                         <input type="url" name="xwordinfo_image_url" id="xwordinfo_image_url" class="regular-text"
-                               value="<?php echo esc_attr($person->xwordinfo_image_url ?? ''); ?>" />
+                               value="<?php echo esc_attr($constructor->xwordinfo_image_url ?? ''); ?>" />
                         <p class="description">
-                            <?php esc_html_e('Direct URL to the person\'s image from XWordInfo', 'kealoa-reference'); ?>
+                            <?php esc_html_e('Auto-populated from name (spaces removed). Format: xwordinfo.com/images/cons/{name}.jpg', 'kealoa-reference'); ?>
                         </p>
-                        <?php if (!empty($person->xwordinfo_image_url)): ?>
-                            <p><img src="<?php echo esc_url($person->xwordinfo_image_url); ?>" alt="" style="max-width: 150px; margin-top: 10px;" /></p>
+                        <?php if (!empty($constructor->xwordinfo_image_url)): ?>
+                            <p><img src="<?php echo esc_url($constructor->xwordinfo_image_url); ?>" alt="" style="max-width: 150px; margin-top: 10px;" /></p>
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -418,7 +583,7 @@ class Kealoa_Admin {
             
             <p class="submit">
                 <input type="submit" class="button button-primary" 
-                       value="<?php echo $is_edit ? esc_attr__('Update Person', 'kealoa-reference') : esc_attr__('Add Person', 'kealoa-reference'); ?>" />
+                       value="<?php echo $is_edit ? esc_attr__('Update Constructor', 'kealoa-reference') : esc_attr__('Add Constructor', 'kealoa-reference'); ?>" />
             </p>
         </form>
         <?php
@@ -487,10 +652,7 @@ class Kealoa_Admin {
                             <td><?php echo esc_html(date('l', strtotime($puzzle->publication_date))); ?></td>
                             <td>
                                 <?php if (!empty($constructors)): ?>
-                                    <?php 
-                                    $names = array_map(fn($c) => $c->full_name, $constructors);
-                                    echo esc_html(Kealoa_Formatter::format_list_with_and($names));
-                                    ?>
+                                    <?php echo Kealoa_Formatter::format_constructor_list($constructors); ?>
                                 <?php else: ?>
                                     —
                                 <?php endif; ?>
@@ -536,9 +698,9 @@ class Kealoa_Admin {
     private function render_puzzle_form(int $id = 0): void {
         $puzzle = $id ? $this->db->get_puzzle($id) : null;
         $is_edit = $puzzle !== null;
-        $constructors = $is_edit ? $this->db->get_puzzle_constructors($id) : [];
-        $constructor_ids = array_map(fn($c) => $c->id, $constructors);
-        $all_persons = $this->db->get_persons(['limit' => 1000]);
+        $puzzle_constructors = $is_edit ? $this->db->get_puzzle_constructors($id) : [];
+        $puzzle_constructor_ids = array_map(fn($c) => (int) $c->id, $puzzle_constructors);
+        $all_constructors = $this->db->get_constructors(['limit' => 1000]);
         ?>
         <h1>
             <?php echo $is_edit 
@@ -569,10 +731,10 @@ class Kealoa_Admin {
                     <th><label for="constructors"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></label></th>
                     <td>
                         <select name="constructors[]" id="constructors" multiple class="kealoa-multi-select" style="width: 100%; min-height: 150px;">
-                            <?php foreach ($all_persons as $person): ?>
-                                <option value="<?php echo esc_attr($person->id); ?>"
-                                    <?php echo in_array($person->id, $constructor_ids) ? 'selected' : ''; ?>>
-                                    <?php echo esc_html($person->full_name); ?>
+                            <?php foreach ($all_constructors as $constructor): ?>
+                                <option value="<?php echo esc_attr($constructor->id); ?>"
+                                    <?php echo in_array((int) $constructor->id, $puzzle_constructor_ids, true) ? 'selected' : ''; ?>>
+                                    <?php echo esc_html($constructor->full_name); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -660,7 +822,7 @@ class Kealoa_Admin {
                         <tr>
                             <td><?php echo esc_html($round->id); ?></td>
                             <td><?php echo esc_html(Kealoa_Formatter::format_date($round->round_date)); ?></td>
-                            <td><?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, (int) $round->episode_start_seconds); ?></td>
+                            <td><?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null, (int) $round->episode_start_seconds); ?></td>
                             <td><?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?></td>
                             <td><?php echo esc_html($round->clue_giver_name ?? '—'); ?></td>
                             <td><?php echo esc_html($clue_count); ?></td>
@@ -755,6 +917,16 @@ class Kealoa_Admin {
                     </td>
                 </tr>
                 <tr>
+                    <th><label for="episode_url"><?php esc_html_e('Episode URL', 'kealoa-reference'); ?></label></th>
+                    <td>
+                        <input type="url" name="episode_url" id="episode_url" class="regular-text"
+                               value="<?php echo esc_attr($round->episode_url ?? ''); ?>" />
+                        <p class="description">
+                            <?php esc_html_e('The raw URL of the podcast episode.', 'kealoa-reference'); ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
                     <th><label for="episode_start_seconds"><?php esc_html_e('Start Time (seconds)', 'kealoa-reference'); ?></label></th>
                     <td>
                         <input type="number" name="episode_start_seconds" id="episode_start_seconds" min="0"
@@ -837,7 +1009,7 @@ class Kealoa_Admin {
         $solutions = $this->db->get_round_solutions($round_id);
         $guessers = $this->db->get_round_guessers($round_id);
         $puzzles = $this->db->get_puzzles(['limit' => 1000, 'order' => 'DESC']);
-        $all_persons = $this->db->get_persons(['limit' => 1000]);
+        $all_constructors = $this->db->get_constructors(['limit' => 1000]);
         ?>
         <h1><?php printf(esc_html__('Clues for Round %s', 'kealoa-reference'), Kealoa_Formatter::format_date($round->round_date)); ?></h1>
         
@@ -953,16 +1125,16 @@ class Kealoa_Admin {
                     <th><label for="puzzle_constructors"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></label></th>
                     <td>
                         <select name="puzzle_constructors[]" id="puzzle_constructors" multiple class="kealoa-multi-select" style="width: 100%; min-height: 120px;">
-                            <?php foreach ($all_persons as $person): ?>
-                                <option value="<?php echo esc_attr($person->id); ?>">
-                                    <?php echo esc_html($person->full_name); ?>
+                            <?php foreach ($all_constructors as $constructor): ?>
+                                <option value="<?php echo esc_attr($constructor->id); ?>">
+                                    <?php echo esc_html($constructor->full_name); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                         <p class="description">
                             <?php esc_html_e('Hold Ctrl/Cmd to select multiple. Only used when creating a new puzzle.', 'kealoa-reference'); ?>
-                            <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons&action=add')); ?>" target="_blank">
-                                <?php esc_html_e('Add new person', 'kealoa-reference'); ?> &rarr;
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-constructors&action=add')); ?>" target="_blank">
+                                <?php esc_html_e('Add new constructor', 'kealoa-reference'); ?> &rarr;
                             </a>
                         </p>
                     </td>
@@ -1044,13 +1216,13 @@ class Kealoa_Admin {
         
         $solutions = $this->db->get_round_solutions($round_id);
         $guessers = $this->db->get_round_guessers($round_id);
-        $all_persons = $this->db->get_persons(['limit' => 1000]);
+        $all_constructors = $this->db->get_constructors(['limit' => 1000]);
         $clue_guesses = $this->db->get_clue_guesses($clue_id);
         
         // Get the puzzle for this clue
         $puzzle = $this->db->get_puzzle((int) $clue->puzzle_id);
         $puzzle_constructors = $puzzle ? $this->db->get_puzzle_constructors((int) $puzzle->id) : [];
-        $puzzle_constructor_ids = array_map(fn($c) => $c->id, $puzzle_constructors);
+        $puzzle_constructor_ids = array_map(fn($c) => (int) $c->id, $puzzle_constructors);
         
         // Build a map of guesser_id => guessed_word
         $guess_map = [];
@@ -1104,17 +1276,17 @@ class Kealoa_Admin {
                     <th><label for="puzzle_constructors"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></label></th>
                     <td>
                         <select name="puzzle_constructors[]" id="puzzle_constructors" multiple class="kealoa-multi-select" style="width: 100%; min-height: 120px;">
-                            <?php foreach ($all_persons as $person): ?>
-                                <option value="<?php echo esc_attr($person->id); ?>"
-                                    <?php echo in_array($person->id, $puzzle_constructor_ids) ? 'selected' : ''; ?>>
-                                    <?php echo esc_html($person->full_name); ?>
+                            <?php foreach ($all_constructors as $constructor): ?>
+                                <option value="<?php echo esc_attr($constructor->id); ?>"
+                                    <?php echo in_array((int) $constructor->id, $puzzle_constructor_ids, true) ? 'selected' : ''; ?>>
+                                    <?php echo esc_html($constructor->full_name); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                         <p class="description">
                             <?php esc_html_e('Hold Ctrl/Cmd to select multiple. Only used when creating a new puzzle.', 'kealoa-reference'); ?>
-                            <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons&action=add')); ?>" target="_blank">
-                                <?php esc_html_e('Add new person', 'kealoa-reference'); ?> &rarr;
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-constructors&action=add')); ?>" target="_blank">
+                                <?php esc_html_e('Add new constructor', 'kealoa-reference'); ?> &rarr;
                             </a>
                         </p>
                     </td>
@@ -1213,6 +1385,26 @@ class Kealoa_Admin {
         wp_send_json_success($data);
     }
 
+    /**
+     * AJAX handler to get constructors list
+     */
+    public function ajax_get_constructors(): void {
+        check_ajax_referer('kealoa_admin_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Unauthorized']);
+        }
+        
+        $constructors = $this->db->get_constructors(['limit' => 1000]);
+        
+        $data = array_map(fn($c) => [
+            'id' => $c->id,
+            'full_name' => $c->full_name,
+        ], $constructors);
+        
+        wp_send_json_success($data);
+    }
+
     // =========================================================================
     // FORM HANDLERS
     // =========================================================================
@@ -1223,9 +1415,7 @@ class Kealoa_Admin {
     private function handle_create_person(): void {
         $id = $this->db->create_person([
             'full_name' => $_POST['full_name'] ?? '',
-            'xwordinfo_profile_name' => $_POST['xwordinfo_profile_name'] ?? null,
             'home_page_url' => $_POST['home_page_url'] ?? null,
-            'xwordinfo_image_url' => $_POST['xwordinfo_image_url'] ?? null,
         ]);
         
         if ($id) {
@@ -1243,9 +1433,7 @@ class Kealoa_Admin {
         
         $result = $this->db->update_person($id, [
             'full_name' => $_POST['full_name'] ?? '',
-            'xwordinfo_profile_name' => $_POST['xwordinfo_profile_name'] ?? null,
             'home_page_url' => $_POST['home_page_url'] ?? null,
-            'xwordinfo_image_url' => $_POST['xwordinfo_image_url'] ?? null,
         ]);
         
         if ($result) {
@@ -1262,6 +1450,51 @@ class Kealoa_Admin {
         $id = (int) ($_POST['id'] ?? 0);
         $this->db->delete_person($id);
         $this->redirect_with_message('kealoa-persons', 'Person deleted.');
+    }
+
+    /**
+     * Handle create constructor
+     */
+    private function handle_create_constructor(): void {
+        $id = $this->db->create_constructor([
+            'full_name' => $_POST['full_name'] ?? '',
+            'xwordinfo_profile_name' => $_POST['xwordinfo_profile_name'] ?? null,
+            'xwordinfo_image_url' => $_POST['xwordinfo_image_url'] ?? null,
+        ]);
+        
+        if ($id) {
+            $this->redirect_with_message('kealoa-constructors', 'Constructor created successfully.');
+        } else {
+            $this->redirect_with_message('kealoa-constructors', 'Failed to create constructor.', 'error');
+        }
+    }
+
+    /**
+     * Handle update constructor
+     */
+    private function handle_update_constructor(): void {
+        $id = (int) ($_POST['constructor_id'] ?? 0);
+        
+        $result = $this->db->update_constructor($id, [
+            'full_name' => $_POST['full_name'] ?? '',
+            'xwordinfo_profile_name' => $_POST['xwordinfo_profile_name'] ?? null,
+            'xwordinfo_image_url' => $_POST['xwordinfo_image_url'] ?? null,
+        ]);
+        
+        if ($result) {
+            $this->redirect_with_message('kealoa-constructors', 'Constructor updated successfully.');
+        } else {
+            $this->redirect_with_message('kealoa-constructors', 'Failed to update constructor.', 'error');
+        }
+    }
+
+    /**
+     * Handle delete constructor
+     */
+    private function handle_delete_constructor(): void {
+        $id = (int) ($_POST['id'] ?? 0);
+        $this->db->delete_constructor($id);
+        $this->redirect_with_message('kealoa-constructors', 'Constructor deleted.');
     }
 
     /**
@@ -1319,6 +1552,7 @@ class Kealoa_Admin {
         $id = $this->db->create_round([
             'round_date' => $_POST['round_date'] ?? '',
             'episode_number' => $_POST['episode_number'] ?? 0,
+            'episode_url' => $_POST['episode_url'] ?? null,
             'episode_start_seconds' => $_POST['episode_start_seconds'] ?? 0,
             'clue_giver_id' => $_POST['clue_giver_id'] ?? 0,
             'description' => $_POST['description'] ?? null,
@@ -1354,6 +1588,7 @@ class Kealoa_Admin {
         $result = $this->db->update_round($id, [
             'round_date' => $_POST['round_date'] ?? '',
             'episode_number' => $_POST['episode_number'] ?? 0,
+            'episode_url' => $_POST['episode_url'] ?? null,
             'episode_start_seconds' => $_POST['episode_start_seconds'] ?? 0,
             'clue_giver_id' => $_POST['clue_giver_id'] ?? 0,
             'description' => $_POST['description'] ?? null,

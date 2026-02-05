@@ -45,6 +45,7 @@ class Kealoa_Activator {
         $charset_collate = $wpdb->get_charset_collate();
         
         // Table names with WordPress prefix
+        $constructors_table = $wpdb->prefix . 'kealoa_constructors';
         $persons_table = $wpdb->prefix . 'kealoa_persons';
         $puzzles_table = $wpdb->prefix . 'kealoa_puzzles';
         $puzzle_constructors_table = $wpdb->prefix . 'kealoa_puzzle_constructors';
@@ -54,18 +55,28 @@ class Kealoa_Activator {
         $clues_table = $wpdb->prefix . 'kealoa_clues';
         $guesses_table = $wpdb->prefix . 'kealoa_guesses';
         
-        // SQL for persons table
-        $sql_persons = "CREATE TABLE {$persons_table} (
+        // SQL for constructors table (crossword puzzle constructors with XWordInfo data)
+        $sql_constructors = "CREATE TABLE {$constructors_table} (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             full_name varchar(255) NOT NULL,
             xwordinfo_profile_name varchar(255) DEFAULT NULL,
-            home_page_url varchar(500) DEFAULT NULL,
             xwordinfo_image_url varchar(500) DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             KEY idx_full_name (full_name),
             KEY idx_xwordinfo_profile (xwordinfo_profile_name)
+        ) {$charset_collate};";
+        
+        // SQL for persons table (people like clue givers, guessers)
+        $sql_persons = "CREATE TABLE {$persons_table} (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            full_name varchar(255) NOT NULL,
+            home_page_url varchar(500) DEFAULT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_full_name (full_name)
         ) {$charset_collate};";
         
         // SQL for puzzles table
@@ -78,16 +89,16 @@ class Kealoa_Activator {
             UNIQUE KEY idx_publication_date (publication_date)
         ) {$charset_collate};";
         
-        // SQL for puzzle constructors junction table
+        // SQL for puzzle constructors junction table (references constructors table)
         $sql_puzzle_constructors = "CREATE TABLE {$puzzle_constructors_table} (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             puzzle_id bigint(20) UNSIGNED NOT NULL,
-            person_id bigint(20) UNSIGNED NOT NULL,
+            constructor_id bigint(20) UNSIGNED NOT NULL,
             constructor_order tinyint(3) UNSIGNED DEFAULT 1,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            UNIQUE KEY idx_puzzle_person (puzzle_id, person_id),
-            KEY idx_person_id (person_id)
+            UNIQUE KEY idx_puzzle_constructor (puzzle_id, constructor_id),
+            KEY idx_constructor_id (constructor_id)
         ) {$charset_collate};";
         
         // SQL for rounds table
@@ -95,6 +106,7 @@ class Kealoa_Activator {
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             round_date date NOT NULL,
             episode_number int(10) UNSIGNED NOT NULL,
+            episode_url varchar(500) DEFAULT NULL,
             episode_start_seconds int(10) UNSIGNED DEFAULT 0,
             clue_giver_id bigint(20) UNSIGNED NOT NULL,
             description text DEFAULT NULL,
@@ -163,6 +175,7 @@ class Kealoa_Activator {
         
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         
+        dbDelta($sql_constructors);
         dbDelta($sql_persons);
         dbDelta($sql_puzzles);
         dbDelta($sql_puzzle_constructors);
