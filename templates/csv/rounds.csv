@@ -1,0 +1,3 @@
+round_date,episode_number,episode_url,episode_start_seconds,clue_giver,guessers,solution_words,description
+"2024-01-20",150,"https://example.com/episode150",1234,"Alice Johnson","Bob Williams, Charlie Brown","WORD1, WORD2, WORD3","Optional description"
+"2024-01-27",151,"https://example.com/episode151",2345,"Bob Williams","Alice Johnson, Charlie Brown","APPLE, BANANA, CHERRY",""

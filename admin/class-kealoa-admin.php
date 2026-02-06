@@ -98,6 +98,15 @@ class Kealoa_Admin {
             'kealoa-puzzles',
             [$this, 'render_puzzles_page']
         );
+        
+        add_submenu_page(
+            'kealoa-reference',
+            __('Import Data', 'kealoa-reference'),
+            __('Import', 'kealoa-reference'),
+            'manage_options',
+            'kealoa-import',
+            [$this, 'render_import_page']
+        );
     }
 
     /**
@@ -251,6 +260,220 @@ class Kealoa_Admin {
             </div>
         </div>
         <?php
+    }
+
+    /**
+     * Render import page
+     */
+    public function render_import_page(): void {
+        $templates = Kealoa_Import::get_templates();
+        $import_result = null;
+        
+        // Handle form submission
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['kealoa_import_nonce'])) {
+            if (wp_verify_nonce($_POST['kealoa_import_nonce'], 'kealoa_import_csv')) {
+                $import_result = $this->handle_csv_import();
+            }
+        }
+        ?>
+        <div class="wrap kealoa-admin-wrap">
+            <h1><?php esc_html_e('Import Data', 'kealoa-reference'); ?></h1>
+            
+            <?php if ($import_result): ?>
+                <div class="notice notice-<?php echo $import_result['success'] ? 'success' : 'error'; ?> is-dismissible">
+                    <p>
+                        <?php 
+                        printf(
+                            esc_html__('Import complete: %d imported, %d skipped.', 'kealoa-reference'),
+                            $import_result['imported'],
+                            $import_result['skipped']
+                        );
+                        ?>
+                    </p>
+                    <?php if (!empty($import_result['errors'])): ?>
+                        <details>
+                            <summary><?php esc_html_e('View errors', 'kealoa-reference'); ?></summary>
+                            <ul>
+                                <?php foreach ($import_result['errors'] as $error): ?>
+                                    <li><?php echo esc_html($error); ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </details>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+            
+            <div class="kealoa-import-section">
+                <h2><?php esc_html_e('Download Templates', 'kealoa-reference'); ?></h2>
+                <p><?php esc_html_e('Download CSV templates to see the expected format for each data type. Fill in your data and upload to import.', 'kealoa-reference'); ?></p>
+                
+                <table class="widefat">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Data Type', 'kealoa-reference'); ?></th>
+                            <th><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
+                            <th><?php esc_html_e('Template', 'kealoa-reference'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong><?php esc_html_e('Constructors', 'kealoa-reference'); ?></strong></td>
+                            <td><?php esc_html_e('Crossword puzzle constructors with XWordInfo profile info', 'kealoa-reference'); ?></td>
+                            <td>
+                                <?php if (isset($templates['constructors'])): ?>
+                                    <a href="<?php echo esc_url($templates['constructors']['url']); ?>" class="button button-small" download>
+                                        <?php esc_html_e('Download', 'kealoa-reference'); ?>
+                                    </a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong><?php esc_html_e('Persons', 'kealoa-reference'); ?></strong></td>
+                            <td><?php esc_html_e('Podcast hosts, guests, and clue givers/guessers', 'kealoa-reference'); ?></td>
+                            <td>
+                                <?php if (isset($templates['persons'])): ?>
+                                    <a href="<?php echo esc_url($templates['persons']['url']); ?>" class="button button-small" download>
+                                        <?php esc_html_e('Download', 'kealoa-reference'); ?>
+                                    </a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></strong></td>
+                            <td><?php esc_html_e('NYT crossword puzzles with constructors (creates constructors if needed)', 'kealoa-reference'); ?></td>
+                            <td>
+                                <?php if (isset($templates['puzzles'])): ?>
+                                    <a href="<?php echo esc_url($templates['puzzles']['url']); ?>" class="button button-small" download>
+                                        <?php esc_html_e('Download', 'kealoa-reference'); ?>
+                                    </a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong><?php esc_html_e('Rounds', 'kealoa-reference'); ?></strong></td>
+                            <td><?php esc_html_e('KEALOA game rounds with episode info, solution words, guessers (creates persons if needed)', 'kealoa-reference'); ?></td>
+                            <td>
+                                <?php if (isset($templates['rounds'])): ?>
+                                    <a href="<?php echo esc_url($templates['rounds']['url']); ?>" class="button button-small" download>
+                                        <?php esc_html_e('Download', 'kealoa-reference'); ?>
+                                    </a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong><?php esc_html_e('Clues', 'kealoa-reference'); ?></strong></td>
+                            <td><?php esc_html_e('Clues for each round (requires rounds and puzzles to exist)', 'kealoa-reference'); ?></td>
+                            <td>
+                                <?php if (isset($templates['clues'])): ?>
+                                    <a href="<?php echo esc_url($templates['clues']['url']); ?>" class="button button-small" download>
+                                        <?php esc_html_e('Download', 'kealoa-reference'); ?>
+                                    </a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong><?php esc_html_e('Guesses', 'kealoa-reference'); ?></strong></td>
+                            <td><?php esc_html_e('Guesses for each clue (requires rounds, clues, and persons to exist)', 'kealoa-reference'); ?></td>
+                            <td>
+                                <?php if (isset($templates['guesses'])): ?>
+                                    <a href="<?php echo esc_url($templates['guesses']['url']); ?>" class="button button-small" download>
+                                        <?php esc_html_e('Download', 'kealoa-reference'); ?>
+                                    </a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="kealoa-import-section" style="margin-top: 30px;">
+                <h2><?php esc_html_e('Import CSV File', 'kealoa-reference'); ?></h2>
+                <p><?php esc_html_e('Select a data type and upload your CSV file. Import order matters: Constructors/Persons first, then Puzzles, then Rounds, then Clues, then Guesses.', 'kealoa-reference'); ?></p>
+                
+                <form method="post" enctype="multipart/form-data" class="kealoa-form">
+                    <?php wp_nonce_field('kealoa_import_csv', 'kealoa_import_nonce'); ?>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th><label for="import_type"><?php esc_html_e('Data Type', 'kealoa-reference'); ?></label></th>
+                            <td>
+                                <select name="import_type" id="import_type" required>
+                                    <option value=""><?php esc_html_e('— Select —', 'kealoa-reference'); ?></option>
+                                    <option value="constructors"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></option>
+                                    <option value="persons"><?php esc_html_e('Persons', 'kealoa-reference'); ?></option>
+                                    <option value="puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></option>
+                                    <option value="rounds"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></option>
+                                    <option value="clues"><?php esc_html_e('Clues', 'kealoa-reference'); ?></option>
+                                    <option value="guesses"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="csv_file"><?php esc_html_e('CSV File', 'kealoa-reference'); ?></label></th>
+                            <td>
+                                <input type="file" name="csv_file" id="csv_file" accept=".csv" required />
+                                <p class="description">
+                                    <?php esc_html_e('Select a CSV file to import. The first row must contain column headers.', 'kealoa-reference'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <p class="submit">
+                        <input type="submit" class="button button-primary" value="<?php esc_attr_e('Import', 'kealoa-reference'); ?>" />
+                    </p>
+                </form>
+            </div>
+            
+            <div class="kealoa-import-section" style="margin-top: 30px;">
+                <h2><?php esc_html_e('Import Notes', 'kealoa-reference'); ?></h2>
+                <ul>
+                    <li><?php esc_html_e('Duplicate records are automatically skipped based on unique identifiers (names, dates).', 'kealoa-reference'); ?></li>
+                    <li><?php esc_html_e('For Puzzles: Constructors are looked up by name. If not found, they are created automatically with XWordInfo fields populated.', 'kealoa-reference'); ?></li>
+                    <li><?php esc_html_e('For Rounds: Clue givers and guessers are looked up by name. If not found, they are created automatically.', 'kealoa-reference'); ?></li>
+                    <li><?php esc_html_e('For Clues: Rounds must exist (matched by round_date). Puzzles are created if not found.', 'kealoa-reference'); ?></li>
+                    <li><?php esc_html_e('For Guesses: is_correct is automatically calculated by comparing guessed_word to the clue\'s correct_answer.', 'kealoa-reference'); ?></li>
+                    <li><?php esc_html_e('All text is trimmed. Solution words and answers are automatically uppercased.', 'kealoa-reference'); ?></li>
+                </ul>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Handle CSV import form submission
+     */
+    private function handle_csv_import(): array {
+        if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
+            return [
+                'success' => false,
+                'imported' => 0,
+                'skipped' => 0,
+                'errors' => ['Failed to upload file.'],
+            ];
+        }
+        
+        $import_type = sanitize_text_field($_POST['import_type'] ?? '');
+        $allowed_types = ['constructors', 'persons', 'puzzles', 'rounds', 'clues', 'guesses'];
+        
+        if (!in_array($import_type, $allowed_types)) {
+            return [
+                'success' => false,
+                'imported' => 0,
+                'skipped' => 0,
+                'errors' => ['Invalid import type selected.'],
+            ];
+        }
+        
+        $file_path = $_FILES['csv_file']['tmp_name'];
+        $importer = new Kealoa_Import($this->db);
+        
+        $method = 'import_' . $import_type;
+        $result = $importer->$method($file_path);
+        
+        $result['success'] = $result['imported'] > 0 || empty($result['errors']);
+        
+        return $result;
     }
 
     /**

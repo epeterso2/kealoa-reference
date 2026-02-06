@@ -1,0 +1,4 @@
+round_date,clue_number,puzzle_date,puzzle_clue_number,puzzle_clue_direction,clue_text,correct_answer
+"2024-01-20",1,"2024-01-15",23,"A","This is the clue text for the first clue","WORD1"
+"2024-01-20",2,"2024-01-16",45,"D","Another clue text here","WORD2"
+"2024-01-20",3,"2024-01-15",12,"A","Third clue in the round","WORD3"

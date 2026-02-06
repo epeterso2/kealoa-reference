@@ -504,6 +504,18 @@ class Kealoa_DB {
     }
 
     /**
+     * Get a round by date
+     */
+    public function get_round_by_date(string $date): ?object {
+        $sql = $this->wpdb->prepare(
+            "SELECT * FROM {$this->rounds_table} WHERE round_date = %s",
+            $date
+        );
+        $result = $this->wpdb->get_row($sql);
+        return $result ?: null;
+    }
+
+    /**
      * Get all rounds
      */
     public function get_rounds(array $args = []): array {

@@ -89,6 +89,7 @@ require_once KEALOA_PLUGIN_DIR . 'includes/class-kealoa-deactivator.php';
 require_once KEALOA_PLUGIN_DIR . 'includes/class-kealoa-db.php';
 require_once KEALOA_PLUGIN_DIR . 'includes/class-kealoa-formatter.php';
 require_once KEALOA_PLUGIN_DIR . 'includes/class-kealoa-shortcodes.php';
+require_once KEALOA_PLUGIN_DIR . 'includes/class-kealoa-import.php';
 require_once KEALOA_PLUGIN_DIR . 'admin/class-kealoa-admin.php';
 require_once KEALOA_PLUGIN_DIR . 'includes/class-kealoa-blocks.php';
 

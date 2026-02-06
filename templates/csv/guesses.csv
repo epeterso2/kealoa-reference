@@ -1,0 +1,7 @@
+round_date,clue_number,guesser,guessed_word
+"2024-01-20",1,"Bob Williams","WORD1"
+"2024-01-20",1,"Charlie Brown","WRONG"
+"2024-01-20",2,"Bob Williams","WORD2"
+"2024-01-20",2,"Charlie Brown","WORD2"
+"2024-01-20",3,"Bob Williams","WORD3"
+"2024-01-20",3,"Charlie Brown","WORD3"
