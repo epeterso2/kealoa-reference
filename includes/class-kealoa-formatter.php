@@ -165,21 +165,17 @@ class Kealoa_Formatter {
      *
      * @param int $episode_number The episode number
      * @param string|null $episode_url The raw episode URL
-     * @param int $start_seconds Seconds after episode start where KEALOA begins
      * @return string HTML link to episode player
      */
-    public static function format_episode_link(int $episode_number, ?string $episode_url = null, int $start_seconds = 0): string {
+    public static function format_episode_link(int $episode_number, ?string $episode_url = null): string {
         if (empty($episode_url)) {
             // No URL provided, just return the episode number without a link
             return sprintf('<span class="kealoa-episode-number">%d</span>', $episode_number);
         }
         
-        // Append start time parameter
-        $url = $episode_url . '?t=' . $start_seconds;
-        
         return sprintf(
             '<a href="%s" class="kealoa-episode-link" target="_blank" rel="noopener noreferrer">%d</a>',
-            esc_url($url),
+            esc_url($episode_url),
             $episode_number
         );
     }

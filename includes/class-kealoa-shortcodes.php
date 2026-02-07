@@ -86,7 +86,7 @@ class Kealoa_Shortcodes {
                                 ?>
                             </td>
                             <td class="kealoa-episode-cell">
-                                <?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null, (int) $round->episode_start_seconds); ?>
+                                <?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null); ?>
                             </td>
                             <td class="kealoa-solutions-cell">
                                 <?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?>
@@ -169,7 +169,7 @@ class Kealoa_Shortcodes {
                     </p>
                     <p>
                         <strong><?php esc_html_e('Episode:', 'kealoa-reference'); ?></strong>
-                        <?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null, (int) $round->episode_start_seconds); ?>
+                        <?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null); ?>
                     </p>
                     <p>
                         <strong><?php esc_html_e('Solution Words:', 'kealoa-reference'); ?></strong>
@@ -548,7 +548,7 @@ class Kealoa_Shortcodes {
                                         ?>
                                     </td>
                                     <td>
-                                        <?php echo Kealoa_Formatter::format_episode_link((int) $history->episode_number, $history->episode_url ?? null, (int) $history->episode_start_seconds); ?>
+                                        <?php echo Kealoa_Formatter::format_episode_link((int) $history->episode_number, $history->episode_url ?? null); ?>
                                     </td>
                                     <td><?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?></td>
                                     <td><?php echo esc_html($history->total_clues); ?></td>

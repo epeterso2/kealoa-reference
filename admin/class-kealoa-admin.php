@@ -1047,7 +1047,7 @@ class Kealoa_Admin {
                             <td><?php echo esc_html($round->id); ?></td>
                             <td><?php echo esc_html(Kealoa_Formatter::format_date($round->round_date)); ?></td>
                             <td><?php echo esc_html($round->round_number ?? 1); ?></td>
-                            <td><?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null, (int) $round->episode_start_seconds); ?></td>
+                            <td><?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null); ?></td>
                             <td><?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?></td>
                             <td><?php echo esc_html($round->clue_giver_name ?? '—'); ?></td>
                             <td><?php echo esc_html($clue_count); ?></td>
