@@ -473,6 +473,30 @@ class Kealoa_Import {
                 $puzzle = $this->db->get_puzzle($puzzle_id);
             }
             
+            // Handle constructors if provided - add them to the puzzle
+            if (!empty($row['constructors'])) {
+                $constructor_names = array_map('trim', explode(',', $row['constructors']));
+                $constructor_ids = [];
+                
+                foreach ($constructor_names as $name) {
+                    if (empty($name)) {
+                        continue;
+                    }
+                    $constructor = $this->find_or_create_constructor($name);
+                    if ($constructor) {
+                        $constructor_ids[] = $constructor->id;
+                    }
+                }
+                
+                // Only update constructors if we found/created some and puzzle doesn't already have constructors
+                if (!empty($constructor_ids)) {
+                    $existing_constructors = $this->db->get_puzzle_constructors((int) $puzzle->id);
+                    if (empty($existing_constructors)) {
+                        $this->db->set_puzzle_constructors((int) $puzzle->id, $constructor_ids);
+                    }
+                }
+            }
+            
             // Check if clue already exists
             $existing_clues = $this->db->get_round_clues($round->id);
             $clue_exists = false;
