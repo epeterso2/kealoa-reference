@@ -632,14 +632,12 @@ class Kealoa_Import {
             }
             
             $guessed_word = strtoupper(trim($row['guessed_word']));
-            $is_correct = ($guessed_word === strtoupper($clue->correct_answer)) ? 1 : 0;
             
-            $result = $this->db->create_guess([
-                'clue_id' => $clue->id,
-                'guesser_person_id' => $guesser->id,
-                'guessed_word' => $guessed_word,
-                'is_correct' => $is_correct,
-            ]);
+            $result = $this->db->set_guess(
+                (int) $clue->id,
+                (int) $guesser->id,
+                $guessed_word
+            );
             
             if ($result) {
                 $imported++;
