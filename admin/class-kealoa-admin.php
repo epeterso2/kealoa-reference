@@ -1024,6 +1024,7 @@ class Kealoa_Admin {
                 <tr>
                     <th><?php esc_html_e('ID', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
+                    <th><?php esc_html_e('Round #', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Episode', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Clue Giver', 'kealoa-reference'); ?></th>
@@ -1034,7 +1035,7 @@ class Kealoa_Admin {
             <tbody>
                 <?php if (empty($rounds)): ?>
                     <tr>
-                        <td colspan="7"><?php esc_html_e('No rounds found.', 'kealoa-reference'); ?></td>
+                        <td colspan="8"><?php esc_html_e('No rounds found.', 'kealoa-reference'); ?></td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($rounds as $round): ?>
@@ -1045,6 +1046,7 @@ class Kealoa_Admin {
                         <tr>
                             <td><?php echo esc_html($round->id); ?></td>
                             <td><?php echo esc_html(Kealoa_Formatter::format_date($round->round_date)); ?></td>
+                            <td><?php echo esc_html($round->round_number ?? 1); ?></td>
                             <td><?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null, (int) $round->episode_start_seconds); ?></td>
                             <td><?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?></td>
                             <td><?php echo esc_html($round->clue_giver_name ?? '—'); ?></td>
@@ -1130,6 +1132,16 @@ class Kealoa_Admin {
                     <td>
                         <input type="date" name="round_date" id="round_date" required
                                value="<?php echo esc_attr($round->round_date ?? ''); ?>" />
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="round_number"><?php esc_html_e('Round Number', 'kealoa-reference'); ?></label></th>
+                    <td>
+                        <input type="number" name="round_number" id="round_number" min="1"
+                               value="<?php echo esc_attr($round->round_number ?? 1); ?>" />
+                        <p class="description">
+                            <?php esc_html_e('For episodes with multiple KEALOA rounds, specify the round number (1, 2, 3...). Defaults to 1.', 'kealoa-reference'); ?>
+                        </p>
                     </td>
                 </tr>
                 <tr>
@@ -1774,6 +1786,7 @@ class Kealoa_Admin {
     private function handle_create_round(): void {
         $id = $this->db->create_round([
             'round_date' => $_POST['round_date'] ?? '',
+            'round_number' => $_POST['round_number'] ?? 1,
             'episode_number' => $_POST['episode_number'] ?? 0,
             'episode_url' => $_POST['episode_url'] ?? null,
             'episode_start_seconds' => $_POST['episode_start_seconds'] ?? 0,
@@ -1810,6 +1823,7 @@ class Kealoa_Admin {
         
         $result = $this->db->update_round($id, [
             'round_date' => $_POST['round_date'] ?? '',
+            'round_number' => $_POST['round_number'] ?? 1,
             'episode_number' => $_POST['episode_number'] ?? 0,
             'episode_url' => $_POST['episode_url'] ?? null,
             'episode_start_seconds' => $_POST['episode_start_seconds'] ?? 0,

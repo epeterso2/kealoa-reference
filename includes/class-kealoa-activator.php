@@ -105,6 +105,7 @@ class Kealoa_Activator {
         $sql_rounds = "CREATE TABLE {$rounds_table} (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             round_date date NOT NULL,
+            round_number tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
             episode_number int(10) UNSIGNED NOT NULL,
             episode_url varchar(500) DEFAULT NULL,
             episode_start_seconds int(10) UNSIGNED DEFAULT 0,
@@ -113,7 +114,7 @@ class Kealoa_Activator {
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            KEY idx_round_date (round_date),
+            UNIQUE KEY idx_round_date_number (round_date, round_number),
             KEY idx_episode_number (episode_number),
             KEY idx_clue_giver (clue_giver_id)
         ) {$charset_collate};";

@@ -243,8 +243,14 @@ class Kealoa_Import {
                 continue;
             }
             
-            // Check if round already exists for this date
-            $existing = $this->db->get_round_by_date($row['round_date']);
+            // Get round number (default to 1 if not specified)
+            $round_number = (int) ($row['round_number'] ?? 1);
+            if ($round_number < 1) {
+                $round_number = 1;
+            }
+            
+            // Check if round already exists for this date and round number
+            $existing = $this->db->get_round_by_date_and_number($row['round_date'], $round_number);
             if ($existing) {
                 $skipped++;
                 continue;
@@ -260,6 +266,7 @@ class Kealoa_Import {
             
             $round_id = $this->db->create_round([
                 'round_date' => $row['round_date'],
+                'round_number' => $round_number,
                 'episode_number' => (int) $row['episode_number'],
                 'episode_url' => $row['episode_url'] ?? null,
                 'episode_start_seconds' => (int) ($row['episode_start_seconds'] ?? 0),
@@ -337,10 +344,16 @@ class Kealoa_Import {
                 continue;
             }
             
+            // Get round number (default to 1 if not specified)
+            $round_number = (int) ($row['round_number'] ?? 1);
+            if ($round_number < 1) {
+                $round_number = 1;
+            }
+            
             // Find the round
-            $round = $this->db->get_round_by_date($row['round_date']);
+            $round = $this->db->get_round_by_date_and_number($row['round_date'], $round_number);
             if (!$round) {
-                $errors[] = "Line {$line}: Round not found for date {$row['round_date']}";
+                $errors[] = "Line {$line}: Round not found for date {$row['round_date']} round #{$round_number}";
                 $skipped++;
                 continue;
             }
@@ -432,10 +445,16 @@ class Kealoa_Import {
                 continue;
             }
             
+            // Get round number (default to 1 if not specified)
+            $round_number = (int) ($row['round_number'] ?? 1);
+            if ($round_number < 1) {
+                $round_number = 1;
+            }
+            
             // Find the round
-            $round = $this->db->get_round_by_date($row['round_date']);
+            $round = $this->db->get_round_by_date_and_number($row['round_date'], $round_number);
             if (!$round) {
-                $errors[] = "Line {$line}: Round not found for date {$row['round_date']}";
+                $errors[] = "Line {$line}: Round not found for date {$row['round_date']} round #{$round_number}";
                 $skipped++;
                 continue;
             }

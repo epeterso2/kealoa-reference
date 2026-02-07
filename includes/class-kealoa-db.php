@@ -504,15 +504,42 @@ class Kealoa_DB {
     }
 
     /**
-     * Get a round by date
+     * Get a round by date and round number
      */
-    public function get_round_by_date(string $date): ?object {
+    public function get_round_by_date_and_number(string $date, int $round_number = 1): ?object {
         $sql = $this->wpdb->prepare(
-            "SELECT * FROM {$this->rounds_table} WHERE round_date = %s",
-            $date
+            "SELECT * FROM {$this->rounds_table} WHERE round_date = %s AND round_number = %d",
+            $date,
+            $round_number
         );
         $result = $this->wpdb->get_row($sql);
         return $result ?: null;
+    }
+
+    /**
+     * Get all rounds for a specific date
+     */
+    public function get_rounds_by_date(string $date): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT r.*, p.full_name as clue_giver_name 
+            FROM {$this->rounds_table} r
+            LEFT JOIN {$this->persons_table} p ON r.clue_giver_id = p.id
+            WHERE r.round_date = %s
+            ORDER BY r.round_number ASC",
+            $date
+        );
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get next available round number for a date
+     */
+    public function get_next_round_number(string $date): int {
+        $sql = $this->wpdb->prepare(
+            "SELECT COALESCE(MAX(round_number), 0) + 1 FROM {$this->rounds_table} WHERE round_date = %s",
+            $date
+        );
+        return (int) $this->wpdb->get_var($sql);
     }
 
     /**
@@ -531,11 +558,14 @@ class Kealoa_DB {
         $orderby = in_array($args['orderby'], $allowed_orderby) ? $args['orderby'] : 'round_date';
         $order = strtoupper($args['order']) === 'ASC' ? 'ASC' : 'DESC';
         
+        // Add secondary sort by round_number when ordering by date
+        $secondary_sort = ($orderby === 'round_date') ? ', r.round_number ASC' : '';
+        
         $sql = $this->wpdb->prepare(
             "SELECT r.*, p.full_name as clue_giver_name 
             FROM {$this->rounds_table} r
             LEFT JOIN {$this->persons_table} p ON r.clue_giver_id = p.id
-            ORDER BY {$orderby} {$order} 
+            ORDER BY {$orderby} {$order}{$secondary_sort} 
             LIMIT %d OFFSET %d",
             $args['limit'],
             $args['offset']
@@ -559,6 +589,7 @@ class Kealoa_DB {
             $this->rounds_table,
             [
                 'round_date' => sanitize_text_field($data['round_date']),
+                'round_number' => (int) ($data['round_number'] ?? 1),
                 'episode_number' => (int) $data['episode_number'],
                 'episode_url' => isset($data['episode_url']) && $data['episode_url']
                     ? esc_url_raw($data['episode_url'])
@@ -569,7 +600,7 @@ class Kealoa_DB {
                     ? sanitize_textarea_field($data['description']) 
                     : null,
             ],
-            ['%s', '%d', '%s', '%d', '%d', '%s']
+            ['%s', '%d', '%d', '%s', '%d', '%d', '%s']
         );
         
         return $result ? $this->wpdb->insert_id : false;
@@ -585,6 +616,10 @@ class Kealoa_DB {
         if (isset($data['round_date'])) {
             $update_data['round_date'] = sanitize_text_field($data['round_date']);
             $format[] = '%s';
+        }
+        if (isset($data['round_number'])) {
+            $update_data['round_number'] = (int) $data['round_number'];
+            $format[] = '%d';
         }
         if (isset($data['episode_number'])) {
             $update_data['episode_number'] = (int) $data['episode_number'];
@@ -1154,6 +1189,7 @@ class Kealoa_DB {
             "SELECT 
                 r.id as round_id,
                 r.round_date,
+                r.round_number,
                 r.episode_number,
                 r.episode_url,
                 r.episode_start_seconds,
@@ -1164,8 +1200,8 @@ class Kealoa_DB {
             INNER JOIN {$this->clues_table} c ON r.id = c.round_id
             LEFT JOIN {$this->guesses_table} g ON c.id = g.clue_id AND g.guesser_person_id = rg.person_id
             WHERE rg.person_id = %d
-            GROUP BY r.id, r.round_date, r.episode_number, r.episode_url, r.episode_start_seconds
-            ORDER BY r.round_date DESC",
+            GROUP BY r.id, r.round_date, r.round_number, r.episode_number, r.episode_url, r.episode_start_seconds
+            ORDER BY r.round_date DESC, r.round_number ASC",
             $person_id
         );
         
