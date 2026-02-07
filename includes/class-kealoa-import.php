@@ -345,12 +345,16 @@ class Kealoa_Import {
                 continue;
             }
             
+            // Handle start time - accept both HH:MM:SS format and raw seconds
+            $start_time_value = $row['episode_start_time'] ?? $row['episode_start_seconds'] ?? '0';
+            $start_seconds = Kealoa_Formatter::time_to_seconds((string) $start_time_value);
+            
             $round_id = $this->db->create_round([
                 'round_date' => $round_date,
                 'round_number' => $round_number,
                 'episode_number' => (int) $row['episode_number'],
                 'episode_url' => $row['episode_url'] ?? null,
-                'episode_start_seconds' => (int) ($row['episode_start_seconds'] ?? 0),
+                'episode_start_seconds' => $start_seconds,
                 'clue_giver_id' => $clue_giver->id,
                 'description' => $row['description'] ?? null,
             ]);

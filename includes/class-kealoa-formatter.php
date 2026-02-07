@@ -22,6 +22,51 @@ if (!defined('ABSPATH')) {
 class Kealoa_Formatter {
 
     /**
+     * Convert seconds to HH:MM:SS format
+     *
+     * @param int $seconds Total seconds
+     * @return string Time in HH:MM:SS format
+     */
+    public static function seconds_to_time(int $seconds): string {
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+        $secs = $seconds % 60;
+        return sprintf('%02d:%02d:%02d', $hours, $minutes, $secs);
+    }
+
+    /**
+     * Convert HH:MM:SS (or MM:SS or just seconds) to total seconds
+     *
+     * @param string $time Time string in HH:MM:SS, MM:SS, or seconds format
+     * @return int Total seconds
+     */
+    public static function time_to_seconds(string $time): int {
+        $time = trim($time);
+        if (empty($time)) {
+            return 0;
+        }
+        
+        // If it's just a number, treat it as seconds
+        if (is_numeric($time)) {
+            return (int) $time;
+        }
+        
+        // Split by colon
+        $parts = explode(':', $time);
+        $count = count($parts);
+        
+        if ($count === 3) {
+            // HH:MM:SS
+            return ((int) $parts[0] * 3600) + ((int) $parts[1] * 60) + (int) $parts[2];
+        } elseif ($count === 2) {
+            // MM:SS
+            return ((int) $parts[0] * 60) + (int) $parts[1];
+        }
+        
+        return 0;
+    }
+
+    /**
      * Format a list with "and" before the last item
      *
      * @param array $items Array of items to format

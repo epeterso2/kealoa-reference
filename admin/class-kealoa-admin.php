@@ -1162,12 +1162,13 @@ class Kealoa_Admin {
                     </td>
                 </tr>
                 <tr>
-                    <th><label for="episode_start_seconds"><?php esc_html_e('Start Time (seconds)', 'kealoa-reference'); ?></label></th>
+                    <th><label for="episode_start_time"><?php esc_html_e('Start Time', 'kealoa-reference'); ?></label></th>
                     <td>
-                        <input type="number" name="episode_start_seconds" id="episode_start_seconds" min="0"
-                               value="<?php echo esc_attr($round->episode_start_seconds ?? 0); ?>" />
+                        <input type="text" name="episode_start_time" id="episode_start_time" 
+                               placeholder="HH:MM:SS" pattern="[0-9]{1,2}:[0-9]{2}:[0-9]{2}"
+                               value="<?php echo esc_attr(Kealoa_Formatter::seconds_to_time((int) ($round->episode_start_seconds ?? 0))); ?>" />
                         <p class="description">
-                            <?php esc_html_e('Number of seconds after the start of the episode where the KEALOA round begins.', 'kealoa-reference'); ?>
+                            <?php esc_html_e('Time after the start of the episode where the KEALOA round begins (HH:MM:SS format, e.g., 01:23:45).', 'kealoa-reference'); ?>
                         </p>
                     </td>
                 </tr>
@@ -1789,7 +1790,7 @@ class Kealoa_Admin {
             'round_number' => $_POST['round_number'] ?? 1,
             'episode_number' => $_POST['episode_number'] ?? 0,
             'episode_url' => $_POST['episode_url'] ?? null,
-            'episode_start_seconds' => $_POST['episode_start_seconds'] ?? 0,
+            'episode_start_seconds' => Kealoa_Formatter::time_to_seconds($_POST['episode_start_time'] ?? ''),
             'clue_giver_id' => $_POST['clue_giver_id'] ?? 0,
             'description' => $_POST['description'] ?? null,
         ]);
@@ -1826,7 +1827,7 @@ class Kealoa_Admin {
             'round_number' => $_POST['round_number'] ?? 1,
             'episode_number' => $_POST['episode_number'] ?? 0,
             'episode_url' => $_POST['episode_url'] ?? null,
-            'episode_start_seconds' => $_POST['episode_start_seconds'] ?? 0,
+            'episode_start_seconds' => Kealoa_Formatter::time_to_seconds($_POST['episode_start_time'] ?? ''),
             'clue_giver_id' => $_POST['clue_giver_id'] ?? 0,
             'description' => $_POST['description'] ?? null,
         ]);

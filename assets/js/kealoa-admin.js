@@ -77,11 +77,27 @@ https://www.xwordinfo.com/images/cons//**
         });
 
         /**
+         * Convert HH:MM:SS to seconds
+         */
+        function timeToSeconds(time) {
+            if (!time) return 0;
+            time = time.toString().trim();
+            if (!isNaN(time)) return parseInt(time, 10);
+            var parts = time.split(':');
+            if (parts.length === 3) {
+                return (parseInt(parts[0], 10) * 3600) + (parseInt(parts[1], 10) * 60) + parseInt(parts[2], 10);
+            } else if (parts.length === 2) {
+                return (parseInt(parts[0], 10) * 60) + parseInt(parts[1], 10);
+            }
+            return 0;
+        }
+
+        /**
          * Episode link preview
          */
-        $('#episode_url, #episode_start_seconds').on('change keyup', function () {
+        $('#episode_url, #episode_start_time').on('change keyup', function () {
             var episodeUrl = $('#episode_url').val();
-            var startSeconds = $('#episode_start_seconds').val() || 0;
+            var startSeconds = timeToSeconds($('#episode_start_time').val());
             
             if (episodeUrl) {
                 var url = episodeUrl + '?t=' + startSeconds;
