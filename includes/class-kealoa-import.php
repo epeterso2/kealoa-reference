@@ -137,24 +137,29 @@ class Kealoa_Import {
                 'limit' => 1
             ]);
             
-            $found = false;
+            $found = null;
             foreach ($existing as $c) {
                 if (strtolower($c->full_name) === strtolower($row['full_name'])) {
-                    $found = true;
+                    $found = $c;
                     break;
                 }
             }
             
             if ($found) {
-                $skipped++;
-                continue;
+                // Update existing constructor
+                $result = $this->db->update_constructor((int) $found->id, [
+                    'full_name' => $row['full_name'],
+                    'xwordinfo_profile_name' => $row['xwordinfo_profile_name'] ?? null,
+                    'xwordinfo_image_url' => $row['xwordinfo_image_url'] ?? null,
+                ]);
+            } else {
+                // Create new constructor
+                $result = $this->db->create_constructor([
+                    'full_name' => $row['full_name'],
+                    'xwordinfo_profile_name' => $row['xwordinfo_profile_name'] ?? null,
+                    'xwordinfo_image_url' => $row['xwordinfo_image_url'] ?? null,
+                ]);
             }
-            
-            $result = $this->db->create_constructor([
-                'full_name' => $row['full_name'],
-                'xwordinfo_profile_name' => $row['xwordinfo_profile_name'] ?? null,
-                'xwordinfo_image_url' => $row['xwordinfo_image_url'] ?? null,
-            ]);
             
             if ($result) {
                 $imported++;
@@ -195,23 +200,27 @@ class Kealoa_Import {
                 'limit' => 1
             ]);
             
-            $found = false;
+            $found = null;
             foreach ($existing as $p) {
                 if (strtolower($p->full_name) === strtolower($row['full_name'])) {
-                    $found = true;
+                    $found = $p;
                     break;
                 }
             }
             
             if ($found) {
-                $skipped++;
-                continue;
+                // Update existing person
+                $result = $this->db->update_person((int) $found->id, [
+                    'full_name' => $row['full_name'],
+                    'home_page_url' => $row['home_page_url'] ?? null,
+                ]);
+            } else {
+                // Create new person
+                $result = $this->db->create_person([
+                    'full_name' => $row['full_name'],
+                    'home_page_url' => $row['home_page_url'] ?? null,
+                ]);
             }
-            
-            $result = $this->db->create_person([
-                'full_name' => $row['full_name'],
-                'home_page_url' => $row['home_page_url'] ?? null,
-            ]);
             
             if ($result) {
                 $imported++;
@@ -256,22 +265,24 @@ class Kealoa_Import {
             
             // Check if puzzle already exists for this date
             $existing = $this->db->get_puzzle_by_date($publication_date);
+            
             if ($existing) {
-                $skipped++;
-                continue;
+                // Use existing puzzle ID
+                $puzzle_id = (int) $existing->id;
+            } else {
+                // Create new puzzle
+                $puzzle_id = $this->db->create_puzzle([
+                    'publication_date' => $publication_date,
+                ]);
+                
+                if (!$puzzle_id) {
+                    $errors[] = "Line {$line}: Failed to insert puzzle";
+                    $skipped++;
+                    continue;
+                }
             }
             
-            $puzzle_id = $this->db->create_puzzle([
-                'publication_date' => $publication_date,
-            ]);
-            
-            if (!$puzzle_id) {
-                $errors[] = "Line {$line}: Failed to insert puzzle";
-                $skipped++;
-                continue;
-            }
-            
-            // Handle constructors if provided
+            // Handle constructors if provided - always update
             if (!empty($row['constructors'])) {
                 $constructor_names = array_map('trim', explode(',', $row['constructors']));
                 $constructor_ids = [];
@@ -330,13 +341,6 @@ class Kealoa_Import {
                 $round_number = 1;
             }
             
-            // Check if round already exists for this date and round number
-            $existing = $this->db->get_round_by_date_and_number($round_date, $round_number);
-            if ($existing) {
-                $skipped++;
-                continue;
-            }
-            
             // Find or create clue giver
             $clue_giver = $this->find_or_create_person($row['clue_giver']);
             if (!$clue_giver) {
@@ -349,7 +353,7 @@ class Kealoa_Import {
             $start_time_value = $row['episode_start_time'] ?? $row['episode_start_seconds'] ?? '0';
             $start_seconds = Kealoa_Formatter::time_to_seconds((string) $start_time_value);
             
-            $round_id = $this->db->create_round([
+            $round_data = [
                 'round_date' => $round_date,
                 'round_number' => $round_number,
                 'episode_number' => (int) $row['episode_number'],
@@ -358,15 +362,31 @@ class Kealoa_Import {
                 'episode_start_seconds' => $start_seconds,
                 'clue_giver_id' => $clue_giver->id,
                 'description' => $row['description'] ?? null,
-            ]);
+            ];
             
-            if (!$round_id) {
-                $errors[] = "Line {$line}: Failed to insert round";
-                $skipped++;
-                continue;
+            // Check if round already exists for this date and round number
+            $existing = $this->db->get_round_by_date_and_number($round_date, $round_number);
+            
+            if ($existing) {
+                // Update existing round
+                $result = $this->db->update_round((int) $existing->id, $round_data);
+                $round_id = (int) $existing->id;
+                if (!$result) {
+                    $errors[] = "Line {$line}: Failed to update round";
+                    $skipped++;
+                    continue;
+                }
+            } else {
+                // Create new round
+                $round_id = $this->db->create_round($round_data);
+                if (!$round_id) {
+                    $errors[] = "Line {$line}: Failed to insert round";
+                    $skipped++;
+                    continue;
+                }
             }
             
-            // Handle guessers if provided
+            // Handle guessers if provided - always update
             if (!empty($row['guessers'])) {
                 $guesser_names = array_map('trim', explode(',', $row['guessers']));
                 $guesser_ids = [];
@@ -378,20 +398,16 @@ class Kealoa_Import {
                     }
                 }
                 
-                if (!empty($guesser_ids)) {
-                    $this->db->set_round_guessers($round_id, $guesser_ids);
-                }
+                $this->db->set_round_guessers($round_id, $guesser_ids);
             }
             
-            // Handle solution words if provided
+            // Handle solution words if provided - always update
             if (!empty($row['solution_words'])) {
                 $words = array_map('trim', explode(',', $row['solution_words']));
                 $words = array_map('strtoupper', $words);
                 $words = array_filter($words);
                 
-                if (!empty($words)) {
-                    $this->db->set_round_solutions($round_id, $words);
-                }
+                $this->db->set_round_solutions($round_id, $words);
             }
             
             $imported++;
@@ -496,28 +512,10 @@ class Kealoa_Import {
                     }
                 }
                 
-                // Only update constructors if we found/created some and puzzle doesn't already have constructors
+                // Always update constructors
                 if (!empty($constructor_ids)) {
-                    $existing_constructors = $this->db->get_puzzle_constructors((int) $puzzle->id);
-                    if (empty($existing_constructors)) {
-                        $this->db->set_puzzle_constructors((int) $puzzle->id, $constructor_ids);
-                    }
+                    $this->db->set_puzzle_constructors((int) $puzzle->id, $constructor_ids);
                 }
-            }
-            
-            // Check if clue already exists
-            $existing_clues = $this->db->get_round_clues($round->id);
-            $clue_exists = false;
-            foreach ($existing_clues as $c) {
-                if ((int) $c->clue_number === (int) $row['clue_number']) {
-                    $clue_exists = true;
-                    break;
-                }
-            }
-            
-            if ($clue_exists) {
-                $skipped++;
-                continue;
             }
             
             $direction = strtoupper(substr($row['puzzle_clue_direction'], 0, 1));
@@ -527,7 +525,7 @@ class Kealoa_Import {
                 continue;
             }
             
-            $clue_id = $this->db->create_clue([
+            $clue_data = [
                 'round_id' => $round->id,
                 'puzzle_id' => $puzzle->id,
                 'clue_number' => (int) $row['clue_number'],
@@ -535,7 +533,25 @@ class Kealoa_Import {
                 'puzzle_clue_direction' => $direction,
                 'clue_text' => $row['clue_text'],
                 'correct_answer' => strtoupper($row['correct_answer']),
-            ]);
+            ];
+            
+            // Check if clue already exists
+            $existing_clues = $this->db->get_round_clues($round->id);
+            $existing_clue = null;
+            foreach ($existing_clues as $c) {
+                if ((int) $c->clue_number === (int) $row['clue_number']) {
+                    $existing_clue = $c;
+                    break;
+                }
+            }
+            
+            if ($existing_clue) {
+                // Update existing clue
+                $clue_id = $this->db->update_clue((int) $existing_clue->id, $clue_data);
+            } else {
+                // Create new clue
+                $clue_id = $this->db->create_clue($clue_data);
+            }
             
             if ($clue_id) {
                 $imported++;
@@ -624,23 +640,9 @@ class Kealoa_Import {
                 continue;
             }
             
-            // Check if guess already exists
-            $existing_guesses = $this->db->get_clue_guesses((int) $clue->id);
-            $guess_exists = false;
-            foreach ($existing_guesses as $g) {
-                if ((int) $g->guesser_person_id === (int) $guesser->id) {
-                    $guess_exists = true;
-                    break;
-                }
-            }
-            
-            if ($guess_exists) {
-                $skipped++;
-                continue;
-            }
-            
             $guessed_word = strtoupper(trim($row['guessed_word']));
             
+            // set_guess will create or update the guess
             $result = $this->db->set_guess(
                 (int) $clue->id,
                 (int) $guesser->id,
