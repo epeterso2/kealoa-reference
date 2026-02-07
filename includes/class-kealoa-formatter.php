@@ -209,6 +209,23 @@ class Kealoa_Formatter {
     }
 
     /**
+     * Format a puzzle date as a link to XWordInfo
+     *
+     * @param string $date The date in Y-m-d format
+     * @return string HTML link to XWordInfo puzzle page
+     */
+    public static function format_puzzle_date_link(string $date): string {
+        $formatted_date = date('n/j/Y', strtotime($date));
+        $url = 'https://www.xwordinfo.com/Crossword?date=' . $formatted_date;
+        
+        return sprintf(
+            '<a href="%s" class="kealoa-puzzle-link" target="_blank" rel="noopener noreferrer">%s</a>',
+            esc_url($url),
+            esc_html($formatted_date)
+        );
+    }
+
+    /**
      * Format an XWordInfo profile link
      *
      * @param string $profile_name The XWordInfo profile name (underscores for spaces)

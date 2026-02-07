@@ -227,7 +227,7 @@ class Kealoa_Shortcodes {
                                 <tr>
                                     <td class="kealoa-clue-number"><?php echo esc_html($clue->clue_number); ?></td>
                                     <td class="kealoa-puzzle-date">
-                                        <?php echo esc_html(Kealoa_Formatter::format_date($clue->puzzle_date)); ?>
+                                        <?php echo Kealoa_Formatter::format_puzzle_date_link($clue->puzzle_date); ?>
                                     </td>
                                     <td class="kealoa-constructors">
                                         <?php echo Kealoa_Formatter::format_constructor_list($constructors); ?>

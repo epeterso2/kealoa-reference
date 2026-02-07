@@ -871,7 +871,7 @@ class Kealoa_Admin {
                         <?php $constructors = $this->db->get_puzzle_constructors((int) $puzzle->id); ?>
                         <tr>
                             <td><?php echo esc_html($puzzle->id); ?></td>
-                            <td><?php echo esc_html(Kealoa_Formatter::format_date($puzzle->publication_date)); ?></td>
+                            <td><?php echo Kealoa_Formatter::format_puzzle_date_link($puzzle->publication_date); ?></td>
                             <td><?php echo esc_html(date('l', strtotime($puzzle->publication_date))); ?></td>
                             <td>
                                 <?php if (!empty($constructors)): ?>
@@ -1304,7 +1304,7 @@ class Kealoa_Admin {
                         <?php $clue_guesses = $this->db->get_clue_guesses((int) $clue->id); ?>
                         <tr>
                             <td><?php echo esc_html($clue->clue_number); ?></td>
-                            <td><?php echo esc_html(Kealoa_Formatter::format_date($clue->puzzle_date)); ?></td>
+                            <td><?php echo Kealoa_Formatter::format_puzzle_date_link($clue->puzzle_date); ?></td>
                             <td><?php echo esc_html(Kealoa_Formatter::format_clue_direction((int) $clue->puzzle_clue_number, $clue->puzzle_clue_direction)); ?></td>
                             <td><?php echo esc_html($clue->clue_text); ?></td>
                             <td><strong><?php echo esc_html($clue->correct_answer); ?></strong></td>
