@@ -20,6 +20,53 @@ class Kealoa_Import {
     }
 
     /**
+     * Normalize a date string to YYYY-MM-DD format
+     * Handles various input formats like M/D/YYYY, MM/DD/YYYY, YYYY-MM-DD, etc.
+     */
+    private function normalize_date(string $date_str): ?string {
+        $date_str = trim($date_str);
+        if (empty($date_str)) {
+            return null;
+        }
+        
+        // If already in YYYY-MM-DD format, validate and return
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date_str)) {
+            $parts = explode('-', $date_str);
+            if (checkdate((int)$parts[1], (int)$parts[2], (int)$parts[0])) {
+                return $date_str;
+            }
+        }
+        
+        // Try M/D/YYYY or MM/DD/YYYY format explicitly (prioritize this for US dates)
+        if (preg_match('#^(\d{1,2})/(\d{1,2})/(\d{4})$#', $date_str, $matches)) {
+            $month = (int)$matches[1];
+            $day = (int)$matches[2];
+            $year = (int)$matches[3];
+            if (checkdate($month, $day, $year)) {
+                return sprintf('%04d-%02d-%02d', $year, $month, $day);
+            }
+        }
+        
+        // Try M-D-YYYY or MM-DD-YYYY format
+        if (preg_match('#^(\d{1,2})-(\d{1,2})-(\d{4})$#', $date_str, $matches)) {
+            $month = (int)$matches[1];
+            $day = (int)$matches[2];
+            $year = (int)$matches[3];
+            if (checkdate($month, $day, $year)) {
+                return sprintf('%04d-%02d-%02d', $year, $month, $day);
+            }
+        }
+        
+        // Fallback: try to parse with strtotime
+        $timestamp = strtotime($date_str);
+        if ($timestamp !== false && $timestamp > 0) {
+            return date('Y-m-d', $timestamp);
+        }
+        
+        return null;
+    }
+
+    /**
      * Parse a CSV file and return rows as associative arrays
      */
     private function parse_csv(string $file_path): array {
@@ -32,14 +79,32 @@ class Kealoa_Import {
                 return [];
             }
             
-            // Trim headers
+            // Trim headers and remove BOM if present
             $headers = array_map('trim', $headers);
+            if (!empty($headers[0])) {
+                $headers[0] = preg_replace('/^\xEF\xBB\xBF/', '', $headers[0]);
+            }
+            
+            $header_count = count($headers);
             
             while (($data = fgetcsv($handle)) !== false) {
-                if (count($data) === count($headers)) {
-                    $row = array_combine($headers, array_map('trim', $data));
-                    $rows[] = $row;
+                // Skip completely empty rows
+                if (count($data) === 1 && empty(trim($data[0] ?? ''))) {
+                    continue;
                 }
+                
+                // Pad data array if it has fewer columns than headers
+                while (count($data) < $header_count) {
+                    $data[] = '';
+                }
+                
+                // Truncate if more columns than headers
+                if (count($data) > $header_count) {
+                    $data = array_slice($data, 0, $header_count);
+                }
+                
+                $row = array_combine($headers, array_map('trim', $data));
+                $rows[] = $row;
             }
             
             fclose($handle);
@@ -181,15 +246,23 @@ class Kealoa_Import {
                 continue;
             }
             
+            // Normalize the date format
+            $publication_date = $this->normalize_date($row['publication_date']);
+            if (!$publication_date) {
+                $errors[] = "Line {$line}: Invalid date format '{$row['publication_date']}' - use YYYY-MM-DD or M/D/YYYY";
+                $skipped++;
+                continue;
+            }
+            
             // Check if puzzle already exists for this date
-            $existing = $this->db->get_puzzle_by_date($row['publication_date']);
+            $existing = $this->db->get_puzzle_by_date($publication_date);
             if ($existing) {
                 $skipped++;
                 continue;
             }
             
             $puzzle_id = $this->db->create_puzzle([
-                'publication_date' => $row['publication_date'],
+                'publication_date' => $publication_date,
             ]);
             
             if (!$puzzle_id) {
@@ -243,6 +316,14 @@ class Kealoa_Import {
                 continue;
             }
             
+            // Normalize the date format
+            $round_date = $this->normalize_date($row['round_date']);
+            if (!$round_date) {
+                $errors[] = "Line {$line}: Invalid date format '{$row['round_date']}' - use YYYY-MM-DD or M/D/YYYY";
+                $skipped++;
+                continue;
+            }
+            
             // Get round number (default to 1 if not specified)
             $round_number = (int) ($row['round_number'] ?? 1);
             if ($round_number < 1) {
@@ -250,7 +331,7 @@ class Kealoa_Import {
             }
             
             // Check if round already exists for this date and round number
-            $existing = $this->db->get_round_by_date_and_number($row['round_date'], $round_number);
+            $existing = $this->db->get_round_by_date_and_number($round_date, $round_number);
             if ($existing) {
                 $skipped++;
                 continue;
@@ -265,7 +346,7 @@ class Kealoa_Import {
             }
             
             $round_id = $this->db->create_round([
-                'round_date' => $row['round_date'],
+                'round_date' => $round_date,
                 'round_number' => $round_number,
                 'episode_number' => (int) $row['episode_number'],
                 'episode_url' => $row['episode_url'] ?? null,
@@ -344,6 +425,21 @@ class Kealoa_Import {
                 continue;
             }
             
+            // Normalize dates
+            $round_date = $this->normalize_date($row['round_date']);
+            if (!$round_date) {
+                $errors[] = "Line {$line}: Invalid round_date format '{$row['round_date']}'";
+                $skipped++;
+                continue;
+            }
+            
+            $puzzle_date = $this->normalize_date($row['puzzle_date']);
+            if (!$puzzle_date) {
+                $errors[] = "Line {$line}: Invalid puzzle_date format '{$row['puzzle_date']}'";
+                $skipped++;
+                continue;
+            }
+            
             // Get round number (default to 1 if not specified)
             $round_number = (int) ($row['round_number'] ?? 1);
             if ($round_number < 1) {
@@ -351,21 +447,21 @@ class Kealoa_Import {
             }
             
             // Find the round
-            $round = $this->db->get_round_by_date_and_number($row['round_date'], $round_number);
+            $round = $this->db->get_round_by_date_and_number($round_date, $round_number);
             if (!$round) {
-                $errors[] = "Line {$line}: Round not found for date {$row['round_date']} round #{$round_number}";
+                $errors[] = "Line {$line}: Round not found for date {$round_date} round #{$round_number}";
                 $skipped++;
                 continue;
             }
             
             // Find or create the puzzle
-            $puzzle = $this->db->get_puzzle_by_date($row['puzzle_date']);
+            $puzzle = $this->db->get_puzzle_by_date($puzzle_date);
             if (!$puzzle) {
                 $puzzle_id = $this->db->create_puzzle([
-                    'publication_date' => $row['puzzle_date'],
+                    'publication_date' => $puzzle_date,
                 ]);
                 if (!$puzzle_id) {
-                    $errors[] = "Line {$line}: Could not create puzzle for date {$row['puzzle_date']}";
+                    $errors[] = "Line {$line}: Could not create puzzle for date {$puzzle_date}";
                     $skipped++;
                     continue;
                 }
@@ -445,6 +541,14 @@ class Kealoa_Import {
                 continue;
             }
             
+            // Normalize the date
+            $round_date = $this->normalize_date($row['round_date']);
+            if (!$round_date) {
+                $errors[] = "Line {$line}: Invalid round_date format '{$row['round_date']}'";
+                $skipped++;
+                continue;
+            }
+            
             // Get round number (default to 1 if not specified)
             $round_number = (int) ($row['round_number'] ?? 1);
             if ($round_number < 1) {
@@ -452,9 +556,9 @@ class Kealoa_Import {
             }
             
             // Find the round
-            $round = $this->db->get_round_by_date_and_number($row['round_date'], $round_number);
+            $round = $this->db->get_round_by_date_and_number($round_date, $round_number);
             if (!$round) {
-                $errors[] = "Line {$line}: Round not found for date {$row['round_date']} round #{$round_number}";
+                $errors[] = "Line {$line}: Round not found for date {$round_date} round #{$round_number}";
                 $skipped++;
                 continue;
             }
