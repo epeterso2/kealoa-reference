@@ -591,6 +591,9 @@ class Kealoa_DB {
                 'round_date' => sanitize_text_field($data['round_date']),
                 'round_number' => (int) ($data['round_number'] ?? 1),
                 'episode_number' => (int) $data['episode_number'],
+                'episode_id' => isset($data['episode_id']) && $data['episode_id']
+                    ? (int) $data['episode_id']
+                    : null,
                 'episode_url' => isset($data['episode_url']) && $data['episode_url']
                     ? esc_url_raw($data['episode_url'])
                     : null,
@@ -600,7 +603,7 @@ class Kealoa_DB {
                     ? sanitize_textarea_field($data['description']) 
                     : null,
             ],
-            ['%s', '%d', '%d', '%s', '%d', '%d', '%s']
+            ['%s', '%d', '%d', '%d', '%s', '%d', '%d', '%s']
         );
         
         return $result ? $this->wpdb->insert_id : false;
@@ -623,6 +626,12 @@ class Kealoa_DB {
         }
         if (isset($data['episode_number'])) {
             $update_data['episode_number'] = (int) $data['episode_number'];
+            $format[] = '%d';
+        }
+        if (array_key_exists('episode_id', $data)) {
+            $update_data['episode_id'] = $data['episode_id']
+                ? (int) $data['episode_id']
+                : null;
             $format[] = '%d';
         }
         if (array_key_exists('episode_url', $data)) {

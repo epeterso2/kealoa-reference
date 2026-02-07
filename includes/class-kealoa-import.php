@@ -353,6 +353,7 @@ class Kealoa_Import {
                 'round_date' => $round_date,
                 'round_number' => $round_number,
                 'episode_number' => (int) $row['episode_number'],
+                'episode_id' => !empty($row['episode_id']) ? (int) $row['episode_id'] : null,
                 'episode_url' => $row['episode_url'] ?? null,
                 'episode_start_seconds' => $start_seconds,
                 'clue_giver_id' => $clue_giver->id,

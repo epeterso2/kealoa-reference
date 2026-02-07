@@ -1152,6 +1152,16 @@ class Kealoa_Admin {
                     </td>
                 </tr>
                 <tr>
+                    <th><label for="episode_id"><?php esc_html_e('Episode ID', 'kealoa-reference'); ?></label></th>
+                    <td>
+                        <input type="number" name="episode_id" id="episode_id" min="1"
+                               value="<?php echo esc_attr($round->episode_id ?? ''); ?>" />
+                        <p class="description">
+                            <?php esc_html_e('Optional internal episode ID for reference.', 'kealoa-reference'); ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
                     <th><label for="episode_url"><?php esc_html_e('Episode URL', 'kealoa-reference'); ?></label></th>
                     <td>
                         <input type="url" name="episode_url" id="episode_url" class="regular-text"
@@ -1789,6 +1799,7 @@ class Kealoa_Admin {
             'round_date' => $_POST['round_date'] ?? '',
             'round_number' => $_POST['round_number'] ?? 1,
             'episode_number' => $_POST['episode_number'] ?? 0,
+            'episode_id' => $_POST['episode_id'] ?? null,
             'episode_url' => $_POST['episode_url'] ?? null,
             'episode_start_seconds' => Kealoa_Formatter::time_to_seconds($_POST['episode_start_time'] ?? ''),
             'clue_giver_id' => $_POST['clue_giver_id'] ?? 0,
@@ -1826,6 +1837,7 @@ class Kealoa_Admin {
             'round_date' => $_POST['round_date'] ?? '',
             'round_number' => $_POST['round_number'] ?? 1,
             'episode_number' => $_POST['episode_number'] ?? 0,
+            'episode_id' => $_POST['episode_id'] ?? null,
             'episode_url' => $_POST['episode_url'] ?? null,
             'episode_start_seconds' => Kealoa_Formatter::time_to_seconds($_POST['episode_start_time'] ?? ''),
             'clue_giver_id' => $_POST['clue_giver_id'] ?? 0,
