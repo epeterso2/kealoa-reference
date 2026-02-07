@@ -1,15 +1,16 @@
 <?php
 /**
  * Plugin Name: KEALOA Reference
- * Plugin URI: https://example.com/kealoa-reference
+ * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
  * Version: 1.0.0
  * Requires at least: 6.9
  * Requires PHP: 8.4
- * Author: KEALOA Reference Team
- * Author URI: https://example.com
- * License: GPL v2 or later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Author: Eric Peterson
+ * Author URI: https://epeterso2.com
+ * Author Email: eric@puzzlehead.org
+ * License: CC BY-NC-SA 4.0
+ * License URI: https://creativecommons.org/licenses/by-nc-sa/4.0/
  * Text Domain: kealoa-reference
  * Domain Path: /languages
  */
