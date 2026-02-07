@@ -474,8 +474,16 @@ class Kealoa_Import {
             }
             
             // Handle constructors if provided - add them to the puzzle
-            if (!empty($row['constructors'])) {
-                $constructor_names = array_map('trim', explode(',', $row['constructors']));
+            // Support both 'constructors' (plural) and 'constructor' (singular) column names
+            $constructor_value = '';
+            if (isset($row['constructors']) && !empty(trim($row['constructors']))) {
+                $constructor_value = trim($row['constructors']);
+            } elseif (isset($row['constructor']) && !empty(trim($row['constructor']))) {
+                $constructor_value = trim($row['constructor']);
+            }
+            
+            if (!empty($constructor_value)) {
+                $constructor_names = array_map('trim', explode(',', $constructor_value));
                 $constructor_ids = [];
                 
                 foreach ($constructor_names as $name) {
