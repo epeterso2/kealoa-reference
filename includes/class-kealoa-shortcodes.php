@@ -198,6 +198,12 @@ class Kealoa_Shortcodes {
                 </div>
             </div>
             
+            <?php if (!empty($round->episode_id)): ?>
+                <div class="kealoa-audio-player">
+                    <iframe title="Libsyn Player" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/<?php echo esc_attr($round->episode_id); ?>/height/90/theme/custom/thumbnail/yes/direction/forward/render-playlist/no/custom-color/000000/time-start/<?php echo esc_attr(Kealoa_Formatter::seconds_to_time((int) $round->episode_start_seconds)); ?>/" height="90" width="100%" scrolling="no" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe>
+                </div>
+            <?php endif; ?>
+            
             <?php if (!empty($clues)): ?>
                 <div class="kealoa-clues-section">
                     <h3><?php esc_html_e('Clues', 'kealoa-reference'); ?></h3>
