@@ -176,40 +176,41 @@
         var tables = document.querySelectorAll('.kealoa-table');
 
         for (var t = 0; t < tables.length; t++) {
-            var table = tables[t];
-            var headers = table.querySelectorAll('thead th[data-sort]');
+            (function (table) {
+                var headers = table.querySelectorAll('thead th[data-sort]');
 
-            if (headers.length === 0) {
-                continue;
-            }
+                if (headers.length === 0) {
+                    return;
+                }
 
-            // Store sort state per table
-            table._kealoaSortCol = -1;
-            table._kealoaSortAsc = true;
+                // Store sort state per table
+                table._kealoaSortCol = -1;
+                table._kealoaSortAsc = true;
 
-            for (var h = 0; h < headers.length; h++) {
-                (function (th) {
-                    th.style.cursor = 'pointer';
-                    th.setAttribute('title', 'Click to sort');
+                for (var h = 0; h < headers.length; h++) {
+                    (function (th) {
+                        th.style.cursor = 'pointer';
+                        th.setAttribute('title', 'Click to sort');
 
-                    th.addEventListener('click', function () {
-                        var allHeaders = table.querySelectorAll('thead th');
-                        var colIndex = Array.prototype.indexOf.call(allHeaders, th);
-                        var sortType = th.getAttribute('data-sort');
+                        th.addEventListener('click', function () {
+                            var allHeaders = table.querySelectorAll('thead th');
+                            var colIndex = Array.prototype.indexOf.call(allHeaders, th);
+                            var sortType = th.getAttribute('data-sort');
 
-                        // Toggle direction if same column clicked again
-                        if (table._kealoaSortCol === colIndex) {
-                            table._kealoaSortAsc = !table._kealoaSortAsc;
-                        } else {
-                            table._kealoaSortCol = colIndex;
-                            table._kealoaSortAsc = true;
-                        }
+                            // Toggle direction if same column clicked again
+                            if (table._kealoaSortCol === colIndex) {
+                                table._kealoaSortAsc = !table._kealoaSortAsc;
+                            } else {
+                                table._kealoaSortCol = colIndex;
+                                table._kealoaSortAsc = true;
+                            }
 
-                        sortTable(table, colIndex, sortType, table._kealoaSortAsc);
-                        updateSortIndicators(table, colIndex, table._kealoaSortAsc);
-                    });
-                })(headers[h]);
-            }
+                            sortTable(table, colIndex, sortType, table._kealoaSortAsc);
+                            updateSortIndicators(table, colIndex, table._kealoaSortAsc);
+                        });
+                    })(headers[h]);
+                }
+            })(tables[t]);
         }
     }
 
