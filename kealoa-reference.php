@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.0.8
+ * Version: 1.0.9
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -158,6 +158,14 @@ function kealoa_enqueue_frontend_assets(): void {
         KEALOA_PLUGIN_URL . 'assets/css/kealoa-frontend.css',
         [],
         KEALOA_VERSION
+    );
+    
+    wp_enqueue_script(
+        'kealoa-frontend',
+        KEALOA_PLUGIN_URL . 'assets/js/kealoa-frontend.js',
+        [],
+        KEALOA_VERSION,
+        true
     );
 }
 

@@ -60,11 +60,11 @@ class Kealoa_Shortcodes {
             <table class="kealoa-table kealoa-rounds-table">
                 <thead>
                     <tr>
-                        <th><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
-                        <th><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
-                        <th><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
+                        <th data-sort="date"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
+                        <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
                         <th><?php esc_html_e('Results', 'kealoa-reference'); ?></th>
-                        <th><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
+                        <th data-sort="text"><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -210,12 +210,12 @@ class Kealoa_Shortcodes {
                     <table class="kealoa-table kealoa-clues-table">
                         <thead>
                             <tr>
-                                <th><?php esc_html_e('#', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Constructors', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Clue Text', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Answer', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('#', 'kealoa-reference'); ?></th>
+                                <th data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Clue Text', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Answer', 'kealoa-reference'); ?></th>
                                 <?php foreach ($guessers as $guesser): ?>
                                     <th class="kealoa-guesser-col">
                                         <?php echo Kealoa_Formatter::format_person_link((int) $guesser->id, $guesser->full_name); ?>
@@ -393,10 +393,10 @@ class Kealoa_Shortcodes {
                     <table class="kealoa-table kealoa-clue-number-table">
                         <thead>
                             <tr>
-                                <th><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Times Answered', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Times Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -427,10 +427,10 @@ class Kealoa_Shortcodes {
                     <table class="kealoa-table kealoa-day-of-week-table">
                         <thead>
                             <tr>
-                                <th><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
+                                <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -461,10 +461,10 @@ class Kealoa_Shortcodes {
                     <table class="kealoa-table kealoa-decade-table">
                         <thead>
                             <tr>
-                                <th><?php esc_html_e('Decade', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Times Answered', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Decade', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Times Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -495,10 +495,10 @@ class Kealoa_Shortcodes {
                     <table class="kealoa-table kealoa-constructor-table">
                         <thead>
                             <tr>
-                                <th><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -540,14 +540,14 @@ class Kealoa_Shortcodes {
                     <table class="kealoa-table kealoa-history-table">
                         <thead>
                             <tr>
-                                <th><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
+                                <th data-sort="date"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
                                 <?php if ($has_multi_round_dates): ?>
-                                    <th><?php esc_html_e('Round #', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Round #', 'kealoa-reference'); ?></th>
                                 <?php endif; ?>
-                                <th><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>

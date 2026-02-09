@@ -60,6 +60,37 @@
     white-space: nowrap;
 }
 
+.kealoa-table th[data-sort] {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 22px;
+}
+
+.kealoa-table th[data-sort]:hover {
+    background: #e8e8e8;
+}
+
+.kealoa-table th[data-sort]::after {
+    content: '\2195';
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.3;
+    font-size: 12px;
+}
+
+.kealoa-table th.kealoa-sort-asc::after {
+    content: '\25B2';
+    opacity: 0.8;
+}
+
+.kealoa-table th.kealoa-sort-desc::after {
+    content: '\25BC';
+    opacity: 0.8;
+}
+
 .kealoa-table tbody tr:hover {
     background: #fafafa;
 }
