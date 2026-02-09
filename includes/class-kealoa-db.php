@@ -1125,6 +1125,26 @@ class Kealoa_DB {
     }
 
     /**
+     * Get person results by clue direction (Across vs Down)
+     */
+    public function get_person_results_by_direction(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT 
+                c.puzzle_clue_direction as direction,
+                COUNT(*) as total_answered,
+                SUM(g.is_correct) as correct_count
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            WHERE g.guesser_person_id = %d
+            GROUP BY c.puzzle_clue_direction
+            ORDER BY c.puzzle_clue_direction ASC",
+            $person_id
+        );
+        
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get person results by puzzle day of week
      */
     public function get_person_results_by_day_of_week(int $person_id): array {

@@ -297,6 +297,7 @@ class Kealoa_Shortcodes {
         
         $stats = $this->db->get_person_stats($person_id);
         $clue_number_results = $this->db->get_person_results_by_clue_number($person_id);
+        $direction_results = $this->db->get_person_results_by_direction($person_id);
         $day_of_week_results = $this->db->get_person_results_by_day_of_week($person_id);
         $decade_results = $this->db->get_person_results_by_decade($person_id);
         $constructor_results = $this->db->get_person_results_by_constructor($person_id);
@@ -403,6 +404,40 @@ class Kealoa_Shortcodes {
                             <?php foreach ($clue_number_results as $result): ?>
                                 <tr>
                                     <td><?php echo esc_html($result->clue_number); ?></td>
+                                    <td><?php echo esc_html($result->total_answered); ?></td>
+                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td>
+                                        <?php 
+                                        $pct = $result->total_answered > 0 
+                                            ? ($result->correct_count / $result->total_answered) * 100 
+                                            : 0;
+                                        echo Kealoa_Formatter::format_percentage($pct);
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($direction_results)): ?>
+                <div class="kealoa-direction-stats">
+                    <h3><?php esc_html_e('Results by Clue Direction', 'kealoa-reference'); ?></h3>
+                    
+                    <table class="kealoa-table kealoa-direction-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="text"><?php esc_html_e('Direction', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($direction_results as $result): ?>
+                                <tr>
+                                    <td><?php echo esc_html($result->direction === 'A' ? 'Across' : 'Down'); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
                                     <td>
