@@ -63,6 +63,26 @@
     }
 
     /**
+     * Parse a clue reference like "42D" or "1A" into a sortable numeric value.
+     * Sorts by number first, then direction (A before D).
+     *
+     * @param {string} text Cell text content
+     * @return {number} Sortable value
+     */
+    function parseClueValue(text) {
+        text = text.trim();
+        var match = text.match(/^(\d+)\s*([A-Za-z]?)/);
+        if (match) {
+            var num = parseInt(match[1], 10);
+            var dir = (match[2] || '').toUpperCase();
+            // A=0, D=1, anything else=2
+            var dirOrder = dir === 'A' ? 0 : (dir === 'D' ? 1 : 2);
+            return num * 10 + dirOrder;
+        }
+        return 0;
+    }
+
+    /**
      * Get the sortable value from a cell based on sort type.
      *
      * @param {HTMLTableCellElement} cell The table cell
@@ -78,6 +98,9 @@
 
             case 'number':
                 return parseNumericValue(text);
+
+            case 'clue':
+                return parseClueValue(text);
 
             case 'weekday':
                 var lower = text.toLowerCase();
