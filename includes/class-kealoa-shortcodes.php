@@ -61,7 +61,6 @@ class Kealoa_Shortcodes {
                 <thead>
                     <tr>
                         <th><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
-                        <th><?php esc_html_e('Episode', 'kealoa-reference'); ?></th>
                         <th><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                         <th><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
                         <th><?php esc_html_e('Results', 'kealoa-reference'); ?></th>
@@ -84,9 +83,6 @@ class Kealoa_Shortcodes {
                                     echo ' <span class="kealoa-round-number">(#' . esc_html($round_num) . ')</span>';
                                 }
                                 ?>
-                            </td>
-                            <td class="kealoa-episode-cell">
-                                <?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null); ?>
                             </td>
                             <td class="kealoa-solutions-cell">
                                 <?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?>
