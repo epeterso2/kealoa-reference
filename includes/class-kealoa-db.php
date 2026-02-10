@@ -1012,8 +1012,8 @@ class Kealoa_DB {
                 SUM(g.is_correct) as correct_guesses
             FROM {$this->persons_table} p
             INNER JOIN {$this->round_guessers_table} rg ON p.id = rg.person_id
-            LEFT JOIN {$this->guesses_table} g ON g.guesser_person_id = p.id
-            LEFT JOIN {$this->clues_table} c ON g.clue_id = c.id AND c.round_id = rg.round_id
+            LEFT JOIN {$this->clues_table} c ON c.round_id = rg.round_id
+            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id AND g.guesser_person_id = p.id
             WHERE rg.round_id = %d
             GROUP BY p.id, p.full_name
             ORDER BY p.full_name ASC",
