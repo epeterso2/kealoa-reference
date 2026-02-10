@@ -57,7 +57,7 @@ class Kealoa_Blocks {
                 'attributes' => [
                     'limit' => [
                         'type' => 'number',
-                        'default' => 50,
+                        'default' => 0,
                     ],
                     'order' => [
                         'type' => 'string',
