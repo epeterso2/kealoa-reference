@@ -61,7 +61,6 @@ class Kealoa_Shortcodes {
                     <tr>
                         <th data-sort="date"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
                         <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
                         <th><?php esc_html_e('Results', 'kealoa-reference'); ?></th>
                         <th data-sort="text"><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
                     </tr>
@@ -86,9 +85,6 @@ class Kealoa_Shortcodes {
                             </td>
                             <td class="kealoa-solutions-cell">
                                 <?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?>
-                            </td>
-                            <td class="kealoa-clues-cell">
-                                <?php echo esc_html($clue_count); ?>
                             </td>
                             <td class="kealoa-results-cell">
                                 <?php echo Kealoa_Formatter::format_guesser_results($guesser_results, $clue_count); ?>
