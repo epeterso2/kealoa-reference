@@ -41,8 +41,7 @@ class Kealoa_Shortcodes {
      */
     public function render_rounds_table(array $atts = []): string {
         $atts = shortcode_atts([
-            'limit' => 50,
-            'order' => 'DESC',
+        'limit' => 0,
         ], $atts, 'kealoa_rounds_table');
         
         $rounds = $this->db->get_rounds([

@@ -138,7 +138,7 @@ class Kealoa_Blocks {
      */
     public function render_rounds_table_block(array $attributes): string {
         return $this->shortcodes->render_rounds_table([
-            'limit' => $attributes['limit'] ?? 50,
+            'limit' => $attributes['limit'] ?? 0,
             'order' => $attributes['order'] ?? 'DESC',
         ]);
     }

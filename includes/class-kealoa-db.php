@@ -549,7 +549,7 @@ class Kealoa_DB {
         $defaults = [
             'orderby' => 'round_date',
             'order' => 'DESC',
-            'limit' => 100,
+            'limit' => 0,
             'offset' => 0,
         ];
         $args = wp_parse_args($args, $defaults);
@@ -561,15 +561,15 @@ class Kealoa_DB {
         // Add secondary sort by round_number when ordering by date
         $secondary_sort = ($orderby === 'round_date') ? ', r.round_number ASC' : '';
         
-        $sql = $this->wpdb->prepare(
-            "SELECT r.*, p.full_name as clue_giver_name 
+        $limit_clause = '';
+        if ((int) $args['limit'] > 0) {
+            $limit_clause = $this->wpdb->prepare(' LIMIT %d OFFSET %d', $args['limit'], $args['offset']);
+        }
+        
+        $sql = "SELECT r.*, p.full_name as clue_giver_name 
             FROM {$this->rounds_table} r
             LEFT JOIN {$this->persons_table} p ON r.clue_giver_id = p.id
-            ORDER BY {$orderby} {$order}{$secondary_sort} 
-            LIMIT %d OFFSET %d",
-            $args['limit'],
-            $args['offset']
-        );
+            ORDER BY {$orderby} {$order}{$secondary_sort}{$limit_clause}";
         
         return $this->wpdb->get_results($sql);
     }
