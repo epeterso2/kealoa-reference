@@ -135,19 +135,11 @@ class Kealoa_Shortcodes {
             <div class="kealoa-round-header">
                 <h2 class="kealoa-round-title">
                     <?php 
-                    $title_date = esc_html(Kealoa_Formatter::format_date($round->round_date));
-                    if ($show_round_num) {
-                        printf(
-                            esc_html__('KEALOA Round: %s (#%d)', 'kealoa-reference'),
-                            $title_date,
-                            $round_num
-                        );
-                    } else {
-                        printf(
-                            esc_html__('KEALOA Round: %s', 'kealoa-reference'),
-                            $title_date
-                        );
-                    }
+                    printf(
+                        esc_html__('KEALOA #%d: %s', 'kealoa-reference'),
+                        $round_id,
+                        esc_html(Kealoa_Formatter::format_solution_words($solutions))
+                    );
                     ?>
                 </h2>
                 
