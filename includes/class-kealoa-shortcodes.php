@@ -428,7 +428,15 @@ class Kealoa_Shortcodes {
                         <tbody>
                             <?php foreach ($direction_results as $result): ?>
                                 <tr>
-                                    <td><?php echo esc_html($result->direction === 'A' ? 'Across' : 'Down'); ?></td>
+                                    <td><?php 
+                                        if ($result->direction === 'A') {
+                                            esc_html_e('Across', 'kealoa-reference');
+                                        } elseif ($result->direction === 'D') {
+                                            esc_html_e('Down', 'kealoa-reference');
+                                        } else {
+                                            esc_html_e('No Direction', 'kealoa-reference');
+                                        }
+                                    ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
                                     <td>
