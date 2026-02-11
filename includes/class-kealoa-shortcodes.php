@@ -568,6 +568,7 @@ class Kealoa_Shortcodes {
                     $chart_labels = [];
                     $chart_data = [];
                     $chart_words = [];
+                    $chart_urls = [];
                     foreach ($chart_history as $ch) {
                         $chart_labels[] = Kealoa_Formatter::format_date($ch->round_date);
                         $pct_val = $ch->total_clues > 0
@@ -576,6 +577,7 @@ class Kealoa_Shortcodes {
                         $chart_data[] = $pct_val;
                         $ch_solutions = $this->db->get_round_solutions((int) $ch->round_id);
                         $chart_words[] = Kealoa_Formatter::format_solution_words($ch_solutions);
+                        $chart_urls[] = home_url('/kealoa/round/' . $ch->round_id . '/');
                     }
                     ?>
                     <script>
@@ -583,7 +585,8 @@ class Kealoa_Shortcodes {
                         var ctx = document.getElementById('kealoa-accuracy-chart');
                         if (ctx && typeof Chart !== 'undefined') {
                             var chartWords = <?php echo wp_json_encode($chart_words); ?>;
-                            new Chart(ctx, {
+                            var chartUrls = <?php echo wp_json_encode($chart_urls); ?>;
+                            var chart = new Chart(ctx, {
                                 type: 'line',
                                 data: {
                                     labels: <?php echo wp_json_encode($chart_labels); ?>,
@@ -636,6 +639,18 @@ class Kealoa_Shortcodes {
                                             }
                                         }
                                     }
+                                },
+                                onClick: function(evt) {
+                                    var points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
+                                    if (points.length > 0) {
+                                        var idx = points[0].index;
+                                        if (chartUrls[idx]) {
+                                            window.location.href = chartUrls[idx];
+                                        }
+                                    }
+                                },
+                                onHover: function(evt, elements) {
+                                    ctx.style.cursor = elements.length > 0 ? 'pointer' : 'default';
                                 }
                             });
                         }
