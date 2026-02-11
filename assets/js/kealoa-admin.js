@@ -1,4 +1,4 @@
-https://www.xwordinfo.com/images/cons//**
+/**
  * KEALOA Reference - Admin JavaScript
  *
  * Handles admin interface functionality.
