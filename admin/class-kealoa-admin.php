@@ -107,6 +107,15 @@ class Kealoa_Admin {
             'kealoa-import',
             [$this, 'render_import_page']
         );
+        
+        add_submenu_page(
+            'kealoa-reference',
+            __('Export Data', 'kealoa-reference'),
+            __('Export', 'kealoa-reference'),
+            'manage_options',
+            'kealoa-export',
+            [$this, 'render_export_page']
+        );
     }
 
     /**
@@ -257,6 +266,66 @@ class Kealoa_Admin {
                     <li><strong><?php esc_html_e('KEALOA Round View', 'kealoa-reference'); ?></strong> - <?php esc_html_e('Displays a single round', 'kealoa-reference'); ?></li>
                     <li><strong><?php esc_html_e('KEALOA Person View', 'kealoa-reference'); ?></strong> - <?php esc_html_e('Displays a person\'s profile', 'kealoa-reference'); ?></li>
                 </ul>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render export page
+     */
+    public function render_export_page(): void {
+        $types = [
+            'constructors' => __('Constructors', 'kealoa-reference'),
+            'persons' => __('Persons', 'kealoa-reference'),
+            'puzzles' => __('Puzzles', 'kealoa-reference'),
+            'rounds' => __('Rounds', 'kealoa-reference'),
+            'clues' => __('Clues', 'kealoa-reference'),
+            'guesses' => __('Guesses', 'kealoa-reference'),
+        ];
+
+        $descriptions = [
+            'constructors' => __('Crossword puzzle constructors with XWordInfo profile info', 'kealoa-reference'),
+            'persons' => __('Podcast hosts, guests, and clue givers/guessers', 'kealoa-reference'),
+            'puzzles' => __('NYT crossword puzzles with constructors', 'kealoa-reference'),
+            'rounds' => __('KEALOA game rounds with episode info, solution words, and guessers', 'kealoa-reference'),
+            'clues' => __('All clues with puzzle info and correct answers', 'kealoa-reference'),
+            'guesses' => __('All guesses for every clue', 'kealoa-reference'),
+        ];
+        ?>
+        <div class="wrap kealoa-admin-wrap">
+            <h1><?php esc_html_e('Export Data', 'kealoa-reference'); ?></h1>
+            <p><?php esc_html_e('Download your KEALOA data as CSV files. Exported files are compatible with the import format.', 'kealoa-reference'); ?></p>
+            
+            <table class="widefat" style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e('Data Type', 'kealoa-reference'); ?></th>
+                        <th><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
+                        <th><?php esc_html_e('Export', 'kealoa-reference'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($types as $type => $label): ?>
+                        <tr>
+                            <td><strong><?php echo esc_html($label); ?></strong></td>
+                            <td><?php echo esc_html($descriptions[$type]); ?></td>
+                            <td>
+                                <a href="<?php echo esc_url(Kealoa_Export::get_export_url($type)); ?>" class="button button-small">
+                                    <?php esc_html_e('Download CSV', 'kealoa-reference'); ?>
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 30px;">
+                <h2><?php esc_html_e('Export All Data', 'kealoa-reference'); ?></h2>
+                <p><?php esc_html_e('Download all data types as a single ZIP archive.', 'kealoa-reference'); ?></p>
+                <a href="<?php echo esc_url(Kealoa_Export::get_export_url('all')); ?>" class="button button-primary">
+                    <?php esc_html_e('Download All (ZIP)', 'kealoa-reference'); ?>
+                </a>
             </div>
         </div>
         <?php
