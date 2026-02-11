@@ -1,0 +1,1 @@
+7z a -x!.git -tzip ..\kealoa-reference .
