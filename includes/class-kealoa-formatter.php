@@ -259,10 +259,13 @@ class Kealoa_Formatter {
             return '';
         }
         
+        $nophoto_url = 'https://www.xwordinfo.com/images/cons/nophoto.jpg';
+        
         return sprintf(
-            '<img src="%s" alt="%s" class="kealoa-xwordinfo-image" loading="lazy" />',
+            '<img src="%s" alt="%s" class="kealoa-xwordinfo-image" loading="lazy" onerror="this.onerror=null;this.src=\'%s\';" />',
             esc_url($image_url),
-            esc_attr($alt_text)
+            esc_attr($alt_text),
+            esc_url($nophoto_url)
         );
     }
 
