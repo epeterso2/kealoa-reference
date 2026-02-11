@@ -1162,17 +1162,9 @@ class Kealoa_Admin {
      * Render rounds list
      */
     private function render_rounds_list(): void {
-        $paged = max(1, (int) ($_GET['paged'] ?? 1));
-        $per_page = 20;
-        $offset = ($paged - 1) * $per_page;
-        
         $rounds = $this->db->get_rounds([
-            'limit' => $per_page,
-            'offset' => $offset,
+            'limit' => 0,
         ]);
-        
-        $total = $this->db->count_rounds();
-        $total_pages = ceil($total / $per_page);
         ?>
         <h1 class="wp-heading-inline"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></h1>
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds&action=add')); ?>" class="page-title-action">
