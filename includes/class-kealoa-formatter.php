@@ -109,37 +109,32 @@ class Kealoa_Formatter {
     }
 
     /**
-     * Format a constructor name as a link to XWordInfo profile
+     * Format a constructor name as a link to the in-app constructor page
      *
+     * @param int $constructor_id The constructor's ID
      * @param string $full_name The constructor's full name
-     * @param string|null $xwordinfo_profile_name The XWordInfo profile name (with underscores)
-     * @return string HTML link to XWordInfo profile, or plain text if no profile
+     * @return string HTML link to constructor view
      */
-    public static function format_constructor_link(string $full_name, ?string $xwordinfo_profile_name = null): string {
-        if (empty($xwordinfo_profile_name)) {
-            return esc_html($full_name);
-        }
-        
-        $url = 'https://www.xwordinfo.com/Author/' . $xwordinfo_profile_name;
-        
+    public static function format_constructor_link(int $constructor_id, string $full_name): string {
+        $url = home_url('/kealoa/constructor/' . $constructor_id . '/');
         return sprintf(
-            '<a href="%s" class="kealoa-constructor-link" target="_blank" rel="noopener noreferrer">%s</a>',
+            '<a href="%s" class="kealoa-constructor-link">%s</a>',
             esc_url($url),
             esc_html($full_name)
         );
     }
 
     /**
-     * Format a list of constructors as XWordInfo links
+     * Format a list of constructors as links to their in-app pages
      *
-     * @param array $constructors Array of constructor objects with full_name and xwordinfo_profile_name properties
+     * @param array $constructors Array of constructor objects with id and full_name properties
      * @return string Formatted list with links
      */
     public static function format_constructor_list(array $constructors): string {
         $links = array_map(function($constructor) {
             return self::format_constructor_link(
-                $constructor->full_name, 
-                $constructor->xwordinfo_profile_name ?? null
+                (int) $constructor->id,
+                $constructor->full_name
             );
         }, $constructors);
         

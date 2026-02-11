@@ -113,7 +113,8 @@
 .kealoa-round-link,
 .kealoa-episode-link,
 .kealoa-xwordinfo-link,
-.kealoa-homepage-link {
+.kealoa-homepage-link,
+.kealoa-constructor-link {
     color: #0073aa;
     text-decoration: none;
     transition: color 0.2s ease;
@@ -123,7 +124,8 @@
 .kealoa-round-link:hover,
 .kealoa-episode-link:hover,
 .kealoa-xwordinfo-link:hover,
-.kealoa-homepage-link:hover {
+.kealoa-homepage-link:hover,
+.kealoa-constructor-link:hover {
     color: #005177;
     text-decoration: underline;
 }
@@ -336,6 +338,63 @@
 }
 
 /* ==========================================================================
+   Constructor Views
+   ========================================================================== */
+
+/* Constructors Table */
+
+.kealoa-constructors-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Constructor View */
+
+.kealoa-constructor-view {
+    margin: 20px 0;
+}
+
+.kealoa-constructor-header {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    padding: 30px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.kealoa-constructor-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.kealoa-constructor-image {
+    flex-shrink: 0;
+}
+
+.kealoa-constructor-details {
+    flex: 1;
+    min-width: 250px;
+}
+
+.kealoa-constructor-name {
+    margin: 0 0 15px 0;
+    font-size: 28px;
+    color: #333;
+}
+
+.kealoa-constructor-xwordinfo {
+    margin: 8px 0;
+}
+
+.kealoa-constructor-puzzles h3 {
+    margin: 30px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #0073aa;
+    color: #333;
+}
+
+/* ==========================================================================
    Responsive Styles
    ========================================================================== */
 
@@ -350,6 +409,12 @@
     }
     
     .kealoa-person-info {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .kealoa-constructor-info {
         flex-direction: column;
         align-items: center;
         text-align: center;
@@ -405,7 +470,8 @@
     
     .kealoa-person-link,
     .kealoa-round-link,
-    .kealoa-episode-link {
+    .kealoa-episode-link,
+    .kealoa-constructor-link {
         color: #000;
         text-decoration: underline;
     }

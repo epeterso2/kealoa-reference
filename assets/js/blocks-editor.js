@@ -15,7 +15,7 @@
     const { serverSideRender: ServerSideRender } = wp;
 
     // Get data passed from PHP
-    const kealoaData = window.kealoaBlocksData || { rounds: [], persons: [] };
+    const kealoaData = window.kealoaBlocksData || { rounds: [], persons: [], constructors: [] };
 
     /**
      * KEALOA Rounds Table Block
@@ -262,6 +262,123 @@
                 ),
                 createElement(ServerSideRender, {
                     block: 'kealoa/person-view',
+                    attributes: attributes
+                })
+            );
+        },
+
+        save: function () {
+            return null;
+        }
+    });
+
+    /**
+     * KEALOA Constructors Table Block
+     */
+    registerBlockType('kealoa/constructors-table', {
+        title: __('KEALOA Constructors Table', 'kealoa-reference'),
+        description: __('Displays a table of constructors with puzzle and clue counts.', 'kealoa-reference'),
+        icon: 'hammer',
+        category: 'widgets',
+        keywords: [__('kealoa', 'kealoa-reference'), __('constructors', 'kealoa-reference'), __('table', 'kealoa-reference')],
+        attributes: {},
+
+        edit: function (props) {
+            return createElement(ServerSideRender, {
+                block: 'kealoa/constructors-table',
+                attributes: props.attributes
+            });
+        },
+
+        save: function () {
+            return null;
+        }
+    });
+
+    /**
+     * KEALOA Constructor View Block
+     */
+    registerBlockType('kealoa/constructor-view', {
+        title: __('KEALOA Constructor View', 'kealoa-reference'),
+        description: __('Displays a constructor\'s puzzle history and XWordInfo profile.', 'kealoa-reference'),
+        icon: 'hammer',
+        category: 'widgets',
+        keywords: [__('kealoa', 'kealoa-reference'), __('constructor', 'kealoa-reference'), __('puzzles', 'kealoa-reference')],
+        attributes: {
+            constructorId: {
+                type: 'number',
+                default: 0
+            }
+        },
+
+        edit: function (props) {
+            const { attributes, setAttributes } = props;
+            const { constructorId } = attributes;
+
+            const constructorOptions = [
+                { label: __('— Select a Constructor —', 'kealoa-reference'), value: 0 }
+            ];
+            
+            kealoaData.constructors.forEach(function (constructor) {
+                constructorOptions.push({
+                    label: constructor.name,
+                    value: constructor.id
+                });
+            });
+
+            if (!constructorId) {
+                return createElement(
+                    Fragment,
+                    null,
+                    createElement(
+                        InspectorControls,
+                        null,
+                        createElement(
+                            PanelBody,
+                            { title: __('Constructor Selection', 'kealoa-reference'), initialOpen: true },
+                            createElement(SelectControl, {
+                                label: __('Select Constructor', 'kealoa-reference'),
+                                value: constructorId,
+                                options: constructorOptions,
+                                onChange: function (value) { setAttributes({ constructorId: parseInt(value, 10) }); }
+                            })
+                        )
+                    ),
+                    createElement(
+                        Placeholder,
+                        {
+                            icon: 'hammer',
+                            label: __('KEALOA Constructor View', 'kealoa-reference'),
+                            instructions: __('Select a constructor from the block settings in the sidebar.', 'kealoa-reference')
+                        },
+                        createElement(SelectControl, {
+                            value: constructorId,
+                            options: constructorOptions,
+                            onChange: function (value) { setAttributes({ constructorId: parseInt(value, 10) }); }
+                        })
+                    )
+                );
+            }
+
+            return createElement(
+                Fragment,
+                null,
+                createElement(
+                    InspectorControls,
+                    null,
+                    createElement(
+                        PanelBody,
+                        { title: __('Constructor Selection', 'kealoa-reference'), initialOpen: true },
+                        createElement(SelectControl, {
+                            label: __('Select Constructor', 'kealoa-reference'),
+                            value: constructorId,
+                            options: constructorOptions,
+                            onChange: function (value) { setAttributes({ constructorId: parseInt(value, 10) }); }
+                        })
+                    )
+                ),
+                createElement(ServerSideRender, {
+                    block: 'kealoa/constructor-view',
                     attributes: attributes
                 })
             );

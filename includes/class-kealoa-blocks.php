@@ -50,6 +50,14 @@ class Kealoa_Blocks {
             register_block_type(KEALOA_PLUGIN_DIR . 'blocks/person-view');
         }
         
+        if (file_exists(KEALOA_PLUGIN_DIR . 'blocks/constructors-table/block.json')) {
+            register_block_type(KEALOA_PLUGIN_DIR . 'blocks/constructors-table');
+        }
+        
+        if (file_exists(KEALOA_PLUGIN_DIR . 'blocks/constructor-view/block.json')) {
+            register_block_type(KEALOA_PLUGIN_DIR . 'blocks/constructor-view');
+        }
+        
         // Fallback registration if block.json files don't exist yet
         if (!file_exists(KEALOA_PLUGIN_DIR . 'blocks/rounds-table/block.json')) {
             register_block_type('kealoa/rounds-table', [
@@ -108,6 +116,7 @@ class Kealoa_Blocks {
         $db = new Kealoa_DB();
         $rounds = $db->get_rounds(['limit' => 100]);
         $persons = $db->get_persons(['limit' => 100]);
+        $constructors = $db->get_constructors(['limit' => 1000]);
         
         wp_localize_script('kealoa-blocks-editor', 'kealoaBlocksData', [
             'rounds' => array_map(function($round) {
@@ -123,6 +132,12 @@ class Kealoa_Blocks {
                     'name' => $person->full_name,
                 ];
             }, $persons),
+            'constructors' => array_map(function($constructor) {
+                return [
+                    'id' => (int) $constructor->id,
+                    'name' => $constructor->full_name,
+                ];
+            }, $constructors),
         ]);
         
         wp_enqueue_style(
@@ -171,5 +186,27 @@ class Kealoa_Blocks {
         }
         
         return $this->shortcodes->render_person(['id' => $person_id]);
+    }
+
+    /**
+     * Render constructors table block
+     */
+    public function render_constructors_table_block(array $attributes): string {
+        return $this->shortcodes->render_constructors_table([]);
+    }
+
+    /**
+     * Render constructor view block
+     */
+    public function render_constructor_view_block(array $attributes): string {
+        $constructor_id = $attributes['constructorId'] ?? 0;
+        
+        if (!$constructor_id) {
+            return '<p class="kealoa-block-placeholder">' . 
+                esc_html__('Please select a constructor from the block settings.', 'kealoa-reference') . 
+                '</p>';
+        }
+        
+        return $this->shortcodes->render_constructor(['id' => $constructor_id]);
     }
 }

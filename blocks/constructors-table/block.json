@@ -1,0 +1,19 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "kealoa/constructors-table",
+    "version": "1.0.0",
+    "title": "KEALOA Constructors Table",
+    "category": "widgets",
+    "icon": "hammer",
+    "description": "Displays a table of constructors with puzzle and clue counts.",
+    "keywords": ["kealoa", "constructors", "table", "crossword"],
+    "supports": {
+        "html": false,
+        "align": ["wide", "full"]
+    },
+    "textdomain": "kealoa-reference",
+    "attributes": {},
+    "editorScript": "file:../../assets/js/blocks-editor.js",
+    "render": "file:./render.php"
+}

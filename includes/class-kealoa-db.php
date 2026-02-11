@@ -1245,4 +1245,69 @@ class Kealoa_DB {
         
         return $this->wpdb->get_results($sql);
     }
+
+    // =========================================================================
+    // CONSTRUCTOR STATISTICS
+    // =========================================================================
+
+    /**
+     * Get constructors that have puzzles, with puzzle and clue counts
+     */
+    public function get_constructors_with_stats(): array {
+        $sql = "SELECT 
+                con.id,
+                con.full_name,
+                con.xwordinfo_profile_name,
+                con.xwordinfo_image_url,
+                COUNT(DISTINCT pc.puzzle_id) as puzzle_count,
+                COUNT(DISTINCT c.id) as clue_count
+            FROM {$this->constructors_table} con
+            INNER JOIN {$this->puzzle_constructors_table} pc ON con.id = pc.constructor_id
+            LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id
+            GROUP BY con.id, con.full_name, con.xwordinfo_profile_name, con.xwordinfo_image_url
+            ORDER BY con.full_name ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get puzzles for a constructor with round info
+     */
+    public function get_constructor_puzzles(int $constructor_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT 
+                pz.id as puzzle_id,
+                pz.publication_date,
+                GROUP_CONCAT(DISTINCT r.id ORDER BY r.round_date ASC, r.round_number ASC) as round_ids,
+                GROUP_CONCAT(DISTINCT r.round_date ORDER BY r.round_date ASC, r.round_number ASC) as round_dates,
+                GROUP_CONCAT(DISTINCT r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers
+            FROM {$this->puzzles_table} pz
+            INNER JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
+            LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
+            LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
+            WHERE pc.constructor_id = %d
+            GROUP BY pz.id, pz.publication_date
+            ORDER BY pz.publication_date DESC",
+            $constructor_id
+        );
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get co-constructors for a constructor's puzzles
+     */
+    public function get_puzzle_co_constructors(int $puzzle_id, int $exclude_constructor_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT con.id, con.full_name, con.xwordinfo_profile_name
+            FROM {$this->constructors_table} con
+            INNER JOIN {$this->puzzle_constructors_table} pc ON con.id = pc.constructor_id
+            WHERE pc.puzzle_id = %d AND con.id != %d
+            ORDER BY pc.constructor_order ASC",
+            $puzzle_id,
+            $exclude_constructor_id
+        );
+
+        return $this->wpdb->get_results($sql);
+    }
 }
