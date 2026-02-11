@@ -32,6 +32,7 @@ class Kealoa_Shortcodes {
         add_shortcode('kealoa_rounds_table', [$this, 'render_rounds_table']);
         add_shortcode('kealoa_round', [$this, 'render_round']);
         add_shortcode('kealoa_person', [$this, 'render_person']);
+        add_shortcode('kealoa_persons_table', [$this, 'render_persons_table']);
         add_shortcode('kealoa_constructors_table', [$this, 'render_constructors_table']);
         add_shortcode('kealoa_constructor', [$this, 'render_constructor']);
     }
@@ -605,6 +606,57 @@ class Kealoa_Shortcodes {
                     </table>
                 </div>
             <?php endif; ?>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Render persons (players) table shortcode
+     *
+     * [kealoa_persons_table]
+     */
+    public function render_persons_table(array $atts = []): string {
+        $persons = $this->db->get_persons_with_stats();
+        
+        if (empty($persons)) {
+            return '<p class="kealoa-no-data">' . esc_html__('No players found.', 'kealoa-reference') . '</p>';
+        }
+        
+        ob_start();
+        ?>
+        <div class="kealoa-persons-table-wrapper">
+            <table class="kealoa-table kealoa-persons-table">
+                <thead>
+                    <tr>
+                        <th data-sort="text"><?php esc_html_e('Player', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Rounds Played', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Clues Guessed', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($persons as $person): ?>
+                        <tr>
+                            <td>
+                                <?php echo Kealoa_Formatter::format_person_link((int) $person->id, $person->full_name); ?>
+                            </td>
+                            <td><?php echo esc_html($person->rounds_played); ?></td>
+                            <td><?php echo esc_html($person->clues_guessed); ?></td>
+                            <td><?php echo esc_html($person->correct_guesses); ?></td>
+                            <td>
+                                <?php
+                                $accuracy = $person->clues_guessed > 0
+                                    ? ($person->correct_guesses / $person->clues_guessed) * 100
+                                    : 0;
+                                echo Kealoa_Formatter::format_percentage((float) $accuracy);
+                                ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
         <?php
         return ob_get_clean();

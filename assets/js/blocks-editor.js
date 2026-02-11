@@ -296,6 +296,29 @@
     });
 
     /**
+     * KEALOA Players Table Block
+     */
+    registerBlockType('kealoa/persons-table', {
+        title: __('KEALOA Players Table', 'kealoa-reference'),
+        description: __('Displays a table of all players with rounds played, clues guessed, and accuracy.', 'kealoa-reference'),
+        icon: 'groups',
+        category: 'widgets',
+        keywords: [__('kealoa', 'kealoa-reference'), __('players', 'kealoa-reference'), __('persons', 'kealoa-reference'), __('table', 'kealoa-reference')],
+        attributes: {},
+
+        edit: function (props) {
+            return createElement(ServerSideRender, {
+                block: 'kealoa/persons-table',
+                attributes: props.attributes
+            });
+        },
+
+        save: function () {
+            return null;
+        }
+    });
+
+    /**
      * KEALOA Constructor View Block
      */
     registerBlockType('kealoa/constructor-view', {

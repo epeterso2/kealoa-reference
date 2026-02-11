@@ -1251,6 +1251,27 @@ class Kealoa_DB {
     // =========================================================================
 
     /**
+     * Get all persons (players) with round, guess, and accuracy stats
+     */
+    public function get_persons_with_stats(): array {
+        $sql = "SELECT 
+                p.id,
+                p.full_name,
+                COUNT(DISTINCT rg.round_id) as rounds_played,
+                COUNT(g.id) as clues_guessed,
+                COALESCE(SUM(g.is_correct), 0) as correct_guesses
+            FROM {$this->persons_table} p
+            INNER JOIN {$this->round_guessers_table} rg ON p.id = rg.person_id
+            LEFT JOIN {$this->rounds_table} r ON rg.round_id = r.id
+            LEFT JOIN {$this->clues_table} c ON r.id = c.round_id
+            LEFT JOIN {$this->guesses_table} g ON c.id = g.clue_id AND g.guesser_person_id = p.id
+            GROUP BY p.id, p.full_name
+            ORDER BY p.full_name ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get constructors that have puzzles, with puzzle and clue counts
      */
     public function get_constructors_with_stats(): array {

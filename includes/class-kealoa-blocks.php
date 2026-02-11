@@ -58,6 +58,10 @@ class Kealoa_Blocks {
             register_block_type(KEALOA_PLUGIN_DIR . 'blocks/constructor-view');
         }
         
+        if (file_exists(KEALOA_PLUGIN_DIR . 'blocks/persons-table/block.json')) {
+            register_block_type(KEALOA_PLUGIN_DIR . 'blocks/persons-table');
+        }
+        
         // Fallback registration if block.json files don't exist yet
         if (!file_exists(KEALOA_PLUGIN_DIR . 'blocks/rounds-table/block.json')) {
             register_block_type('kealoa/rounds-table', [
@@ -193,6 +197,13 @@ class Kealoa_Blocks {
      */
     public function render_constructors_table_block(array $attributes): string {
         return $this->shortcodes->render_constructors_table([]);
+    }
+
+    /**
+     * Render persons table block
+     */
+    public function render_persons_table_block(array $attributes): string {
+        return $this->shortcodes->render_persons_table([]);
     }
 
     /**
