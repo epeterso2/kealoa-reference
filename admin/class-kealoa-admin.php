@@ -773,7 +773,7 @@ class Kealoa_Admin {
                         <tr>
                             <td><?php echo esc_html($constructor->id); ?></td>
                             <td>
-                                <strong><?php echo Kealoa_Formatter::format_constructor_link($constructor->full_name, $constructor->xwordinfo_profile_name ?? null); ?></strong>
+                                <strong><?php echo Kealoa_Formatter::format_constructor_link((int) $constructor->id, $constructor->full_name); ?></strong>
                             </td>
                             <td>
                                 <?php if (!empty($constructor->xwordinfo_profile_name)): ?>
