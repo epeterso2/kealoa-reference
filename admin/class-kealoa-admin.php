@@ -347,6 +347,11 @@ class Kealoa_Admin {
                 $import_result = $this->handle_csv_import();
             }
         }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['kealoa_import_zip_nonce'])) {
+            if (wp_verify_nonce($_POST['kealoa_import_zip_nonce'], 'kealoa_import_zip')) {
+                $import_result = $this->handle_zip_import();
+            }
+        }
         ?>
         <div class="wrap kealoa-admin-wrap">
             <h1><?php esc_html_e('Import Data', 'kealoa-reference'); ?></h1>
@@ -362,8 +367,35 @@ class Kealoa_Admin {
                         );
                         ?>
                     </p>
+                    <?php if (!empty($import_result['details'])): ?>
+                        <table class="widefat" style="margin-top: 10px; max-width: 500px;">
+                            <thead>
+                                <tr>
+                                    <th><?php esc_html_e('Data Type', 'kealoa-reference'); ?></th>
+                                    <th><?php esc_html_e('Imported', 'kealoa-reference'); ?></th>
+                                    <th><?php esc_html_e('Skipped', 'kealoa-reference'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($import_result['details'] as $detail): ?>
+                                    <tr>
+                                        <td><?php echo esc_html($detail['label']); ?></td>
+                                        <td><?php echo esc_html($detail['imported']); ?></td>
+                                        <td>
+                                            <?php 
+                                            echo esc_html($detail['skipped']);
+                                            if (!empty($detail['message'])) {
+                                                echo ' <em>(' . esc_html($detail['message']) . ')</em>';
+                                            }
+                                            ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
                     <?php if (!empty($import_result['errors'])): ?>
-                        <details>
+                        <details style="margin-top: 10px;">
                             <summary><?php esc_html_e('View errors', 'kealoa-reference'); ?></summary>
                             <ul>
                                 <?php foreach ($import_result['errors'] as $error): ?>
@@ -459,6 +491,31 @@ class Kealoa_Admin {
             </div>
             
             <div class="kealoa-import-section" style="margin-top: 30px;">
+                <h2><?php esc_html_e('Import All Data from ZIP', 'kealoa-reference'); ?></h2>
+                <p><?php esc_html_e('Upload a ZIP file created by "Export All Data" to import all data types at once. The ZIP file should contain CSV files (constructors.csv, persons.csv, puzzles.csv, rounds.csv, clues.csv, guesses.csv). Files are imported in the correct dependency order automatically.', 'kealoa-reference'); ?></p>
+                
+                <form method="post" enctype="multipart/form-data" class="kealoa-form">
+                    <?php wp_nonce_field('kealoa_import_zip', 'kealoa_import_zip_nonce'); ?>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th><label for="zip_file"><?php esc_html_e('ZIP File', 'kealoa-reference'); ?></label></th>
+                            <td>
+                                <input type="file" name="zip_file" id="zip_file" accept=".zip" required />
+                                <p class="description">
+                                    <?php esc_html_e('Select a ZIP file exported from KEALOA Reference.', 'kealoa-reference'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <p class="submit">
+                        <input type="submit" class="button button-primary" value="<?php esc_attr_e('Import ZIP', 'kealoa-reference'); ?>" />
+                    </p>
+                </form>
+            </div>
+            
+            <div class="kealoa-import-section" style="margin-top: 30px;">
                 <h2><?php esc_html_e('Import CSV File', 'kealoa-reference'); ?></h2>
                 <p><?php esc_html_e('Select a data type and upload your CSV file. Import order matters: Constructors/Persons first, then Puzzles, then Rounds, then Clues, then Guesses.', 'kealoa-reference'); ?></p>
                 
@@ -510,6 +567,37 @@ class Kealoa_Admin {
             </div>
         </div>
         <?php
+    }
+
+    /**
+     * Handle ZIP import form submission
+     */
+    private function handle_zip_import(): array {
+        if (!isset($_FILES['zip_file']) || $_FILES['zip_file']['error'] !== UPLOAD_ERR_OK) {
+            return [
+                'success' => false,
+                'imported' => 0,
+                'skipped' => 0,
+                'errors' => ['Failed to upload ZIP file.'],
+            ];
+        }
+
+        $file_name = $_FILES['zip_file']['name'];
+        $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+
+        if ($file_ext !== 'zip') {
+            return [
+                'success' => false,
+                'imported' => 0,
+                'skipped' => 0,
+                'errors' => ['Please upload a .zip file.'],
+            ];
+        }
+
+        $file_path = $_FILES['zip_file']['tmp_name'];
+        $importer = new Kealoa_Import($this->db);
+
+        return $importer->import_zip($file_path);
     }
 
     /**

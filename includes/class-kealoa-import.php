@@ -737,6 +737,110 @@ class Kealoa_Import {
     }
 
     /**
+     * Import all data from an exported ZIP file
+     *
+     * The ZIP file should contain CSV files named: constructors.csv, persons.csv,
+     * puzzles.csv, rounds.csv, clues.csv, guesses.csv (as created by Export All).
+     * Files are imported in dependency order.
+     */
+    public function import_zip(string $zip_path): array {
+        $all_results = [
+            'success' => true,
+            'imported' => 0,
+            'skipped' => 0,
+            'errors' => [],
+            'details' => [],
+        ];
+
+        // Verify ZIP extension is available
+        if (!class_exists('ZipArchive')) {
+            $all_results['success'] = false;
+            $all_results['errors'][] = 'PHP ZipArchive extension is not available.';
+            return $all_results;
+        }
+
+        // Open the ZIP file
+        $zip = new \ZipArchive();
+        $open_result = $zip->open($zip_path);
+        if ($open_result !== true) {
+            $all_results['success'] = false;
+            $all_results['errors'][] = 'Could not open ZIP file (error code: ' . $open_result . ').';
+            return $all_results;
+        }
+
+        // Extract to temp directory
+        $temp_dir = get_temp_dir() . 'kealoa-import-' . uniqid();
+        wp_mkdir_p($temp_dir);
+
+        $zip->extractTo($temp_dir);
+        $zip->close();
+
+        // Import in dependency order
+        $import_order = [
+            'constructors' => 'Constructors',
+            'persons' => 'Persons',
+            'puzzles' => 'Puzzles',
+            'rounds' => 'Rounds',
+            'clues' => 'Clues',
+            'guesses' => 'Guesses',
+        ];
+
+        foreach ($import_order as $type => $label) {
+            $csv_path = $temp_dir . '/' . $type . '.csv';
+
+            if (!file_exists($csv_path)) {
+                $all_results['details'][$type] = [
+                    'label' => $label,
+                    'imported' => 0,
+                    'skipped' => 0,
+                    'status' => 'skipped',
+                    'message' => $type . '.csv not found in ZIP file',
+                ];
+                continue;
+            }
+
+            $method = 'import_' . $type;
+            $result = $this->$method($csv_path);
+
+            $all_results['imported'] += $result['imported'];
+            $all_results['skipped'] += $result['skipped'];
+
+            if (!empty($result['errors'])) {
+                foreach ($result['errors'] as $error) {
+                    $all_results['errors'][] = $label . ': ' . $error;
+                }
+            }
+
+            $all_results['details'][$type] = [
+                'label' => $label,
+                'imported' => $result['imported'],
+                'skipped' => $result['skipped'],
+                'status' => ($result['imported'] > 0 || empty($result['errors'])) ? 'success' : 'error',
+            ];
+        }
+
+        // Cleanup temp files
+        foreach ($import_order as $type => $label) {
+            $csv_path = $temp_dir . '/' . $type . '.csv';
+            if (file_exists($csv_path)) {
+                @unlink($csv_path);
+            }
+        }
+        // Remove any other files that may have been in the ZIP
+        $remaining_files = glob($temp_dir . '/*');
+        if ($remaining_files) {
+            foreach ($remaining_files as $file) {
+                @unlink($file);
+            }
+        }
+        @rmdir($temp_dir);
+
+        $all_results['success'] = $all_results['imported'] > 0 || empty($all_results['errors']);
+
+        return $all_results;
+    }
+
+    /**
      * Get available template files
      */
     public static function get_templates(): array {
