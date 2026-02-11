@@ -816,27 +816,26 @@ class Kealoa_DB {
      * Create a clue
      */
     public function create_clue(array $data): int|false {
-        $puzzle_id = !empty($data['puzzle_id']) ? (int) $data['puzzle_id'] : null;
-        $puzzle_clue_number = !empty($data['puzzle_clue_number']) ? (int) $data['puzzle_clue_number'] : null;
-        $puzzle_clue_direction = !empty($data['puzzle_clue_direction']) ? sanitize_text_field($data['puzzle_clue_direction']) : null;
-
         $insert_data = [
             'round_id' => (int) $data['round_id'],
             'clue_number' => (int) $data['clue_number'],
-            'puzzle_id' => $puzzle_id,
-            'puzzle_clue_number' => $puzzle_clue_number,
-            'puzzle_clue_direction' => $puzzle_clue_direction,
             'clue_text' => sanitize_textarea_field($data['clue_text']),
             'correct_answer' => strtoupper(sanitize_text_field($data['correct_answer'])),
         ];
+        $format = ['%d', '%d', '%s', '%s'];
 
-        $format = [
-            '%d', '%d',
-            $puzzle_id !== null ? '%d' : null,
-            $puzzle_clue_number !== null ? '%d' : null,
-            $puzzle_clue_direction !== null ? '%s' : null,
-            '%s', '%s',
-        ];
+        if (!empty($data['puzzle_id'])) {
+            $insert_data['puzzle_id'] = (int) $data['puzzle_id'];
+            $format[] = '%d';
+        }
+        if (!empty($data['puzzle_clue_number'])) {
+            $insert_data['puzzle_clue_number'] = (int) $data['puzzle_clue_number'];
+            $format[] = '%d';
+        }
+        if (!empty($data['puzzle_clue_direction'])) {
+            $insert_data['puzzle_clue_direction'] = sanitize_text_field($data['puzzle_clue_direction']);
+            $format[] = '%s';
+        }
 
         $result = $this->wpdb->insert($this->clues_table, $insert_data, $format);
         
@@ -856,15 +855,15 @@ class Kealoa_DB {
         }
         if (array_key_exists('puzzle_id', $data)) {
             $update_data['puzzle_id'] = !empty($data['puzzle_id']) ? (int) $data['puzzle_id'] : null;
-            $format[] = $update_data['puzzle_id'] !== null ? '%d' : null;
+            $format[] = '%d';
         }
         if (array_key_exists('puzzle_clue_number', $data)) {
             $update_data['puzzle_clue_number'] = !empty($data['puzzle_clue_number']) ? (int) $data['puzzle_clue_number'] : null;
-            $format[] = $update_data['puzzle_clue_number'] !== null ? '%d' : null;
+            $format[] = '%d';
         }
         if (array_key_exists('puzzle_clue_direction', $data)) {
             $update_data['puzzle_clue_direction'] = !empty($data['puzzle_clue_direction']) ? sanitize_text_field($data['puzzle_clue_direction']) : null;
-            $format[] = $update_data['puzzle_clue_direction'] !== null ? '%s' : null;
+            $format[] = '%s';
         }
         if (isset($data['clue_text'])) {
             $update_data['clue_text'] = sanitize_textarea_field($data['clue_text']);
