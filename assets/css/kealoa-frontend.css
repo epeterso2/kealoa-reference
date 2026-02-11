@@ -116,7 +116,7 @@
 .kealoa-homepage-link,
 .kealoa-constructor-link {
     color: #0073aa;
-    text-decoration: none;
+    text-decoration: underline;
     transition: color 0.2s ease;
 }
 
