@@ -159,6 +159,9 @@ class Kealoa_Admin {
             wp_die(__('Security check failed.', 'kealoa-reference'));
         }
         
+        // Remove magic quotes added by WordPress
+        $_POST = wp_unslash($_POST);
+        
         $action = sanitize_text_field($_POST['kealoa_action']);
         
         match($action) {
