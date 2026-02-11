@@ -88,7 +88,7 @@ class Kealoa_Shortcodes {
                                 ?>
                             </td>
                             <td class="kealoa-solutions-cell">
-                                <?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?>
+                                <?php echo Kealoa_Formatter::format_solution_words_link((int) $round->id, $solutions); ?>
                             </td>
                             <td class="kealoa-results-cell">
                                 <?php echo Kealoa_Formatter::format_guesser_results($guesser_results, $clue_count); ?>
@@ -698,7 +698,7 @@ class Kealoa_Shortcodes {
                                     <?php if ($has_multi_round_dates): ?>
                                         <td><?php echo esc_html($history_round_num); ?></td>
                                     <?php endif; ?>
-                                    <td><?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?></td>
+                                    <td><?php echo Kealoa_Formatter::format_solution_words_link((int) $history->round_id, $solutions); ?></td>
                                     <td><?php echo esc_html($history->total_clues); ?></td>
                                     <td><?php echo esc_html($history->correct_count); ?></td>
                                     <td>

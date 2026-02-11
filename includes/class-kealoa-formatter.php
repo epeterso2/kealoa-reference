@@ -194,6 +194,24 @@ class Kealoa_Formatter {
     }
 
     /**
+     * Format solution words as a link to the round view
+     *
+     * @param int $round_id The round ID
+     * @param array $solutions The solution words
+     * @return string HTML link with solution words
+     */
+    public static function format_solution_words_link(int $round_id, array $solutions): string {
+        $url = home_url('/kealoa/round/' . $round_id . '/');
+        $words = self::format_solution_words($solutions);
+        
+        return sprintf(
+            '<a href="%s" class="kealoa-round-link">%s</a>',
+            esc_url($url),
+            esc_html($words)
+        );
+    }
+
+    /**
      * Format a date in M/D/YYYY format
      *
      * @param string $date The date in Y-m-d format
