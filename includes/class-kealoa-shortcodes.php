@@ -557,6 +557,76 @@ class Kealoa_Shortcodes {
             <?php endif; ?>
             
             <?php if (!empty($round_history)): ?>
+                <div class="kealoa-accuracy-chart-section">
+                    <h3><?php esc_html_e('Accuracy by Round', 'kealoa-reference'); ?></h3>
+                    <div class="kealoa-chart-container">
+                        <canvas id="kealoa-accuracy-chart"></canvas>
+                    </div>
+                    <?php
+                    // Build chart data in chronological order (round_history is DESC)
+                    $chart_history = array_reverse($round_history);
+                    $chart_labels = [];
+                    $chart_data = [];
+                    $round_counter = 1;
+                    foreach ($chart_history as $ch) {
+                        $chart_labels[] = $round_counter;
+                        $pct_val = $ch->total_clues > 0
+                            ? round(($ch->correct_count / $ch->total_clues) * 100, 1)
+                            : 0;
+                        $chart_data[] = $pct_val;
+                        $round_counter++;
+                    }
+                    ?>
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var ctx = document.getElementById('kealoa-accuracy-chart');
+                        if (ctx && typeof Chart !== 'undefined') {
+                            new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: <?php echo wp_json_encode($chart_labels); ?>,
+                                    datasets: [{
+                                        label: <?php echo wp_json_encode(__('Accuracy %', 'kealoa-reference')); ?>,
+                                        data: <?php echo wp_json_encode($chart_data); ?>,
+                                        borderColor: '#2271b1',
+                                        backgroundColor: 'rgba(34, 113, 177, 0.1)',
+                                        fill: true,
+                                        tension: 0.3,
+                                        pointRadius: 3,
+                                        pointHoverRadius: 6
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    scales: {
+                                        x: {
+                                            title: {
+                                                display: true,
+                                                text: <?php echo wp_json_encode(__('Round', 'kealoa-reference')); ?>
+                                            }
+                                        },
+                                        y: {
+                                            title: {
+                                                display: true,
+                                                text: <?php echo wp_json_encode(__('Accuracy %', 'kealoa-reference')); ?>
+                                            },
+                                            min: 0,
+                                            max: 100
+                                        }
+                                    },
+                                    plugins: {
+                                        legend: {
+                                            display: false
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    </script>
+                </div>
+                
                 <div class="kealoa-round-history">
                     <h3><?php esc_html_e('Round History', 'kealoa-reference'); ?></h3>
                     
