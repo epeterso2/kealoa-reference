@@ -567,20 +567,22 @@ class Kealoa_Shortcodes {
                     $chart_history = array_reverse($round_history);
                     $chart_labels = [];
                     $chart_data = [];
-                    $round_counter = 1;
+                    $chart_words = [];
                     foreach ($chart_history as $ch) {
-                        $chart_labels[] = $round_counter;
+                        $chart_labels[] = Kealoa_Formatter::format_date($ch->round_date);
                         $pct_val = $ch->total_clues > 0
                             ? round(($ch->correct_count / $ch->total_clues) * 100, 1)
                             : 0;
                         $chart_data[] = $pct_val;
-                        $round_counter++;
+                        $ch_solutions = $this->db->get_round_solutions((int) $ch->round_id);
+                        $chart_words[] = Kealoa_Formatter::format_solution_words($ch_solutions);
                     }
                     ?>
                     <script>
                     document.addEventListener('DOMContentLoaded', function() {
                         var ctx = document.getElementById('kealoa-accuracy-chart');
                         if (ctx && typeof Chart !== 'undefined') {
+                            var chartWords = <?php echo wp_json_encode($chart_words); ?>;
                             new Chart(ctx, {
                                 type: 'line',
                                 data: {
@@ -603,7 +605,7 @@ class Kealoa_Shortcodes {
                                         x: {
                                             title: {
                                                 display: true,
-                                                text: <?php echo wp_json_encode(__('Round', 'kealoa-reference')); ?>
+                                                text: <?php echo wp_json_encode(__('Round Date', 'kealoa-reference')); ?>
                                             }
                                         },
                                         y: {
@@ -618,6 +620,20 @@ class Kealoa_Shortcodes {
                                     plugins: {
                                         legend: {
                                             display: false
+                                        },
+                                        tooltip: {
+                                            callbacks: {
+                                                title: function(items) {
+                                                    if (items.length > 0) {
+                                                        var idx = items[0].dataIndex;
+                                                        return chartWords[idx] || items[0].label;
+                                                    }
+                                                    return '';
+                                                },
+                                                label: function(item) {
+                                                    return item.parsed.y + '%';
+                                                }
+                                            }
                                         }
                                     }
                                 }
