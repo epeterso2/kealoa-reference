@@ -1421,16 +1421,16 @@ class Kealoa_Admin {
             
             <table class="form-table">
                 <tr>
-                    <th><label for="clue_number"><?php esc_html_e('Clue Number', 'kealoa-reference'); ?> *</label></th>
+                    <th><label for="clue_number"><?php esc_html_e('Clue Number', 'kealoa-reference'); ?></label></th>
                     <td>
-                        <input type="number" name="clue_number" id="clue_number" min="1" required
+                        <input type="number" name="clue_number" id="clue_number" min="1"
                                value="<?php echo count($clues) + 1; ?>" />
                     </td>
                 </tr>
                 <tr>
-                    <th><label for="puzzle_date"><?php esc_html_e('NYT Puzzle Date', 'kealoa-reference'); ?> *</label></th>
+                    <th><label for="puzzle_date"><?php esc_html_e('NYT Puzzle Date', 'kealoa-reference'); ?></label></th>
                     <td>
-                        <input type="date" name="puzzle_date" id="puzzle_date" class="regular-text" required />
+                        <input type="date" name="puzzle_date" id="puzzle_date" class="regular-text" />
                         <p class="description">
                             <?php esc_html_e('If a puzzle with this date already exists, it will be used automatically.', 'kealoa-reference'); ?>
                         </p>
@@ -1455,15 +1455,16 @@ class Kealoa_Admin {
                     </td>
                 </tr>
                 <tr>
-                    <th><label for="puzzle_clue_number"><?php esc_html_e('Puzzle Clue Number', 'kealoa-reference'); ?> *</label></th>
+                    <th><label for="puzzle_clue_number"><?php esc_html_e('Puzzle Clue Number', 'kealoa-reference'); ?></label></th>
                     <td>
-                        <input type="number" name="puzzle_clue_number" id="puzzle_clue_number" min="1" required />
+                        <input type="number" name="puzzle_clue_number" id="puzzle_clue_number" min="1" />
                     </td>
                 </tr>
                 <tr>
-                    <th><label for="puzzle_clue_direction"><?php esc_html_e('Direction', 'kealoa-reference'); ?> *</label></th>
+                    <th><label for="puzzle_clue_direction"><?php esc_html_e('Direction', 'kealoa-reference'); ?></label></th>
                     <td>
-                        <select name="puzzle_clue_direction" id="puzzle_clue_direction" required>
+                        <select name="puzzle_clue_direction" id="puzzle_clue_direction">
+                            <option value=""><?php esc_html_e('— None —', 'kealoa-reference'); ?></option>
                             <option value="A"><?php esc_html_e('Across', 'kealoa-reference'); ?></option>
                             <option value="D"><?php esc_html_e('Down', 'kealoa-reference'); ?></option>
                         </select>
@@ -1571,16 +1572,16 @@ class Kealoa_Admin {
             
             <table class="form-table">
                 <tr>
-                    <th><label for="clue_number"><?php esc_html_e('Clue Number', 'kealoa-reference'); ?> *</label></th>
+                    <th><label for="clue_number"><?php esc_html_e('Clue Number', 'kealoa-reference'); ?></label></th>
                     <td>
-                        <input type="number" name="clue_number" id="clue_number" min="1" required
+                        <input type="number" name="clue_number" id="clue_number" min="1"
                                value="<?php echo esc_attr($clue->clue_number); ?>" />
                     </td>
                 </tr>
                 <tr>
-                    <th><label for="puzzle_date"><?php esc_html_e('NYT Puzzle Date', 'kealoa-reference'); ?> *</label></th>
+                    <th><label for="puzzle_date"><?php esc_html_e('NYT Puzzle Date', 'kealoa-reference'); ?></label></th>
                     <td>
-                        <input type="date" name="puzzle_date" id="puzzle_date" class="regular-text" required
+                        <input type="date" name="puzzle_date" id="puzzle_date" class="regular-text"
                                value="<?php echo esc_attr($puzzle->publication_date ?? ''); ?>" />
                         <p class="description">
                             <?php esc_html_e('If a puzzle with this date already exists, it will be used automatically.', 'kealoa-reference'); ?>
@@ -1607,16 +1608,17 @@ class Kealoa_Admin {
                     </td>
                 </tr>
                 <tr>
-                    <th><label for="puzzle_clue_number"><?php esc_html_e('Puzzle Clue Number', 'kealoa-reference'); ?> *</label></th>
+                    <th><label for="puzzle_clue_number"><?php esc_html_e('Puzzle Clue Number', 'kealoa-reference'); ?></label></th>
                     <td>
-                        <input type="number" name="puzzle_clue_number" id="puzzle_clue_number" min="1" required
+                        <input type="number" name="puzzle_clue_number" id="puzzle_clue_number" min="1"
                                value="<?php echo esc_attr($clue->puzzle_clue_number); ?>" />
                     </td>
                 </tr>
                 <tr>
-                    <th><label for="puzzle_clue_direction"><?php esc_html_e('Direction', 'kealoa-reference'); ?> *</label></th>
+                    <th><label for="puzzle_clue_direction"><?php esc_html_e('Direction', 'kealoa-reference'); ?></label></th>
                     <td>
-                        <select name="puzzle_clue_direction" id="puzzle_clue_direction" required>
+                        <select name="puzzle_clue_direction" id="puzzle_clue_direction">
+                            <option value=""><?php esc_html_e('— None —', 'kealoa-reference'); ?></option>
                             <option value="A" <?php selected($clue->puzzle_clue_direction, 'A'); ?>><?php esc_html_e('Across', 'kealoa-reference'); ?></option>
                             <option value="D" <?php selected($clue->puzzle_clue_direction, 'D'); ?>><?php esc_html_e('Down', 'kealoa-reference'); ?></option>
                         </select>
@@ -1972,17 +1974,12 @@ class Kealoa_Admin {
             }
         }
         
-        if (!$puzzle_id) {
-            wp_redirect(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $round_id . '&error=no_puzzle'));
-            exit;
-        }
-        
         $clue_id = $this->db->create_clue([
             'round_id' => $round_id,
             'clue_number' => $_POST['clue_number'] ?? 1,
-            'puzzle_id' => $puzzle_id,
-            'puzzle_clue_number' => $_POST['puzzle_clue_number'] ?? 0,
-            'puzzle_clue_direction' => $_POST['puzzle_clue_direction'] ?? 'A',
+            'puzzle_id' => $puzzle_id ?: null,
+            'puzzle_clue_number' => !empty($_POST['puzzle_clue_number']) ? $_POST['puzzle_clue_number'] : null,
+            'puzzle_clue_direction' => !empty($_POST['puzzle_clue_direction']) ? $_POST['puzzle_clue_direction'] : null,
             'clue_text' => $_POST['clue_text'] ?? '',
             'correct_answer' => $_POST['correct_answer'] ?? '',
         ]);
@@ -2039,16 +2036,11 @@ class Kealoa_Admin {
             }
         }
         
-        if (!$puzzle_id) {
-            wp_redirect(admin_url('admin.php?page=kealoa-rounds&action=edit_clue&id=' . $round_id . '&clue_id=' . $clue_id . '&error=no_puzzle'));
-            exit;
-        }
-        
         $this->db->update_clue($clue_id, [
             'clue_number' => $_POST['clue_number'] ?? 1,
-            'puzzle_id' => $puzzle_id,
-            'puzzle_clue_number' => $_POST['puzzle_clue_number'] ?? 0,
-            'puzzle_clue_direction' => $_POST['puzzle_clue_direction'] ?? 'A',
+            'puzzle_id' => $puzzle_id ?: null,
+            'puzzle_clue_number' => !empty($_POST['puzzle_clue_number']) ? $_POST['puzzle_clue_number'] : null,
+            'puzzle_clue_direction' => !empty($_POST['puzzle_clue_direction']) ? $_POST['puzzle_clue_direction'] : null,
             'clue_text' => $_POST['clue_text'] ?? '',
             'correct_answer' => $_POST['correct_answer'] ?? '',
         ]);

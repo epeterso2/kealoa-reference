@@ -854,17 +854,17 @@ class Kealoa_DB {
             $update_data['clue_number'] = (int) $data['clue_number'];
             $format[] = '%d';
         }
-        if (isset($data['puzzle_id'])) {
-            $update_data['puzzle_id'] = (int) $data['puzzle_id'];
-            $format[] = '%d';
+        if (array_key_exists('puzzle_id', $data)) {
+            $update_data['puzzle_id'] = !empty($data['puzzle_id']) ? (int) $data['puzzle_id'] : null;
+            $format[] = $update_data['puzzle_id'] !== null ? '%d' : null;
         }
-        if (isset($data['puzzle_clue_number'])) {
-            $update_data['puzzle_clue_number'] = (int) $data['puzzle_clue_number'];
-            $format[] = '%d';
+        if (array_key_exists('puzzle_clue_number', $data)) {
+            $update_data['puzzle_clue_number'] = !empty($data['puzzle_clue_number']) ? (int) $data['puzzle_clue_number'] : null;
+            $format[] = $update_data['puzzle_clue_number'] !== null ? '%d' : null;
         }
-        if (isset($data['puzzle_clue_direction'])) {
-            $update_data['puzzle_clue_direction'] = sanitize_text_field($data['puzzle_clue_direction']);
-            $format[] = '%s';
+        if (array_key_exists('puzzle_clue_direction', $data)) {
+            $update_data['puzzle_clue_direction'] = !empty($data['puzzle_clue_direction']) ? sanitize_text_field($data['puzzle_clue_direction']) : null;
+            $format[] = $update_data['puzzle_clue_direction'] !== null ? '%s' : null;
         }
         if (isset($data['clue_text'])) {
             $update_data['clue_text'] = sanitize_textarea_field($data['clue_text']);
