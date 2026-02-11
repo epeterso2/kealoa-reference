@@ -1187,7 +1187,7 @@ class Kealoa_Admin {
                     <th><?php esc_html_e('Round #', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Episode', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
-                    <th><?php esc_html_e('Clue Giver', 'kealoa-reference'); ?></th>
+                    <th><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Actions', 'kealoa-reference'); ?></th>
                 </tr>
@@ -1209,7 +1209,7 @@ class Kealoa_Admin {
                             <td><?php echo esc_html($round->round_number ?? 1); ?></td>
                             <td><?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null); ?></td>
                             <td><?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?></td>
-                            <td><?php echo esc_html($round->clue_giver_name ?? '—'); ?></td>
+                            <td><?php echo esc_html($round->description ?? ''); ?></td>
                             <td><?php echo esc_html($clue_count); ?></td>
                             <td>
                                 <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds&action=edit&id=' . $round->id)); ?>">
