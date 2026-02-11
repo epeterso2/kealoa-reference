@@ -816,19 +816,29 @@ class Kealoa_DB {
      * Create a clue
      */
     public function create_clue(array $data): int|false {
-        $result = $this->wpdb->insert(
-            $this->clues_table,
-            [
-                'round_id' => (int) $data['round_id'],
-                'clue_number' => (int) $data['clue_number'],
-                'puzzle_id' => (int) $data['puzzle_id'],
-                'puzzle_clue_number' => (int) $data['puzzle_clue_number'],
-                'puzzle_clue_direction' => sanitize_text_field($data['puzzle_clue_direction']),
-                'clue_text' => sanitize_textarea_field($data['clue_text']),
-                'correct_answer' => strtoupper(sanitize_text_field($data['correct_answer'])),
-            ],
-            ['%d', '%d', '%d', '%d', '%s', '%s', '%s']
-        );
+        $puzzle_id = !empty($data['puzzle_id']) ? (int) $data['puzzle_id'] : null;
+        $puzzle_clue_number = !empty($data['puzzle_clue_number']) ? (int) $data['puzzle_clue_number'] : null;
+        $puzzle_clue_direction = !empty($data['puzzle_clue_direction']) ? sanitize_text_field($data['puzzle_clue_direction']) : null;
+
+        $insert_data = [
+            'round_id' => (int) $data['round_id'],
+            'clue_number' => (int) $data['clue_number'],
+            'puzzle_id' => $puzzle_id,
+            'puzzle_clue_number' => $puzzle_clue_number,
+            'puzzle_clue_direction' => $puzzle_clue_direction,
+            'clue_text' => sanitize_textarea_field($data['clue_text']),
+            'correct_answer' => strtoupper(sanitize_text_field($data['correct_answer'])),
+        ];
+
+        $format = [
+            '%d', '%d',
+            $puzzle_id !== null ? '%d' : null,
+            $puzzle_clue_number !== null ? '%d' : null,
+            $puzzle_clue_direction !== null ? '%s' : null,
+            '%s', '%s',
+        ];
+
+        $result = $this->wpdb->insert($this->clues_table, $insert_data, $format);
         
         return $result ? $this->wpdb->insert_id : false;
     }

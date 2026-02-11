@@ -432,7 +432,7 @@ class Kealoa_Import {
         foreach ($rows as $index => $row) {
             $line = $index + 2;
             
-            $required = ['round_date', 'clue_number', 'puzzle_date', 'puzzle_clue_number', 'puzzle_clue_direction', 'clue_text', 'correct_answer'];
+            $required = ['round_date', 'clue_text', 'correct_answer'];
             $missing = [];
             foreach ($required as $field) {
                 if (empty($row[$field])) {
@@ -454,13 +454,6 @@ class Kealoa_Import {
                 continue;
             }
             
-            $puzzle_date = $this->normalize_date($row['puzzle_date']);
-            if (!$puzzle_date) {
-                $errors[] = "Line {$line}: Invalid puzzle_date format '{$row['puzzle_date']}'";
-                $skipped++;
-                continue;
-            }
-            
             // Get round number (default to 1 if not specified)
             $round_number = (int) ($row['round_number'] ?? 1);
             if ($round_number < 1) {
@@ -475,62 +468,84 @@ class Kealoa_Import {
                 continue;
             }
             
-            // Find or create the puzzle
-            $puzzle = $this->db->get_puzzle_by_date($puzzle_date);
-            if (!$puzzle) {
-                $puzzle_id = $this->db->create_puzzle([
-                    'publication_date' => $puzzle_date,
-                ]);
-                if (!$puzzle_id) {
-                    $errors[] = "Line {$line}: Could not create puzzle for date {$puzzle_date}";
+            // Handle puzzle fields (optional - may be empty for word-only rounds)
+            $puzzle_id = null;
+            $puzzle_clue_number = null;
+            $puzzle_clue_direction = null;
+            
+            if (!empty($row['puzzle_date'])) {
+                $puzzle_date = $this->normalize_date($row['puzzle_date']);
+                if (!$puzzle_date) {
+                    $errors[] = "Line {$line}: Invalid puzzle_date format '{$row['puzzle_date']}'";
                     $skipped++;
                     continue;
                 }
-                $puzzle = $this->db->get_puzzle($puzzle_id);
-            }
-            
-            // Handle constructors if provided - add them to the puzzle
-            // Support both 'constructors' (plural) and 'constructor' (singular) column names
-            $constructor_value = '';
-            if (isset($row['constructors']) && !empty(trim($row['constructors']))) {
-                $constructor_value = trim($row['constructors']);
-            } elseif (isset($row['constructor']) && !empty(trim($row['constructor']))) {
-                $constructor_value = trim($row['constructor']);
-            }
-            
-            if (!empty($constructor_value)) {
-                $constructor_names = array_map('trim', explode(',', $constructor_value));
-                $constructor_ids = [];
                 
-                foreach ($constructor_names as $name) {
-                    if (empty($name)) {
+                // Find or create the puzzle
+                $puzzle = $this->db->get_puzzle_by_date($puzzle_date);
+                if (!$puzzle) {
+                    $new_puzzle_id = $this->db->create_puzzle([
+                        'publication_date' => $puzzle_date,
+                    ]);
+                    if (!$new_puzzle_id) {
+                        $errors[] = "Line {$line}: Could not create puzzle for date {$puzzle_date}";
+                        $skipped++;
                         continue;
                     }
-                    $constructor = $this->find_or_create_constructor($name);
-                    if ($constructor) {
-                        $constructor_ids[] = $constructor->id;
+                    $puzzle = $this->db->get_puzzle($new_puzzle_id);
+                }
+                $puzzle_id = (int) $puzzle->id;
+                
+                // Handle constructors if provided
+                $constructor_value = '';
+                if (isset($row['constructors']) && !empty(trim($row['constructors']))) {
+                    $constructor_value = trim($row['constructors']);
+                } elseif (isset($row['constructor']) && !empty(trim($row['constructor']))) {
+                    $constructor_value = trim($row['constructor']);
+                }
+                
+                if (!empty($constructor_value)) {
+                    $constructor_names = array_map('trim', explode(',', $constructor_value));
+                    $constructor_ids = [];
+                    
+                    foreach ($constructor_names as $name) {
+                        if (empty($name)) {
+                            continue;
+                        }
+                        $constructor = $this->find_or_create_constructor($name);
+                        if ($constructor) {
+                            $constructor_ids[] = $constructor->id;
+                        }
+                    }
+                    
+                    if (!empty($constructor_ids)) {
+                        $this->db->set_puzzle_constructors((int) $puzzle->id, $constructor_ids);
                     }
                 }
                 
-                // Always update constructors
-                if (!empty($constructor_ids)) {
-                    $this->db->set_puzzle_constructors((int) $puzzle->id, $constructor_ids);
+                // Handle puzzle clue direction
+                if (!empty($row['puzzle_clue_direction'])) {
+                    $direction = strtoupper(substr($row['puzzle_clue_direction'], 0, 1));
+                    if (!in_array($direction, ['A', 'D'])) {
+                        $errors[] = "Line {$line}: Invalid direction '{$row['puzzle_clue_direction']}', must be A or D";
+                        $skipped++;
+                        continue;
+                    }
+                    $puzzle_clue_direction = $direction;
                 }
-            }
-            
-            $direction = strtoupper(substr($row['puzzle_clue_direction'], 0, 1));
-            if (!in_array($direction, ['A', 'D'])) {
-                $errors[] = "Line {$line}: Invalid direction '{$row['puzzle_clue_direction']}', must be A or D";
-                $skipped++;
-                continue;
+                
+                // Handle puzzle clue number
+                if (!empty($row['puzzle_clue_number'])) {
+                    $puzzle_clue_number = (int) $row['puzzle_clue_number'];
+                }
             }
             
             $clue_data = [
                 'round_id' => $round->id,
-                'puzzle_id' => $puzzle->id,
-                'clue_number' => (int) $row['clue_number'],
-                'puzzle_clue_number' => (int) $row['puzzle_clue_number'],
-                'puzzle_clue_direction' => $direction,
+                'puzzle_id' => $puzzle_id,
+                'clue_number' => !empty($row['clue_number']) ? (int) $row['clue_number'] : ($index + 1),
+                'puzzle_clue_number' => $puzzle_clue_number,
+                'puzzle_clue_direction' => $puzzle_clue_direction,
                 'clue_text' => $row['clue_text'],
                 'correct_answer' => strtoupper($row['correct_answer']),
             ];

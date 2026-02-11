@@ -214,7 +214,7 @@ class Kealoa_Shortcodes {
                         <tbody>
                             <?php foreach ($clues as $clue): ?>
                                 <?php 
-                                $constructors = $this->db->get_puzzle_constructors((int) $clue->puzzle_id);
+                                $constructors = !empty($clue->puzzle_id) ? $this->db->get_puzzle_constructors((int) $clue->puzzle_id) : [];
                                 $clue_guesses = $this->db->get_clue_guesses((int) $clue->id);
                                 ?>
                                 <tr>

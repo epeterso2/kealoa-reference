@@ -214,7 +214,10 @@ class Kealoa_Formatter {
      * @param string $date The date in Y-m-d format
      * @return string HTML link to XWordInfo puzzle page
      */
-    public static function format_puzzle_date_link(string $date): string {
+    public static function format_puzzle_date_link(?string $date): string {
+        if (empty($date)) {
+            return '—';
+        }
         $formatted_date = date('n/j/Y', strtotime($date));
         $url = 'https://www.xwordinfo.com/Crossword?date=' . $formatted_date;
         
@@ -286,7 +289,10 @@ class Kealoa_Formatter {
      * @param string $direction The direction (A or D)
      * @return string Formatted like "42D" or "1A"
      */
-    public static function format_clue_direction(int $number, string $direction): string {
+    public static function format_clue_direction(int $number, ?string $direction): string {
+        if ($number === 0 || empty($direction)) {
+            return '—';
+        }
         return $number . strtoupper($direction);
     }
 
