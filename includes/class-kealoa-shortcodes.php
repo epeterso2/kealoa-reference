@@ -390,7 +390,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="number"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -424,7 +424,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="text"><?php esc_html_e('Direction', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -466,7 +466,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -500,7 +500,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="number"><?php esc_html_e('Decade', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -534,7 +534,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -684,7 +684,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
