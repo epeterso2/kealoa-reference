@@ -63,6 +63,7 @@ class Kealoa_Shortcodes {
             <table class="kealoa-table kealoa-rounds-table">
                 <thead>
                     <tr>
+                        <th data-sort="text"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                         <th data-sort="date"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
                         <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                         <th><?php esc_html_e('Results', 'kealoa-reference'); ?></th>
@@ -79,6 +80,7 @@ class Kealoa_Shortcodes {
                         $rounds_on_date = $this->db->get_rounds_by_date($round->round_date);
                         ?>
                         <tr>
+                            <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($round->round_date)); ?></td>
                             <td class="kealoa-date-cell">
                                 <?php 
                                 echo Kealoa_Formatter::format_round_date_link((int) $round->id, $round->round_date);
@@ -202,6 +204,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="number"><?php esc_html_e('#', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></th>
                                 <th data-sort="clue"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
@@ -222,6 +225,7 @@ class Kealoa_Shortcodes {
                                 ?>
                                 <tr>
                                     <td class="kealoa-clue-number"><?php echo esc_html($clue->clue_number); ?></td>
+                                    <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($clue->puzzle_date)); ?></td>
                                     <td class="kealoa-puzzle-date">
                                         <?php echo Kealoa_Formatter::format_puzzle_date_link($clue->puzzle_date); ?>
                                     </td>
@@ -675,6 +679,7 @@ class Kealoa_Shortcodes {
                     <table class="kealoa-table kealoa-history-table">
                         <thead>
                             <tr>
+                                <th data-sort="text"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
                                 <?php if ($has_multi_round_dates): ?>
                                     <th data-sort="number"><?php esc_html_e('Round #', 'kealoa-reference'); ?></th>
@@ -692,6 +697,7 @@ class Kealoa_Shortcodes {
                                 $history_round_num = (int) ($history->round_number ?? 1);
                                 ?>
                                 <tr>
+                                    <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($history->round_date)); ?></td>
                                     <td>
                                         <?php echo Kealoa_Formatter::format_round_date_link((int) $history->round_id, $history->round_date); ?>
                                     </td>
@@ -864,6 +870,7 @@ class Kealoa_Shortcodes {
                     <table class="kealoa-table kealoa-constructor-puzzles-table">
                         <thead>
                             <tr>
+                                <th data-sort="text"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Co-Constructors', 'kealoa-reference'); ?></th>
                                 <th><?php esc_html_e('Used in Rounds', 'kealoa-reference'); ?></th>
@@ -878,6 +885,7 @@ class Kealoa_Shortcodes {
                                 $round_numbers = !empty($puzzle->round_numbers) ? explode(',', $puzzle->round_numbers) : [];
                                 ?>
                                 <tr>
+                                    <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($puzzle->publication_date)); ?></td>
                                     <td>
                                         <?php echo Kealoa_Formatter::format_puzzle_date_link($puzzle->publication_date); ?>
                                     </td>

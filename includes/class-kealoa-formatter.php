@@ -194,6 +194,19 @@ class Kealoa_Formatter {
     }
 
     /**
+     * Format a date's day of week as a 3-letter abbreviation
+     *
+     * @param ?string $date The date in Y-m-d format
+     * @return string 3-letter day abbreviation (Mon, Tue, etc.) or em dash if null
+     */
+    public static function format_day_abbrev(?string $date): string {
+        if (empty($date)) {
+            return '—';
+        }
+        return date('D', strtotime($date));
+    }
+
+    /**
      * Format solution words as a link to the round view
      *
      * @param int $round_id The round ID
