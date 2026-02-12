@@ -202,7 +202,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="number"><?php esc_html_e('#', 'kealoa-reference'); ?></th>
-                                <th data-sort="text"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
+                                <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></th>
                                 <th data-sort="clue"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
@@ -866,7 +866,7 @@ class Kealoa_Shortcodes {
                     <table class="kealoa-table kealoa-constructor-puzzles-table">
                         <thead>
                             <tr>
-                                <th data-sort="text"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
+                                <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Co-Constructors', 'kealoa-reference'); ?></th>
                                 <th><?php esc_html_e('Used in Rounds', 'kealoa-reference'); ?></th>
