@@ -382,7 +382,7 @@ class Kealoa_Shortcodes {
                             <td><?php echo esc_html($stats->max_correct); ?></td>
                         </tr>
                         <tr>
-                            <td><?php esc_html_e('Percentage Correct', 'kealoa-reference'); ?></td>
+                            <td><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></td>
                             <td><?php echo Kealoa_Formatter::format_percentage($stats->min_percentage); ?></td>
                             <td><?php echo Kealoa_Formatter::format_percentage($stats->mean_percentage); ?></td>
                             <td><?php echo Kealoa_Formatter::format_percentage($stats->median_percentage); ?></td>
