@@ -127,6 +127,7 @@ class Kealoa_Shortcodes {
         
         $solutions = $this->db->get_round_solutions($round_id);
         $guessers = $this->db->get_round_guessers($round_id);
+        $guesser_results = $this->db->get_round_guesser_results($round_id);
         $clues = $this->db->get_round_clues($round_id);
         $clue_giver = $this->db->get_person((int) $round->clue_giver_id);
         $round_num = (int) ($round->round_number ?? 1);
@@ -177,7 +178,18 @@ class Kealoa_Shortcodes {
                     </p>
                     <p>
                         <strong><?php esc_html_e('Guessers:', 'kealoa-reference'); ?></strong>
-                        <?php echo Kealoa_Formatter::format_person_list($guessers); ?>
+                        <?php
+                        $guesser_parts = [];
+                        foreach ($guesser_results as $gr) {
+                            $link = Kealoa_Formatter::format_person_link((int) $gr->person_id, $gr->full_name);
+                            $correct = (int) $gr->correct_guesses;
+                            $total = (int) $gr->total_guesses;
+                            $accuracy = $total > 0 ? ($correct / $total) * 100 : 0;
+                            $score = sprintf('%d/%d, %s', $correct, $total, Kealoa_Formatter::format_percentage((float) $accuracy));
+                            $guesser_parts[] = $link . ' (' . esc_html($score) . ')';
+                        }
+                        echo implode('; ', $guesser_parts);
+                        ?>
                     </p>
                     <?php if (!empty($round->description)): ?>
                         <p>
