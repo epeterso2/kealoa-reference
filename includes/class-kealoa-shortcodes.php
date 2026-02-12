@@ -388,7 +388,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="number"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Times Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
                             </tr>
@@ -498,7 +498,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="number"><?php esc_html_e('Decade', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Times Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Percentage', 'kealoa-reference'); ?></th>
                             </tr>
