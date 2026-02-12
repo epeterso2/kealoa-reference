@@ -869,7 +869,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Co-Constructors', 'kealoa-reference'); ?></th>
-                                <th><?php esc_html_e('Used in Rounds', 'kealoa-reference'); ?></th>
+                                <th data-sort="date"><?php esc_html_e('Used in Rounds', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
