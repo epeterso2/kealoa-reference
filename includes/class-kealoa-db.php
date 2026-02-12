@@ -1196,6 +1196,28 @@ class Kealoa_DB {
     }
 
     /**
+     * Get person results by year of round
+     */
+    public function get_person_results_by_year(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT 
+                YEAR(r.round_date) as year,
+                COUNT(DISTINCT r.id) as rounds_played,
+                COUNT(g.id) as total_answered,
+                SUM(g.is_correct) as correct_count
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
+            WHERE g.guesser_person_id = %d
+            GROUP BY YEAR(r.round_date)
+            ORDER BY year ASC",
+            $person_id
+        );
+        
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get person results by constructor
      */
     public function get_person_results_by_constructor(int $person_id): array {
