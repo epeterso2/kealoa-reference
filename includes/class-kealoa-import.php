@@ -116,7 +116,7 @@ class Kealoa_Import {
     /**
      * Import constructors from CSV
      */
-    public function import_constructors(string $file_path): array {
+    public function import_constructors(string $file_path, bool $overwrite = true): array {
         $rows = $this->parse_csv($file_path);
         $imported = 0;
         $skipped = 0;
@@ -146,6 +146,10 @@ class Kealoa_Import {
             }
             
             if ($found) {
+                if (!$overwrite) {
+                    $skipped++;
+                    continue;
+                }
                 // Update existing constructor
                 $result = $this->db->update_constructor((int) $found->id, [
                     'full_name' => $row['full_name'],
@@ -179,7 +183,7 @@ class Kealoa_Import {
     /**
      * Import persons from CSV
      */
-    public function import_persons(string $file_path): array {
+    public function import_persons(string $file_path, bool $overwrite = true): array {
         $rows = $this->parse_csv($file_path);
         $imported = 0;
         $skipped = 0;
@@ -209,6 +213,10 @@ class Kealoa_Import {
             }
             
             if ($found) {
+                if (!$overwrite) {
+                    $skipped++;
+                    continue;
+                }
                 // Update existing person
                 $result = $this->db->update_person((int) $found->id, [
                     'full_name' => $row['full_name'],
@@ -240,7 +248,7 @@ class Kealoa_Import {
     /**
      * Import puzzles from CSV
      */
-    public function import_puzzles(string $file_path): array {
+    public function import_puzzles(string $file_path, bool $overwrite = true): array {
         $rows = $this->parse_csv($file_path);
         $imported = 0;
         $skipped = 0;
@@ -267,6 +275,10 @@ class Kealoa_Import {
             $existing = $this->db->get_puzzle_by_date($publication_date);
             
             if ($existing) {
+                if (!$overwrite) {
+                    $skipped++;
+                    continue;
+                }
                 // Use existing puzzle ID
                 $puzzle_id = (int) $existing->id;
             } else {
@@ -312,7 +324,7 @@ class Kealoa_Import {
     /**
      * Import rounds from CSV
      */
-    public function import_rounds(string $file_path): array {
+    public function import_rounds(string $file_path, bool $overwrite = true): array {
         $rows = $this->parse_csv($file_path);
         $imported = 0;
         $skipped = 0;
@@ -368,6 +380,10 @@ class Kealoa_Import {
             $existing = $this->db->get_round_by_date_and_number($round_date, $round_number);
             
             if ($existing) {
+                if (!$overwrite) {
+                    $skipped++;
+                    continue;
+                }
                 // Update existing round
                 $result = $this->db->update_round((int) $existing->id, $round_data);
                 $round_id = (int) $existing->id;
@@ -423,7 +439,7 @@ class Kealoa_Import {
     /**
      * Import clues from CSV
      */
-    public function import_clues(string $file_path): array {
+    public function import_clues(string $file_path, bool $overwrite = true): array {
         $rows = $this->parse_csv($file_path);
         $imported = 0;
         $skipped = 0;
@@ -561,6 +577,10 @@ class Kealoa_Import {
             }
             
             if ($existing_clue) {
+                if (!$overwrite) {
+                    $skipped++;
+                    continue;
+                }
                 // Update existing clue
                 $clue_id = $this->db->update_clue((int) $existing_clue->id, $clue_data);
             } else {
@@ -596,7 +616,7 @@ class Kealoa_Import {
     /**
      * Import guesses from CSV
      */
-    public function import_guesses(string $file_path): array {
+    public function import_guesses(string $file_path, bool $overwrite = true): array {
         $rows = $this->parse_csv($file_path);
         $imported = 0;
         $skipped = 0;
@@ -666,6 +686,22 @@ class Kealoa_Import {
             }
             
             $guessed_word = strtoupper(trim($row['guessed_word']));
+            
+            // Check if guess already exists for this clue and guesser
+            if (!$overwrite) {
+                $existing_guesses = $this->db->get_clue_guesses((int) $clue->id);
+                $has_existing = false;
+                foreach ($existing_guesses as $g) {
+                    if ((int) $g->guesser_person_id === (int) $guesser->id) {
+                        $has_existing = true;
+                        break;
+                    }
+                }
+                if ($has_existing) {
+                    $skipped++;
+                    continue;
+                }
+            }
             
             // set_guess will create or update the guess
             $result = $this->db->set_guess(
@@ -753,7 +789,7 @@ class Kealoa_Import {
      * puzzles.csv, rounds.csv, clues.csv, guesses.csv (as created by Export All).
      * Files are imported in dependency order.
      */
-    public function import_zip(string $zip_path): array {
+    public function import_zip(string $zip_path, bool $overwrite = true): array {
         $all_results = [
             'success' => true,
             'imported' => 0,
@@ -810,7 +846,7 @@ class Kealoa_Import {
             }
 
             $method = 'import_' . $type;
-            $result = $this->$method($csv_path);
+            $result = $this->$method($csv_path, $overwrite);
 
             $all_results['imported'] += $result['imported'];
             $all_results['skipped'] += $result['skipped'];

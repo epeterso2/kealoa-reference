@@ -507,6 +507,18 @@ class Kealoa_Admin {
                                 </p>
                             </td>
                         </tr>
+                        <tr>
+                            <th><?php esc_html_e('Options', 'kealoa-reference'); ?></th>
+                            <td>
+                                <label for="zip_overwrite">
+                                    <input type="checkbox" name="overwrite" id="zip_overwrite" value="1" />
+                                    <?php esc_html_e('Overwrite existing data', 'kealoa-reference'); ?>
+                                </label>
+                                <p class="description">
+                                    <?php esc_html_e('When checked, imported data will overwrite existing records. When unchecked, existing records will be skipped.', 'kealoa-reference'); ?>
+                                </p>
+                            </td>
+                        </tr>
                     </table>
                     
                     <p class="submit">
@@ -546,6 +558,18 @@ class Kealoa_Admin {
                                 </p>
                             </td>
                         </tr>
+                        <tr>
+                            <th><?php esc_html_e('Options', 'kealoa-reference'); ?></th>
+                            <td>
+                                <label for="csv_overwrite">
+                                    <input type="checkbox" name="overwrite" id="csv_overwrite" value="1" />
+                                    <?php esc_html_e('Overwrite existing data', 'kealoa-reference'); ?>
+                                </label>
+                                <p class="description">
+                                    <?php esc_html_e('When checked, imported data will overwrite existing records. When unchecked, existing records will be skipped.', 'kealoa-reference'); ?>
+                                </p>
+                            </td>
+                        </tr>
                     </table>
                     
                     <p class="submit">
@@ -557,7 +581,7 @@ class Kealoa_Admin {
             <div class="kealoa-import-section" style="margin-top: 30px;">
                 <h2><?php esc_html_e('Import Notes', 'kealoa-reference'); ?></h2>
                 <ul>
-                    <li><?php esc_html_e('Duplicate records are automatically skipped based on unique identifiers (names, dates).', 'kealoa-reference'); ?></li>
+                    <li><?php esc_html_e('When "Overwrite existing data" is unchecked, duplicate records are skipped based on unique identifiers (names, dates). When checked, existing records are updated with the imported data.', 'kealoa-reference'); ?></li>
                     <li><?php esc_html_e('For Puzzles: Constructors are looked up by name. If not found, they are created automatically with XWordInfo fields populated.', 'kealoa-reference'); ?></li>
                     <li><?php esc_html_e('For Rounds: Clue givers and guessers are looked up by name. If not found, they are created automatically.', 'kealoa-reference'); ?></li>
                     <li><?php esc_html_e('For Clues: Rounds must exist (matched by round_date). Puzzles are created if not found.', 'kealoa-reference'); ?></li>
@@ -595,9 +619,10 @@ class Kealoa_Admin {
         }
 
         $file_path = $_FILES['zip_file']['tmp_name'];
+        $overwrite = !empty($_POST['overwrite']);
         $importer = new Kealoa_Import($this->db);
 
-        return $importer->import_zip($file_path);
+        return $importer->import_zip($file_path, $overwrite);
     }
 
     /**
@@ -626,10 +651,11 @@ class Kealoa_Admin {
         }
         
         $file_path = $_FILES['csv_file']['tmp_name'];
+        $overwrite = !empty($_POST['overwrite']);
         $importer = new Kealoa_Import($this->db);
         
         $method = 'import_' . $import_type;
-        $result = $importer->$method($file_path);
+        $result = $importer->$method($file_path, $overwrite);
         
         $result['success'] = $result['imported'] > 0 || empty($result['errors']);
         
