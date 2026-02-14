@@ -70,6 +70,10 @@ class Kealoa_Blocks {
             register_block_type(KEALOA_PLUGIN_DIR . 'blocks/editor-view');
         }
         
+        if (file_exists(KEALOA_PLUGIN_DIR . 'blocks/version-info/block.json')) {
+            register_block_type(KEALOA_PLUGIN_DIR . 'blocks/version-info');
+        }
+        
         // Fallback registration if block.json files don't exist yet
         if (!file_exists(KEALOA_PLUGIN_DIR . 'blocks/rounds-table/block.json')) {
             register_block_type('kealoa/rounds-table', [
@@ -255,5 +259,12 @@ class Kealoa_Blocks {
         }
         
         return $this->shortcodes->render_editor(['name' => $editor_name]);
+    }
+
+    /**
+     * Render version info block
+     */
+    public function render_version_info_block(array $attributes): string {
+        return $this->shortcodes->render_version([]);
     }
 }

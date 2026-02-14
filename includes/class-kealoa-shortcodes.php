@@ -37,6 +37,7 @@ class Kealoa_Shortcodes {
         add_shortcode('kealoa_constructor', [$this, 'render_constructor']);
         add_shortcode('kealoa_editors_table', [$this, 'render_editors_table']);
         add_shortcode('kealoa_editor', [$this, 'render_editor']);
+        add_shortcode('kealoa_version', [$this, 'render_version']);
     }
 
     /**
@@ -1180,6 +1181,35 @@ class Kealoa_Shortcodes {
             <?php else: ?>
                 <p class="kealoa-no-data"><?php esc_html_e('No puzzles found for this editor.', 'kealoa-reference'); ?></p>
             <?php endif; ?>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Render version info shortcode
+     *
+     * [kealoa_version]
+     */
+    public function render_version(array $atts = []): string {
+        $plugin_version = KEALOA_VERSION;
+        $db_version = KEALOA_DB_VERSION;
+        
+        ob_start();
+        ?>
+        <div class="kealoa-version-widget">
+            <table class="kealoa-table kealoa-version-table">
+                <tbody>
+                    <tr>
+                        <td><strong><?php esc_html_e('Plugin Version', 'kealoa-reference'); ?></strong></td>
+                        <td><?php echo esc_html($plugin_version); ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong><?php esc_html_e('Database Version', 'kealoa-reference'); ?></strong></td>
+                        <td><?php echo esc_html($db_version); ?></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
         <?php
         return ob_get_clean();

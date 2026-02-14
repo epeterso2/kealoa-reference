@@ -529,4 +529,27 @@
         }
     });
 
+    /**
+     * KEALOA Version Info Block
+     */
+    registerBlockType('kealoa/version-info', {
+        title: __('KEALOA Version Info', 'kealoa-reference'),
+        description: __('Displays the KEALOA plugin and database version numbers.', 'kealoa-reference'),
+        icon: 'info-outline',
+        category: 'widgets',
+        keywords: [__('kealoa', 'kealoa-reference'), __('version', 'kealoa-reference'), __('info', 'kealoa-reference')],
+        attributes: {},
+
+        edit: function (props) {
+            return createElement(ServerSideRender, {
+                block: 'kealoa/version-info',
+                attributes: props.attributes
+            });
+        },
+
+        save: function () {
+            return null;
+        }
+    });
+
 })(window.wp);
