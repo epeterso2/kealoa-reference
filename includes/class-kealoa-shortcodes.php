@@ -187,8 +187,7 @@ class Kealoa_Shortcodes {
                             $link = Kealoa_Formatter::format_person_link((int) $gr->person_id, $gr->full_name);
                             $correct = (int) $gr->correct_guesses;
                             $total = (int) $gr->total_guesses;
-                            $accuracy = $total > 0 ? ($correct / $total) * 100 : 0;
-                            $score = sprintf('%d/%d, %s', $correct, $total, Kealoa_Formatter::format_percentage((float) $accuracy));
+                            $score = sprintf('%d/%d', $correct, $total);
                             $guesser_parts[] = $link . ' (' . esc_html($score) . ')';
                         }
                         echo implode('; ', $guesser_parts);
