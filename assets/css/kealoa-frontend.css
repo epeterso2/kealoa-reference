@@ -488,3 +488,48 @@
         text-decoration: underline;
     }
 }
+
+/* ==========================================================================
+   Tabs
+   ========================================================================== */
+
+.kealoa-tabs {
+    margin-top: 20px;
+}
+
+.kealoa-tab-nav {
+    display: flex;
+    border-bottom: 2px solid #ddd;
+    margin-bottom: 20px;
+    gap: 0;
+}
+
+.kealoa-tab-button {
+    padding: 10px 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.kealoa-tab-button:hover {
+    color: #2271b1;
+}
+
+.kealoa-tab-button.active {
+    color: #2271b1;
+    border-bottom-color: #2271b1;
+}
+
+.kealoa-tab-panel {
+    display: none;
+}
+
+.kealoa-tab-panel.active {
+    display: block;
+}

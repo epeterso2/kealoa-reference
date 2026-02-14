@@ -243,4 +243,40 @@
     } else {
         initTableSorting();
     }
+
+    /**
+     * Tab switching for person view
+     */
+    function initTabs() {
+        var tabContainers = document.querySelectorAll('.kealoa-tabs');
+        tabContainers.forEach(function(container) {
+            var buttons = container.querySelectorAll('.kealoa-tab-button');
+            var panels = container.querySelectorAll('.kealoa-tab-panel');
+            
+            buttons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    var tabName = this.getAttribute('data-tab');
+                    
+                    buttons.forEach(function(btn) {
+                        btn.classList.remove('active');
+                    });
+                    panels.forEach(function(panel) {
+                        panel.classList.remove('active');
+                    });
+                    
+                    this.classList.add('active');
+                    var targetPanel = container.querySelector('.kealoa-tab-panel[data-tab="' + tabName + '"]');
+                    if (targetPanel) {
+                        targetPanel.classList.add('active');
+                    }
+                });
+            });
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTabs);
+    } else {
+        initTabs();
+    }
 })();

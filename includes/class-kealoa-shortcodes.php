@@ -372,6 +372,16 @@ class Kealoa_Shortcodes {
                 </div>
             </div>
             
+            <div class="kealoa-tabs">
+                <div class="kealoa-tab-nav">
+                    <button class="kealoa-tab-button active" data-tab="player"><?php esc_html_e('Player', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="puzzle"><?php esc_html_e('Puzzle', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="constructor"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="round"><?php esc_html_e('Round', 'kealoa-reference'); ?></button>
+                </div>
+                
+                <div class="kealoa-tab-panel active" data-tab="player">
+            
             <div class="kealoa-person-stats">
                 <h3><?php esc_html_e('KEALOA Statistics', 'kealoa-reference'); ?></h3>
                 
@@ -460,6 +470,113 @@ class Kealoa_Shortcodes {
                     </table>
                 </div>
             <?php endif; ?>
+            
+            <?php if (!empty($round_history)): ?>
+                <div class="kealoa-accuracy-chart-section">
+                    <h3><?php esc_html_e('Accuracy by Round', 'kealoa-reference'); ?></h3>
+                    <div class="kealoa-chart-container">
+                        <canvas id="kealoa-accuracy-chart"></canvas>
+                    </div>
+                    <?php
+                    // Build chart data in chronological order (round_history is DESC)
+                    $chart_history = array_reverse($round_history);
+                    $chart_labels = [];
+                    $chart_data = [];
+                    $chart_words = [];
+                    $chart_urls = [];
+                    foreach ($chart_history as $ch) {
+                        $chart_labels[] = Kealoa_Formatter::format_date($ch->round_date);
+                        $pct_val = $ch->total_clues > 0
+                            ? round(($ch->correct_count / $ch->total_clues) * 100, 1)
+                            : 0;
+                        $chart_data[] = $pct_val;
+                        $ch_solutions = $this->db->get_round_solutions((int) $ch->round_id);
+                        $chart_words[] = Kealoa_Formatter::format_solution_words($ch_solutions);
+                        $chart_urls[] = home_url('/kealoa/round/' . $ch->round_id . '/');
+                    }
+                    ?>
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var ctx = document.getElementById('kealoa-accuracy-chart');
+                        if (ctx && typeof Chart !== 'undefined') {
+                            var chartWords = <?php echo wp_json_encode($chart_words); ?>;
+                            var chartUrls = <?php echo wp_json_encode($chart_urls); ?>;
+                            var chart = new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: <?php echo wp_json_encode($chart_labels); ?>,
+                                    datasets: [{
+                                        label: <?php echo wp_json_encode(__('Accuracy %', 'kealoa-reference')); ?>,
+                                        data: <?php echo wp_json_encode($chart_data); ?>,
+                                        borderColor: '#2271b1',
+                                        backgroundColor: 'rgba(34, 113, 177, 0.1)',
+                                        fill: true,
+                                        tension: 0.3,
+                                        pointRadius: 3,
+                                        pointHoverRadius: 6
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    scales: {
+                                        x: {
+                                            title: {
+                                                display: true,
+                                                text: <?php echo wp_json_encode(__('Round Date', 'kealoa-reference')); ?>
+                                            }
+                                        },
+                                        y: {
+                                            title: {
+                                                display: true,
+                                                text: <?php echo wp_json_encode(__('Accuracy %', 'kealoa-reference')); ?>
+                                            },
+                                            min: 0,
+                                            max: 100
+                                        }
+                                    },
+                                    plugins: {
+                                        legend: {
+                                            display: false
+                                        },
+                                        tooltip: {
+                                            callbacks: {
+                                                title: function(items) {
+                                                    if (items.length > 0) {
+                                                        var idx = items[0].dataIndex;
+                                                        return chartWords[idx] || items[0].label;
+                                                    }
+                                                    return '';
+                                                },
+                                                label: function(item) {
+                                                    return item.parsed.y + '%';
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                onClick: function(evt) {
+                                    var points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
+                                    if (points.length > 0) {
+                                        var idx = points[0].index;
+                                        if (chartUrls[idx]) {
+                                            window.location.href = chartUrls[idx];
+                                        }
+                                    }
+                                },
+                                onHover: function(evt, elements) {
+                                    ctx.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+                                }
+                            });
+                        }
+                    });
+                    </script>
+                </div>
+            <?php endif; ?>
+            
+                </div><!-- end Player tab -->
+                
+                <div class="kealoa-tab-panel" data-tab="puzzle">
             
             <?php if (!empty($clue_number_results)): ?>
                 <div class="kealoa-clue-number-stats">
@@ -605,40 +722,6 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
             
-            <?php if (!empty($constructor_results)): ?>
-                <div class="kealoa-constructor-stats">
-                    <h3><?php esc_html_e('Results by Constructor', 'kealoa-reference'); ?></h3>
-                    
-                    <table class="kealoa-table kealoa-constructor-table">
-                        <thead>
-                            <tr>
-                                <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($constructor_results as $result): ?>
-                                <tr>
-                                    <td><?php echo Kealoa_Formatter::format_constructor_link((int) $result->constructor_id, $result->full_name); ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php 
-                                        $pct = $result->total_answered > 0 
-                                            ? ($result->correct_count / $result->total_answered) * 100 
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-            
             <?php if (!empty($editor_results)): ?>
                 <div class="kealoa-editor-stats">
                     <h3><?php esc_html_e('Results by Editor', 'kealoa-reference'); ?></h3>
@@ -673,109 +756,49 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
             
-            <?php if (!empty($round_history)): ?>
-                <div class="kealoa-accuracy-chart-section">
-                    <h3><?php esc_html_e('Accuracy by Round', 'kealoa-reference'); ?></h3>
-                    <div class="kealoa-chart-container">
-                        <canvas id="kealoa-accuracy-chart"></canvas>
-                    </div>
-                    <?php
-                    // Build chart data in chronological order (round_history is DESC)
-                    $chart_history = array_reverse($round_history);
-                    $chart_labels = [];
-                    $chart_data = [];
-                    $chart_words = [];
-                    $chart_urls = [];
-                    foreach ($chart_history as $ch) {
-                        $chart_labels[] = Kealoa_Formatter::format_date($ch->round_date);
-                        $pct_val = $ch->total_clues > 0
-                            ? round(($ch->correct_count / $ch->total_clues) * 100, 1)
-                            : 0;
-                        $chart_data[] = $pct_val;
-                        $ch_solutions = $this->db->get_round_solutions((int) $ch->round_id);
-                        $chart_words[] = Kealoa_Formatter::format_solution_words($ch_solutions);
-                        $chart_urls[] = home_url('/kealoa/round/' . $ch->round_id . '/');
-                    }
-                    ?>
-                    <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        var ctx = document.getElementById('kealoa-accuracy-chart');
-                        if (ctx && typeof Chart !== 'undefined') {
-                            var chartWords = <?php echo wp_json_encode($chart_words); ?>;
-                            var chartUrls = <?php echo wp_json_encode($chart_urls); ?>;
-                            var chart = new Chart(ctx, {
-                                type: 'line',
-                                data: {
-                                    labels: <?php echo wp_json_encode($chart_labels); ?>,
-                                    datasets: [{
-                                        label: <?php echo wp_json_encode(__('Accuracy %', 'kealoa-reference')); ?>,
-                                        data: <?php echo wp_json_encode($chart_data); ?>,
-                                        borderColor: '#2271b1',
-                                        backgroundColor: 'rgba(34, 113, 177, 0.1)',
-                                        fill: true,
-                                        tension: 0.3,
-                                        pointRadius: 3,
-                                        pointHoverRadius: 6
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    scales: {
-                                        x: {
-                                            title: {
-                                                display: true,
-                                                text: <?php echo wp_json_encode(__('Round Date', 'kealoa-reference')); ?>
-                                            }
-                                        },
-                                        y: {
-                                            title: {
-                                                display: true,
-                                                text: <?php echo wp_json_encode(__('Accuracy %', 'kealoa-reference')); ?>
-                                            },
-                                            min: 0,
-                                            max: 100
-                                        }
-                                    },
-                                    plugins: {
-                                        legend: {
-                                            display: false
-                                        },
-                                        tooltip: {
-                                            callbacks: {
-                                                title: function(items) {
-                                                    if (items.length > 0) {
-                                                        var idx = items[0].dataIndex;
-                                                        return chartWords[idx] || items[0].label;
-                                                    }
-                                                    return '';
-                                                },
-                                                label: function(item) {
-                                                    return item.parsed.y + '%';
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
-                                onClick: function(evt) {
-                                    var points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
-                                    if (points.length > 0) {
-                                        var idx = points[0].index;
-                                        if (chartUrls[idx]) {
-                                            window.location.href = chartUrls[idx];
-                                        }
-                                    }
-                                },
-                                onHover: function(evt, elements) {
-                                    ctx.style.cursor = elements.length > 0 ? 'pointer' : 'default';
-                                }
-                            });
-                        }
-                    });
-                    </script>
-                </div>
+                </div><!-- end Puzzle tab -->
                 
-                <div class="kealoa-round-history">
+                <div class="kealoa-tab-panel" data-tab="constructor">
+            
+            <?php if (!empty($constructor_results)): ?>
+                <div class="kealoa-constructor-stats">
+                    <h3><?php esc_html_e('Results by Constructor', 'kealoa-reference'); ?></h3>
+                    
+                    <table class="kealoa-table kealoa-constructor-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($constructor_results as $result): ?>
+                                <tr>
+                                    <td><?php echo Kealoa_Formatter::format_constructor_link((int) $result->constructor_id, $result->full_name); ?></td>
+                                    <td><?php echo esc_html($result->total_answered); ?></td>
+                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td>
+                                        <?php 
+                                        $pct = $result->total_answered > 0 
+                                            ? ($result->correct_count / $result->total_answered) * 100 
+                                            : 0;
+                                        echo Kealoa_Formatter::format_percentage($pct);
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+            
+                </div><!-- end Constructor tab -->
+                
+                <div class="kealoa-tab-panel" data-tab="round">
+            
+            <?php if (!empty($round_history)): ?>
                     <h3><?php esc_html_e('Round History', 'kealoa-reference'); ?></h3>
                     
                     <?php
@@ -832,6 +855,9 @@ class Kealoa_Shortcodes {
                     </table>
                 </div>
             <?php endif; ?>
+            
+                </div><!-- end Round tab -->
+            </div><!-- end kealoa-tabs -->
         </div>
         <?php
         return ob_get_clean();
