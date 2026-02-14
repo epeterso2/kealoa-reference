@@ -381,6 +381,12 @@ class Kealoa_Formatter {
      * @return string Formatted list showing "Name (X/Y)" with links
      */
     public static function format_guesser_results(array $results, int $total_clues): string {
+        if (count($results) > 1) {
+            usort($results, function($a, $b) {
+                return (int) $b->correct_guesses - (int) $a->correct_guesses;
+            });
+        }
+        
         $formatted = array_map(function($result) use ($total_clues) {
             $link = self::format_person_link((int) $result->person_id, $result->full_name);
             return sprintf('%s (%d/%d)', $link, (int) $result->correct_guesses, $total_clues);
