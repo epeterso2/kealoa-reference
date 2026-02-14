@@ -309,14 +309,29 @@ class Kealoa_Shortcodes {
         $constructor_results = $this->db->get_person_results_by_constructor($person_id);
         $round_history = $this->db->get_person_round_history($person_id);
         
+        // If person has no image, check for a matching constructor by name
+        $person_image_url = $person->xwordinfo_image_url ?? '';
+        if (empty($person_image_url)) {
+            $matching_constructors = $this->db->get_constructors([
+                'search' => $person->full_name,
+                'limit' => 1,
+            ]);
+            foreach ($matching_constructors as $mc) {
+                if (strtolower($mc->full_name) === strtolower($person->full_name) && !empty($mc->xwordinfo_image_url)) {
+                    $person_image_url = $mc->xwordinfo_image_url;
+                    break;
+                }
+            }
+        }
+        
         ob_start();
         ?>
         <div class="kealoa-person-view">
             <div class="kealoa-person-header">
                 <div class="kealoa-person-info">
-                    <?php if (!empty($person->xwordinfo_image_url)): ?>
+                    <?php if (!empty($person_image_url)): ?>
                         <div class="kealoa-person-image">
-                            <?php echo Kealoa_Formatter::format_xwordinfo_image($person->xwordinfo_image_url, $person->full_name); ?>
+                            <?php echo Kealoa_Formatter::format_xwordinfo_image($person_image_url, $person->full_name); ?>
                         </div>
                     <?php endif; ?>
                     
