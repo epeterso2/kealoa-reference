@@ -1192,26 +1192,10 @@ class Kealoa_Shortcodes {
      * [kealoa_version]
      */
     public function render_version(array $atts = []): string {
-        $plugin_version = KEALOA_VERSION;
-        $db_version = KEALOA_DB_VERSION;
-        
-        ob_start();
-        ?>
-        <div class="kealoa-version-widget">
-            <table class="kealoa-table kealoa-version-table">
-                <tbody>
-                    <tr>
-                        <td><strong><?php esc_html_e('Plugin Version', 'kealoa-reference'); ?></strong></td>
-                        <td><?php echo esc_html($plugin_version); ?></td>
-                    </tr>
-                    <tr>
-                        <td><strong><?php esc_html_e('Database Version', 'kealoa-reference'); ?></strong></td>
-                        <td><?php echo esc_html($db_version); ?></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <?php
-        return ob_get_clean();
+        return sprintf(
+            '<p class="kealoa-version-widget">Plugin Version: %s, Database Version: %s.</p>',
+            esc_html(KEALOA_VERSION),
+            esc_html(KEALOA_DB_VERSION)
+        );
     }
 }
