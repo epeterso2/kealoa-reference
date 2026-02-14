@@ -72,18 +72,35 @@ class Kealoa_Import {
     private function parse_csv(string $file_path): array {
         $rows = [];
         
-        if (($handle = fopen($file_path, 'r')) !== false) {
+        // Read raw content and ensure UTF-8 encoding
+        $content = file_get_contents($file_path);
+        if ($content === false) {
+            return [];
+        }
+        
+        // Remove UTF-8 BOM if present
+        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
+        
+        // Detect encoding and convert to UTF-8 if needed
+        $encoding = mb_detect_encoding($content, ['UTF-8', 'ISO-8859-1', 'Windows-1252'], true);
+        if ($encoding && $encoding !== 'UTF-8') {
+            $content = mb_convert_encoding($content, 'UTF-8', $encoding);
+        }
+        
+        // Write sanitized content to a temp file for fgetcsv
+        $temp_path = tempnam(sys_get_temp_dir(), 'kealoa_csv_');
+        file_put_contents($temp_path, $content);
+        
+        if (($handle = fopen($temp_path, 'r')) !== false) {
             $headers = fgetcsv($handle);
             if ($headers === false) {
                 fclose($handle);
+                @unlink($temp_path);
                 return [];
             }
             
-            // Trim headers and remove BOM if present
+            // Trim headers
             $headers = array_map('trim', $headers);
-            if (!empty($headers[0])) {
-                $headers[0] = preg_replace('/^\xEF\xBB\xBF/', '', $headers[0]);
-            }
             
             $header_count = count($headers);
             
@@ -109,6 +126,8 @@ class Kealoa_Import {
             
             fclose($handle);
         }
+        
+        @unlink($temp_path);
         
         return $rows;
     }
