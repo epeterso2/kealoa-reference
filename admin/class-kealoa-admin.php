@@ -955,7 +955,7 @@ class Kealoa_Admin {
                         <input type="url" name="xwordinfo_image_url" id="xwordinfo_image_url" class="regular-text"
                                value="<?php echo esc_attr($constructor->xwordinfo_image_url ?? ''); ?>" />
                         <p class="description">
-                            <?php esc_html_e('Auto-populated from name (spaces removed). Format: xwordinfo.com/images/cons/{name}.jpg', 'kealoa-reference'); ?>
+                            <?php esc_html_e('Auto-populated from name (non-alphanumeric characters removed). Format: xwordinfo.com/images/cons/{name}.jpg', 'kealoa-reference'); ?>
                         </p>
                         <?php if (!empty($constructor->xwordinfo_image_url)): ?>
                             <p><img src="<?php echo esc_url($constructor->xwordinfo_image_url); ?>" alt="" style="max-width: 150px; margin-top: 10px;" /></p>

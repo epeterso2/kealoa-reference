@@ -570,6 +570,16 @@ class Kealoa_Import {
             
             if ($clue_id) {
                 $imported++;
+                
+                // Handle Ryan Hecht guess if column is present and has a value
+                if (!empty($row['ryan_hecht'])) {
+                    $ryan = $this->find_or_create_person('Ryan Hecht');
+                    if ($ryan) {
+                        $guessed_word = strtoupper(trim($row['ryan_hecht']));
+                        $actual_clue_id = $existing_clue ? (int) $existing_clue->id : $clue_id;
+                        $this->db->set_guess($actual_clue_id, (int) $ryan->id, $guessed_word);
+                    }
+                }
             } else {
                 $errors[] = "Line {$line}: Failed to insert clue";
                 $skipped++;
@@ -693,7 +703,7 @@ class Kealoa_Import {
         
         // Auto-generate XWordInfo fields
         $profile_name = str_replace(' ', '_', $name);
-        $image_name = str_replace(' ', '', $name);
+        $image_name = preg_replace('/[^A-Za-z0-9]/', '', $name);
         $image_url = 'https://www.xwordinfo.com/images/cons/' . $image_name . '.jpg';
         
         $id = $this->db->create_constructor([
