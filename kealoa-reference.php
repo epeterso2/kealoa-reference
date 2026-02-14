@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.0.61
+ * Version: 1.0.62
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.0.61');
+define('KEALOA_VERSION', '1.0.62');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -206,6 +206,12 @@ function kealoa_register_rewrite_rules(): void {
         'index.php?kealoa_constructor_id=$matches[1]',
         'top'
     );
+    
+    add_rewrite_rule(
+        '^kealoa/editor/([^/]+)/?$',
+        'index.php?kealoa_editor_name=$matches[1]',
+        'top'
+    );
 }
 
 /**
@@ -215,6 +221,7 @@ function kealoa_query_vars(array $vars): array {
     $vars[] = 'kealoa_person_id';
     $vars[] = 'kealoa_round_id';
     $vars[] = 'kealoa_constructor_id';
+    $vars[] = 'kealoa_editor_name';
     return $vars;
 }
 
@@ -238,6 +245,12 @@ function kealoa_template_redirect(): void {
     
     if ($constructor_id) {
         kealoa_render_constructor_page((int) $constructor_id);
+        exit;
+    }
+    
+    $editor_name = get_query_var('kealoa_editor_name');
+    if ($editor_name) {
+        kealoa_render_editor_page(urldecode($editor_name));
         exit;
     }
 }
@@ -295,6 +308,18 @@ function kealoa_render_constructor_page(int $constructor_id): void {
     echo '<div class="kealoa-page-container">';
     $shortcodes = new Kealoa_Shortcodes();
     echo $shortcodes->render_constructor(['id' => $constructor_id]);
+    echo '</div>';
+    get_footer();
+}
+
+/**
+ * Render editor page
+ */
+function kealoa_render_editor_page(string $editor_name): void {
+    get_header();
+    echo '<div class="kealoa-page-container">';
+    $shortcodes = new Kealoa_Shortcodes();
+    echo $shortcodes->render_editor(['name' => $editor_name]);
     echo '</div>';
     get_footer();
 }
