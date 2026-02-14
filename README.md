@@ -4,7 +4,7 @@ A WordPress plugin for managing and displaying KEALOA quiz game data from the Fi
 
 ## Description
 
-KEALOA is a quiz game played on the Fill Me In podcast where a clue giver selects words from New York Times crossword puzzles that have similar lengths, spellings, and definitions. Guessers then try to identify which word matches each clue.
+KEALOA is a quiz game played on the Fill Me In podcast where a clue giver selects words from New York Times crossword puzzles that have similar lengths, spellings, and definitions. Players then try to identify which word matches each clue.
 
 This plugin provides:
 
@@ -32,8 +32,8 @@ This plugin provides:
 The plugin adds a **KEALOA** menu to the WordPress admin with the following sections:
 
 - **Dashboard** - Overview of data and available shortcodes/blocks
-- **Rounds** - Manage KEALOA rounds with clue giver, guessers, and solution words
-- **Persons** - Manage people (clue givers, guessers, puzzle constructors)
+- **Rounds** - Manage KEALOA rounds with clue giver, players, and solution words
+- **Persons** - Manage people (clue givers, players, puzzle constructors)
 - **Puzzles** - Manage NYT puzzle dates and constructors
 
 ### Shortcodes
@@ -76,7 +76,7 @@ The plugin creates custom URL routes:
 - Fill Me In episode number
 - Episode start time (seconds)
 - Clue giver
-- Guessers
+- Players
 - Solution words
 - Description
 
@@ -88,7 +88,7 @@ The plugin creates custom URL routes:
 - Correct answer
 
 ### Guesses
-- Guesser
+- Player
 - Guessed word
 - Correct/incorrect status
 

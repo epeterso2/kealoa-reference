@@ -290,9 +290,9 @@ class Kealoa_Admin {
 
         $descriptions = [
             'constructors' => __('Crossword puzzle constructors with XWordInfo profile info', 'kealoa-reference'),
-            'persons' => __('Podcast hosts, guests, and clue givers/guessers', 'kealoa-reference'),
+            'persons' => __('Podcast hosts, guests, and clue givers/players', 'kealoa-reference'),
             'puzzles' => __('NYT crossword puzzles with constructors', 'kealoa-reference'),
-            'rounds' => __('KEALOA game rounds with episode info, solution words, and guessers', 'kealoa-reference'),
+            'rounds' => __('KEALOA game rounds with episode info, solution words, and players', 'kealoa-reference'),
             'clues' => __('All clues with puzzle info and correct answers', 'kealoa-reference'),
             'guesses' => __('All guesses for every clue', 'kealoa-reference'),
         ];
@@ -434,7 +434,7 @@ class Kealoa_Admin {
                         </tr>
                         <tr>
                             <td><strong><?php esc_html_e('Persons', 'kealoa-reference'); ?></strong></td>
-                            <td><?php esc_html_e('Podcast hosts, guests, and clue givers/guessers', 'kealoa-reference'); ?></td>
+                            <td><?php esc_html_e('Podcast hosts, guests, and clue givers/players', 'kealoa-reference'); ?></td>
                             <td>
                                 <?php if (isset($templates['persons'])): ?>
                                     <a href="<?php echo esc_url($templates['persons']['url']); ?>" class="button button-small" download>
@@ -456,7 +456,7 @@ class Kealoa_Admin {
                         </tr>
                         <tr>
                             <td><strong><?php esc_html_e('Rounds', 'kealoa-reference'); ?></strong></td>
-                            <td><?php esc_html_e('KEALOA game rounds with episode info, solution words, guessers (creates persons if needed)', 'kealoa-reference'); ?></td>
+                            <td><?php esc_html_e('KEALOA game rounds with episode info, solution words, players (creates persons if needed)', 'kealoa-reference'); ?></td>
                             <td>
                                 <?php if (isset($templates['rounds'])): ?>
                                     <a href="<?php echo esc_url($templates['rounds']['url']); ?>" class="button button-small" download>
@@ -584,7 +584,7 @@ class Kealoa_Admin {
                 <ul>
                     <li><?php esc_html_e('When "Overwrite existing data" is unchecked, duplicate records are skipped based on unique identifiers (names, dates). When checked, existing records are updated with the imported data.', 'kealoa-reference'); ?></li>
                     <li><?php esc_html_e('For Puzzles: Constructors are looked up by name. If not found, they are created automatically with XWordInfo fields populated.', 'kealoa-reference'); ?></li>
-                    <li><?php esc_html_e('For Rounds: Clue givers and guessers are looked up by name. If not found, they are created automatically.', 'kealoa-reference'); ?></li>
+                    <li><?php esc_html_e('For Rounds: Clue givers and players are looked up by name. If not found, they are created automatically.', 'kealoa-reference'); ?></li>
                     <li><?php esc_html_e('For Clues: Rounds must exist (matched by round_date). Puzzles are created if not found.', 'kealoa-reference'); ?></li>
                     <li><?php esc_html_e('For Guesses: is_correct is automatically calculated by comparing guessed_word to the clue\'s correct_answer.', 'kealoa-reference'); ?></li>
                     <li><?php esc_html_e('All text is trimmed. Solution words and answers are automatically uppercased.', 'kealoa-reference'); ?></li>
@@ -807,7 +807,7 @@ class Kealoa_Admin {
                         <input type="text" name="full_name" id="full_name" class="regular-text" required
                                value="<?php echo esc_attr($person->full_name ?? ''); ?>" />
                         <p class="description">
-                            <?php esc_html_e('Persons are podcast hosts, clue givers, and guessers (not puzzle constructors).', 'kealoa-reference'); ?>
+                            <?php esc_html_e('Persons are podcast hosts, clue givers, and players (not puzzle constructors).', 'kealoa-reference'); ?>
                         </p>
                     </td>
                 </tr>
@@ -1415,7 +1415,7 @@ class Kealoa_Admin {
                     </td>
                 </tr>
                 <tr>
-                    <th><label for="guessers"><?php esc_html_e('Guessers', 'kealoa-reference'); ?></label></th>
+                    <th><label for="guessers"><?php esc_html_e('Players', 'kealoa-reference'); ?></label></th>
                     <td>
                         <select name="guessers[]" id="guessers" multiple class="kealoa-multi-select" style="width: 100%; min-height: 150px;">
                             <?php foreach ($all_persons as $person): ?>
@@ -1426,7 +1426,7 @@ class Kealoa_Admin {
                             <?php endforeach; ?>
                         </select>
                         <p class="description">
-                            <?php esc_html_e('Hold Ctrl/Cmd to select multiple guessers.', 'kealoa-reference'); ?>
+                            <?php esc_html_e('Hold Ctrl/Cmd to select multiple players.', 'kealoa-reference'); ?>
                         </p>
                     </td>
                 </tr>
@@ -1490,7 +1490,7 @@ class Kealoa_Admin {
                 <?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?>
             </p>
             <p>
-                <strong><?php esc_html_e('Guessers:', 'kealoa-reference'); ?></strong>
+                <strong><?php esc_html_e('Players:', 'kealoa-reference'); ?></strong>
                 <?php 
                 $guesser_names = array_map(fn($g) => $g->full_name, $guessers);
                 echo esc_html(Kealoa_Formatter::format_list_with_and($guesser_names));

@@ -180,7 +180,7 @@ class Kealoa_Shortcodes {
                         ?>
                     </p>
                     <p>
-                        <strong><?php esc_html_e('Guessers:', 'kealoa-reference'); ?></strong>
+                        <strong><?php esc_html_e('Players:', 'kealoa-reference'); ?></strong>
                         <?php
                         $sorted_results = $guesser_results;
                         usort($sorted_results, function($a, $b) {

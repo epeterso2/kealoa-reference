@@ -707,7 +707,7 @@ class Kealoa_Import {
             // Find the guesser
             $guesser = $this->find_person_by_name($row['guesser']);
             if (!$guesser) {
-                $errors[] = "Line {$line}: Guesser '{$row['guesser']}' not found";
+                $errors[] = "Line {$line}: Player '{$row['guesser']}' not found";
                 $skipped++;
                 continue;
             }
