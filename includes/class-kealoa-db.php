@@ -882,7 +882,7 @@ class Kealoa_DB {
      */
     public function get_round_clues(int $round_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT c.*, pz.publication_date as puzzle_date
+            "SELECT c.*, pz.publication_date as puzzle_date, pz.editor_name as editor_name
             FROM {$this->clues_table} c
             LEFT JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
             WHERE c.round_id = %d

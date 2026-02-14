@@ -219,6 +219,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
                                 <th data-sort="clue"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Clue Text', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Answer', 'kealoa-reference'); ?></th>
@@ -243,6 +244,15 @@ class Kealoa_Shortcodes {
                                     </td>
                                     <td class="kealoa-constructors">
                                         <?php echo Kealoa_Formatter::format_constructor_list($constructors); ?>
+                                    </td>
+                                    <td class="kealoa-editor">
+                                        <?php
+                                        if (!empty($clue->editor_name)) {
+                                            echo Kealoa_Formatter::format_editor_link($clue->editor_name);
+                                        } else {
+                                            echo '—';
+                                        }
+                                        ?>
                                     </td>
                                     <td class="kealoa-clue-ref">
                                         <?php echo esc_html(Kealoa_Formatter::format_clue_direction((int) $clue->puzzle_clue_number, $clue->puzzle_clue_direction)); ?>
