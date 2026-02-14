@@ -651,7 +651,7 @@ class Kealoa_Shortcodes {
                         <tbody>
                             <?php foreach ($editor_results as $result): ?>
                                 <tr>
-                                    <td><?php echo esc_html($result->editor_name); ?></td>
+                                    <td><?php echo Kealoa_Formatter::format_editor_link($result->editor_name); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
                                     <td>
