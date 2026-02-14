@@ -62,6 +62,14 @@ class Kealoa_Blocks {
             register_block_type(KEALOA_PLUGIN_DIR . 'blocks/persons-table');
         }
         
+        if (file_exists(KEALOA_PLUGIN_DIR . 'blocks/editors-table/block.json')) {
+            register_block_type(KEALOA_PLUGIN_DIR . 'blocks/editors-table');
+        }
+        
+        if (file_exists(KEALOA_PLUGIN_DIR . 'blocks/editor-view/block.json')) {
+            register_block_type(KEALOA_PLUGIN_DIR . 'blocks/editor-view');
+        }
+        
         // Fallback registration if block.json files don't exist yet
         if (!file_exists(KEALOA_PLUGIN_DIR . 'blocks/rounds-table/block.json')) {
             register_block_type('kealoa/rounds-table', [
@@ -121,6 +129,7 @@ class Kealoa_Blocks {
         $rounds = $db->get_rounds(['limit' => 100]);
         $persons = $db->get_persons(['limit' => 100]);
         $constructors = $db->get_constructors(['limit' => 1000]);
+        $editors = $db->get_editors_with_stats();
         
         wp_localize_script('kealoa-blocks-editor', 'kealoaBlocksData', [
             'rounds' => array_map(function($round) {
@@ -142,6 +151,11 @@ class Kealoa_Blocks {
                     'name' => $constructor->full_name,
                 ];
             }, $constructors),
+            'editors' => array_map(function($editor) {
+                return [
+                    'name' => $editor->editor_name,
+                ];
+            }, $editors),
         ]);
         
         wp_enqueue_style(
@@ -219,5 +233,27 @@ class Kealoa_Blocks {
         }
         
         return $this->shortcodes->render_constructor(['id' => $constructor_id]);
+    }
+
+    /**
+     * Render editors table block
+     */
+    public function render_editors_table_block(array $attributes): string {
+        return $this->shortcodes->render_editors_table([]);
+    }
+
+    /**
+     * Render editor view block
+     */
+    public function render_editor_view_block(array $attributes): string {
+        $editor_name = $attributes['editorName'] ?? '';
+        
+        if (!$editor_name) {
+            return '<p class="kealoa-block-placeholder">' . 
+                esc_html__('Please select an editor from the block settings.', 'kealoa-reference') . 
+                '</p>';
+        }
+        
+        return $this->shortcodes->render_editor(['name' => $editor_name]);
     }
 }

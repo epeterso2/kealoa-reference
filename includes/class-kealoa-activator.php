@@ -83,6 +83,7 @@ class Kealoa_Activator {
         $sql_puzzles = "CREATE TABLE {$puzzles_table} (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             publication_date date NOT NULL,
+            editor_name varchar(255) DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),

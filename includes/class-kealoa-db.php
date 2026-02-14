@@ -423,12 +423,22 @@ class Kealoa_DB {
      * Create a puzzle
      */
     public function create_puzzle(array $data): int|false {
+        $insert_data = [
+            'publication_date' => sanitize_text_field($data['publication_date']),
+        ];
+        $format = ['%s'];
+        
+        if (array_key_exists('editor_name', $data)) {
+            $insert_data['editor_name'] = $data['editor_name'] !== null && $data['editor_name'] !== ''
+                ? sanitize_text_field($data['editor_name'])
+                : null;
+            $format[] = '%s';
+        }
+        
         $result = $this->wpdb->insert(
             $this->puzzles_table,
-            [
-                'publication_date' => sanitize_text_field($data['publication_date']),
-            ],
-            ['%s']
+            $insert_data,
+            $format
         );
         
         return $result ? $this->wpdb->insert_id : false;
@@ -442,11 +452,23 @@ class Kealoa_DB {
             return false;
         }
         
+        $update_data = [
+            'publication_date' => sanitize_text_field($data['publication_date']),
+        ];
+        $format = ['%s'];
+        
+        if (array_key_exists('editor_name', $data)) {
+            $update_data['editor_name'] = $data['editor_name'] !== null && $data['editor_name'] !== ''
+                ? sanitize_text_field($data['editor_name'])
+                : null;
+            $format[] = '%s';
+        }
+        
         $result = $this->wpdb->update(
             $this->puzzles_table,
-            ['publication_date' => sanitize_text_field($data['publication_date'])],
+            $update_data,
             ['id' => $id],
-            ['%s'],
+            $format,
             ['%d']
         );
         
@@ -467,6 +489,41 @@ class Kealoa_DB {
         );
         
         return $result !== false;
+    }
+
+    /**
+     * Auto-populate editor names for all puzzles based on historical date ranges.
+     *
+     * @return int Number of puzzles updated
+     */
+    public function auto_populate_editor_names(): int {
+        $editors = [
+            ['name' => 'Margaret Farrar',   'start' => '1942-02-15', 'end' => '1969-01-05'],
+            ['name' => 'Will Weng',         'start' => '1969-01-06', 'end' => '1977-02-27'],
+            ['name' => 'Eugene T. Maleska', 'start' => '1977-02-28', 'end' => '1993-09-05'],
+            ['name' => 'Mel Taub',          'start' => '1993-09-06', 'end' => '1993-11-20'],
+            ['name' => 'Joel Fagliano',     'start' => '2024-03-14', 'end' => '2024-12-29'],
+            ['name' => 'Will Shortz',       'start' => '1993-11-21', 'end' => '2099-12-31'],
+        ];
+
+        $updated = 0;
+        foreach ($editors as $editor) {
+            $result = $this->wpdb->query(
+                $this->wpdb->prepare(
+                    "UPDATE {$this->puzzles_table}
+                     SET editor_name = %s
+                     WHERE publication_date >= %s AND publication_date <= %s",
+                    $editor['name'],
+                    $editor['start'],
+                    $editor['end']
+                )
+            );
+            if ($result !== false) {
+                $updated += (int) $result;
+            }
+        }
+
+        return $updated;
     }
 
     /**
@@ -1266,6 +1323,27 @@ class Kealoa_DB {
     }
 
     /**
+     * Get person's results grouped by puzzle editor
+     */
+    public function get_person_results_by_editor(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT 
+                COALESCE(p.editor_name, 'Unknown') as editor_name,
+                COUNT(*) as total_answered,
+                SUM(g.is_correct) as correct_count
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->puzzles_table} p ON c.puzzle_id = p.id
+            WHERE g.guesser_person_id = %d
+            GROUP BY editor_name
+            ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC",
+            $person_id
+        );
+        
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get person's round history
      */
     public function get_person_round_history(int $person_id): array {
@@ -1356,6 +1434,51 @@ class Kealoa_DB {
             GROUP BY pz.id, pz.publication_date
             ORDER BY pz.publication_date DESC",
             $constructor_id
+        );
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get all editors with aggregate guess stats
+     */
+    public function get_editors_with_stats(): array {
+        $sql = "SELECT 
+                COALESCE(p.editor_name, 'Unknown') as editor_name,
+                COUNT(DISTINCT g.id) as clues_guessed,
+                COALESCE(SUM(g.is_correct), 0) as correct_guesses
+            FROM {$this->puzzles_table} p
+            INNER JOIN {$this->clues_table} c ON c.puzzle_id = p.id
+            INNER JOIN {$this->guesses_table} g ON g.clue_id = c.id
+            WHERE p.editor_name IS NOT NULL AND p.editor_name != ''
+            GROUP BY p.editor_name
+            ORDER BY p.editor_name ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get puzzles edited by a specific editor, with constructor and round info
+     */
+    public function get_editor_puzzles(string $editor_name): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT 
+                pz.id as puzzle_id,
+                pz.publication_date,
+                GROUP_CONCAT(DISTINCT con.full_name ORDER BY pc.constructor_order ASC SEPARATOR ', ') as constructor_names,
+                GROUP_CONCAT(DISTINCT con.id ORDER BY pc.constructor_order ASC) as constructor_ids,
+                GROUP_CONCAT(DISTINCT r.id ORDER BY r.round_date ASC, r.round_number ASC) as round_ids,
+                GROUP_CONCAT(DISTINCT r.round_date ORDER BY r.round_date ASC, r.round_number ASC) as round_dates,
+                GROUP_CONCAT(DISTINCT r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers
+            FROM {$this->puzzles_table} pz
+            LEFT JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
+            LEFT JOIN {$this->constructors_table} con ON pc.constructor_id = con.id
+            LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
+            LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
+            WHERE pz.editor_name = %s
+            GROUP BY pz.id, pz.publication_date
+            ORDER BY pz.publication_date DESC",
+            $editor_name
         );
 
         return $this->wpdb->get_results($sql);

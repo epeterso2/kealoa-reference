@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "kealoa/editor-view",
+    "version": "1.0.0",
+    "title": "KEALOA Editor View",
+    "category": "widgets",
+    "icon": "edit",
+    "description": "Displays an editor's puzzle history.",
+    "keywords": ["kealoa", "editor", "puzzles"],
+    "supports": {
+        "html": false,
+        "align": ["wide", "full"]
+    },
+    "textdomain": "kealoa-reference",
+    "attributes": {
+        "editorName": {
+            "type": "string",
+            "default": ""
+        }
+    },
+    "editorScript": "file:../../assets/js/blocks-editor.js",
+    "render": "file:./render.php"
+}

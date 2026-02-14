@@ -174,6 +174,7 @@ class Kealoa_Admin {
             'create_puzzle' => $this->handle_create_puzzle(),
             'update_puzzle' => $this->handle_update_puzzle(),
             'delete_puzzle' => $this->handle_delete_puzzle(),
+            'auto_populate_editors' => $this->handle_auto_populate_editors(),
             'create_round' => $this->handle_create_round(),
             'update_round' => $this->handle_update_round(),
             'delete_round' => $this->handle_delete_round(),
@@ -1057,12 +1058,20 @@ class Kealoa_Admin {
             </p>
         </form>
         
+        <form method="post" style="display: inline-block; margin-bottom: 10px;">
+            <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
+            <input type="hidden" name="kealoa_action" value="auto_populate_editors" />
+            <input type="submit" class="button" value="<?php esc_attr_e('Auto-Populate Editors', 'kealoa-reference'); ?>"
+                   onclick="return confirm('<?php esc_attr_e('This will overwrite all existing editor names based on puzzle dates. Continue?', 'kealoa-reference'); ?>');" />
+        </form>
+        
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
                     <th><?php esc_html_e('ID', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Day of Week', 'kealoa-reference'); ?></th>
+                    <th><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Constructors', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Actions', 'kealoa-reference'); ?></th>
                 </tr>
@@ -1070,7 +1079,7 @@ class Kealoa_Admin {
             <tbody>
                 <?php if (empty($puzzles)): ?>
                     <tr>
-                        <td colspan="5"><?php esc_html_e('No puzzles found.', 'kealoa-reference'); ?></td>
+                        <td colspan="6"><?php esc_html_e('No puzzles found.', 'kealoa-reference'); ?></td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($puzzles as $puzzle): ?>
@@ -1079,6 +1088,7 @@ class Kealoa_Admin {
                             <td><?php echo esc_html($puzzle->id); ?></td>
                             <td><?php echo Kealoa_Formatter::format_puzzle_date_link($puzzle->publication_date); ?></td>
                             <td><?php echo esc_html(date('l', strtotime($puzzle->publication_date))); ?></td>
+                            <td><?php echo esc_html($puzzle->editor_name ?? '—'); ?></td>
                             <td>
                                 <?php if (!empty($constructors)): ?>
                                     <?php echo Kealoa_Formatter::format_constructor_list($constructors); ?>
@@ -1154,6 +1164,16 @@ class Kealoa_Admin {
                     <td>
                         <input type="date" name="publication_date" id="publication_date" required
                                value="<?php echo esc_attr($puzzle->publication_date ?? ''); ?>" />
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="editor_name"><?php esc_html_e('Editor', 'kealoa-reference'); ?></label></th>
+                    <td>
+                        <input type="text" name="editor_name" id="editor_name" class="regular-text"
+                               value="<?php echo esc_attr($puzzle->editor_name ?? ''); ?>" />
+                        <p class="description">
+                            <?php esc_html_e('The name of the crossword editor for this puzzle.', 'kealoa-reference'); ?>
+                        </p>
                     </td>
                 </tr>
                 <tr>
@@ -1949,6 +1969,7 @@ class Kealoa_Admin {
     private function handle_create_puzzle(): void {
         $id = $this->db->create_puzzle([
             'publication_date' => $_POST['publication_date'] ?? '',
+            'editor_name' => $_POST['editor_name'] ?? null,
         ]);
         
         if ($id) {
@@ -1970,6 +1991,7 @@ class Kealoa_Admin {
         
         $result = $this->db->update_puzzle($id, [
             'publication_date' => $_POST['publication_date'] ?? '',
+            'editor_name' => $_POST['editor_name'] ?? null,
         ]);
         
         $constructors = $_POST['constructors'] ?? [];
@@ -1989,6 +2011,14 @@ class Kealoa_Admin {
         $id = (int) ($_POST['id'] ?? 0);
         $this->db->delete_puzzle($id);
         $this->redirect_with_message('kealoa-puzzles', 'Puzzle deleted.');
+    }
+
+    /**
+     * Handle auto-populate editor names
+     */
+    private function handle_auto_populate_editors(): void {
+        $updated = $this->db->auto_populate_editor_names();
+        $this->redirect_with_message('kealoa-puzzles', sprintf('Editor names auto-populated for %d puzzles.', $updated));
     }
 
     /**

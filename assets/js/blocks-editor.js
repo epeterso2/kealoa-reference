@@ -15,7 +15,7 @@
     const { serverSideRender: ServerSideRender } = wp;
 
     // Get data passed from PHP
-    const kealoaData = window.kealoaBlocksData || { rounds: [], persons: [], constructors: [] };
+    const kealoaData = window.kealoaBlocksData || { rounds: [], persons: [], constructors: [], editors: [] };
 
     /**
      * KEALOA Rounds Table Block
@@ -402,6 +402,123 @@
                 ),
                 createElement(ServerSideRender, {
                     block: 'kealoa/constructor-view',
+                    attributes: attributes
+                })
+            );
+        },
+
+        save: function () {
+            return null;
+        }
+    });
+
+    /**
+     * KEALOA Editors Table Block
+     */
+    registerBlockType('kealoa/editors-table', {
+        title: __('KEALOA Editors Table', 'kealoa-reference'),
+        description: __('Displays a table of all editors with clues guessed and accuracy.', 'kealoa-reference'),
+        icon: 'edit',
+        category: 'widgets',
+        keywords: [__('kealoa', 'kealoa-reference'), __('editors', 'kealoa-reference'), __('table', 'kealoa-reference')],
+        attributes: {},
+
+        edit: function (props) {
+            return createElement(ServerSideRender, {
+                block: 'kealoa/editors-table',
+                attributes: props.attributes
+            });
+        },
+
+        save: function () {
+            return null;
+        }
+    });
+
+    /**
+     * KEALOA Editor View Block
+     */
+    registerBlockType('kealoa/editor-view', {
+        title: __('KEALOA Editor View', 'kealoa-reference'),
+        description: __('Displays an editor\'s puzzle history.', 'kealoa-reference'),
+        icon: 'edit',
+        category: 'widgets',
+        keywords: [__('kealoa', 'kealoa-reference'), __('editor', 'kealoa-reference'), __('puzzles', 'kealoa-reference')],
+        attributes: {
+            editorName: {
+                type: 'string',
+                default: ''
+            }
+        },
+
+        edit: function (props) {
+            const { attributes, setAttributes } = props;
+            const { editorName } = attributes;
+
+            const editorOptions = [
+                { label: __('— Select an Editor —', 'kealoa-reference'), value: '' }
+            ];
+            
+            kealoaData.editors.forEach(function (editor) {
+                editorOptions.push({
+                    label: editor.name,
+                    value: editor.name
+                });
+            });
+
+            if (!editorName) {
+                return createElement(
+                    Fragment,
+                    null,
+                    createElement(
+                        InspectorControls,
+                        null,
+                        createElement(
+                            PanelBody,
+                            { title: __('Editor Selection', 'kealoa-reference'), initialOpen: true },
+                            createElement(SelectControl, {
+                                label: __('Select Editor', 'kealoa-reference'),
+                                value: editorName,
+                                options: editorOptions,
+                                onChange: function (value) { setAttributes({ editorName: value }); }
+                            })
+                        )
+                    ),
+                    createElement(
+                        Placeholder,
+                        {
+                            icon: 'edit',
+                            label: __('KEALOA Editor View', 'kealoa-reference'),
+                            instructions: __('Select an editor from the block settings in the sidebar.', 'kealoa-reference')
+                        },
+                        createElement(SelectControl, {
+                            value: editorName,
+                            options: editorOptions,
+                            onChange: function (value) { setAttributes({ editorName: value }); }
+                        })
+                    )
+                );
+            }
+
+            return createElement(
+                Fragment,
+                null,
+                createElement(
+                    InspectorControls,
+                    null,
+                    createElement(
+                        PanelBody,
+                        { title: __('Editor Selection', 'kealoa-reference'), initialOpen: true },
+                        createElement(SelectControl, {
+                            label: __('Select Editor', 'kealoa-reference'),
+                            value: editorName,
+                            options: editorOptions,
+                            onChange: function (value) { setAttributes({ editorName: value }); }
+                        })
+                    )
+                ),
+                createElement(ServerSideRender, {
+                    block: 'kealoa/editor-view',
                     attributes: attributes
                 })
             );

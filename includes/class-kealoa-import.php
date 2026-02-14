@@ -298,13 +298,21 @@ class Kealoa_Import {
                     $skipped++;
                     continue;
                 }
+                // Update existing puzzle with editor_name if provided
+                $update_data = ['publication_date' => $publication_date];
+                if (isset($row['editor_name'])) {
+                    $update_data['editor_name'] = !empty($row['editor_name']) ? $row['editor_name'] : null;
+                }
+                $this->db->update_puzzle((int) $existing->id, $update_data);
                 // Use existing puzzle ID
                 $puzzle_id = (int) $existing->id;
             } else {
                 // Create new puzzle
-                $puzzle_id = $this->db->create_puzzle([
-                    'publication_date' => $publication_date,
-                ]);
+                $create_data = ['publication_date' => $publication_date];
+                if (isset($row['editor_name'])) {
+                    $create_data['editor_name'] = !empty($row['editor_name']) ? $row['editor_name'] : null;
+                }
+                $puzzle_id = $this->db->create_puzzle($create_data);
                 
                 if (!$puzzle_id) {
                     $errors[] = "Line {$line}: Failed to insert puzzle";

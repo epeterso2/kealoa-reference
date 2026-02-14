@@ -125,6 +125,21 @@ class Kealoa_Formatter {
     }
 
     /**
+     * Format an editor name as a link to the editor view
+     *
+     * @param string $editor_name The editor's name
+     * @return string HTML link to editor view
+     */
+    public static function format_editor_link(string $editor_name): string {
+        $url = home_url('/kealoa/editor/' . urlencode($editor_name) . '/');
+        return sprintf(
+            '<a href="%s" class="kealoa-editor-link">%s</a>',
+            esc_url($url),
+            esc_html($editor_name)
+        );
+    }
+
+    /**
      * Format a list of constructors as links to their in-app pages
      *
      * @param array $constructors Array of constructor objects with id and full_name properties

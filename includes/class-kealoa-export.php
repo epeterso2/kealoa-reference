@@ -184,7 +184,7 @@ class Kealoa_Export {
      * Write puzzles CSV (with constructors)
      */
     private function write_puzzles($output): void {
-        fputcsv($output, ['publication_date', 'constructors']);
+        fputcsv($output, ['publication_date', 'editor_name', 'constructors']);
 
         $puzzles = $this->db->get_puzzles(['limit' => 999999, 'orderby' => 'publication_date', 'order' => 'ASC']);
 
@@ -194,6 +194,7 @@ class Kealoa_Export {
 
             fputcsv($output, [
                 $puzzle->publication_date,
+                $puzzle->editor_name ?? '',
                 implode(', ', $constructor_names),
             ]);
         }

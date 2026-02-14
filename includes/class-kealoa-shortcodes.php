@@ -35,6 +35,8 @@ class Kealoa_Shortcodes {
         add_shortcode('kealoa_persons_table', [$this, 'render_persons_table']);
         add_shortcode('kealoa_constructors_table', [$this, 'render_constructors_table']);
         add_shortcode('kealoa_constructor', [$this, 'render_constructor']);
+        add_shortcode('kealoa_editors_table', [$this, 'render_editors_table']);
+        add_shortcode('kealoa_editor', [$this, 'render_editor']);
     }
 
     /**
@@ -307,6 +309,7 @@ class Kealoa_Shortcodes {
         $decade_results = $this->db->get_person_results_by_decade($person_id);
         $year_results = $this->db->get_person_results_by_year($person_id);
         $constructor_results = $this->db->get_person_results_by_constructor($person_id);
+        $editor_results = $this->db->get_person_results_by_editor($person_id);
         $round_history = $this->db->get_person_round_history($person_id);
         
         // If person has no image, check for a matching constructor by name
@@ -605,6 +608,40 @@ class Kealoa_Shortcodes {
                             <?php foreach ($constructor_results as $result): ?>
                                 <tr>
                                     <td><?php echo Kealoa_Formatter::format_constructor_link((int) $result->constructor_id, $result->full_name); ?></td>
+                                    <td><?php echo esc_html($result->total_answered); ?></td>
+                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td>
+                                        <?php 
+                                        $pct = $result->total_answered > 0 
+                                            ? ($result->correct_count / $result->total_answered) * 100 
+                                            : 0;
+                                        echo Kealoa_Formatter::format_percentage($pct);
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($editor_results)): ?>
+                <div class="kealoa-editor-stats">
+                    <h3><?php esc_html_e('Results by Editor', 'kealoa-reference'); ?></h3>
+                    
+                    <table class="kealoa-table kealoa-editor-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($editor_results as $result): ?>
+                                <tr>
+                                    <td><?php echo esc_html($result->editor_name); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
                                     <td>
@@ -985,6 +1022,153 @@ class Kealoa_Shortcodes {
                 </div>
             <?php else: ?>
                 <p class="kealoa-no-data"><?php esc_html_e('No puzzles found for this constructor.', 'kealoa-reference'); ?></p>
+            <?php endif; ?>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Render editors table shortcode
+     *
+     * [kealoa_editors_table]
+     */
+    public function render_editors_table(array $atts = []): string {
+        $editors = $this->db->get_editors_with_stats();
+        
+        if (empty($editors)) {
+            return '<p class="kealoa-no-data">' . esc_html__('No editors found.', 'kealoa-reference') . '</p>';
+        }
+        
+        ob_start();
+        ?>
+        <div class="kealoa-editors-table-wrapper">
+            <table class="kealoa-table kealoa-editors-table">
+                <thead>
+                    <tr>
+                        <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Clues Guessed', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($editors as $editor): ?>
+                        <tr>
+                            <td>
+                                <?php echo Kealoa_Formatter::format_editor_link($editor->editor_name); ?>
+                            </td>
+                            <td><?php echo esc_html($editor->clues_guessed); ?></td>
+                            <td><?php echo esc_html($editor->correct_guesses); ?></td>
+                            <td>
+                                <?php
+                                $accuracy = $editor->clues_guessed > 0
+                                    ? ($editor->correct_guesses / $editor->clues_guessed) * 100
+                                    : 0;
+                                echo Kealoa_Formatter::format_percentage((float) $accuracy);
+                                ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Render single editor view shortcode
+     *
+     * [kealoa_editor name="Editor Name"]
+     */
+    public function render_editor(array $atts = []): string {
+        $atts = shortcode_atts([
+            'name' => '',
+        ], $atts, 'kealoa_editor');
+        
+        $editor_name = sanitize_text_field($atts['name']);
+        if (empty($editor_name)) {
+            return '<p class="kealoa-error">' . esc_html__('Please specify an editor name.', 'kealoa-reference') . '</p>';
+        }
+        
+        $puzzles = $this->db->get_editor_puzzles($editor_name);
+        
+        ob_start();
+        ?>
+        <div class="kealoa-editor-view">
+            <div class="kealoa-editor-header">
+                <h2 class="kealoa-editor-name"><?php echo esc_html($editor_name); ?></h2>
+            </div>
+            
+            <?php if (!empty($puzzles)): ?>
+                <div class="kealoa-editor-puzzles">
+                    <h3><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></h3>
+                    
+                    <table class="kealoa-table kealoa-editor-puzzles-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
+                                <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
+                                <th data-sort="date"><?php esc_html_e('KEALOA Round(s)', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($puzzles as $puzzle): ?>
+                                <?php
+                                $constructor_ids = !empty($puzzle->constructor_ids) ? explode(',', $puzzle->constructor_ids) : [];
+                                $constructor_names = !empty($puzzle->constructor_names) ? explode(', ', $puzzle->constructor_names) : [];
+                                $round_ids = !empty($puzzle->round_ids) ? explode(',', $puzzle->round_ids) : [];
+                                $round_dates = !empty($puzzle->round_dates) ? explode(',', $puzzle->round_dates) : [];
+                                $round_numbers = !empty($puzzle->round_numbers) ? explode(',', $puzzle->round_numbers) : [];
+                                ?>
+                                <tr>
+                                    <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($puzzle->publication_date)); ?></td>
+                                    <td>
+                                        <?php echo Kealoa_Formatter::format_puzzle_date_link($puzzle->publication_date); ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        if (!empty($constructor_ids)) {
+                                            $links = [];
+                                            for ($i = 0; $i < count($constructor_ids); $i++) {
+                                                $cid = (int) $constructor_ids[$i];
+                                                $cname = $constructor_names[$i] ?? '';
+                                                if ($cid && $cname) {
+                                                    $links[] = Kealoa_Formatter::format_constructor_link($cid, $cname);
+                                                }
+                                            }
+                                            echo Kealoa_Formatter::format_list_with_and($links);
+                                        } else {
+                                            echo '—';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        if (!empty($round_ids)) {
+                                            $round_links = [];
+                                            for ($i = 0; $i < count($round_ids); $i++) {
+                                                $rid = (int) $round_ids[$i];
+                                                $rdate = $round_dates[$i] ?? '';
+                                                if ($rid && $rdate) {
+                                                    $round_links[] = Kealoa_Formatter::format_round_date_link($rid, $rdate);
+                                                }
+                                            }
+                                            echo implode(', ', $round_links);
+                                        } else {
+                                            echo '—';
+                                        }
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <p class="kealoa-no-data"><?php esc_html_e('No puzzles found for this editor.', 'kealoa-reference'); ?></p>
             <?php endif; ?>
         </div>
         <?php
