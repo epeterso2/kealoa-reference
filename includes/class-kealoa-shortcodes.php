@@ -182,8 +182,12 @@ class Kealoa_Shortcodes {
                     <p>
                         <strong><?php esc_html_e('Guessers:', 'kealoa-reference'); ?></strong>
                         <?php
+                        $sorted_results = $guesser_results;
+                        usort($sorted_results, function($a, $b) {
+                            return (int) $b->correct_guesses - (int) $a->correct_guesses;
+                        });
                         $guesser_parts = [];
-                        foreach ($guesser_results as $gr) {
+                        foreach ($sorted_results as $gr) {
                             $link = Kealoa_Formatter::format_person_link((int) $gr->person_id, $gr->full_name);
                             $correct = (int) $gr->correct_guesses;
                             $total = (int) $gr->total_guesses;
