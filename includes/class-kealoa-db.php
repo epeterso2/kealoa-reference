@@ -372,6 +372,7 @@ class Kealoa_DB {
             'order' => 'DESC',
             'limit' => 100,
             'offset' => 0,
+            'constructor_search' => '',
         ];
         $args = wp_parse_args($args, $defaults);
         
@@ -379,11 +380,24 @@ class Kealoa_DB {
         $orderby = in_array($args['orderby'], $allowed_orderby) ? $args['orderby'] : 'publication_date';
         $order = strtoupper($args['order']) === 'ASC' ? 'ASC' : 'DESC';
         
-        $sql = $this->wpdb->prepare(
-            "SELECT * FROM {$this->puzzles_table} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d",
-            $args['limit'],
-            $args['offset']
-        );
+        if (!empty($args['constructor_search'])) {
+            $sql = $this->wpdb->prepare(
+                "SELECT DISTINCT p.* FROM {$this->puzzles_table} p
+                INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.puzzle_id
+                INNER JOIN {$this->constructors_table} c ON pc.constructor_id = c.id
+                WHERE c.full_name LIKE %s
+                ORDER BY p.{$orderby} {$order} LIMIT %d OFFSET %d",
+                '%' . $this->wpdb->esc_like($args['constructor_search']) . '%',
+                $args['limit'],
+                $args['offset']
+            );
+        } else {
+            $sql = $this->wpdb->prepare(
+                "SELECT * FROM {$this->puzzles_table} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d",
+                $args['limit'],
+                $args['offset']
+            );
+        }
         
         return $this->wpdb->get_results($sql);
     }
@@ -391,7 +405,17 @@ class Kealoa_DB {
     /**
      * Count total puzzles
      */
-    public function count_puzzles(): int {
+    public function count_puzzles(string $constructor_search = ''): int {
+        if (!empty($constructor_search)) {
+            $sql = $this->wpdb->prepare(
+                "SELECT COUNT(DISTINCT p.id) FROM {$this->puzzles_table} p
+                INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.puzzle_id
+                INNER JOIN {$this->constructors_table} c ON pc.constructor_id = c.id
+                WHERE c.full_name LIKE %s",
+                '%' . $this->wpdb->esc_like($constructor_search) . '%'
+            );
+            return (int) $this->wpdb->get_var($sql);
+        }
         return (int) $this->wpdb->get_var("SELECT COUNT(*) FROM {$this->puzzles_table}");
     }
 

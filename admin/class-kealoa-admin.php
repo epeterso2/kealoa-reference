@@ -849,22 +849,32 @@ class Kealoa_Admin {
      * Render constructors list
      */
     private function render_constructors_list(): void {
+        $search = sanitize_text_field($_GET['s'] ?? '');
         $paged = max(1, (int) ($_GET['paged'] ?? 1));
         $per_page = 20;
         $offset = ($paged - 1) * $per_page;
         
         $constructors = $this->db->get_constructors([
+            'search' => $search,
             'limit' => $per_page,
             'offset' => $offset,
         ]);
         
-        $total = $this->db->count_constructors();
+        $total = $this->db->count_constructors($search);
         $total_pages = ceil($total / $per_page);
         ?>
         <h1 class="wp-heading-inline"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></h1>
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-constructors&action=add')); ?>" class="page-title-action">
             <?php esc_html_e('Add New', 'kealoa-reference'); ?>
         </a>
+        
+        <form method="get" class="kealoa-search-form">
+            <input type="hidden" name="page" value="kealoa-constructors" />
+            <p class="search-box">
+                <input type="search" name="s" value="<?php echo esc_attr($search); ?>" placeholder="<?php esc_attr_e('Search constructors...', 'kealoa-reference'); ?>" />
+                <input type="submit" class="button" value="<?php esc_attr_e('Search', 'kealoa-reference'); ?>" />
+            </p>
+        </form>
         
         <p class="description"><?php esc_html_e('Crossword puzzle constructors with XWordInfo profiles.', 'kealoa-reference'); ?></p>
         
@@ -1020,22 +1030,32 @@ class Kealoa_Admin {
      * Render puzzles list
      */
     private function render_puzzles_list(): void {
+        $search = sanitize_text_field($_GET['s'] ?? '');
         $paged = max(1, (int) ($_GET['paged'] ?? 1));
         $per_page = 20;
         $offset = ($paged - 1) * $per_page;
         
         $puzzles = $this->db->get_puzzles([
+            'constructor_search' => $search,
             'limit' => $per_page,
             'offset' => $offset,
         ]);
         
-        $total = $this->db->count_puzzles();
+        $total = $this->db->count_puzzles($search);
         $total_pages = ceil($total / $per_page);
         ?>
         <h1 class="wp-heading-inline"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></h1>
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-puzzles&action=add')); ?>" class="page-title-action">
             <?php esc_html_e('Add New', 'kealoa-reference'); ?>
         </a>
+        
+        <form method="get" class="kealoa-search-form">
+            <input type="hidden" name="page" value="kealoa-puzzles" />
+            <p class="search-box">
+                <input type="search" name="s" value="<?php echo esc_attr($search); ?>" placeholder="<?php esc_attr_e('Search by constructor...', 'kealoa-reference'); ?>" />
+                <input type="submit" class="button" value="<?php esc_attr_e('Search', 'kealoa-reference'); ?>" />
+            </p>
+        </form>
         
         <table class="wp-list-table widefat fixed striped">
             <thead>
