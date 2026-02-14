@@ -1011,6 +1011,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Co-Constructors', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Used in Rounds', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1050,6 +1051,23 @@ class Kealoa_Shortcodes {
                                                 }
                                             }
                                             echo implode(', ', $round_links);
+                                        } else {
+                                            echo '—';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td class="kealoa-solutions-cell">
+                                        <?php
+                                        if (!empty($round_ids)) {
+                                            $solution_links = [];
+                                            for ($i = 0; $i < count($round_ids); $i++) {
+                                                $rid = (int) $round_ids[$i];
+                                                if ($rid) {
+                                                    $solutions = $this->db->get_round_solutions($rid);
+                                                    $solution_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
+                                                }
+                                            }
+                                            echo implode(', ', $solution_links);
                                         } else {
                                             echo '—';
                                         }
@@ -1152,6 +1170,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('KEALOA Round(s)', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1197,6 +1216,23 @@ class Kealoa_Shortcodes {
                                                 }
                                             }
                                             echo implode(', ', $round_links);
+                                        } else {
+                                            echo '—';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td class="kealoa-solutions-cell">
+                                        <?php
+                                        if (!empty($round_ids)) {
+                                            $solution_links = [];
+                                            for ($i = 0; $i < count($round_ids); $i++) {
+                                                $rid = (int) $round_ids[$i];
+                                                if ($rid) {
+                                                    $solutions = $this->db->get_round_solutions($rid);
+                                                    $solution_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
+                                                }
+                                            }
+                                            echo implode(', ', $solution_links);
                                         } else {
                                             echo '—';
                                         }
