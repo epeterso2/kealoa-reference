@@ -386,7 +386,7 @@ class Kealoa_Formatter {
             return sprintf('%s (%d/%d)', $link, (int) $result->correct_guesses, $total_clues);
         }, $results);
         
-        return self::format_list_with_and($formatted);
+        return implode('<br>', $formatted);
     }
 
     /**
