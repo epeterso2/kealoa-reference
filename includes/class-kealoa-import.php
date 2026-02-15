@@ -240,12 +240,14 @@ class Kealoa_Import {
                 $result = $this->db->update_person((int) $found->id, [
                     'full_name' => $row['full_name'],
                     'home_page_url' => $row['home_page_url'] ?? null,
+                    'image_url' => $row['image_url'] ?? null,
                 ]);
             } else {
                 // Create new person
                 $result = $this->db->create_person([
                     'full_name' => $row['full_name'],
                     'home_page_url' => $row['home_page_url'] ?? null,
+                    'image_url' => $row['image_url'] ?? null,
                 ]);
             }
             

@@ -326,8 +326,8 @@ class Kealoa_Shortcodes {
         $editor_results = $this->db->get_person_results_by_editor($person_id);
         $round_history = $this->db->get_person_round_history($person_id);
         
-        // If person has no image, check for a matching constructor by name
-        $person_image_url = $person->xwordinfo_image_url ?? '';
+        // Use person's own image if available, otherwise fall back to constructor image
+        $person_image_url = $person->image_url ?? '';
         if (empty($person_image_url)) {
             $matching_constructors = $this->db->get_constructors([
                 'search' => $person->full_name,
@@ -341,6 +341,8 @@ class Kealoa_Shortcodes {
             }
         }
         
+        $is_player_image = !empty($person->image_url);
+        
         ob_start();
         ?>
         <div class="kealoa-person-view">
@@ -348,7 +350,13 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-person-info">
                     <?php if (!empty($person_image_url)): ?>
                         <div class="kealoa-person-image">
-                            <?php echo Kealoa_Formatter::format_xwordinfo_image($person_image_url, $person->full_name); ?>
+                            <?php if ($is_player_image): ?>
+                                <img src="<?php echo esc_url($person_image_url); ?>" 
+                                     alt="<?php echo esc_attr($person->full_name); ?>" 
+                                     class="kealoa-player-image" />
+                            <?php else: ?>
+                                <?php echo Kealoa_Formatter::format_xwordinfo_image($person_image_url, $person->full_name); ?>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                     

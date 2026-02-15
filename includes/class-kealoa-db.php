@@ -282,8 +282,11 @@ class Kealoa_DB {
                 'home_page_url' => isset($data['home_page_url']) 
                     ? esc_url_raw($data['home_page_url']) 
                     : null,
+                'image_url' => isset($data['image_url']) 
+                    ? esc_url_raw($data['image_url']) 
+                    : null,
             ],
-            ['%s', '%s']
+            ['%s', '%s', '%s']
         );
         
         return $result ? $this->wpdb->insert_id : false;
@@ -303,6 +306,12 @@ class Kealoa_DB {
         if (array_key_exists('home_page_url', $data)) {
             $update_data['home_page_url'] = $data['home_page_url'] 
                 ? esc_url_raw($data['home_page_url']) 
+                : null;
+            $format[] = '%s';
+        }
+        if (array_key_exists('image_url', $data)) {
+            $update_data['image_url'] = $data['image_url'] 
+                ? esc_url_raw($data['image_url']) 
                 : null;
             $format[] = '%s';
         }

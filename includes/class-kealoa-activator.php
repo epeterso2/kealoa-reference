@@ -73,6 +73,7 @@ class Kealoa_Activator {
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             full_name varchar(255) NOT NULL,
             home_page_url varchar(500) DEFAULT NULL,
+            image_url varchar(500) DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),

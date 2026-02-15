@@ -249,6 +249,13 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+.kealoa-player-image {
+    height: 200px;
+    width: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
 .kealoa-person-details {
     flex: 1;
     min-width: 250px;
