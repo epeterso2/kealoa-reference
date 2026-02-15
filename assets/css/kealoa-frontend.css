@@ -264,8 +264,6 @@
 .kealoa-person-xwordinfo,
 .kealoa-person-homepage {
     margin: 8px 0;
-    padding-left: 100px;
-    text-indent: -100px;
     overflow-wrap: break-word;
     word-break: break-all;
 }
@@ -473,8 +471,8 @@
     .kealoa-person-xwordinfo,
     .kealoa-person-homepage,
     .kealoa-constructor-xwordinfo {
-        padding-left: 0;
-        text-indent: 0;
+        overflow-wrap: break-word;
+        word-break: break-all;
     }
     
     .kealoa-person-xwordinfo strong,
