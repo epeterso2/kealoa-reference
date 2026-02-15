@@ -176,6 +176,8 @@
 .kealoa-round-meta p {
     margin: 8px 0;
     line-height: 1.6;
+    padding-left: 140px;
+    text-indent: -140px;
 }
 
 .kealoa-round-meta strong {
@@ -261,6 +263,14 @@
 .kealoa-person-xwordinfo,
 .kealoa-person-homepage {
     margin: 8px 0;
+    padding-left: 100px;
+    text-indent: -100px;
+}
+
+.kealoa-person-xwordinfo strong,
+.kealoa-person-homepage strong {
+    display: inline-block;
+    min-width: 100px;
 }
 
 /* Stats Grid */
@@ -397,6 +407,13 @@
 
 .kealoa-constructor-xwordinfo {
     margin: 8px 0;
+    padding-left: 100px;
+    text-indent: -100px;
+}
+
+.kealoa-constructor-xwordinfo strong {
+    display: inline-block;
+    min-width: 100px;
 }
 
 .kealoa-constructor-puzzles h3 {
@@ -441,6 +458,25 @@
     }
     
     .kealoa-round-meta strong {
+        display: block;
+        min-width: auto;
+    }
+    
+    .kealoa-round-meta p {
+        padding-left: 0;
+        text-indent: 0;
+    }
+    
+    .kealoa-person-xwordinfo,
+    .kealoa-person-homepage,
+    .kealoa-constructor-xwordinfo {
+        padding-left: 0;
+        text-indent: 0;
+    }
+    
+    .kealoa-person-xwordinfo strong,
+    .kealoa-person-homepage strong,
+    .kealoa-constructor-xwordinfo strong {
         display: block;
         min-width: auto;
     }
