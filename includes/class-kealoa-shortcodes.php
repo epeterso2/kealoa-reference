@@ -364,7 +364,6 @@ class Kealoa_Shortcodes {
                         
                         <?php if (!empty($person->home_page_url)): ?>
                             <p class="kealoa-person-homepage">
-                                <strong><?php esc_html_e('Home Page:', 'kealoa-reference'); ?></strong>
                                 <?php echo Kealoa_Formatter::format_home_page_link($person->home_page_url); ?>
                             </p>
                         <?php endif; ?>
