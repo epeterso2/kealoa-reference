@@ -450,6 +450,73 @@ class Kealoa_Shortcodes {
                 </table>
             </div>
             
+            <?php if (!empty($round_history)): ?>
+                <div class="kealoa-score-distribution-section">
+                    <h3><?php esc_html_e('Score Distribution', 'kealoa-reference'); ?></h3>
+                    <div class="kealoa-chart-container">
+                        <canvas id="kealoa-score-distribution-chart"></canvas>
+                    </div>
+                    <?php
+                    // Build score distribution: count rounds per score (0-10)
+                    $score_counts = array_fill(0, 11, 0);
+                    foreach ($round_history as $rh) {
+                        $score = min(10, max(0, (int) $rh->correct_count));
+                        $score_counts[$score]++;
+                    }
+                    $score_labels = array_map('strval', range(0, 10));
+                    ?>
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var ctx = document.getElementById('kealoa-score-distribution-chart');
+                        if (ctx && typeof Chart !== 'undefined') {
+                            new Chart(ctx, {
+                                type: 'bar',
+                                data: {
+                                    labels: <?php echo wp_json_encode($score_labels); ?>,
+                                    datasets: [{
+                                        label: <?php echo wp_json_encode(__('Rounds', 'kealoa-reference')); ?>,
+                                        data: <?php echo wp_json_encode(array_values($score_counts)); ?>,
+                                        backgroundColor: 'rgba(34, 113, 177, 0.7)',
+                                        borderColor: '#2271b1',
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    indexAxis: 'y',
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    scales: {
+                                        x: {
+                                            title: {
+                                                display: true,
+                                                text: <?php echo wp_json_encode(__('Rounds', 'kealoa-reference')); ?>
+                                            },
+                                            beginAtZero: true,
+                                            ticks: {
+                                                stepSize: 1,
+                                                precision: 0
+                                            }
+                                        },
+                                        y: {
+                                            title: {
+                                                display: true,
+                                                text: <?php echo wp_json_encode(__('Correct Answers', 'kealoa-reference')); ?>
+                                            }
+                                        }
+                                    },
+                                    plugins: {
+                                        legend: {
+                                            display: false
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    </script>
+                </div>
+            <?php endif; ?>
+            
             <?php if (!empty($year_results)): ?>
                 <div class="kealoa-year-stats">
                     <h3><?php esc_html_e('Results by Year of Round', 'kealoa-reference'); ?></h3>
