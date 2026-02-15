@@ -1010,7 +1010,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Co-Constructors', 'kealoa-reference'); ?></th>
-                                <th data-sort="date"><?php esc_html_e('Used in Rounds', 'kealoa-reference'); ?></th>
+                                <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
@@ -1169,7 +1169,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
-                                <th data-sort="date"><?php esc_html_e('KEALOA Round(s)', 'kealoa-reference'); ?></th>
+                                <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
