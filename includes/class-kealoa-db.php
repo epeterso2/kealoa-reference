@@ -1500,4 +1500,73 @@ class Kealoa_DB {
 
         return $this->wpdb->get_results($sql);
     }
+
+    /**
+     * Get the highest round score for each person.
+     *
+     * Returns an associative array keyed by person_id.
+     *
+     * @return array<int, int>
+     */
+    public function get_all_persons_highest_round_scores(): array {
+        $sql = "SELECT sub.guesser_person_id, MAX(sub.round_score) as highest_round_score
+            FROM (
+                SELECT g.guesser_person_id, c.round_id, SUM(g.is_correct) as round_score
+                FROM {$this->guesses_table} g
+                INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+                GROUP BY g.guesser_person_id, c.round_id
+            ) sub
+            GROUP BY sub.guesser_person_id";
+
+        $results = $this->wpdb->get_results($sql);
+        $map = [];
+        foreach ($results as $row) {
+            $map[(int) $row->guesser_person_id] = (int) $row->highest_round_score;
+        }
+        return $map;
+    }
+
+    /**
+     * Get the longest streak of consecutive correct answers in a single round for each person.
+     *
+     * Returns an associative array keyed by person_id.
+     *
+     * @return array<int, int>
+     */
+    public function get_all_persons_longest_streaks(): array {
+        $sql = "SELECT g.guesser_person_id, c.round_id, c.clue_number, g.is_correct
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            ORDER BY g.guesser_person_id ASC, c.round_id ASC, c.clue_number ASC";
+
+        $rows = $this->wpdb->get_results($sql);
+
+        $map = [];
+        $prev_person = null;
+        $prev_round = null;
+        $streak = 0;
+
+        foreach ($rows as $row) {
+            $person_id = (int) $row->guesser_person_id;
+            $round_id = (int) $row->round_id;
+            $correct = (int) $row->is_correct;
+
+            if ($person_id !== $prev_person || $round_id !== $prev_round) {
+                $streak = 0;
+                $prev_person = $person_id;
+                $prev_round = $round_id;
+            }
+
+            if ($correct) {
+                $streak++;
+                if (!isset($map[$person_id]) || $streak > $map[$person_id]) {
+                    $map[$person_id] = $streak;
+                }
+            } else {
+                $streak = 0;
+            }
+        }
+
+        return $map;
+    }
 }

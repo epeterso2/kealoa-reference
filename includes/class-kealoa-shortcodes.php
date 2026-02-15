@@ -875,6 +875,9 @@ class Kealoa_Shortcodes {
             return '<p class="kealoa-no-data">' . esc_html__('No players found.', 'kealoa-reference') . '</p>';
         }
         
+        $highest_scores = $this->db->get_all_persons_highest_round_scores();
+        $longest_streaks = $this->db->get_all_persons_longest_streaks();
+        
         ob_start();
         ?>
         <div class="kealoa-persons-table-wrapper">
@@ -886,6 +889,8 @@ class Kealoa_Shortcodes {
                         <th data-sort="number"><?php esc_html_e('Clues Guessed', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Best Score', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Best Streak', 'kealoa-reference'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -905,6 +910,8 @@ class Kealoa_Shortcodes {
                                 echo Kealoa_Formatter::format_percentage((float) $accuracy);
                                 ?>
                             </td>
+                            <td><?php echo esc_html($highest_scores[(int) $person->id] ?? 0); ?></td>
+                            <td><?php echo esc_html($longest_streaks[(int) $person->id] ?? 0); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
