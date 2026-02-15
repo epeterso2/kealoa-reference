@@ -517,76 +517,6 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
             
-            <?php if (!empty($year_results)): ?>
-                <div class="kealoa-year-stats">
-                    <h3><?php esc_html_e('Results by Year of Round', 'kealoa-reference'); ?></h3>
-                    
-                    <table class="kealoa-table kealoa-year-table">
-                        <thead>
-                            <tr>
-                                <th data-sort="number"><?php esc_html_e('Year', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($year_results as $result): ?>
-                                <tr>
-                                    <td><?php echo esc_html($result->year); ?></td>
-                                    <td><?php echo esc_html($result->rounds_played); ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php 
-                                        $pct = $result->total_answered > 0 
-                                            ? ($result->correct_count / $result->total_answered) * 100 
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-            
-            <?php if (!empty($clue_number_results)): ?>
-                <div class="kealoa-clue-number-stats">
-                    <h3><?php esc_html_e('Results by Clue Number', 'kealoa-reference'); ?></h3>
-                    
-                    <table class="kealoa-table kealoa-clue-number-table">
-                        <thead>
-                            <tr>
-                                <th data-sort="number"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($clue_number_results as $result): ?>
-                                <tr>
-                                    <td><?php echo esc_html($result->clue_number); ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php 
-                                        $pct = $result->total_answered > 0 
-                                            ? ($result->correct_count / $result->total_answered) * 100 
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-            
             <?php if (!empty($round_history)): ?>
                 <div class="kealoa-accuracy-chart-section">
                     <h3><?php esc_html_e('Accuracy by Round', 'kealoa-reference'); ?></h3>
@@ -687,6 +617,76 @@ class Kealoa_Shortcodes {
                         }
                     });
                     </script>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($year_results)): ?>
+                <div class="kealoa-year-stats">
+                    <h3><?php esc_html_e('Results by Year of Round', 'kealoa-reference'); ?></h3>
+                    
+                    <table class="kealoa-table kealoa-year-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="number"><?php esc_html_e('Year', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($year_results as $result): ?>
+                                <tr>
+                                    <td><?php echo esc_html($result->year); ?></td>
+                                    <td><?php echo esc_html($result->rounds_played); ?></td>
+                                    <td><?php echo esc_html($result->total_answered); ?></td>
+                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td>
+                                        <?php 
+                                        $pct = $result->total_answered > 0 
+                                            ? ($result->correct_count / $result->total_answered) * 100 
+                                            : 0;
+                                        echo Kealoa_Formatter::format_percentage($pct);
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($clue_number_results)): ?>
+                <div class="kealoa-clue-number-stats">
+                    <h3><?php esc_html_e('Results by Clue Number', 'kealoa-reference'); ?></h3>
+                    
+                    <table class="kealoa-table kealoa-clue-number-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="number"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($clue_number_results as $result): ?>
+                                <tr>
+                                    <td><?php echo esc_html($result->clue_number); ?></td>
+                                    <td><?php echo esc_html($result->total_answered); ?></td>
+                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td>
+                                        <?php 
+                                        $pct = $result->total_answered > 0 
+                                            ? ($result->correct_count / $result->total_answered) * 100 
+                                            : 0;
+                                        echo Kealoa_Formatter::format_percentage($pct);
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
             <?php endif; ?>
             </div>
