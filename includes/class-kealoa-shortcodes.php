@@ -402,6 +402,14 @@ class Kealoa_Shortcodes {
                         <span class="kealoa-stat-value"><?php echo Kealoa_Formatter::format_percentage($stats->overall_percentage); ?></span>
                         <span class="kealoa-stat-label"><?php esc_html_e('Overall Accuracy', 'kealoa-reference'); ?></span>
                     </div>
+                    <div class="kealoa-stat-card">
+                        <span class="kealoa-stat-value"><?php echo esc_html($stats->max_correct); ?></span>
+                        <span class="kealoa-stat-label"><?php esc_html_e('Best Score', 'kealoa-reference'); ?></span>
+                    </div>
+                    <div class="kealoa-stat-card">
+                        <span class="kealoa-stat-value"><?php echo esc_html($stats->best_streak); ?></span>
+                        <span class="kealoa-stat-label"><?php esc_html_e('Best Streak', 'kealoa-reference'); ?></span>
+                    </div>
                 </div>
                 
                 <h4><?php esc_html_e('Per-Round Statistics', 'kealoa-reference'); ?></h4>

@@ -1157,6 +1157,35 @@ class Kealoa_DB {
             return $r->clue_count > 0 ? ((int) $r->correct_count / (int) $r->clue_count) * 100 : 0;
         }, $round_results);
         
+        // Calculate longest streak of consecutive correct answers in a single round
+        $best_streak = 0;
+        $streak_rows = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT c.round_id, c.clue_number, g.is_correct
+                FROM {$this->guesses_table} g
+                INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+                WHERE g.guesser_person_id = %d
+                ORDER BY c.round_id ASC, c.clue_number ASC",
+                $person_id
+            )
+        );
+        $prev_round = null;
+        $streak = 0;
+        foreach ($streak_rows as $sr) {
+            if ((int) $sr->round_id !== $prev_round) {
+                $streak = 0;
+                $prev_round = (int) $sr->round_id;
+            }
+            if ((int) $sr->is_correct) {
+                $streak++;
+                if ($streak > $best_streak) {
+                    $best_streak = $streak;
+                }
+            } else {
+                $streak = 0;
+            }
+        }
+        
         return (object) [
             'rounds_played' => $rounds_played,
             'total_clues_answered' => (int) ($guess_stats->total_clues_answered ?? 0),
@@ -1172,6 +1201,7 @@ class Kealoa_DB {
             'max_percentage' => !empty($percentages) ? round(max($percentages), 1) : 0,
             'mean_percentage' => !empty($percentages) ? round(array_sum($percentages) / count($percentages), 1) : 0,
             'median_percentage' => round($this->calculate_median($percentages), 1),
+            'best_streak' => $best_streak,
         ];
     }
 
