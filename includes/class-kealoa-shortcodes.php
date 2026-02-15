@@ -448,7 +448,6 @@ class Kealoa_Shortcodes {
                         </tr>
                     </tbody>
                 </table>
-            </div>
             
             <?php if (!empty($round_history)): ?>
                 <div class="kealoa-score-distribution-section">
@@ -463,7 +462,8 @@ class Kealoa_Shortcodes {
                         $score = min(10, max(0, (int) $rh->correct_count));
                         $score_counts[$score]++;
                     }
-                    $score_labels = array_map('strval', range(0, 10));
+                    $score_labels = array_map('strval', range(10, 0, -1));
+                    $score_data = array_reverse(array_values($score_counts));
                     ?>
                     <script>
                     document.addEventListener('DOMContentLoaded', function() {
@@ -475,7 +475,7 @@ class Kealoa_Shortcodes {
                                     labels: <?php echo wp_json_encode($score_labels); ?>,
                                     datasets: [{
                                         label: <?php echo wp_json_encode(__('Rounds', 'kealoa-reference')); ?>,
-                                        data: <?php echo wp_json_encode(array_values($score_counts)); ?>,
+                                        data: <?php echo wp_json_encode($score_data); ?>,
                                         backgroundColor: 'rgba(34, 113, 177, 0.7)',
                                         borderColor: '#2271b1',
                                         borderWidth: 1
@@ -689,6 +689,7 @@ class Kealoa_Shortcodes {
                     </script>
                 </div>
             <?php endif; ?>
+            </div>
             
                 </div><!-- end Player tab -->
                 
