@@ -322,6 +322,7 @@ class Kealoa_Shortcodes {
         $day_of_week_results = $this->db->get_person_results_by_day_of_week($person_id);
         $decade_results = $this->db->get_person_results_by_decade($person_id);
         $year_results = $this->db->get_person_results_by_year($person_id);
+        $best_streaks_by_year = $this->db->get_person_best_streaks_by_year($person_id);
         $constructor_results = $this->db->get_person_results_by_constructor($person_id);
         $editor_results = $this->db->get_person_results_by_editor($person_id);
         $round_history = $this->db->get_person_round_history($person_id);
@@ -602,6 +603,8 @@ class Kealoa_Shortcodes {
                                 <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Best Score', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Best Streak', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -619,6 +622,8 @@ class Kealoa_Shortcodes {
                                         echo Kealoa_Formatter::format_percentage($pct);
                                         ?>
                                     </td>
+                                    <td><?php echo esc_html((int) $result->best_score); ?></td>
+                                    <td><?php echo esc_html($best_streaks_by_year[(int) $result->year] ?? 0); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

@@ -1337,17 +1337,69 @@ class Kealoa_DB {
                 YEAR(r.round_date) as year,
                 COUNT(DISTINCT r.id) as rounds_played,
                 COUNT(g.id) as total_answered,
-                SUM(g.is_correct) as correct_count
+                SUM(g.is_correct) as correct_count,
+                MAX(rs.round_score) as best_score
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
+            LEFT JOIN (
+                SELECT g2.guesser_person_id, c2.round_id, SUM(g2.is_correct) as round_score
+                FROM {$this->guesses_table} g2
+                INNER JOIN {$this->clues_table} c2 ON g2.clue_id = c2.id
+                WHERE g2.guesser_person_id = %d
+                GROUP BY g2.guesser_person_id, c2.round_id
+            ) rs ON rs.round_id = r.id AND rs.guesser_person_id = g.guesser_person_id
             WHERE g.guesser_person_id = %d
             GROUP BY YEAR(r.round_date)
             ORDER BY year ASC",
+            $person_id,
             $person_id
         );
         
         return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get the best streak of consecutive correct answers per year for a person
+     *
+     * @return array<int, int> Keyed by year
+     */
+    public function get_person_best_streaks_by_year(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT c.round_id, YEAR(r.round_date) as year, c.clue_number, g.is_correct
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
+            WHERE g.guesser_person_id = %d
+            ORDER BY year ASC, c.round_id ASC, c.clue_number ASC",
+            $person_id
+        );
+
+        $rows = $this->wpdb->get_results($sql);
+        $map = [];
+        $prev_round = null;
+        $streak = 0;
+
+        foreach ($rows as $row) {
+            $year = (int) $row->year;
+            $round_id = (int) $row->round_id;
+
+            if ($round_id !== $prev_round) {
+                $streak = 0;
+                $prev_round = $round_id;
+            }
+
+            if ((int) $row->is_correct) {
+                $streak++;
+                if (!isset($map[$year]) || $streak > $map[$year]) {
+                    $map[$year] = $streak;
+                }
+            } else {
+                $streak = 0;
+            }
+        }
+
+        return $map;
     }
 
     /**
