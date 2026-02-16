@@ -327,6 +327,44 @@
             });
         }
 
+        /**
+         * Media Library picker for person/constructor forms
+         */
+        $(document).on('click', '.kealoa-select-media', function (e) {
+            e.preventDefault();
+            var $button = $(this);
+            var targetInput = $button.data('target');
+            var previewDiv = $button.data('preview');
+
+            var frame = wp.media({
+                title: 'Select Photo',
+                multiple: false,
+                library: { type: 'image' }
+            });
+
+            frame.on('select', function () {
+                var attachment = frame.state().get('selection').first().toJSON();
+                $(targetInput).val(attachment.id);
+                var imgUrl = attachment.sizes && attachment.sizes.thumbnail
+                    ? attachment.sizes.thumbnail.url
+                    : attachment.url;
+                $(previewDiv).html('<img src="' + imgUrl + '" style="max-width:150px;" />');
+                $button.siblings('.kealoa-remove-media').show();
+            });
+
+            frame.open();
+        });
+
+        $(document).on('click', '.kealoa-remove-media', function (e) {
+            e.preventDefault();
+            var $button = $(this);
+            var targetInput = $button.data('target');
+            var previewDiv = $button.data('preview');
+            $(targetInput).val('');
+            $(previewDiv).html('');
+            $button.hide();
+        });
+
     });
 
 })(jQuery);

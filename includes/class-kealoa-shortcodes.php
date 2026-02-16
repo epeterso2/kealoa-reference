@@ -470,37 +470,59 @@ class Kealoa_Shortcodes {
             }
         }
         
-        // Use person's own image if available, otherwise fall back to constructor image
-        $person_image_url = $person->image_url ?? '';
-        if (empty($person_image_url)) {
+        // Determine image to display: media library > XWordInfo > image_url
+        $person_media_id = (int) ($person->media_id ?? 0);
+        $person_media_url = '';
+        $person_image_source = ''; // 'media', 'xwordinfo', 'url', or ''
+
+        if ($person_media_id > 0) {
+            $media_src = wp_get_attachment_image_src($person_media_id, 'medium');
+            if ($media_src) {
+                $person_media_url = $media_src[0];
+                $person_image_source = 'media';
+            }
+        }
+
+        if (empty($person_image_source)) {
+            // Try XWordInfo image via matching constructor
             $matching_constructors = $this->db->get_constructors([
                 'search' => $person->full_name,
                 'limit' => 1,
             ]);
             foreach ($matching_constructors as $mc) {
                 if (strtolower($mc->full_name) === strtolower($person->full_name) && !empty($mc->xwordinfo_image_url)) {
-                    $person_image_url = $mc->xwordinfo_image_url;
+                    $person_media_url = $mc->xwordinfo_image_url;
+                    $person_image_source = 'xwordinfo';
                     break;
                 }
             }
         }
-        
-        $is_player_image = !empty($person->image_url);
+
+        if (empty($person_image_source) && !empty($person->image_url)) {
+            $person_media_url = $person->image_url;
+            $person_image_source = 'url';
+        }
         
         ob_start();
         ?>
         <div class="kealoa-person-view">
             <div class="kealoa-person-header">
                 <div class="kealoa-person-info">
-                    <?php if (!empty($person_image_url)): ?>
+                    <?php if (!empty($person_media_url)): ?>
                         <div class="kealoa-person-image">
-                            <?php if ($is_player_image): ?>
-                                <img src="<?php echo esc_url($person_image_url); ?>" 
-                                     alt="<?php echo esc_attr($person->full_name); ?>" 
-                                     class="kealoa-player-image" />
+                            <?php if ($person_image_source === 'xwordinfo'): ?>
+                                <?php echo Kealoa_Formatter::format_xwordinfo_image($person_media_url, $person->full_name); ?>
                             <?php else: ?>
-                                <?php echo Kealoa_Formatter::format_xwordinfo_image($person_image_url, $person->full_name); ?>
+                                <img src="<?php echo esc_url($person_media_url); ?>" 
+                                     alt="<?php echo esc_attr($person->full_name); ?>" 
+                                     class="kealoa-entity-image" />
                             <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (current_user_can('manage_options')): ?>
+                        <div class="kealoa-media-picker" data-entity-type="person" data-entity-id="<?php echo esc_attr($person->id); ?>">
+                            <button type="button" class="kealoa-media-select-btn"><?php esc_html_e('Select Photo', 'kealoa-reference'); ?></button>
+                            <button type="button" class="kealoa-media-remove-btn" style="<?php echo $person_image_source !== 'media' ? 'display:none;' : ''; ?>"><?php esc_html_e('Remove Photo', 'kealoa-reference'); ?></button>
                         </div>
                     <?php endif; ?>
                     
@@ -1266,15 +1288,45 @@ class Kealoa_Shortcodes {
         
         $puzzles = $this->db->get_constructor_puzzles($constructor_id);
         $stats = $this->db->get_constructor_stats($constructor_id);
+
+        // Determine image: media library > XWordInfo
+        $con_media_id = (int) ($constructor->media_id ?? 0);
+        $con_image_url = '';
+        $con_image_source = ''; // 'media', 'xwordinfo', or ''
+
+        if ($con_media_id > 0) {
+            $media_src = wp_get_attachment_image_src($con_media_id, 'medium');
+            if ($media_src) {
+                $con_image_url = $media_src[0];
+                $con_image_source = 'media';
+            }
+        }
+
+        if (empty($con_image_source) && !empty($constructor->xwordinfo_image_url)) {
+            $con_image_url = $constructor->xwordinfo_image_url;
+            $con_image_source = 'xwordinfo';
+        }
         
         ob_start();
         ?>
         <div class="kealoa-constructor-view">
             <div class="kealoa-constructor-header">
                 <div class="kealoa-constructor-info">
-                    <?php if (!empty($constructor->xwordinfo_image_url)): ?>
+                    <?php if (!empty($con_image_url)): ?>
                         <div class="kealoa-constructor-image">
-                            <?php echo Kealoa_Formatter::format_xwordinfo_image($constructor->xwordinfo_image_url, $constructor->full_name); ?>
+                            <?php if ($con_image_source === 'xwordinfo'): ?>
+                                <?php echo Kealoa_Formatter::format_xwordinfo_image($con_image_url, $constructor->full_name); ?>
+                            <?php else: ?>
+                                <img src="<?php echo esc_url($con_image_url); ?>" 
+                                     alt="<?php echo esc_attr($constructor->full_name); ?>" 
+                                     class="kealoa-entity-image" />
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (current_user_can('manage_options')): ?>
+                        <div class="kealoa-media-picker" data-entity-type="constructor" data-entity-id="<?php echo esc_attr($constructor->id); ?>">
+                            <button type="button" class="kealoa-media-select-btn"><?php esc_html_e('Select Photo', 'kealoa-reference'); ?></button>
+                            <button type="button" class="kealoa-media-remove-btn" style="<?php echo $con_image_source !== 'media' ? 'display:none;' : ''; ?>"><?php esc_html_e('Remove Photo', 'kealoa-reference'); ?></button>
                         </div>
                     <?php endif; ?>
                     
@@ -1469,12 +1521,40 @@ class Kealoa_Shortcodes {
         
         $puzzles = $this->db->get_editor_puzzles($editor_name);
         $stats = $this->db->get_editor_stats($editor_name);
+
+        // Determine editor image from media library
+        $editor_media_id = $this->db->get_editor_media_id($editor_name);
+        $editor_image_url = '';
+        if ($editor_media_id > 0) {
+            $media_src = wp_get_attachment_image_src($editor_media_id, 'medium');
+            if ($media_src) {
+                $editor_image_url = $media_src[0];
+            }
+        }
         
         ob_start();
         ?>
         <div class="kealoa-editor-view">
             <div class="kealoa-editor-header">
-                <h2 class="kealoa-editor-name"><?php echo esc_html($editor_name); ?></h2>
+                <div class="kealoa-editor-info">
+                    <?php if (!empty($editor_image_url)): ?>
+                        <div class="kealoa-editor-image">
+                            <img src="<?php echo esc_url($editor_image_url); ?>" 
+                                 alt="<?php echo esc_attr($editor_name); ?>" 
+                                 class="kealoa-entity-image" />
+                        </div>
+                    <?php endif; ?>
+                    <?php if (current_user_can('manage_options')): ?>
+                        <div class="kealoa-media-picker" data-entity-type="editor" data-entity-id="<?php echo esc_attr($editor_name); ?>">
+                            <button type="button" class="kealoa-media-select-btn"><?php esc_html_e('Select Photo', 'kealoa-reference'); ?></button>
+                            <button type="button" class="kealoa-media-remove-btn" style="<?php echo empty($editor_image_url) ? 'display:none;' : ''; ?>"><?php esc_html_e('Remove Photo', 'kealoa-reference'); ?></button>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="kealoa-editor-details">
+                        <h2 class="kealoa-editor-name"><?php echo esc_html($editor_name); ?></h2>
+                    </div>
+                </div>
             </div>
             
             <?php if ($stats): ?>

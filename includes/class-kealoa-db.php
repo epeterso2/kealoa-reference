@@ -128,18 +128,26 @@ class Kealoa_DB {
      * Create a constructor
      */
     public function create_constructor(array $data): int|false {
+        $insert_data = [
+            'full_name' => sanitize_text_field($data['full_name']),
+            'xwordinfo_profile_name' => isset($data['xwordinfo_profile_name']) 
+                ? sanitize_text_field($data['xwordinfo_profile_name']) 
+                : null,
+            'xwordinfo_image_url' => isset($data['xwordinfo_image_url']) 
+                ? esc_url_raw($data['xwordinfo_image_url']) 
+                : null,
+        ];
+        $format = ['%s', '%s', '%s'];
+
+        if (array_key_exists('media_id', $data)) {
+            $insert_data['media_id'] = $data['media_id'] ? (int) $data['media_id'] : null;
+            $format[] = '%d';
+        }
+
         $result = $this->wpdb->insert(
             $this->constructors_table,
-            [
-                'full_name' => sanitize_text_field($data['full_name']),
-                'xwordinfo_profile_name' => isset($data['xwordinfo_profile_name']) 
-                    ? sanitize_text_field($data['xwordinfo_profile_name']) 
-                    : null,
-                'xwordinfo_image_url' => isset($data['xwordinfo_image_url']) 
-                    ? esc_url_raw($data['xwordinfo_image_url']) 
-                    : null,
-            ],
-            ['%s', '%s', '%s']
+            $insert_data,
+            $format
         );
         
         return $result ? $this->wpdb->insert_id : false;
@@ -167,6 +175,10 @@ class Kealoa_DB {
                 ? esc_url_raw($data['xwordinfo_image_url']) 
                 : null;
             $format[] = '%s';
+        }
+        if (array_key_exists('media_id', $data)) {
+            $update_data['media_id'] = $data['media_id'] ? (int) $data['media_id'] : null;
+            $format[] = '%d';
         }
         
         if (empty($update_data)) {
@@ -288,18 +300,26 @@ class Kealoa_DB {
      * Create a person
      */
     public function create_person(array $data): int|false {
+        $insert_data = [
+            'full_name' => sanitize_text_field($data['full_name']),
+            'home_page_url' => isset($data['home_page_url']) 
+                ? esc_url_raw($data['home_page_url']) 
+                : null,
+            'image_url' => isset($data['image_url']) 
+                ? esc_url_raw($data['image_url']) 
+                : null,
+        ];
+        $format = ['%s', '%s', '%s'];
+
+        if (array_key_exists('media_id', $data)) {
+            $insert_data['media_id'] = $data['media_id'] ? (int) $data['media_id'] : null;
+            $format[] = '%d';
+        }
+
         $result = $this->wpdb->insert(
             $this->persons_table,
-            [
-                'full_name' => sanitize_text_field($data['full_name']),
-                'home_page_url' => isset($data['home_page_url']) 
-                    ? esc_url_raw($data['home_page_url']) 
-                    : null,
-                'image_url' => isset($data['image_url']) 
-                    ? esc_url_raw($data['image_url']) 
-                    : null,
-            ],
-            ['%s', '%s', '%s']
+            $insert_data,
+            $format
         );
         
         return $result ? $this->wpdb->insert_id : false;
@@ -327,6 +347,10 @@ class Kealoa_DB {
                 ? esc_url_raw($data['image_url']) 
                 : null;
             $format[] = '%s';
+        }
+        if (array_key_exists('media_id', $data)) {
+            $update_data['media_id'] = $data['media_id'] ? (int) $data['media_id'] : null;
+            $format[] = '%d';
         }
         
         if (empty($update_data)) {
@@ -1828,5 +1852,33 @@ class Kealoa_DB {
         }
 
         return $map;
+    }
+
+    // =========================================================================
+    // EDITOR MEDIA
+    // =========================================================================
+
+    /**
+     * Get the media attachment ID for an editor
+     */
+    public function get_editor_media_id(string $editor_name): int {
+        $key = 'kealoa_editor_media_' . sanitize_title($editor_name);
+        return (int) get_option($key, 0);
+    }
+
+    /**
+     * Set the media attachment ID for an editor
+     */
+    public function set_editor_media_id(string $editor_name, int $media_id): bool {
+        $key = 'kealoa_editor_media_' . sanitize_title($editor_name);
+        return update_option($key, $media_id, false);
+    }
+
+    /**
+     * Remove the media attachment ID for an editor
+     */
+    public function delete_editor_media_id(string $editor_name): bool {
+        $key = 'kealoa_editor_media_' . sanitize_title($editor_name);
+        return delete_option($key);
     }
 }

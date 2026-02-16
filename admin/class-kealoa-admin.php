@@ -36,6 +36,7 @@ class Kealoa_Admin {
         // AJAX handlers
         add_action('wp_ajax_kealoa_get_persons', [$this, 'ajax_get_persons']);
         add_action('wp_ajax_kealoa_get_constructors', [$this, 'ajax_get_constructors']);
+        add_action('wp_ajax_kealoa_save_media', [$this, 'ajax_save_media']);
     }
 
     /**
@@ -126,6 +127,8 @@ class Kealoa_Admin {
             return;
         }
         
+        wp_enqueue_media();
+
         wp_enqueue_style(
             'kealoa-admin',
             KEALOA_PLUGIN_URL . 'assets/css/kealoa-admin.css',
@@ -833,6 +836,27 @@ class Kealoa_Admin {
                                value="<?php echo esc_attr($person->image_url ?? ''); ?>" />
                     </td>
                 </tr>
+                <tr>
+                    <th><?php esc_html_e('Media Library Photo', 'kealoa-reference'); ?></th>
+                    <td>
+                        <input type="hidden" name="media_id" id="person_media_id" value="<?php echo esc_attr($person->media_id ?? ''); ?>" />
+                        <div id="person-media-preview" style="margin-bottom: 10px;">
+                            <?php if (!empty($person->media_id)): ?>
+                                <?php echo wp_get_attachment_image((int) $person->media_id, 'thumbnail'); ?>
+                            <?php endif; ?>
+                        </div>
+                        <button type="button" class="button kealoa-select-media" data-target="#person_media_id" data-preview="#person-media-preview">
+                            <?php esc_html_e('Select Photo', 'kealoa-reference'); ?>
+                        </button>
+                        <button type="button" class="button kealoa-remove-media" data-target="#person_media_id" data-preview="#person-media-preview"
+                                style="<?php echo empty($person->media_id) ? 'display:none;' : ''; ?>">
+                            <?php esc_html_e('Remove Photo', 'kealoa-reference'); ?>
+                        </button>
+                        <p class="description">
+                            <?php esc_html_e('Select a photo from the WordPress media library. This takes priority over Image URL and XWordInfo images.', 'kealoa-reference'); ?>
+                        </p>
+                    </td>
+                </tr>
             </table>
             
             <p class="submit">
@@ -1012,6 +1036,27 @@ class Kealoa_Admin {
                         <?php if (!empty($constructor->xwordinfo_image_url)): ?>
                             <p><img src="<?php echo esc_url($constructor->xwordinfo_image_url); ?>" alt="" style="max-width: 150px; margin-top: 10px;" /></p>
                         <?php endif; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <th><?php esc_html_e('Media Library Photo', 'kealoa-reference'); ?></th>
+                    <td>
+                        <input type="hidden" name="media_id" id="constructor_media_id" value="<?php echo esc_attr($constructor->media_id ?? ''); ?>" />
+                        <div id="constructor-media-preview" style="margin-bottom: 10px;">
+                            <?php if (!empty($constructor->media_id)): ?>
+                                <?php echo wp_get_attachment_image((int) $constructor->media_id, 'thumbnail'); ?>
+                            <?php endif; ?>
+                        </div>
+                        <button type="button" class="button kealoa-select-media" data-target="#constructor_media_id" data-preview="#constructor-media-preview">
+                            <?php esc_html_e('Select Photo', 'kealoa-reference'); ?>
+                        </button>
+                        <button type="button" class="button kealoa-remove-media" data-target="#constructor_media_id" data-preview="#constructor-media-preview"
+                                style="<?php echo empty($constructor->media_id) ? 'display:none;' : ''; ?>">
+                            <?php esc_html_e('Remove Photo', 'kealoa-reference'); ?>
+                        </button>
+                        <p class="description">
+                            <?php esc_html_e('Select a photo from the WordPress media library. This takes priority over XWordInfo images.', 'kealoa-reference'); ?>
+                        </p>
                     </td>
                 </tr>
             </table>
@@ -1898,6 +1943,7 @@ class Kealoa_Admin {
             'full_name' => $_POST['full_name'] ?? '',
             'home_page_url' => $_POST['home_page_url'] ?? null,
             'image_url' => $_POST['image_url'] ?? null,
+            'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
         ]);
         
         if ($id) {
@@ -1917,6 +1963,7 @@ class Kealoa_Admin {
             'full_name' => $_POST['full_name'] ?? '',
             'home_page_url' => $_POST['home_page_url'] ?? null,
             'image_url' => $_POST['image_url'] ?? null,
+            'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
         ]);
         
         if ($result) {
@@ -1943,6 +1990,7 @@ class Kealoa_Admin {
             'full_name' => $_POST['full_name'] ?? '',
             'xwordinfo_profile_name' => $_POST['xwordinfo_profile_name'] ?? null,
             'xwordinfo_image_url' => $_POST['xwordinfo_image_url'] ?? null,
+            'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
         ]);
         
         if ($id) {
@@ -1962,6 +2010,7 @@ class Kealoa_Admin {
             'full_name' => $_POST['full_name'] ?? '',
             'xwordinfo_profile_name' => $_POST['xwordinfo_profile_name'] ?? null,
             'xwordinfo_image_url' => $_POST['xwordinfo_image_url'] ?? null,
+            'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
         ]);
         
         if ($result) {
@@ -2277,5 +2326,53 @@ class Kealoa_Admin {
         
         wp_redirect(admin_url('admin.php?page=' . $page));
         exit;
+    }
+
+    /**
+     * AJAX handler to save/remove media for a person, constructor, or editor
+     */
+    public function ajax_save_media(): void {
+        check_ajax_referer('kealoa_media_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized', 403);
+        }
+
+        $entity_type = sanitize_text_field($_POST['entity_type'] ?? '');
+        $entity_id = sanitize_text_field($_POST['entity_id'] ?? '');
+        $media_id = (int) ($_POST['media_id'] ?? 0);
+
+        if (!in_array($entity_type, ['person', 'constructor', 'editor'], true)) {
+            wp_send_json_error('Invalid entity type');
+        }
+
+        if ($entity_type === 'editor') {
+            if (empty($entity_id)) {
+                wp_send_json_error('Invalid editor name');
+            }
+            if ($media_id > 0) {
+                $this->db->set_editor_media_id($entity_id, $media_id);
+            } else {
+                $this->db->delete_editor_media_id($entity_id);
+            }
+        } else {
+            $id = (int) $entity_id;
+            if (!$id) {
+                wp_send_json_error('Invalid entity ID');
+            }
+            if ($entity_type === 'person') {
+                $this->db->update_person($id, ['media_id' => $media_id ?: null]);
+            } else {
+                $this->db->update_constructor($id, ['media_id' => $media_id ?: null]);
+            }
+        }
+
+        $image_url = '';
+        if ($media_id > 0) {
+            $image = wp_get_attachment_image_src($media_id, 'medium');
+            $image_url = $image ? $image[0] : '';
+        }
+
+        wp_send_json_success(['media_id' => $media_id, 'image_url' => $image_url]);
     }
 }

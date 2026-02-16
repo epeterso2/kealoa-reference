@@ -246,22 +246,51 @@
     flex-wrap: wrap;
 }
 
-.kealoa-person-image {
+.kealoa-person-image,
+.kealoa-constructor-image,
+.kealoa-editor-image {
     flex-shrink: 0;
 }
 
-.kealoa-xwordinfo-image {
-    width: 150px;
-    height: auto;
+.kealoa-xwordinfo-image,
+.kealoa-entity-image {
+    max-height: 200px;
+    width: auto;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .kealoa-player-image {
-    height: 200px;
+    max-height: 200px;
     width: auto;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Media picker (admin only) */
+.kealoa-media-picker {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-shrink: 0;
+}
+
+.kealoa-media-select-btn,
+.kealoa-media-remove-btn {
+    background: #f0f0f1;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #2271b1;
+    white-space: nowrap;
+}
+
+.kealoa-media-select-btn:hover,
+.kealoa-media-remove-btn:hover {
+    background: #e0e0e1;
+    border-color: #999;
 }
 
 .kealoa-person-details {
@@ -406,10 +435,6 @@
     flex-wrap: wrap;
 }
 
-.kealoa-constructor-image {
-    flex-shrink: 0;
-}
-
 .kealoa-constructor-details {
     flex: 1;
     min-width: 250px;
@@ -437,6 +462,40 @@
     margin: 30px 0 15px 0;
     padding-bottom: 10px;
     border-bottom: 2px solid #0073aa;
+    color: #333;
+}
+
+/* ==========================================================================
+   Editor View
+   ========================================================================== */
+
+.kealoa-editor-view {
+    margin: 20px 0;
+}
+
+.kealoa-editor-header {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    padding: 30px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.kealoa-editor-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.kealoa-editor-details {
+    flex: 1;
+    min-width: 250px;
+    overflow: hidden;
+}
+
+.kealoa-editor-name {
+    margin: 0 0 15px 0;
+    font-size: 28px;
     color: #333;
 }
 
