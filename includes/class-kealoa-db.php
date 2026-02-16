@@ -1218,14 +1218,16 @@ class Kealoa_DB {
             )
         );
         
-        // Get total clues answered and correct answers
+        // Get total clues answered and correct answers (only from rounds where person is a guesser)
         $guess_stats = $this->wpdb->get_row(
             $this->wpdb->prepare(
                 "SELECT 
                     COUNT(*) as total_clues_answered,
-                    SUM(is_correct) as total_correct
-                FROM {$this->guesses_table}
-                WHERE guesser_person_id = %d",
+                    SUM(g.is_correct) as total_correct
+                FROM {$this->guesses_table} g
+                INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+                INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
+                WHERE g.guesser_person_id = %d",
                 $person_id
             )
         );
@@ -1239,6 +1241,7 @@ class Kealoa_DB {
                     SUM(g.is_correct) as correct_count
                 FROM {$this->guesses_table} g
                 INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+                INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
                 WHERE g.guesser_person_id = %d
                 GROUP BY c.round_id",
                 $person_id
@@ -1257,6 +1260,7 @@ class Kealoa_DB {
                 "SELECT c.round_id, c.clue_number, g.is_correct
                 FROM {$this->guesses_table} g
                 INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+                INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
                 WHERE g.guesser_person_id = %d
                 ORDER BY c.round_id ASC, c.clue_number ASC",
                 $person_id
@@ -1328,6 +1332,7 @@ class Kealoa_DB {
                 SUM(g.is_correct) as correct_count
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             WHERE g.guesser_person_id = %d
             GROUP BY c.clue_number
             ORDER BY c.clue_number ASC",
@@ -1348,6 +1353,7 @@ class Kealoa_DB {
                 SUM(g.is_correct) as correct_count
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             WHERE g.guesser_person_id = %d
             GROUP BY CHAR_LENGTH(c.correct_answer)
             ORDER BY CHAR_LENGTH(c.correct_answer) ASC",
@@ -1368,6 +1374,7 @@ class Kealoa_DB {
                 SUM(g.is_correct) as correct_count
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             WHERE g.guesser_person_id = %d
             GROUP BY c.puzzle_clue_direction
             ORDER BY c.puzzle_clue_direction ASC",
@@ -1388,6 +1395,7 @@ class Kealoa_DB {
                 SUM(g.is_correct) as correct_count
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
             WHERE g.guesser_person_id = %d
             GROUP BY DAYOFWEEK(pz.publication_date)
@@ -1409,6 +1417,7 @@ class Kealoa_DB {
                 SUM(g.is_correct) as correct_count
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
             WHERE g.guesser_person_id = %d
             GROUP BY FLOOR(YEAR(pz.publication_date) / 10) * 10
@@ -1432,11 +1441,13 @@ class Kealoa_DB {
                 MAX(rs.round_score) as best_score
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
             LEFT JOIN (
                 SELECT g2.guesser_person_id, c2.round_id, SUM(g2.is_correct) as round_score
                 FROM {$this->guesses_table} g2
                 INNER JOIN {$this->clues_table} c2 ON g2.clue_id = c2.id
+                INNER JOIN {$this->round_guessers_table} rg2 ON rg2.round_id = c2.round_id AND rg2.person_id = g2.guesser_person_id
                 WHERE g2.guesser_person_id = %d
                 GROUP BY g2.guesser_person_id, c2.round_id
             ) rs ON rs.round_id = r.id AND rs.guesser_person_id = g.guesser_person_id
@@ -1460,6 +1471,7 @@ class Kealoa_DB {
             "SELECT c.round_id, YEAR(r.round_date) as year, c.clue_number, g.is_correct
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
             WHERE g.guesser_person_id = %d
             ORDER BY year ASC, c.round_id ASC, c.clue_number ASC",
@@ -1506,6 +1518,7 @@ class Kealoa_DB {
                 SUM(g.is_correct) as correct_count
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->puzzle_constructors_table} pc ON c.puzzle_id = pc.puzzle_id
             INNER JOIN {$this->constructors_table} con ON pc.constructor_id = con.id
             WHERE g.guesser_person_id = %d
@@ -1528,6 +1541,7 @@ class Kealoa_DB {
                 SUM(g.is_correct) as correct_count
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->puzzles_table} p ON c.puzzle_id = p.id
             WHERE g.guesser_person_id = %d
             GROUP BY editor_name
@@ -1548,6 +1562,7 @@ class Kealoa_DB {
             "SELECT c.round_id, c.clue_number, g.is_correct
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             WHERE g.guesser_person_id = %d
             ORDER BY c.round_id ASC, c.clue_number ASC",
             $person_id
@@ -1589,6 +1604,7 @@ class Kealoa_DB {
             "SELECT c.clue_number, c.round_id
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             WHERE g.guesser_person_id = %d AND g.is_correct = 1
             ORDER BY c.clue_number ASC, c.round_id ASC",
             $person_id
