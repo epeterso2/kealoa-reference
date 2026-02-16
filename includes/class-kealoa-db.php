@@ -1636,6 +1636,26 @@ class Kealoa_DB {
     }
 
     /**
+     * Get aggregate stats for a single constructor
+     */
+    public function get_constructor_stats(int $constructor_id): ?object {
+        $sql = $this->wpdb->prepare(
+            "SELECT 
+                COUNT(DISTINCT pc.puzzle_id) as puzzle_count,
+                COUNT(DISTINCT c.id) as clue_count,
+                COALESCE(SUM(g.is_correct), 0) as correct_guesses,
+                COUNT(g.id) as total_guesses
+            FROM {$this->puzzle_constructors_table} pc
+            LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id
+            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+            WHERE pc.constructor_id = %d",
+            $constructor_id
+        );
+
+        return $this->wpdb->get_row($sql);
+    }
+
+    /**
      * Get puzzles for a constructor with round info
      */
     public function get_constructor_puzzles(int $constructor_id): array {

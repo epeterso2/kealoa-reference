@@ -1265,6 +1265,7 @@ class Kealoa_Shortcodes {
         }
         
         $puzzles = $this->db->get_constructor_puzzles($constructor_id);
+        $stats = $this->db->get_constructor_stats($constructor_id);
         
         ob_start();
         ?>
@@ -1290,6 +1291,32 @@ class Kealoa_Shortcodes {
                 </div>
             </div>
             
+            <?php if ($stats): ?>
+            <div class="kealoa-stats-grid">
+                <div class="kealoa-stat-card">
+                    <span class="kealoa-stat-value"><?php echo esc_html($stats->puzzle_count); ?></span>
+                    <span class="kealoa-stat-label"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></span>
+                </div>
+                <div class="kealoa-stat-card">
+                    <span class="kealoa-stat-value"><?php echo esc_html($stats->clue_count); ?></span>
+                    <span class="kealoa-stat-label"><?php esc_html_e('Clues', 'kealoa-reference'); ?></span>
+                </div>
+                <div class="kealoa-stat-card">
+                    <span class="kealoa-stat-value"><?php echo esc_html($stats->correct_guesses); ?></span>
+                    <span class="kealoa-stat-label"><?php esc_html_e('Correct', 'kealoa-reference'); ?></span>
+                </div>
+                <div class="kealoa-stat-card">
+                    <span class="kealoa-stat-value"><?php
+                        $accuracy = (int) $stats->total_guesses > 0
+                            ? ((int) $stats->correct_guesses / (int) $stats->total_guesses) * 100
+                            : 0;
+                        echo Kealoa_Formatter::format_percentage($accuracy);
+                    ?></span>
+                    <span class="kealoa-stat-label"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></span>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <?php if (!empty($puzzles)): ?>
                 <div class="kealoa-constructor-puzzles">
                     <h3><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></h3>
