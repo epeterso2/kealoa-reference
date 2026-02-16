@@ -1698,6 +1698,26 @@ class Kealoa_DB {
     }
 
     /**
+     * Get aggregate stats for a single editor
+     */
+    public function get_editor_stats(string $editor_name): ?object {
+        $sql = $this->wpdb->prepare(
+            "SELECT 
+                COUNT(DISTINCT p.id) as puzzle_count,
+                COUNT(DISTINCT c.id) as clue_count,
+                COALESCE(SUM(g.is_correct), 0) as correct_guesses,
+                COUNT(g.id) as total_guesses
+            FROM {$this->puzzles_table} p
+            INNER JOIN {$this->clues_table} c ON c.puzzle_id = p.id
+            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+            WHERE p.editor_name = %s",
+            $editor_name
+        );
+
+        return $this->wpdb->get_row($sql);
+    }
+
+    /**
      * Get puzzles edited by a specific editor, with constructor and round info
      */
     public function get_editor_puzzles(string $editor_name): array {
