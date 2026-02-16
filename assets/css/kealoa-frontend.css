@@ -105,6 +105,14 @@
     -webkit-overflow-scrolling: touch;
 }
 
+.kealoa-rounds-table .kealoa-results-cell {
+    white-space: nowrap;
+}
+
+.kealoa-rounds-table .kealoa-description-cell {
+    width: 100%;
+}
+
 /* ==========================================================================
    Links
    ========================================================================== */
