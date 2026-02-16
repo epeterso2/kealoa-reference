@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.0.99
+ * Version: 1.1.2
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.0.99');
+define('KEALOA_VERSION', '1.1.2');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -176,28 +176,13 @@ function kealoa_enqueue_frontend_assets(): void {
         true
     );
     
-    $js_deps = ['chartjs'];
-
-    // Enqueue media library for admins on the frontend
-    if (current_user_can('manage_options')) {
-        wp_enqueue_media();
-        $js_deps[] = 'jquery';
-    }
-
     wp_enqueue_script(
         'kealoa-frontend',
         KEALOA_PLUGIN_URL . 'assets/js/kealoa-frontend.js',
-        $js_deps,
+        ['chartjs'],
         KEALOA_VERSION,
         true
     );
-
-    if (current_user_can('manage_options')) {
-        wp_localize_script('kealoa-frontend', 'kealoaMedia', [
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('kealoa_media_nonce'),
-        ]);
-    }
 }
 
 /**

@@ -295,6 +295,20 @@ class Kealoa_Formatter {
     }
 
     /**
+     * Derive XWordInfo image URL from a person's name
+     *
+     * Removes all non-alphanumeric characters from the name to form the image filename.
+     * Example: "Joel Fagliano" => "https://www.xwordinfo.com/images/cons/JoelFagliano.jpg"
+     *
+     * @param string $name The person's full name
+     * @return string The derived XWordInfo image URL
+     */
+    public static function xwordinfo_image_url_from_name(string $name): string {
+        $clean = preg_replace('/[^A-Za-z0-9]/', '', $name);
+        return 'https://www.xwordinfo.com/images/cons/' . $clean . '.jpg';
+    }
+
+    /**
      * Format an XWordInfo profile image
      *
      * @param string $image_url The URL to the XWordInfo profile image

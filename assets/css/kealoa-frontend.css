@@ -267,31 +267,6 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Media picker (admin only) */
-.kealoa-media-picker {
-    display: flex;
-    gap: 6px;
-    margin-top: 8px;
-    flex-shrink: 0;
-}
-
-.kealoa-media-select-btn,
-.kealoa-media-remove-btn {
-    background: #f0f0f1;
-    border: 1px solid #c3c4c7;
-    border-radius: 4px;
-    padding: 4px 10px;
-    font-size: 12px;
-    cursor: pointer;
-    color: #2271b1;
-    white-space: nowrap;
-}
-
-.kealoa-media-select-btn:hover,
-.kealoa-media-remove-btn:hover {
-    background: #e0e0e1;
-    border-color: #999;
-}
 
 .kealoa-person-details {
     flex: 1;
