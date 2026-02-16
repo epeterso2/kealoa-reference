@@ -279,4 +279,106 @@
     } else {
         initTabs();
     }
+
+    /**
+     * Round Picker - navigate to rounds matching an aggregate value
+     *
+     * Usage: Add class "kealoa-round-picker-link" to an element with
+     * data-rounds='[{"id":1,"date":"1/1/2024","words":"FOO BAR","score":"8/10"}]'
+     *
+     * If there is only one round, navigates directly.
+     * If there are multiple, shows a picker modal.
+     */
+    function initRoundPicker() {
+        // Create the modal overlay once
+        var overlay = document.createElement('div');
+        overlay.className = 'kealoa-round-picker-overlay';
+        overlay.innerHTML =
+            '<div class="kealoa-round-picker-modal">' +
+                '<div class="kealoa-round-picker-header">' +
+                    '<h3>Select a Round</h3>' +
+                    '<button class="kealoa-round-picker-close" aria-label="Close">&times;</button>' +
+                '</div>' +
+                '<ul class="kealoa-round-picker-list"></ul>' +
+            '</div>';
+        document.body.appendChild(overlay);
+
+        var listEl = overlay.querySelector('.kealoa-round-picker-list');
+        var closeBtn = overlay.querySelector('.kealoa-round-picker-close');
+
+        function closeModal() {
+            overlay.classList.remove('active');
+        }
+
+        closeBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                closeModal();
+            }
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        /**
+         * Open the round picker for a set of rounds.
+         * @param {Array} rounds - Array of {id, date, words, score} objects
+         */
+        window.kealoaOpenRoundPicker = function(rounds) {
+            if (!rounds || rounds.length === 0) {
+                return;
+            }
+
+            if (rounds.length === 1) {
+                window.location.href = rounds[0].url;
+                return;
+            }
+
+            listEl.innerHTML = '';
+            rounds.forEach(function(r) {
+                var li = document.createElement('li');
+                var a = document.createElement('a');
+                a.href = r.url;
+                a.innerHTML =
+                    '<span class="kealoa-round-picker-date">' + escapeHtml(r.date) + '</span>' +
+                    '<span class="kealoa-round-picker-words">' + escapeHtml(r.words) + '</span>' +
+                    (r.score ? '<span class="kealoa-round-picker-score">' + escapeHtml(r.score) + '</span>' : '');
+                li.appendChild(a);
+                listEl.appendChild(li);
+            });
+
+            overlay.classList.add('active');
+        };
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+
+        // Delegate click on all round picker links
+        document.addEventListener('click', function(e) {
+            var link = e.target.closest('.kealoa-round-picker-link');
+            if (!link) return;
+
+            e.preventDefault();
+            var roundsData = link.getAttribute('data-rounds');
+            if (roundsData) {
+                try {
+                    var rounds = JSON.parse(roundsData);
+                    window.kealoaOpenRoundPicker(rounds);
+                } catch (ex) {
+                    // ignore parse errors
+                }
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initRoundPicker);
+    } else {
+        initRoundPicker();
+    }
 })();

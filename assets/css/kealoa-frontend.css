@@ -585,3 +585,124 @@
 .kealoa-tab-panel.active {
     display: block;
 }
+
+/* ==========================================================================
+   Round Picker
+   ========================================================================== */
+
+.kealoa-round-picker-link {
+    color: #2271b1;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+}
+
+.kealoa-round-picker-link:hover {
+    text-decoration-style: solid;
+}
+
+.kealoa-stat-card .kealoa-stat-value .kealoa-round-picker-link {
+    color: inherit;
+    font-size: inherit;
+}
+
+.kealoa-round-picker-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100000;
+    justify-content: center;
+    align-items: center;
+}
+
+.kealoa-round-picker-overlay.active {
+    display: flex;
+}
+
+.kealoa-round-picker-modal {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.kealoa-round-picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.kealoa-round-picker-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.kealoa-round-picker-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    line-height: 1;
+}
+
+.kealoa-round-picker-close:hover {
+    color: #333;
+}
+
+.kealoa-round-picker-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.kealoa-round-picker-list li {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.kealoa-round-picker-list li:last-child {
+    border-bottom: none;
+}
+
+.kealoa-round-picker-list a {
+    display: block;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #333;
+    transition: background 0.15s;
+}
+
+.kealoa-round-picker-list a:hover {
+    background: #f0f5fa;
+}
+
+.kealoa-round-picker-list .kealoa-round-picker-date {
+    font-weight: 600;
+    color: #2271b1;
+    margin-right: 8px;
+}
+
+.kealoa-round-picker-list .kealoa-round-picker-words {
+    color: #555;
+}
+
+.kealoa-round-picker-list .kealoa-round-picker-score {
+    display: block;
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+}

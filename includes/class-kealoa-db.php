@@ -1495,6 +1495,72 @@ class Kealoa_DB {
     }
 
     /**
+     * Get the best streak of consecutive correct answers per round for a person.
+     *
+     * @return array<int, int> Keyed by round_id => best streak in that round
+     */
+    public function get_person_streak_per_round(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT c.round_id, c.clue_number, g.is_correct
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            WHERE g.guesser_person_id = %d
+            ORDER BY c.round_id ASC, c.clue_number ASC",
+            $person_id
+        );
+
+        $rows = $this->wpdb->get_results($sql);
+        $map = [];
+        $prev_round = null;
+        $streak = 0;
+
+        foreach ($rows as $row) {
+            $round_id = (int) $row->round_id;
+
+            if ($round_id !== $prev_round) {
+                $streak = 0;
+                $prev_round = $round_id;
+            }
+
+            if ((int) $row->is_correct) {
+                $streak++;
+                if (!isset($map[$round_id]) || $streak > $map[$round_id]) {
+                    $map[$round_id] = $streak;
+                }
+            } else {
+                $streak = 0;
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * Get round IDs where the person answered a given clue number correctly.
+     *
+     * @return array<int, array<int>> Keyed by clue_number => [round_id, ...]
+     */
+    public function get_person_correct_clue_rounds(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT c.clue_number, c.round_id
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            WHERE g.guesser_person_id = %d AND g.is_correct = 1
+            ORDER BY c.clue_number ASC, c.round_id ASC",
+            $person_id
+        );
+
+        $rows = $this->wpdb->get_results($sql);
+        $map = [];
+        foreach ($rows as $row) {
+            $cn = (int) $row->clue_number;
+            $map[$cn][] = (int) $row->round_id;
+        }
+
+        return $map;
+    }
+
+    /**
      * Get person's round history
      */
     public function get_person_round_history(int $person_id): array {

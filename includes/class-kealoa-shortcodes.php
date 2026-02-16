@@ -388,6 +388,87 @@ class Kealoa_Shortcodes {
         $constructor_results = $this->db->get_person_results_by_constructor($person_id);
         $editor_results = $this->db->get_person_results_by_editor($person_id);
         $round_history = $this->db->get_person_round_history($person_id);
+        $streak_per_round = $this->db->get_person_streak_per_round($person_id);
+        $correct_clue_rounds = $this->db->get_person_correct_clue_rounds($person_id);
+        
+        // Build round info lookup: round_id => {url, date, words, score}
+        $round_info = [];
+        foreach ($round_history as $rh) {
+            $rh_solutions = $this->db->get_round_solutions((int) $rh->round_id);
+            $round_info[(int) $rh->round_id] = [
+                'url' => home_url('/kealoa/round/' . $rh->round_id . '/'),
+                'date' => Kealoa_Formatter::format_date($rh->round_date),
+                'words' => Kealoa_Formatter::format_solution_words($rh_solutions),
+                'score' => (int) $rh->correct_count . '/' . (int) $rh->total_clues,
+                'year' => (int) date('Y', strtotime($rh->round_date)),
+                'correct_count' => (int) $rh->correct_count,
+                'total_clues' => (int) $rh->total_clues,
+            ];
+        }
+        
+        // Helper: build JSON for round picker from array of round_ids
+        $build_picker_json = function(array $round_ids) use ($round_info): string {
+            $rounds = [];
+            foreach ($round_ids as $rid) {
+                if (isset($round_info[$rid])) {
+                    $ri = $round_info[$rid];
+                    $rounds[] = [
+                        'url' => $ri['url'],
+                        'date' => $ri['date'],
+                        'words' => $ri['words'],
+                        'score' => $ri['score'],
+                    ];
+                }
+            }
+            return esc_attr(wp_json_encode($rounds));
+        };
+        
+        // Pre-compute: rounds grouped by score
+        $rounds_by_score = [];
+        foreach ($round_info as $rid => $ri) {
+            $rounds_by_score[$ri['correct_count']][] = $rid;
+        }
+        
+        // Pre-compute: rounds grouped by year
+        $round_ids_by_year = [];
+        foreach ($round_info as $rid => $ri) {
+            $round_ids_by_year[$ri['year']][] = $rid;
+        }
+        
+        // Pre-compute: rounds with best score overall
+        $best_score_round_ids = $rounds_by_score[$stats->max_correct] ?? [];
+        
+        // Pre-compute: rounds with best streak overall
+        $best_streak_round_ids = [];
+        foreach ($streak_per_round as $rid => $streak) {
+            if ($streak === $stats->best_streak) {
+                $best_streak_round_ids[] = $rid;
+            }
+        }
+        
+        // Pre-compute: rounds with best score per year
+        $best_score_rounds_by_year = [];
+        foreach ($year_results as $yr) {
+            $year = (int) $yr->year;
+            $best = (int) $yr->best_score;
+            $best_score_rounds_by_year[$year] = [];
+            foreach ($round_ids_by_year[$year] ?? [] as $rid) {
+                if ($round_info[$rid]['correct_count'] === $best) {
+                    $best_score_rounds_by_year[$year][] = $rid;
+                }
+            }
+        }
+        
+        // Pre-compute: rounds with best streak per year
+        $best_streak_rounds_by_year = [];
+        foreach ($best_streaks_by_year as $year => $best_streak) {
+            $best_streak_rounds_by_year[$year] = [];
+            foreach ($round_ids_by_year[$year] ?? [] as $rid) {
+                if (($streak_per_round[$rid] ?? 0) === $best_streak) {
+                    $best_streak_rounds_by_year[$year][] = $rid;
+                }
+            }
+        }
         
         // Use person's own image if available, otherwise fall back to constructor image
         $person_image_url = $person->image_url ?? '';
@@ -473,11 +554,11 @@ class Kealoa_Shortcodes {
                         <span class="kealoa-stat-label"><?php esc_html_e('Overall Accuracy', 'kealoa-reference'); ?></span>
                     </div>
                     <div class="kealoa-stat-card">
-                        <span class="kealoa-stat-value"><?php echo esc_html($stats->max_correct); ?></span>
+                        <span class="kealoa-stat-value"><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($best_score_round_ids); ?>"><?php echo esc_html($stats->max_correct); ?></a></span>
                         <span class="kealoa-stat-label"><?php esc_html_e('Best Score', 'kealoa-reference'); ?></span>
                     </div>
                     <div class="kealoa-stat-card">
-                        <span class="kealoa-stat-value"><?php echo esc_html($stats->best_streak); ?></span>
+                        <span class="kealoa-stat-value"><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($best_streak_round_ids); ?>"><?php echo esc_html($stats->best_streak); ?></a></span>
                         <span class="kealoa-stat-label"><?php esc_html_e('Best Streak', 'kealoa-reference'); ?></span>
                     </div>
                 </div>
@@ -497,12 +578,32 @@ class Kealoa_Shortcodes {
                     }
                     $score_labels = array_map('strval', range(10, 0, -1));
                     $score_data = array_reverse(array_values($score_counts));
+                    
+                    // Build round picker data per score (10→0 order matching labels)
+                    $score_rounds_json = [];
+                    for ($s = 10; $s >= 0; $s--) {
+                        $rids = $rounds_by_score[$s] ?? [];
+                        $rounds_for_score = [];
+                        foreach ($rids as $rid) {
+                            if (isset($round_info[$rid])) {
+                                $ri = $round_info[$rid];
+                                $rounds_for_score[] = [
+                                    'url' => $ri['url'],
+                                    'date' => $ri['date'],
+                                    'words' => $ri['words'],
+                                    'score' => $ri['score'],
+                                ];
+                            }
+                        }
+                        $score_rounds_json[] = $rounds_for_score;
+                    }
                     ?>
                     <script>
                     document.addEventListener('DOMContentLoaded', function() {
                         var ctx = document.getElementById('kealoa-score-distribution-chart');
                         if (ctx && typeof Chart !== 'undefined') {
-                            new Chart(ctx, {
+                            var scoreRounds = <?php echo wp_json_encode($score_rounds_json); ?>;
+                            var chart = new Chart(ctx, {
                                 type: 'bar',
                                 data: {
                                     labels: <?php echo wp_json_encode($score_labels); ?>,
@@ -542,6 +643,18 @@ class Kealoa_Shortcodes {
                                             display: false
                                         }
                                     }
+                                },
+                                onClick: function(evt) {
+                                    var points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
+                                    if (points.length > 0) {
+                                        var idx = points[0].index;
+                                        if (scoreRounds[idx] && scoreRounds[idx].length > 0) {
+                                            window.kealoaOpenRoundPicker(scoreRounds[idx]);
+                                        }
+                                    }
+                                },
+                                onHover: function(evt, elements) {
+                                    ctx.style.cursor = elements.length > 0 ? 'pointer' : 'default';
                                 }
                             });
                         }
@@ -564,14 +677,15 @@ class Kealoa_Shortcodes {
                     $chart_words = [];
                     $chart_urls = [];
                     foreach ($chart_history as $ch) {
+                        $rid = (int) $ch->round_id;
+                        $ri = $round_info[$rid] ?? null;
                         $chart_labels[] = Kealoa_Formatter::format_date($ch->round_date);
                         $pct_val = $ch->total_clues > 0
                             ? round(($ch->correct_count / $ch->total_clues) * 100, 1)
                             : 0;
                         $chart_data[] = $pct_val;
-                        $ch_solutions = $this->db->get_round_solutions((int) $ch->round_id);
-                        $chart_words[] = Kealoa_Formatter::format_solution_words($ch_solutions);
-                        $chart_urls[] = home_url('/kealoa/round/' . $ch->round_id . '/');
+                        $chart_words[] = $ri ? $ri['words'] : '';
+                        $chart_urls[] = $ri ? $ri['url'] : home_url('/kealoa/round/' . $rid . '/');
                     }
                     ?>
                     <script>
@@ -671,8 +785,15 @@ class Kealoa_Shortcodes {
                         </thead>
                         <tbody>
                             <?php foreach ($year_results as $result): ?>
+                                <?php
+                                $yr = (int) $result->year;
+                                $yr_round_ids = $round_ids_by_year[$yr] ?? [];
+                                $yr_best_score_ids = $best_score_rounds_by_year[$yr] ?? [];
+                                $yr_best_streak_ids = $best_streak_rounds_by_year[$yr] ?? [];
+                                $yr_best_streak_val = $best_streaks_by_year[$yr] ?? 0;
+                                ?>
                                 <tr>
-                                    <td><?php echo esc_html($result->year); ?></td>
+                                    <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($yr_round_ids); ?>"><?php echo esc_html($yr); ?></a></td>
                                     <td><?php echo esc_html($result->rounds_played); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
@@ -684,8 +805,8 @@ class Kealoa_Shortcodes {
                                         echo Kealoa_Formatter::format_percentage($pct);
                                         ?>
                                     </td>
-                                    <td><?php echo esc_html((int) $result->best_score); ?></td>
-                                    <td><?php echo esc_html($best_streaks_by_year[(int) $result->year] ?? 0); ?></td>
+                                    <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($yr_best_score_ids); ?>"><?php echo esc_html((int) $result->best_score); ?></a></td>
+                                    <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($yr_best_streak_ids); ?>"><?php echo esc_html($yr_best_streak_val); ?></a></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -708,10 +829,11 @@ class Kealoa_Shortcodes {
                         </thead>
                         <tbody>
                             <?php foreach ($clue_number_results as $result): ?>
+                                <?php $cn = (int) $result->clue_number; ?>
                                 <tr>
-                                    <td><?php echo esc_html($result->clue_number); ?></td>
+                                    <td><?php echo esc_html($cn); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($correct_clue_rounds[$cn] ?? []); ?>"><?php echo esc_html($result->correct_count); ?></a></td>
                                     <td>
                                         <?php 
                                         $pct = $result->total_answered > 0 
