@@ -713,6 +713,25 @@ class Kealoa_DB {
     }
 
     /**
+     * Get overview statistics for all rounds grouped by year
+     */
+    public function get_rounds_stats_by_year(): array {
+        $sql = "SELECT
+                YEAR(r.round_date) as year,
+                COUNT(DISTINCT r.id) as total_rounds,
+                COUNT(DISTINCT c.id) as total_clues,
+                COUNT(g.id) as total_guesses,
+                SUM(g.is_correct) as total_correct
+            FROM {$this->rounds_table} r
+            LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
+            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+            GROUP BY YEAR(r.round_date)
+            ORDER BY year ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Create a round
      */
     public function create_round(array $data): int|false {

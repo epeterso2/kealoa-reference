@@ -88,6 +88,41 @@ class Kealoa_Shortcodes {
                 </div>
             </div>
 
+            <?php $yearly_stats = $this->db->get_rounds_stats_by_year(); ?>
+            <?php if (!empty($yearly_stats)): ?>
+            <table class="kealoa-table kealoa-year-table">
+                <thead>
+                    <tr>
+                        <th data-sort="number"><?php esc_html_e('Year', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($yearly_stats as $ys): ?>
+                        <tr>
+                            <td><?php echo esc_html($ys->year); ?></td>
+                            <td><?php echo esc_html($ys->total_rounds); ?></td>
+                            <td><?php echo esc_html($ys->total_clues); ?></td>
+                            <td><?php echo esc_html($ys->total_guesses); ?></td>
+                            <td><?php echo esc_html($ys->total_correct); ?></td>
+                            <td>
+                                <?php
+                                $pct = (int) $ys->total_guesses > 0
+                                    ? ((int) $ys->total_correct / (int) $ys->total_guesses) * 100
+                                    : 0;
+                                echo Kealoa_Formatter::format_percentage($pct);
+                                ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php endif; ?>
+
             <table class="kealoa-table kealoa-rounds-table">
                 <thead>
                     <tr>
