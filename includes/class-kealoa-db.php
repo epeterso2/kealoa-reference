@@ -1338,6 +1338,26 @@ class Kealoa_DB {
     }
 
     /**
+     * Get person results grouped by answer length
+     */
+    public function get_person_results_by_answer_length(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT 
+                CHAR_LENGTH(c.correct_answer) as answer_length,
+                COUNT(*) as total_answered,
+                SUM(g.is_correct) as correct_count
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            WHERE g.guesser_person_id = %d
+            GROUP BY CHAR_LENGTH(c.correct_answer)
+            ORDER BY CHAR_LENGTH(c.correct_answer) ASC",
+            $person_id
+        );
+        
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get person results by clue direction (Across vs Down)
      */
     public function get_person_results_by_direction(int $person_id): array {

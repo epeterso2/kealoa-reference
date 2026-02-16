@@ -380,6 +380,7 @@ class Kealoa_Shortcodes {
         
         $stats = $this->db->get_person_stats($person_id);
         $clue_number_results = $this->db->get_person_results_by_clue_number($person_id);
+        $answer_length_results = $this->db->get_person_results_by_answer_length($person_id);
         $direction_results = $this->db->get_person_results_by_direction($person_id);
         $day_of_week_results = $this->db->get_person_results_by_day_of_week($person_id);
         $decade_results = $this->db->get_person_results_by_decade($person_id);
@@ -836,6 +837,40 @@ class Kealoa_Shortcodes {
                                     <td><?php echo esc_html($cn); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($correct_clue_rounds[$cn] ?? []); ?>"><?php echo esc_html($result->correct_count); ?></a></td>
+                                    <td>
+                                        <?php 
+                                        $pct = $result->total_answered > 0 
+                                            ? ($result->correct_count / $result->total_answered) * 100 
+                                            : 0;
+                                        echo Kealoa_Formatter::format_percentage($pct);
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($answer_length_results)): ?>
+                <div class="kealoa-answer-length-stats">
+                    <h3><?php esc_html_e('Results by Answer Length', 'kealoa-reference'); ?></h3>
+                    
+                    <table class="kealoa-table kealoa-answer-length-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="number"><?php esc_html_e('Length', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($answer_length_results as $result): ?>
+                                <tr>
+                                    <td><?php echo esc_html($result->answer_length); ?></td>
+                                    <td><?php echo esc_html($result->total_answered); ?></td>
+                                    <td><?php echo esc_html($result->correct_count); ?></td>
                                     <td>
                                         <?php 
                                         $pct = $result->total_answered > 0 
