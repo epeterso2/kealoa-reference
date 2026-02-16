@@ -1363,6 +1363,10 @@ class Kealoa_Shortcodes {
                     <span class="kealoa-stat-label"><?php esc_html_e('Clues', 'kealoa-reference'); ?></span>
                 </div>
                 <div class="kealoa-stat-card">
+                    <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n($stats->total_guesses)); ?></span>
+                    <span class="kealoa-stat-label"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></span>
+                </div>
+                <div class="kealoa-stat-card">
                     <span class="kealoa-stat-value"><?php echo esc_html($stats->correct_guesses); ?></span>
                     <span class="kealoa-stat-label"><?php esc_html_e('Correct', 'kealoa-reference'); ?></span>
                 </div>
@@ -1569,6 +1573,10 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-stat-card">
                     <span class="kealoa-stat-value"><?php echo esc_html($stats->clue_count); ?></span>
                     <span class="kealoa-stat-label"><?php esc_html_e('Clues', 'kealoa-reference'); ?></span>
+                </div>
+                <div class="kealoa-stat-card">
+                    <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n($stats->total_guesses)); ?></span>
+                    <span class="kealoa-stat-label"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></span>
                 </div>
                 <div class="kealoa-stat-card">
                     <span class="kealoa-stat-value"><?php echo esc_html($stats->correct_guesses); ?></span>
