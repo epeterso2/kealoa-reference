@@ -1444,10 +1444,13 @@ class Kealoa_DB {
                 con.xwordinfo_profile_name,
                 con.xwordinfo_image_url,
                 COUNT(DISTINCT pc.puzzle_id) as puzzle_count,
-                COUNT(DISTINCT c.id) as clue_count
+                COUNT(DISTINCT c.id) as clue_count,
+                COALESCE(SUM(g.is_correct), 0) as correct_guesses,
+                COUNT(g.id) as total_guesses
             FROM {$this->constructors_table} con
             INNER JOIN {$this->puzzle_constructors_table} pc ON con.id = pc.constructor_id
             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id
+            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
             GROUP BY con.id, con.full_name, con.xwordinfo_profile_name, con.xwordinfo_image_url
             ORDER BY con.full_name ASC";
 

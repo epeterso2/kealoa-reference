@@ -1027,6 +1027,7 @@ class Kealoa_Shortcodes {
                         <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1037,6 +1038,14 @@ class Kealoa_Shortcodes {
                             </td>
                             <td><?php echo esc_html($constructor->puzzle_count); ?></td>
                             <td><?php echo esc_html($constructor->clue_count); ?></td>
+                            <td>
+                                <?php
+                                $accuracy = $constructor->total_guesses > 0
+                                    ? ($constructor->correct_guesses / $constructor->total_guesses) * 100
+                                    : 0;
+                                echo Kealoa_Formatter::format_percentage((float) $accuracy);
+                                ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
