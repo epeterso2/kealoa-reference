@@ -685,6 +685,34 @@ class Kealoa_DB {
     }
 
     /**
+     * Get overview statistics for all rounds
+     */
+    public function get_rounds_overview_stats(): object {
+        $total_rounds = $this->count_rounds();
+
+        $total_clues = (int) $this->wpdb->get_var(
+            "SELECT COUNT(*) FROM {$this->clues_table}"
+        );
+
+        $guess_stats = $this->wpdb->get_row(
+            "SELECT COUNT(*) as total_guesses, SUM(is_correct) as total_correct FROM {$this->guesses_table}"
+        );
+
+        $total_guesses = (int) ($guess_stats->total_guesses ?? 0);
+        $total_correct = (int) ($guess_stats->total_correct ?? 0);
+
+        return (object) [
+            'total_rounds' => $total_rounds,
+            'total_clues' => $total_clues,
+            'total_guesses' => $total_guesses,
+            'total_correct' => $total_correct,
+            'accuracy' => $total_guesses > 0
+                ? round(($total_correct / $total_guesses) * 100, 1)
+                : 0,
+        ];
+    }
+
+    /**
      * Create a round
      */
     public function create_round(array $data): int|false {

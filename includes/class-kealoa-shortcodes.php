@@ -60,9 +60,34 @@ class Kealoa_Shortcodes {
             return '<p class="kealoa-no-data">' . esc_html__('No KEALOA rounds found.', 'kealoa-reference') . '</p>';
         }
         
+        $overview = $this->db->get_rounds_overview_stats();
+        
         ob_start();
         ?>
         <div class="kealoa-rounds-table-wrapper">
+            <div class="kealoa-stats-grid">
+                <div class="kealoa-stat-card">
+                    <span class="kealoa-stat-value"><?php echo esc_html($overview->total_rounds); ?></span>
+                    <span class="kealoa-stat-label"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></span>
+                </div>
+                <div class="kealoa-stat-card">
+                    <span class="kealoa-stat-value"><?php echo esc_html($overview->total_clues); ?></span>
+                    <span class="kealoa-stat-label"><?php esc_html_e('Clues', 'kealoa-reference'); ?></span>
+                </div>
+                <div class="kealoa-stat-card">
+                    <span class="kealoa-stat-value"><?php echo esc_html($overview->total_guesses); ?></span>
+                    <span class="kealoa-stat-label"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></span>
+                </div>
+                <div class="kealoa-stat-card">
+                    <span class="kealoa-stat-value"><?php echo esc_html($overview->total_correct); ?></span>
+                    <span class="kealoa-stat-label"><?php esc_html_e('Correct', 'kealoa-reference'); ?></span>
+                </div>
+                <div class="kealoa-stat-card">
+                    <span class="kealoa-stat-value"><?php echo Kealoa_Formatter::format_percentage($overview->accuracy); ?></span>
+                    <span class="kealoa-stat-label"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></span>
+                </div>
+            </div>
+
             <table class="kealoa-table kealoa-rounds-table">
                 <thead>
                     <tr>
