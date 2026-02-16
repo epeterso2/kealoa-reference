@@ -600,7 +600,7 @@ class Kealoa_Shortcodes {
                             <tr>
                                 <th data-sort="number"><?php esc_html_e('Year', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Best Score', 'kealoa-reference'); ?></th>
@@ -639,7 +639,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="number"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -710,7 +710,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="text"><?php esc_html_e('Direction', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -752,7 +752,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -786,7 +786,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="number"><?php esc_html_e('Decade', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -820,7 +820,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -858,7 +858,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -910,7 +910,7 @@ class Kealoa_Shortcodes {
                                     <th data-sort="number"><?php esc_html_e('Round #', 'kealoa-reference'); ?></th>
                                 <?php endif; ?>
                                 <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
