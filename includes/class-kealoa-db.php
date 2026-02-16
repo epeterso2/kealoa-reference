@@ -544,7 +544,7 @@ class Kealoa_DB {
      */
     public function auto_populate_editor_names(): int {
         $editors = [
-            ['name' => 'Margaret Farrar',   'start' => '1942-02-15', 'end' => '1969-01-05'],
+            ['name' => 'Margaret P. Farrar', 'start' => '1942-02-15', 'end' => '1969-01-05'],
             ['name' => 'Will Weng',         'start' => '1969-01-06', 'end' => '1977-02-27'],
             ['name' => 'Eugene T. Maleska', 'start' => '1977-02-28', 'end' => '1993-09-05'],
             ['name' => 'Mel Taub',          'start' => '1993-09-06', 'end' => '1993-11-20'],
