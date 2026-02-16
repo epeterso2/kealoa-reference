@@ -1535,14 +1535,22 @@ class Kealoa_Shortcodes {
         $puzzles = $this->db->get_editor_puzzles($editor_name);
         $stats = $this->db->get_editor_stats($editor_name);
 
-        // Determine editor image from media library
+        // Determine editor image: media library > XWordInfo
         $editor_media_id = $this->db->get_editor_media_id($editor_name);
         $editor_image_url = '';
+        $editor_image_source = ''; // 'media', 'xwordinfo', or ''
+
         if ($editor_media_id > 0) {
             $media_src = wp_get_attachment_image_src($editor_media_id, 'medium');
             if ($media_src) {
                 $editor_image_url = $media_src[0];
+                $editor_image_source = 'media';
             }
+        }
+
+        if (empty($editor_image_source)) {
+            $editor_image_url = Kealoa_Formatter::xwordinfo_image_url_from_name($editor_name);
+            $editor_image_source = 'xwordinfo';
         }
         
         ob_start();
@@ -1552,9 +1560,13 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-editor-info">
                     <?php if (!empty($editor_image_url)): ?>
                         <div class="kealoa-editor-image">
-                            <img src="<?php echo esc_url($editor_image_url); ?>" 
-                                 alt="<?php echo esc_attr($editor_name); ?>" 
-                                 class="kealoa-entity-image" />
+                            <?php if ($editor_image_source === 'xwordinfo'): ?>
+                                <?php echo Kealoa_Formatter::format_xwordinfo_image($editor_image_url, $editor_name); ?>
+                            <?php else: ?>
+                                <img src="<?php echo esc_url($editor_image_url); ?>" 
+                                     alt="<?php echo esc_attr($editor_name); ?>" 
+                                     class="kealoa-entity-image" />
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
 
