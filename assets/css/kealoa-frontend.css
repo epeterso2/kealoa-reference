@@ -267,6 +267,33 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+.kealoa-round-players {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 16px;
+}
+
+.kealoa-round-player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.kealoa-round-player img {
+    max-height: 150px;
+    width: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.kealoa-round-player-name {
+    font-size: 0.85em;
+    color: #555;
+    text-align: center;
+}
+
 
 .kealoa-person-details {
     flex: 1;

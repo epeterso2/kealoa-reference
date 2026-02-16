@@ -266,6 +266,58 @@ class Kealoa_Shortcodes {
                         </p>
                     <?php endif; ?>
                 </div>
+
+                <?php
+                // Collect all players: clue giver + guessers
+                $all_players = [];
+                if ($clue_giver) {
+                    $all_players[] = $clue_giver;
+                }
+                foreach ($guessers as $guesser) {
+                    // Avoid duplicating clue giver if they're also a guesser
+                    if (!$clue_giver || (int) $guesser->id !== (int) $clue_giver->id) {
+                        $all_players[] = $guesser;
+                    }
+                }
+                ?>
+                <?php if (!empty($all_players)): ?>
+                <div class="kealoa-round-players">
+                    <?php foreach ($all_players as $player): ?>
+                        <?php
+                        $player_media_id = (int) ($player->media_id ?? 0);
+                        $player_img_url = '';
+                        $player_img_source = '';
+                        if ($player_media_id > 0) {
+                            $player_src = wp_get_attachment_image_src($player_media_id, 'medium');
+                            if ($player_src) {
+                                $player_img_url = $player_src[0];
+                                $player_img_source = 'media';
+                            }
+                        }
+                        if (empty($player_img_source)) {
+                            $player_img_url = Kealoa_Formatter::xwordinfo_image_url_from_name($player->full_name);
+                            $player_img_source = 'xwordinfo';
+                        }
+                        ?>
+                        <?php
+                        $player_slug = str_replace(' ', '_', $player->full_name);
+                        $player_url = home_url('/kealoa/person/' . urlencode($player_slug) . '/');
+                        ?>
+                        <div class="kealoa-round-player">
+                            <a href="<?php echo esc_url($player_url); ?>">
+                                <?php if ($player_img_source === 'media'): ?>
+                                    <img src="<?php echo esc_url($player_img_url); ?>"
+                                         alt="<?php echo esc_attr($player->full_name); ?>"
+                                         class="kealoa-player-image" />
+                                <?php else: ?>
+                                    <?php echo Kealoa_Formatter::format_xwordinfo_image($player_img_url, $player->full_name); ?>
+                                <?php endif; ?>
+                            </a>
+                            <span class="kealoa-round-player-name"><?php echo esc_html($player->full_name); ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
             </div>
             
             <?php if (!empty($round->episode_id)): ?>
