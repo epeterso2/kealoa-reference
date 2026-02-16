@@ -750,7 +750,7 @@ class Kealoa_Admin {
                                 <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons&action=edit&id=' . $person->id)); ?>">
                                     <?php esc_html_e('Edit', 'kealoa-reference'); ?>
                                 </a> |
-                                <a href="<?php echo esc_url(home_url('/kealoa/person/' . $person->id . '/')); ?>" target="_blank">
+                                <a href="<?php echo esc_url(home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $person->full_name)) . '/')); ?>" target="_blank">
                                     <?php esc_html_e('View', 'kealoa-reference'); ?>
                                 </a> |
                                 <a href="#" class="kealoa-delete-link" 

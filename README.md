@@ -56,7 +56,7 @@ The plugin provides three blocks in the block editor:
 
 The plugin creates custom URL routes:
 
-- `/kealoa/person/{id}/` - Person detail page
+- `/kealoa/person/{name}/` - Person detail page (spaces replaced by underscores)
 - `/kealoa/round/{id}/` - Round detail page
 
 ## Data Model

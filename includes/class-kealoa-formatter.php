@@ -100,7 +100,8 @@ class Kealoa_Formatter {
      * @return string HTML link to person view
      */
     public static function format_person_link(int $person_id, string $full_name): string {
-        $url = home_url('/kealoa/person/' . $person_id . '/');
+        $slug = str_replace(' ', '_', $full_name);
+        $url = home_url('/kealoa/person/' . urlencode($slug) . '/');
         return sprintf(
             '<a href="%s" class="kealoa-person-link">%s</a>',
             esc_url($url),

@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.0.87
+ * Version: 1.0.88
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.0.87');
+define('KEALOA_VERSION', '1.0.88');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -190,8 +190,8 @@ function kealoa_enqueue_frontend_assets(): void {
  */
 function kealoa_register_rewrite_rules(): void {
     add_rewrite_rule(
-        '^kealoa/person/([0-9]+)/?$',
-        'index.php?kealoa_person_id=$matches[1]',
+        '^kealoa/person/([^/]+)/?$',
+        'index.php?kealoa_person_name=$matches[1]',
         'top'
     );
     
@@ -218,7 +218,7 @@ function kealoa_register_rewrite_rules(): void {
  * Add custom query variables
  */
 function kealoa_query_vars(array $vars): array {
-    $vars[] = 'kealoa_person_id';
+    $vars[] = 'kealoa_person_name';
     $vars[] = 'kealoa_round_id';
     $vars[] = 'kealoa_constructor_id';
     $vars[] = 'kealoa_editor_name';
@@ -229,12 +229,12 @@ function kealoa_query_vars(array $vars): array {
  * Handle custom template redirects
  */
 function kealoa_template_redirect(): void {
-    $person_id = get_query_var('kealoa_person_id');
+    $person_name = get_query_var('kealoa_person_name');
     $round_id = get_query_var('kealoa_round_id');
     $constructor_id = get_query_var('kealoa_constructor_id');
     
-    if ($person_id) {
-        kealoa_render_person_page((int) $person_id);
+    if ($person_name) {
+        kealoa_render_person_page(urldecode($person_name));
         exit;
     }
     
@@ -258,9 +258,9 @@ function kealoa_template_redirect(): void {
 /**
  * Render person page
  */
-function kealoa_render_person_page(int $person_id): void {
+function kealoa_render_person_page(string $person_name): void {
     $db = new Kealoa_DB();
-    $person = $db->get_person($person_id);
+    $person = $db->get_person_by_name($person_name);
     
     if (!$person) {
         wp_die(__('Person not found.', 'kealoa-reference'), '', ['response' => 404]);
@@ -269,7 +269,7 @@ function kealoa_render_person_page(int $person_id): void {
     get_header();
     echo '<div class="kealoa-page-container">';
     $shortcodes = new Kealoa_Shortcodes();
-    echo $shortcodes->render_person(['id' => $person_id]);
+    echo $shortcodes->render_person(['id' => $person->id]);
     echo '</div>';
     get_footer();
 }

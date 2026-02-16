@@ -214,6 +214,19 @@ class Kealoa_DB {
     }
 
     /**
+     * Get a person by name (case-insensitive, underscores match spaces)
+     */
+    public function get_person_by_name(string $name): ?object {
+        $name = str_replace('_', ' ', $name);
+        $sql = $this->wpdb->prepare(
+            "SELECT * FROM {$this->persons_table} WHERE full_name = %s",
+            $name
+        );
+        $result = $this->wpdb->get_row($sql);
+        return $result ?: null;
+    }
+
+    /**
      * Get all persons
      */
     public function get_persons(array $args = []): array {
