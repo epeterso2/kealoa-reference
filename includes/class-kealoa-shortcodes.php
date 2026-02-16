@@ -90,6 +90,7 @@ class Kealoa_Shortcodes {
 
             <?php $yearly_stats = $this->db->get_rounds_stats_by_year(); ?>
             <?php if (!empty($yearly_stats)): ?>
+            <h3><?php esc_html_e('Statistics by Year', 'kealoa-reference'); ?></h3>
             <table class="kealoa-table kealoa-year-table">
                 <thead>
                     <tr>
@@ -123,6 +124,7 @@ class Kealoa_Shortcodes {
             </table>
             <?php endif; ?>
 
+            <h3><?php esc_html_e('All Rounds', 'kealoa-reference'); ?></h3>
             <table class="kealoa-table kealoa-rounds-table">
                 <thead>
                     <tr>
