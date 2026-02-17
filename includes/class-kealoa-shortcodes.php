@@ -654,7 +654,7 @@ class Kealoa_Shortcodes {
             }
         }
 
-        if (empty($person_image_source)) {
+        if (empty($person_image_source) && empty($person->hide_xwordinfo)) {
             // Derive XWordInfo image URL from person's name
             $person_media_url = Kealoa_Formatter::xwordinfo_image_url_from_name($person->full_name);
             $person_image_source = 'xwordinfo';
