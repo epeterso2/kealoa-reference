@@ -620,13 +620,13 @@ class Kealoa_Import {
             if ($clue_id) {
                 $imported++;
                 
-                // Handle Ryan Hecht guess if column is present and has a value
-                if (!empty($row['ryan_hecht'])) {
-                    $ryan = $this->find_or_create_person('Ryan Hecht');
-                    if ($ryan) {
-                        $guessed_word = strtoupper(trim($row['ryan_hecht']));
+                // Handle guesser/guess columns if present and both have values
+                if (!empty($row['guesser']) && !empty($row['guess'])) {
+                    $guesser = $this->find_or_create_person(trim($row['guesser']));
+                    if ($guesser) {
+                        $guessed_word = strtoupper(trim($row['guess']));
                         $actual_clue_id = $existing_clue ? (int) $existing_clue->id : $clue_id;
-                        $this->db->set_guess($actual_clue_id, (int) $ryan->id, $guessed_word);
+                        $this->db->set_guess($actual_clue_id, (int) $guesser->id, $guessed_word);
                     }
                 }
             } else {
