@@ -472,6 +472,10 @@ class Kealoa_Shortcodes {
         }
         
         $stats = $this->db->get_person_stats($person_id);
+
+        // Check if this person is also a constructor
+        $matching_constructor = $this->db->get_constructor_by_name($person->full_name);
+
         $clue_number_results = $this->db->get_person_results_by_clue_number($person_id);
         $answer_length_results = $this->db->get_person_results_by_answer_length($person_id);
         $direction_results = $this->db->get_person_results_by_direction($person_id);
@@ -601,7 +605,14 @@ class Kealoa_Shortcodes {
                     <?php endif; ?>
                     
                     <div class="kealoa-person-details">
-                        <h2 class="kealoa-person-name"><?php echo esc_html($person->full_name); ?></h2>
+                        <h2 class="kealoa-person-name">
+                            <?php echo esc_html($person->full_name); ?>
+                            <?php if ($matching_constructor): ?>
+                                <a href="<?php echo esc_url(home_url('/kealoa/constructor/' . urlencode(str_replace(' ', '_', $matching_constructor->full_name)) . '/')); ?>" class="kealoa-cross-link" title="<?php esc_attr_e('View as Constructor', 'kealoa-reference'); ?>">
+                                    &#9999;&#65039;
+                                </a>
+                            <?php endif; ?>
+                        </h2>
                         
                         <?php if (!empty($person->xwordinfo_profile_name)): ?>
                             <p class="kealoa-person-xwordinfo">
@@ -1399,6 +1410,9 @@ class Kealoa_Shortcodes {
         $puzzles = $this->db->get_constructor_puzzles($constructor_id);
         $stats = $this->db->get_constructor_stats($constructor_id);
 
+        // Check if this constructor is also a player (person)
+        $matching_person = $this->db->get_person_by_name($constructor->full_name);
+
         // Determine image: media library > XWordInfo
         $con_media_id = (int) ($constructor->media_id ?? 0);
         $con_image_url = '';
@@ -1435,7 +1449,14 @@ class Kealoa_Shortcodes {
                     <?php endif; ?>
                     
                     <div class="kealoa-constructor-details">
-                        <h2 class="kealoa-constructor-name"><?php echo esc_html($constructor->full_name); ?></h2>
+                        <h2 class="kealoa-constructor-name">
+                            <?php echo esc_html($constructor->full_name); ?>
+                            <?php if ($matching_person): ?>
+                                <a href="<?php echo esc_url(home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $matching_person->full_name)) . '/')); ?>" class="kealoa-cross-link" title="<?php esc_attr_e('View as Player', 'kealoa-reference'); ?>">
+                                    &#127918;
+                                </a>
+                            <?php endif; ?>
+                        </h2>
                         
                         <?php if (!empty($constructor->xwordinfo_profile_name)): ?>
                             <p class="kealoa-constructor-xwordinfo">
