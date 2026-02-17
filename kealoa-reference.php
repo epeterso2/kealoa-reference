@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.1.14
+ * Version: 1.1.15
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.1.14');
+define('KEALOA_VERSION', '1.1.15');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -154,6 +154,9 @@ function kealoa_init(): void {
     add_action('init', 'kealoa_register_rewrite_rules');
     add_filter('query_vars', 'kealoa_query_vars');
     add_action('template_redirect', 'kealoa_template_redirect');
+    
+    // Add KEALOA results to WordPress search
+    add_action('loop_start', 'kealoa_search_results');
 }
 add_action('plugins_loaded', 'kealoa_init');
 
@@ -338,3 +341,47 @@ register_activation_hook(__FILE__, function(): void {
 register_deactivation_hook(__FILE__, function(): void {
     flush_rewrite_rules();
 });
+
+/**
+ * Display KEALOA search results above normal search results
+ */
+function kealoa_search_results(WP_Query $query): void {
+    // Only on frontend main search query, and only once
+    static $done = false;
+    if ($done || is_admin() || !$query->is_main_query() || !$query->is_search()) {
+        return;
+    }
+    $done = true;
+    
+    $search_term = get_search_query();
+    if (empty($search_term)) {
+        return;
+    }
+    
+    $db = new Kealoa_DB();
+    $results = $db->search_all($search_term);
+    
+    if (empty($results)) {
+        return;
+    }
+    
+    $type_labels = [
+        'player' => __('Player', 'kealoa-reference'),
+        'constructor' => __('Constructor', 'kealoa-reference'),
+        'editor' => __('Editor', 'kealoa-reference'),
+        'round' => __('Round', 'kealoa-reference'),
+    ];
+    
+    echo '<div class="kealoa-search-results">';
+    echo '<h3 class="kealoa-search-heading">' . esc_html__('KEALOA Results', 'kealoa-reference') . '</h3>';
+    echo '<ul class="kealoa-search-list">';
+    foreach ($results as $result) {
+        $label = $type_labels[$result->type] ?? $result->type;
+        echo '<li class="kealoa-search-item">';
+        echo '<span class="kealoa-search-type">' . esc_html($label) . '</span> ';
+        echo '<a href="' . esc_url($result->url) . '">' . esc_html($result->name) . '</a>';
+        echo '</li>';
+    }
+    echo '</ul>';
+    echo '</div>';
+}

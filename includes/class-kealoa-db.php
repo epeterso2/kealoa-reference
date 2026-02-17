@@ -1991,4 +1991,85 @@ class Kealoa_DB {
         $key = 'kealoa_editor_media_' . sanitize_title($editor_name);
         return delete_option($key);
     }
+
+    /**
+     * Search across persons, constructors, editors, and round solution words
+     *
+     * @param string $search_term The search term
+     * @return array Array of results with type, name, and url
+     */
+    public function search_all(string $search_term): array {
+        $results = [];
+        $like = '%' . $this->wpdb->esc_like($search_term) . '%';
+
+        // Search persons
+        $persons = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT id, full_name FROM {$this->persons_table} WHERE full_name LIKE %s ORDER BY full_name ASC",
+                $like
+            )
+        );
+        foreach ($persons as $p) {
+            $slug = str_replace(' ', '_', $p->full_name);
+            $results[] = (object) [
+                'type' => 'player',
+                'name' => $p->full_name,
+                'url' => home_url('/kealoa/person/' . urlencode($slug) . '/'),
+            ];
+        }
+
+        // Search constructors
+        $constructors = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT id, full_name FROM {$this->constructors_table} WHERE full_name LIKE %s ORDER BY full_name ASC",
+                $like
+            )
+        );
+        foreach ($constructors as $c) {
+            $results[] = (object) [
+                'type' => 'constructor',
+                'name' => $c->full_name,
+                'url' => home_url('/kealoa/constructor/' . (int) $c->id . '/'),
+            ];
+        }
+
+        // Search editors (distinct names from puzzles table)
+        $editors = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT DISTINCT editor_name FROM {$this->puzzles_table} WHERE editor_name IS NOT NULL AND editor_name != '' AND editor_name LIKE %s ORDER BY editor_name ASC",
+                $like
+            )
+        );
+        foreach ($editors as $e) {
+            $results[] = (object) [
+                'type' => 'editor',
+                'name' => $e->editor_name,
+                'url' => home_url('/kealoa/editor/' . urlencode($e->editor_name) . '/'),
+            ];
+        }
+
+        // Search round solution words
+        $rounds = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT DISTINCT rs.round_id, r.round_date, r.round_number
+                FROM {$this->round_solutions_table} rs
+                INNER JOIN {$this->rounds_table} r ON rs.round_id = r.id
+                WHERE rs.word LIKE %s
+                ORDER BY r.round_date DESC, r.round_number ASC",
+                $like
+            )
+        );
+        foreach ($rounds as $rd) {
+            // Get all solution words for this round
+            $solutions = $this->get_round_solutions((int) $rd->round_id);
+            $words = array_map(fn($s) => strtoupper($s->word), $solutions);
+            $results[] = (object) [
+                'type' => 'round',
+                'name' => 'KEALOA #' . $rd->round_id . ': ' . implode(', ', $words),
+                'url' => home_url('/kealoa/round/' . (int) $rd->round_id . '/'),
+            ];
+        }
+
+        return $results;
+    }
 }
