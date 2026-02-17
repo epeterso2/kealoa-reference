@@ -688,12 +688,9 @@ class Kealoa_Shortcodes {
                             </p>
                         <?php endif; ?>
                         
-                        <?php if (!empty($person->xwordinfo_profile_name)): ?>
-                            <p class="kealoa-person-xwordinfo">
-                                <strong><?php esc_html_e('XWordInfo:', 'kealoa-reference'); ?></strong>
-                                <?php echo Kealoa_Formatter::format_xwordinfo_link($person->xwordinfo_profile_name, 'View Profile'); ?>
-                            </p>
-                        <?php endif; ?>
+                        <p class="kealoa-person-xwordinfo">
+                            <?php echo Kealoa_Formatter::format_xwordinfo_link($person->full_name, 'XWordInfo Profile'); ?>
+                        </p>
                         
                         <?php if (!empty($person->home_page_url)): ?>
                             <p class="kealoa-person-homepage">
