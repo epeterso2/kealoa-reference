@@ -23,6 +23,9 @@ class Kealoa_Shortcodes {
 
     private Kealoa_DB $db;
 
+    /** Transient cache TTL in seconds (24 hours) */
+    private const CACHE_TTL = DAY_IN_SECONDS;
+
     /**
      * Constructor
      */
@@ -40,6 +43,65 @@ class Kealoa_Shortcodes {
         add_shortcode('kealoa_version', [$this, 'render_version']);
     }
 
+    // =========================================================================
+    // TRANSIENT CACHE HELPERS
+    // =========================================================================
+
+    /**
+     * Get the current cache version number.
+     *
+     * Every transient key includes this version so that bumping
+     * the version effectively invalidates all cached output.
+     */
+    private function get_cache_version(): string {
+        return get_option('kealoa_cache_version', '1');
+    }
+
+    /**
+     * Build a namespaced transient key.
+     */
+    private function cache_key(string $name): string {
+        return 'kealoa_v' . $this->get_cache_version() . '_' . $name;
+    }
+
+    /**
+     * Return cached HTML or run the renderer, cache its output, and return it.
+     *
+     * @param string   $name     Short cache name (e.g. "person_42").
+     * @param callable $renderer Zero-arg callable that returns an HTML string.
+     */
+    private function get_cached_or_render(string $name, callable $renderer): string {
+        $key = $this->cache_key($name);
+
+        $cached = get_transient($key);
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        $html = $renderer();
+        set_transient($key, $html, self::CACHE_TTL);
+        return $html;
+    }
+
+    /**
+     * Flush all KEALOA transient caches by incrementing the cache version.
+     *
+     * Old transients are left to expire naturally via their TTL.
+     * Also clears WP Super Cache / WP page caches if available.
+     */
+    public static function flush_all_caches(): void {
+        $version = (int) get_option('kealoa_cache_version', '1');
+        update_option('kealoa_cache_version', (string) ($version + 1));
+
+        // Clear WP Super Cache
+        if (function_exists('wp_cache_clear_cache')) {
+            wp_cache_clear_cache();
+        }
+
+        // Clear WP object cache (Memcached / Redis, etc.)
+        wp_cache_flush();
+    }
+
     /**
      * Render rounds table shortcode
      *
@@ -51,6 +113,9 @@ class Kealoa_Shortcodes {
         'order' => 'DESC',
     ], $atts, 'kealoa_rounds_table');
         
+        $cache_name = 'rounds_table_' . (int) $atts['limit'] . '_' . $atts['order'];
+        return $this->get_cached_or_render($cache_name, function () use ($atts) {
+
         $rounds = $this->db->get_rounds([
             'limit' => (int) $atts['limit'],
             'order' => $atts['order'],
@@ -168,6 +233,8 @@ class Kealoa_Shortcodes {
         </div>
         <?php
         return ob_get_clean();
+
+        }); // end get_cached_or_render
     }
 
     /**
@@ -189,6 +256,8 @@ class Kealoa_Shortcodes {
         if (!$round) {
             return '<p class="kealoa-error">' . esc_html__('Round not found.', 'kealoa-reference') . '</p>';
         }
+
+        return $this->get_cached_or_render('round_' . $round_id, function () use ($round_id, $round) {
         
         $solutions = $this->db->get_round_solutions($round_id);
         $guessers = $this->db->get_round_guessers($round_id);
@@ -449,6 +518,8 @@ class Kealoa_Shortcodes {
         </div>
         <?php
         return ob_get_clean();
+
+        }); // end get_cached_or_render
     }
 
     /**
@@ -470,6 +541,8 @@ class Kealoa_Shortcodes {
         if (!$person) {
             return '<p class="kealoa-error">' . esc_html__('Person not found.', 'kealoa-reference') . '</p>';
         }
+
+        return $this->get_cached_or_render('person_' . $person_id, function () use ($person_id, $person) {
         
         $stats = $this->db->get_person_stats($person_id);
 
@@ -1279,6 +1352,8 @@ class Kealoa_Shortcodes {
         </div>
         <?php
         return ob_get_clean();
+
+        }); // end get_cached_or_render
     }
 
     /**
@@ -1287,6 +1362,8 @@ class Kealoa_Shortcodes {
      * [kealoa_persons_table]
      */
     public function render_persons_table(array $atts = []): string {
+        return $this->get_cached_or_render('persons_table', function () {
+
         $persons = $this->db->get_persons_with_stats();
         
         if (empty($persons)) {
@@ -1337,6 +1414,8 @@ class Kealoa_Shortcodes {
         </div>
         <?php
         return ob_get_clean();
+
+        }); // end get_cached_or_render
     }
 
     /**
@@ -1345,6 +1424,8 @@ class Kealoa_Shortcodes {
      * [kealoa_constructors_table]
      */
     public function render_constructors_table(array $atts = []): string {
+        return $this->get_cached_or_render('constructors_table', function () {
+
         $constructors = $this->db->get_constructors_with_stats();
         
         if (empty($constructors)) {
@@ -1386,6 +1467,8 @@ class Kealoa_Shortcodes {
         </div>
         <?php
         return ob_get_clean();
+
+        }); // end get_cached_or_render
     }
 
     /**
@@ -1407,6 +1490,8 @@ class Kealoa_Shortcodes {
         if (!$constructor) {
             return '<p class="kealoa-error">' . esc_html__('Constructor not found.', 'kealoa-reference') . '</p>';
         }
+
+        return $this->get_cached_or_render('constructor_' . $constructor_id, function () use ($constructor_id, $constructor) {
         
         $puzzles = $this->db->get_constructor_puzzles($constructor_id);
         $stats = $this->db->get_constructor_stats($constructor_id);
@@ -1583,6 +1668,8 @@ class Kealoa_Shortcodes {
         </div>
         <?php
         return ob_get_clean();
+
+        }); // end get_cached_or_render
     }
 
     /**
@@ -1591,6 +1678,8 @@ class Kealoa_Shortcodes {
      * [kealoa_editors_table]
      */
     public function render_editors_table(array $atts = []): string {
+        return $this->get_cached_or_render('editors_table', function () {
+
         $editors = $this->db->get_editors_with_stats();
         
         if (empty($editors)) {
@@ -1632,6 +1721,8 @@ class Kealoa_Shortcodes {
         </div>
         <?php
         return ob_get_clean();
+
+        }); // end get_cached_or_render
     }
 
     /**
@@ -1648,6 +1739,8 @@ class Kealoa_Shortcodes {
         if (empty($editor_name)) {
             return '<p class="kealoa-error">' . esc_html__('Please specify an editor name.', 'kealoa-reference') . '</p>';
         }
+
+        return $this->get_cached_or_render('editor_' . md5($editor_name), function () use ($editor_name) {
         
         $puzzles = $this->db->get_editor_puzzles($editor_name);
         $stats = $this->db->get_editor_stats($editor_name);
@@ -1813,6 +1906,8 @@ class Kealoa_Shortcodes {
         </div>
         <?php
         return ob_get_clean();
+
+        }); // end get_cached_or_render
     }
 
     /**

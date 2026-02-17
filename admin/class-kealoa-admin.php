@@ -187,6 +187,9 @@ class Kealoa_Admin {
             'save_guesses' => $this->handle_save_guesses(),
             default => null,
         };
+
+        // Flush transient caches after any data mutation
+        Kealoa_Shortcodes::flush_all_caches();
     }
 
     // =========================================================================
@@ -349,11 +352,13 @@ class Kealoa_Admin {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['kealoa_import_nonce'])) {
             if (wp_verify_nonce($_POST['kealoa_import_nonce'], 'kealoa_import_csv')) {
                 $import_result = $this->handle_csv_import();
+                Kealoa_Shortcodes::flush_all_caches();
             }
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['kealoa_import_zip_nonce'])) {
             if (wp_verify_nonce($_POST['kealoa_import_zip_nonce'], 'kealoa_import_zip')) {
                 $import_result = $this->handle_zip_import();
+                Kealoa_Shortcodes::flush_all_caches();
             }
         }
         ?>

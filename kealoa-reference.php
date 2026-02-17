@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.1.22
+ * Version: 1.1.23
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.1.22');
+define('KEALOA_VERSION', '1.1.23');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -154,6 +154,7 @@ function kealoa_init(): void {
     add_action('init', 'kealoa_register_rewrite_rules');
     add_filter('query_vars', 'kealoa_query_vars');
     add_action('template_redirect', 'kealoa_template_redirect');
+    add_filter('template_include', 'kealoa_template_include');
     
     // Add KEALOA results to WordPress search
     add_filter('the_posts', 'kealoa_inject_search_placeholder', 10, 2);
@@ -230,102 +231,114 @@ function kealoa_query_vars(array $vars): array {
 }
 
 /**
- * Handle custom template redirects
+ * Handle custom template redirects for KEALOA virtual pages.
+ *
+ * Sets up a fake WP_Post so WordPress (and caching plugins like
+ * WP Super Cache) treats the response as a normal 200 page.
  */
 function kealoa_template_redirect(): void {
     $person_name = get_query_var('kealoa_person_name');
     $round_id = get_query_var('kealoa_round_id');
     $constructor_name = get_query_var('kealoa_constructor_name');
-    
-    if ($person_name) {
-        kealoa_render_person_page(urldecode($person_name));
-        exit;
-    }
-    
-    if ($round_id) {
-        kealoa_render_round_page((int) $round_id);
-        exit;
-    }
-    
-    if ($constructor_name) {
-        kealoa_render_constructor_page(urldecode($constructor_name));
-        exit;
-    }
-    
     $editor_name = get_query_var('kealoa_editor_name');
-    if ($editor_name) {
-        kealoa_render_editor_page(urldecode($editor_name));
-        exit;
+
+    $title = '';
+    $content = '';
+    $is_kealoa = false;
+
+    if ($person_name) {
+        $db = new Kealoa_DB();
+        $person = $db->get_person_by_name(urldecode($person_name));
+        if (!$person) {
+            wp_die(__('Person not found.', 'kealoa-reference'), '', ['response' => 404]);
+        }
+        $shortcodes = new Kealoa_Shortcodes();
+        $title = $person->full_name;
+        $content = $shortcodes->render_person(['id' => $person->id]);
+        $is_kealoa = true;
+    } elseif ($round_id) {
+        $db = new Kealoa_DB();
+        $round = $db->get_round((int) $round_id);
+        if (!$round) {
+            wp_die(__('Round not found.', 'kealoa-reference'), '', ['response' => 404]);
+        }
+        $shortcodes = new Kealoa_Shortcodes();
+        $title = sprintf(__('KEALOA Round %d', 'kealoa-reference'), (int) $round_id);
+        $content = $shortcodes->render_round(['id' => (int) $round_id]);
+        $is_kealoa = true;
+    } elseif ($constructor_name) {
+        $db = new Kealoa_DB();
+        $constructor = $db->get_constructor_by_name(urldecode($constructor_name));
+        if (!$constructor) {
+            wp_die(__('Constructor not found.', 'kealoa-reference'), '', ['response' => 404]);
+        }
+        $shortcodes = new Kealoa_Shortcodes();
+        $title = $constructor->full_name;
+        $content = $shortcodes->render_constructor(['id' => (int) $constructor->id]);
+        $is_kealoa = true;
+    } elseif ($editor_name) {
+        $decoded = urldecode($editor_name);
+        $shortcodes = new Kealoa_Shortcodes();
+        $title = $decoded;
+        $content = $shortcodes->render_editor(['name' => $decoded]);
+        $is_kealoa = true;
     }
+
+    if (!$is_kealoa) {
+        return;
+    }
+
+    // Build a virtual WP_Post so WordPress treats this as a real page
+    global $wp_query, $post;
+
+    $post = new WP_Post((object) [
+        'ID'             => 0,
+        'post_title'     => $title,
+        'post_content'   => $content,
+        'post_type'      => 'page',
+        'post_status'    => 'publish',
+        'comment_status' => 'closed',
+        'ping_status'    => 'closed',
+        'filter'         => 'raw',
+    ]);
+
+    $wp_query->post  = $post;
+    $wp_query->posts = [$post];
+    $wp_query->found_posts   = 1;
+    $wp_query->max_num_pages = 1;
+    $wp_query->is_page     = true;
+    $wp_query->is_singular = true;
+    $wp_query->is_single   = false;
+    $wp_query->is_404      = false;
+    $wp_query->is_archive  = false;
+    $wp_query->is_home     = false;
+
+    status_header(200);
+
+    // Store content for the template_include filter
+    $GLOBALS['kealoa_virtual_content'] = $content;
 }
 
 /**
- * Render person page
+ * Use the theme's page template for KEALOA virtual pages.
+ *
+ * By letting WordPress load the page template normally (instead of
+ * calling get_header/get_footer + exit), caching plugins like
+ * WP Super Cache can capture and cache the full response.
  */
-function kealoa_render_person_page(string $person_name): void {
-    $db = new Kealoa_DB();
-    $person = $db->get_person_by_name($person_name);
-    
-    if (!$person) {
-        wp_die(__('Person not found.', 'kealoa-reference'), '', ['response' => 404]);
+function kealoa_template_include(string $template): string {
+    if (empty($GLOBALS['kealoa_virtual_content'])) {
+        return $template;
     }
-    
-    get_header();
-    echo '<div class="kealoa-page-container">';
-    $shortcodes = new Kealoa_Shortcodes();
-    echo $shortcodes->render_person(['id' => $person->id]);
-    echo '</div>';
-    get_footer();
-}
 
-/**
- * Render round page
- */
-function kealoa_render_round_page(int $round_id): void {
-    $db = new Kealoa_DB();
-    $round = $db->get_round($round_id);
-    
-    if (!$round) {
-        wp_die(__('Round not found.', 'kealoa-reference'), '', ['response' => 404]);
-    }
-    
-    get_header();
-    echo '<div class="kealoa-page-container">';
-    $shortcodes = new Kealoa_Shortcodes();
-    echo $shortcodes->render_round(['id' => $round_id]);
-    echo '</div>';
-    get_footer();
-}
+    // Hook into the_content to output our rendered HTML
+    add_filter('the_content', function () {
+        return '<div class="kealoa-page-container">' . $GLOBALS['kealoa_virtual_content'] . '</div>';
+    });
 
-/**
- * Render constructor page
- */
-function kealoa_render_constructor_page(string $constructor_name): void {
-    $db = new Kealoa_DB();
-    $constructor = $db->get_constructor_by_name($constructor_name);
-    
-    if (!$constructor) {
-        wp_die(__('Constructor not found.', 'kealoa-reference'), '', ['response' => 404]);
-    }
-    
-    get_header();
-    echo '<div class="kealoa-page-container">';
-    $shortcodes = new Kealoa_Shortcodes();
-    echo $shortcodes->render_constructor(['id' => (int) $constructor->id]);
-    echo '</div>';
-    get_footer();
-}
-
-/**
- * Render editor page
- */
-function kealoa_render_editor_page(string $editor_name): void {
-    get_header();
-    echo '<div class="kealoa-page-container">';
-    $shortcodes = new Kealoa_Shortcodes();
-    echo $shortcodes->render_editor(['name' => $editor_name]);
-    echo '</div>';
-    get_footer();
+    // Use the theme's page template
+    $page_template = locate_template(['page.php', 'singular.php', 'index.php']);
+    return $page_template ?: $template;
 }
 
 /**
