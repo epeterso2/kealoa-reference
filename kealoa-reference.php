@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.1.16
+ * Version: 1.1.17
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.1.16');
+define('KEALOA_VERSION', '1.1.17');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -158,6 +158,7 @@ function kealoa_init(): void {
     // Add KEALOA results to WordPress search
     add_filter('the_posts', 'kealoa_inject_search_placeholder', 10, 2);
     add_filter('the_content', 'kealoa_search_content_filter');
+    add_filter('get_the_excerpt', 'kealoa_search_content_filter');
 }
 add_action('plugins_loaded', 'kealoa_init');
 
@@ -385,21 +386,9 @@ function kealoa_inject_search_placeholder(array $posts, WP_Query $query): array 
 }
 
 /**
- * Prepend KEALOA search results to the first post's content on search pages
+ * Build KEALOA search results HTML
  */
-function kealoa_search_content_filter(string $content): string {
-    if (is_admin() || !is_search() || !is_main_query()) {
-        return $content;
-    }
-    
-    if (empty($GLOBALS['kealoa_search_results'])) {
-        return $content;
-    }
-    
-    $results = $GLOBALS['kealoa_search_results'];
-    // Clear so we only output once
-    unset($GLOBALS['kealoa_search_results']);
-    
+function kealoa_build_search_results_html(array $results): string {
     $type_labels = [
         'player' => __('Player', 'kealoa-reference'),
         'constructor' => __('Constructor', 'kealoa-reference'),
@@ -420,5 +409,24 @@ function kealoa_search_content_filter(string $content): string {
     $html .= '</ul>';
     $html .= '</div>';
     
-    return $html . $content;
+    return $html;
+}
+
+/**
+ * Prepend KEALOA search results to content or excerpt on search pages
+ */
+function kealoa_search_content_filter(string $content): string {
+    if (is_admin() || !is_search() || !is_main_query()) {
+        return $content;
+    }
+    
+    if (empty($GLOBALS['kealoa_search_results'])) {
+        return $content;
+    }
+    
+    $results = $GLOBALS['kealoa_search_results'];
+    // Clear so we only output once
+    unset($GLOBALS['kealoa_search_results']);
+    
+    return kealoa_build_search_results_html($results) . $content;
 }
