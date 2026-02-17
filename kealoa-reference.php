@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.1.15
+ * Version: 1.1.16
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.1.15');
+define('KEALOA_VERSION', '1.1.16');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -156,7 +156,8 @@ function kealoa_init(): void {
     add_action('template_redirect', 'kealoa_template_redirect');
     
     // Add KEALOA results to WordPress search
-    add_action('loop_start', 'kealoa_search_results');
+    add_filter('the_posts', 'kealoa_inject_search_placeholder', 10, 2);
+    add_filter('the_content', 'kealoa_search_content_filter');
 }
 add_action('plugins_loaded', 'kealoa_init');
 
@@ -343,27 +344,61 @@ register_deactivation_hook(__FILE__, function(): void {
 });
 
 /**
- * Display KEALOA search results above normal search results
+ * Inject a placeholder post into empty search results so the loop runs
+ * and our content filter can output KEALOA results.
  */
-function kealoa_search_results(WP_Query $query): void {
-    // Only on frontend main search query, and only once
-    static $done = false;
-    if ($done || is_admin() || !$query->is_main_query() || !$query->is_search()) {
-        return;
+function kealoa_inject_search_placeholder(array $posts, WP_Query $query): array {
+    if (is_admin() || !$query->is_main_query() || !$query->is_search()) {
+        return $posts;
     }
-    $done = true;
     
-    $search_term = get_search_query();
+    $search_term = $query->get('s');
     if (empty($search_term)) {
-        return;
+        return $posts;
     }
     
     $db = new Kealoa_DB();
-    $results = $db->search_all($search_term);
+    $kealoa_results = $db->search_all($search_term);
     
-    if (empty($results)) {
-        return;
+    if (empty($kealoa_results)) {
+        return $posts;
     }
+    
+    // Store results for the content filter
+    $GLOBALS['kealoa_search_results'] = $kealoa_results;
+    
+    // If there are no WP posts, inject a placeholder so the loop runs
+    if (empty($posts)) {
+        $placeholder = new WP_Post((object) [
+            'ID' => 0,
+            'post_title' => '',
+            'post_content' => '',
+            'post_type' => 'kealoa_placeholder',
+            'filter' => 'raw',
+        ]);
+        $posts = [$placeholder];
+        $query->found_posts = 1;
+        $query->max_num_pages = 1;
+    }
+    
+    return $posts;
+}
+
+/**
+ * Prepend KEALOA search results to the first post's content on search pages
+ */
+function kealoa_search_content_filter(string $content): string {
+    if (is_admin() || !is_search() || !is_main_query()) {
+        return $content;
+    }
+    
+    if (empty($GLOBALS['kealoa_search_results'])) {
+        return $content;
+    }
+    
+    $results = $GLOBALS['kealoa_search_results'];
+    // Clear so we only output once
+    unset($GLOBALS['kealoa_search_results']);
     
     $type_labels = [
         'player' => __('Player', 'kealoa-reference'),
@@ -372,16 +407,18 @@ function kealoa_search_results(WP_Query $query): void {
         'round' => __('Round', 'kealoa-reference'),
     ];
     
-    echo '<div class="kealoa-search-results">';
-    echo '<h3 class="kealoa-search-heading">' . esc_html__('KEALOA Results', 'kealoa-reference') . '</h3>';
-    echo '<ul class="kealoa-search-list">';
+    $html = '<div class="kealoa-search-results">';
+    $html .= '<h3 class="kealoa-search-heading">' . esc_html__('KEALOA Results', 'kealoa-reference') . '</h3>';
+    $html .= '<ul class="kealoa-search-list">';
     foreach ($results as $result) {
         $label = $type_labels[$result->type] ?? $result->type;
-        echo '<li class="kealoa-search-item">';
-        echo '<span class="kealoa-search-type">' . esc_html($label) . '</span> ';
-        echo '<a href="' . esc_url($result->url) . '">' . esc_html($result->name) . '</a>';
-        echo '</li>';
+        $html .= '<li class="kealoa-search-item">';
+        $html .= '<span class="kealoa-search-type">' . esc_html($label) . '</span> ';
+        $html .= '<a href="' . esc_url($result->url) . '">' . esc_html($result->name) . '</a>';
+        $html .= '</li>';
     }
-    echo '</ul>';
-    echo '</div>';
+    $html .= '</ul>';
+    $html .= '</div>';
+    
+    return $html . $content;
 }
