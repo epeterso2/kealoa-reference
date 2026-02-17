@@ -205,6 +205,32 @@
     color: #333;
 }
 
+.kealoa-round-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.kealoa-round-nav-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #0073aa;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.kealoa-round-nav-btn:hover {
+    background: #005a87;
+    color: #fff;
+    text-decoration: none;
+}
+
 .kealoa-clues-table .kealoa-clue-number {
     font-weight: 700;
     text-align: center;

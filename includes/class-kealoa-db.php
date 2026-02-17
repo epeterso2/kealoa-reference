@@ -631,6 +631,48 @@ class Kealoa_DB {
     }
 
     /**
+     * Get the previous round (by date desc, round_number desc)
+     */
+    public function get_previous_round(int $current_round_id): ?object {
+        $current = $this->get_round($current_round_id);
+        if (!$current) {
+            return null;
+        }
+        $sql = $this->wpdb->prepare(
+            "SELECT id FROM {$this->rounds_table}
+            WHERE (round_date < %s) OR (round_date = %s AND round_number < %d)
+            ORDER BY round_date DESC, round_number DESC
+            LIMIT 1",
+            $current->round_date,
+            $current->round_date,
+            (int) $current->round_number
+        );
+        $result = $this->wpdb->get_row($sql);
+        return $result ?: null;
+    }
+
+    /**
+     * Get the next round (by date asc, round_number asc)
+     */
+    public function get_next_round(int $current_round_id): ?object {
+        $current = $this->get_round($current_round_id);
+        if (!$current) {
+            return null;
+        }
+        $sql = $this->wpdb->prepare(
+            "SELECT id FROM {$this->rounds_table}
+            WHERE (round_date > %s) OR (round_date = %s AND round_number > %d)
+            ORDER BY round_date ASC, round_number ASC
+            LIMIT 1",
+            $current->round_date,
+            $current->round_date,
+            (int) $current->round_number
+        );
+        $result = $this->wpdb->get_row($sql);
+        return $result ?: null;
+    }
+
+    /**
      * Get a round by date and round number
      */
     public function get_round_by_date_and_number(string $date, int $round_number = 1): ?object {

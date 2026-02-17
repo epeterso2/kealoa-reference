@@ -425,6 +425,27 @@ class Kealoa_Shortcodes {
             <?php else: ?>
                 <p class="kealoa-no-data"><?php esc_html_e('No clues recorded for this round.', 'kealoa-reference'); ?></p>
             <?php endif; ?>
+
+            <?php
+            $prev_round = $this->db->get_previous_round($round_id);
+            $next_round = $this->db->get_next_round($round_id);
+            ?>
+            <?php if ($prev_round || $next_round): ?>
+            <div class="kealoa-round-nav">
+                <?php if ($prev_round): ?>
+                    <a href="<?php echo esc_url(home_url('/kealoa/round/' . (int) $prev_round->id . '/')); ?>" class="kealoa-round-nav-btn kealoa-round-nav-prev">
+                        &larr; <?php esc_html_e('Previous Round', 'kealoa-reference'); ?>
+                    </a>
+                <?php else: ?>
+                    <span></span>
+                <?php endif; ?>
+                <?php if ($next_round): ?>
+                    <a href="<?php echo esc_url(home_url('/kealoa/round/' . (int) $next_round->id . '/')); ?>" class="kealoa-round-nav-btn kealoa-round-nav-next">
+                        <?php esc_html_e('Next Round', 'kealoa-reference'); ?> &rarr;
+                    </a>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
         </div>
         <?php
         return ob_get_clean();
