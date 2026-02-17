@@ -216,34 +216,34 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-round-meta">
                     <p>
                         <strong><?php esc_html_e('Date:', 'kealoa-reference'); ?></strong>
-                        <?php 
+                        <span><?php 
                         echo esc_html(Kealoa_Formatter::format_date($round->round_date));
                         if ($show_round_num) {
                             echo ' <span class="kealoa-round-number">(Round #' . esc_html($round_num) . ')</span>';
                         }
-                        ?>
+                        ?></span>
                     </p>
                     <p>
                         <strong><?php esc_html_e('Episode:', 'kealoa-reference'); ?></strong>
-                        <?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null); ?>
+                        <span><?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null); ?></span>
                     </p>
                     <p>
                         <strong><?php esc_html_e('Solution Words:', 'kealoa-reference'); ?></strong>
-                        <?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?>
+                        <span><?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?></span>
                     </p>
                     <p>
                         <strong><?php esc_html_e('Clue Giver:', 'kealoa-reference'); ?></strong>
-                        <?php 
+                        <span><?php 
                         if ($clue_giver) {
                             echo Kealoa_Formatter::format_person_link((int) $clue_giver->id, $clue_giver->full_name);
                         } else {
                             esc_html_e('Unknown', 'kealoa-reference');
                         }
-                        ?>
+                        ?></span>
                     </p>
                     <p>
                         <strong><?php esc_html_e('Players:', 'kealoa-reference'); ?></strong>
-                        <?php
+                        <span><?php
                         $sorted_results = $guesser_results;
                         usort($sorted_results, function($a, $b) {
                             return (int) $b->correct_guesses - (int) $a->correct_guesses;
@@ -257,12 +257,12 @@ class Kealoa_Shortcodes {
                             $guesser_parts[] = $link . ' (' . esc_html($score) . ')';
                         }
                         echo implode('; ', $guesser_parts);
-                        ?>
+                        ?></span>
                     </p>
                     <?php if (!empty($round->description)): ?>
                         <p>
                             <strong><?php esc_html_e('Description:', 'kealoa-reference'); ?></strong>
-                            <?php echo esc_html($round->description); ?>
+                            <span><?php echo esc_html($round->description); ?></span>
                         </p>
                     <?php endif; ?>
                 </div>

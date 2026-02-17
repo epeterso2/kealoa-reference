@@ -173,6 +173,7 @@
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 30px;
+    overflow: hidden;
 }
 
 .kealoa-round-title {
@@ -182,16 +183,19 @@
 }
 
 .kealoa-round-meta p {
+    display: flex;
     margin: 8px 0;
     line-height: 1.6;
-    padding-left: 140px;
-    text-indent: -140px;
 }
 
 .kealoa-round-meta strong {
-    display: inline-block;
     min-width: 140px;
+    flex-shrink: 0;
     color: #555;
+}
+
+.kealoa-round-meta span {
+    flex: 1;
 }
 
 .kealoa-clues-section h3 {
@@ -535,14 +539,12 @@
         font-size: 24px;
     }
     
-    .kealoa-round-meta strong {
-        display: block;
-        min-width: auto;
+    .kealoa-round-meta p {
+        flex-direction: column;
     }
     
-    .kealoa-round-meta p {
-        padding-left: 0;
-        text-indent: 0;
+    .kealoa-round-meta strong {
+        min-width: auto;
     }
     
     .kealoa-person-xwordinfo,
