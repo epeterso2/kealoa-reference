@@ -76,6 +76,7 @@ class Kealoa_Activator {
             home_page_url varchar(500) DEFAULT NULL,
             image_url varchar(500) DEFAULT NULL,
             media_id bigint(20) UNSIGNED DEFAULT NULL,
+            hide_xwordinfo tinyint(1) NOT NULL DEFAULT 0,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),

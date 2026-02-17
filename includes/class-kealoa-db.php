@@ -321,8 +321,9 @@ class Kealoa_DB {
             'image_url' => isset($data['image_url']) 
                 ? esc_url_raw($data['image_url']) 
                 : null,
+            'hide_xwordinfo' => !empty($data['hide_xwordinfo']) ? 1 : 0,
         ];
-        $format = ['%s', '%s', '%s'];
+        $format = ['%s', '%s', '%s', '%d'];
 
         if (array_key_exists('media_id', $data)) {
             $insert_data['media_id'] = $data['media_id'] ? (int) $data['media_id'] : null;
@@ -363,6 +364,10 @@ class Kealoa_DB {
         }
         if (array_key_exists('media_id', $data)) {
             $update_data['media_id'] = $data['media_id'] ? (int) $data['media_id'] : null;
+            $format[] = '%d';
+        }
+        if (array_key_exists('hide_xwordinfo', $data)) {
+            $update_data['hide_xwordinfo'] = !empty($data['hide_xwordinfo']) ? 1 : 0;
             $format[] = '%d';
         }
         

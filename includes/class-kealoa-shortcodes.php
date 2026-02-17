@@ -688,9 +688,11 @@ class Kealoa_Shortcodes {
                             </p>
                         <?php endif; ?>
                         
+                        <?php if (empty($person->hide_xwordinfo)): ?>
                         <p class="kealoa-person-xwordinfo">
                             <?php echo Kealoa_Formatter::format_xwordinfo_link($person->full_name, 'XWordInfo Profile'); ?>
                         </p>
+                        <?php endif; ?>
                         
                         <?php if (!empty($person->home_page_url)): ?>
                             <p class="kealoa-person-homepage">

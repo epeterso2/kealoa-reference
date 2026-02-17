@@ -241,6 +241,7 @@ class Kealoa_Import {
                     'full_name' => $row['full_name'],
                     'home_page_url' => $row['home_page_url'] ?? null,
                     'image_url' => $row['image_url'] ?? null,
+                    'hide_xwordinfo' => !empty($row['hide_xwordinfo']),
                 ]);
             } else {
                 // Create new person
@@ -248,6 +249,7 @@ class Kealoa_Import {
                     'full_name' => $row['full_name'],
                     'home_page_url' => $row['home_page_url'] ?? null,
                     'image_url' => $row['image_url'] ?? null,
+                    'hide_xwordinfo' => !empty($row['hide_xwordinfo']),
                 ]);
             }
             
