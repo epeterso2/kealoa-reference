@@ -605,14 +605,15 @@ class Kealoa_Shortcodes {
                     <?php endif; ?>
                     
                     <div class="kealoa-person-details">
-                        <h2 class="kealoa-person-name">
-                            <?php echo esc_html($person->full_name); ?>
-                            <?php if ($matching_constructor): ?>
-                                <a href="<?php echo esc_url(home_url('/kealoa/constructor/' . urlencode(str_replace(' ', '_', $matching_constructor->full_name)) . '/')); ?>" class="kealoa-cross-link" title="<?php esc_attr_e('View as Constructor', 'kealoa-reference'); ?>">
-                                    &#9999;&#65039;
+                        <h2 class="kealoa-person-name"><?php echo esc_html($person->full_name); ?></h2>
+                        
+                        <?php if ($matching_constructor): ?>
+                            <p class="kealoa-cross-link-text">
+                                <a href="<?php echo esc_url(home_url('/kealoa/constructor/' . urlencode(str_replace(' ', '_', $matching_constructor->full_name)) . '/')); ?>">
+                                    <?php esc_html_e('View as Constructor', 'kealoa-reference'); ?>
                                 </a>
-                            <?php endif; ?>
-                        </h2>
+                            </p>
+                        <?php endif; ?>
                         
                         <?php if (!empty($person->xwordinfo_profile_name)): ?>
                             <p class="kealoa-person-xwordinfo">
@@ -1449,14 +1450,15 @@ class Kealoa_Shortcodes {
                     <?php endif; ?>
                     
                     <div class="kealoa-constructor-details">
-                        <h2 class="kealoa-constructor-name">
-                            <?php echo esc_html($constructor->full_name); ?>
-                            <?php if ($matching_person): ?>
-                                <a href="<?php echo esc_url(home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $matching_person->full_name)) . '/')); ?>" class="kealoa-cross-link" title="<?php esc_attr_e('View as Player', 'kealoa-reference'); ?>">
-                                    &#127918;
+                        <h2 class="kealoa-constructor-name"><?php echo esc_html($constructor->full_name); ?></h2>
+                        
+                        <?php if ($matching_person): ?>
+                            <p class="kealoa-cross-link-text">
+                                <a href="<?php echo esc_url(home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $matching_person->full_name)) . '/')); ?>">
+                                    <?php esc_html_e('View as Player', 'kealoa-reference'); ?>
                                 </a>
-                            <?php endif; ?>
-                        </h2>
+                            </p>
+                        <?php endif; ?>
                         
                         <?php if (!empty($constructor->xwordinfo_profile_name)): ?>
                             <p class="kealoa-constructor-xwordinfo">
