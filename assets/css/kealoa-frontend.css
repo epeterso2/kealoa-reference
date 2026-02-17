@@ -11,9 +11,8 @@
    ========================================================================== */
 
 .kealoa-page-container {
-    max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 20px 0;
 }
 
 .kealoa-no-data,
@@ -651,7 +650,7 @@
     }
     
     .kealoa-page-container {
-        padding: 10px;
+        padding: 10px 0;
     }
 }
 
