@@ -1205,6 +1205,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Streak', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
@@ -1224,6 +1225,7 @@ class Kealoa_Shortcodes {
                                     <td><?php echo Kealoa_Formatter::format_solution_words_link((int) $history->round_id, $solutions); ?></td>
                                     <td><?php echo esc_html($history->total_clues); ?></td>
                                     <td><?php echo esc_html($history->correct_count); ?></td>
+                                    <td><?php echo esc_html($this->db->get_person_round_streak((int) $history->round_id, $person_id)); ?></td>
                                     <td>
                                         <?php 
                                         $pct = $history->total_clues > 0 

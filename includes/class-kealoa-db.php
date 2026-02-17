@@ -1647,6 +1647,38 @@ class Kealoa_DB {
         return $this->wpdb->get_results($sql);
     }
 
+    /**
+     * Get the longest consecutive correct answer streak for a person in a round
+     */
+    public function get_person_round_streak(int $round_id, int $person_id): int {
+        $sql = $this->wpdb->prepare(
+            "SELECT g.is_correct
+            FROM {$this->clues_table} c
+            LEFT JOIN {$this->guesses_table} g ON c.id = g.clue_id AND g.guesser_person_id = %d
+            WHERE c.round_id = %d
+            ORDER BY c.clue_number ASC",
+            $person_id,
+            $round_id
+        );
+        
+        $results = $this->wpdb->get_results($sql);
+        
+        $max_streak = 0;
+        $current_streak = 0;
+        foreach ($results as $row) {
+            if ((int) ($row->is_correct ?? 0) === 1) {
+                $current_streak++;
+                if ($current_streak > $max_streak) {
+                    $max_streak = $current_streak;
+                }
+            } else {
+                $current_streak = 0;
+            }
+        }
+        
+        return $max_streak;
+    }
+
     // =========================================================================
     // CONSTRUCTOR STATISTICS
     // =========================================================================
