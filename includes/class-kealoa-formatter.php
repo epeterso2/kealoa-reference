@@ -117,7 +117,8 @@ class Kealoa_Formatter {
      * @return string HTML link to constructor view
      */
     public static function format_constructor_link(int $constructor_id, string $full_name): string {
-        $url = home_url('/kealoa/constructor/' . $constructor_id . '/');
+        $slug = str_replace(' ', '_', $full_name);
+        $url = home_url('/kealoa/constructor/' . urlencode($slug) . '/');
         return sprintf(
             '<a href="%s" class="kealoa-constructor-link">%s</a>',
             esc_url($url),

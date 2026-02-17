@@ -67,6 +67,19 @@ class Kealoa_DB {
     }
 
     /**
+     * Get a constructor by name (case-insensitive, underscores match spaces)
+     */
+    public function get_constructor_by_name(string $name): ?object {
+        $name = str_replace('_', ' ', $name);
+        $sql = $this->wpdb->prepare(
+            "SELECT * FROM {$this->constructors_table} WHERE full_name = %s",
+            $name
+        );
+        $result = $this->wpdb->get_row($sql);
+        return $result ?: null;
+    }
+
+    /**
      * Get all constructors
      */
     public function get_constructors(array $args = []): array {
@@ -2029,7 +2042,7 @@ class Kealoa_DB {
             $results[] = (object) [
                 'type' => 'constructor',
                 'name' => $c->full_name,
-                'url' => home_url('/kealoa/constructor/' . (int) $c->id . '/'),
+                'url' => home_url('/kealoa/constructor/' . urlencode(str_replace(' ', '_', $c->full_name)) . '/'),
             ];
         }
 

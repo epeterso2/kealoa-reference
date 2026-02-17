@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.1.18
+ * Version: 1.1.19
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.1.18');
+define('KEALOA_VERSION', '1.1.19');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -206,8 +206,8 @@ function kealoa_register_rewrite_rules(): void {
     );
     
     add_rewrite_rule(
-        '^kealoa/constructor/([0-9]+)/?$',
-        'index.php?kealoa_constructor_id=$matches[1]',
+        '^kealoa/constructor/([^/]+)/?$',
+        'index.php?kealoa_constructor_name=$matches[1]',
         'top'
     );
     
@@ -224,7 +224,7 @@ function kealoa_register_rewrite_rules(): void {
 function kealoa_query_vars(array $vars): array {
     $vars[] = 'kealoa_person_name';
     $vars[] = 'kealoa_round_id';
-    $vars[] = 'kealoa_constructor_id';
+    $vars[] = 'kealoa_constructor_name';
     $vars[] = 'kealoa_editor_name';
     return $vars;
 }
@@ -235,7 +235,7 @@ function kealoa_query_vars(array $vars): array {
 function kealoa_template_redirect(): void {
     $person_name = get_query_var('kealoa_person_name');
     $round_id = get_query_var('kealoa_round_id');
-    $constructor_id = get_query_var('kealoa_constructor_id');
+    $constructor_name = get_query_var('kealoa_constructor_name');
     
     if ($person_name) {
         kealoa_render_person_page(urldecode($person_name));
@@ -247,8 +247,8 @@ function kealoa_template_redirect(): void {
         exit;
     }
     
-    if ($constructor_id) {
-        kealoa_render_constructor_page((int) $constructor_id);
+    if ($constructor_name) {
+        kealoa_render_constructor_page(urldecode($constructor_name));
         exit;
     }
     
@@ -300,9 +300,9 @@ function kealoa_render_round_page(int $round_id): void {
 /**
  * Render constructor page
  */
-function kealoa_render_constructor_page(int $constructor_id): void {
+function kealoa_render_constructor_page(string $constructor_name): void {
     $db = new Kealoa_DB();
-    $constructor = $db->get_constructor($constructor_id);
+    $constructor = $db->get_constructor_by_name($constructor_name);
     
     if (!$constructor) {
         wp_die(__('Constructor not found.', 'kealoa-reference'), '', ['response' => 404]);
@@ -311,7 +311,7 @@ function kealoa_render_constructor_page(int $constructor_id): void {
     get_header();
     echo '<div class="kealoa-page-container">';
     $shortcodes = new Kealoa_Shortcodes();
-    echo $shortcodes->render_constructor(['id' => $constructor_id]);
+    echo $shortcodes->render_constructor(['id' => (int) $constructor->id]);
     echo '</div>';
     get_footer();
 }
