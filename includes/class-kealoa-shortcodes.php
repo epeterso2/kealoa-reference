@@ -1462,8 +1462,7 @@ class Kealoa_Shortcodes {
                         
                         <?php if (!empty($constructor->xwordinfo_profile_name)): ?>
                             <p class="kealoa-constructor-xwordinfo">
-                                <strong><?php esc_html_e('XWordInfo:', 'kealoa-reference'); ?></strong>
-                                <?php echo Kealoa_Formatter::format_xwordinfo_link($constructor->xwordinfo_profile_name, 'View Profile'); ?>
+                                <?php echo Kealoa_Formatter::format_xwordinfo_link($constructor->xwordinfo_profile_name, 'XWordInfo Profile'); ?>
                             </p>
                         <?php endif; ?>
                     </div>
