@@ -268,15 +268,21 @@ class Kealoa_Shortcodes {
                 </div>
 
                 <?php
-                // Collect all players: clue giver + guessers
+                // Collect all players: clue giver first, then guessers in same order as Players header
                 $all_players = [];
                 if ($clue_giver) {
                     $all_players[] = $clue_giver;
                 }
-                foreach ($guessers as $guesser) {
+                foreach ($sorted_results as $gr) {
                     // Avoid duplicating clue giver if they're also a guesser
-                    if (!$clue_giver || (int) $guesser->id !== (int) $clue_giver->id) {
-                        $all_players[] = $guesser;
+                    if (!$clue_giver || (int) $gr->person_id !== (int) $clue_giver->id) {
+                        // Find the full person object from $guessers
+                        foreach ($guessers as $guesser) {
+                            if ((int) $guesser->id === (int) $gr->person_id) {
+                                $all_players[] = $guesser;
+                                break;
+                            }
+                        }
                     }
                 }
                 ?>
