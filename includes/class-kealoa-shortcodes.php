@@ -229,7 +229,21 @@ class Kealoa_Shortcodes {
                     </p>
                     <p>
                         <strong><?php esc_html_e('Solution Words:', 'kealoa-reference'); ?></strong>
-                        <span><?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?></span>
+                        <span><?php
+                        // Count how many clues have each solution word as the correct answer
+                        $answer_counts = [];
+                        foreach ($clues as $clue) {
+                            $answer = strtoupper($clue->correct_answer);
+                            $answer_counts[$answer] = ($answer_counts[$answer] ?? 0) + 1;
+                        }
+                        $word_parts = [];
+                        foreach ($solutions as $s) {
+                            $word = strtoupper($s->word);
+                            $count = $answer_counts[$word] ?? 0;
+                            $word_parts[] = esc_html($word) . ' (' . $count . ')';
+                        }
+                        echo implode(', ', $word_parts);
+                        ?></span>
                     </p>
                     <p>
                         <strong><?php esc_html_e('Clue Giver:', 'kealoa-reference'); ?></strong>
