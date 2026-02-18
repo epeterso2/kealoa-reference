@@ -325,6 +325,15 @@
    Person View
    ========================================================================== */
 
+.kealoa-person-view .kealoa-table {
+    width: auto;
+}
+
+.kealoa-person-view .kealoa-table th,
+.kealoa-person-view .kealoa-table td {
+    white-space: nowrap;
+}
+
 .kealoa-person-view {
     margin: 20px 0;
 }
