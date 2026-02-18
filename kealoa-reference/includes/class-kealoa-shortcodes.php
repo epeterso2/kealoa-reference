@@ -350,6 +350,7 @@ class Kealoa_Shortcodes {
                     <?php endif; ?>
                     <?php if (!empty($round->description2)): ?>
                         <p>
+                            <strong></strong>
                             <span><?php echo esc_html($round->description2); ?></span>
                         </p>
                     <?php endif; ?>
