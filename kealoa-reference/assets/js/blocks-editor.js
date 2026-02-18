@@ -552,4 +552,28 @@
         }
     });
 
+    /**
+     * KEALOA Play Game Block
+     */
+    registerBlockType('kealoa/play-game', {
+        title: __('KEALOA Play Game', 'kealoa-reference'),
+        description: __('An interactive KEALOA game that lets visitors play a random round.', 'kealoa-reference'),
+        icon: 'games',
+        category: 'widgets',
+        keywords: [__('kealoa', 'kealoa-reference'), __('game', 'kealoa-reference'), __('play', 'kealoa-reference'), __('quiz', 'kealoa-reference')],
+        attributes: {},
+
+        edit: function () {
+            return createElement(Placeholder, {
+                icon: 'games',
+                label: __('KEALOA Play Game', 'kealoa-reference'),
+                instructions: __('This block displays an interactive KEALOA game on the front end. Visitors can play a random round and compare their scores with the show\'s players.', 'kealoa-reference')
+            });
+        },
+
+        save: function () {
+            return null;
+        }
+    });
+
 })(window.wp);
