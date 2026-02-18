@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kealoa Reference — Color Palette</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
+
+  :root {
+    /* === PRIMARY PALETTE === */
+    --volcanic-ember:    #C84B0A;   /* eruption core, primary CTA */
+    --lava-orange:       #E8720C;   /* bright lava flow, hover states */
+    --torch-flame:       #F5A623;   /* torch fire, highlights & links */
+    --gold-tiki:         #D4960A;   /* tiki letter gold, active states */
+
+    /* === EARTH / WOOD === */
+    --driftwood-dark:    #5C3A1E;   /* darkest wood tones, nav bg */
+    --bamboo-brown:      #8B5E2E;   /* banner frame wood, borders */
+    --sandy-shore:       #C9A66B;   /* beach sand, light backgrounds */
+    --pale-sand:         #EDD9A3;   /* lightest sand, content bg */
+
+    /* === OCEAN / SKY === */
+    --deep-lagoon:       #0A6E8A;   /* dark ocean depth, footer bg */
+    --tropical-teal:     #1A9BB5;   /* mid ocean, secondary accents */
+    --sky-blue:          #5BAED6;   /* sky behind volcano, info states */
+    --seafoam:           #A8D8E8;   /* wave crests, subtle dividers */
+
+    /* === JUNGLE GREEN === */
+    --jungle-deep:       #1B4A1E;   /* darkest foliage, dark text */
+    --palm-green:        #2E7D32;   /* palm leaves, success states */
+    --hibiscus-leaf:     #4CAF50;   /* bright leaves, secondary buttons */
+
+    /* === ACCENT / FLORAL === */
+    --hibiscus-red:      #C0392B;   /* red hibiscus, alerts & error */
+    --petal-pink:        #E05252;   /* lighter floral, warm alerts */
+
+    /* === SMOKE / NEUTRAL === */
+    --ash-dark:          #2C2C2C;   /* body text */
+    --pumice:            #6B6B6B;   /* secondary text */
+    --volcanic-ash:      #B0AFA8;   /* muted text, placeholders */
+    --cloud-white:       #F7F3EC;   /* page background (warm white) */
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cloud-white);
+    font-family: 'Lora', Georgia, serif;
+    color: var(--ash-dark);
+    padding: 40px 24px 80px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 56px;
+    padding: 32px;
+    background: linear-gradient(135deg, var(--driftwood-dark) 0%, var(--bamboo-brown) 50%, var(--driftwood-dark) 100%);
+    border-radius: 12px;
+    border: 3px solid var(--gold-tiki);
+  }
+
+  header h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.6rem, 4vw, 2.8rem);
+    color: var(--torch-flame);
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+
+  header p {
+    color: var(--pale-sand);
+    font-style: italic;
+    font-size: 0.95rem;
+  }
+
+  .section-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--driftwood-dark);
+    border-bottom: 2px solid var(--bamboo-brown);
+    padding-bottom: 10px;
+    margin: 48px 0 20px;
+  }
+
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .swatch {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+    background: #fff;
+  }
+
+  .swatch-color {
+    height: 90px;
+    width: 100%;
+  }
+
+  .swatch-info {
+    padding: 12px 14px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+
+  .swatch-name {
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--ash-dark);
+    margin-bottom: 3px;
+    text-transform: capitalize;
+  }
+
+  .swatch-hex {
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    color: var(--pumice);
+    margin-bottom: 5px;
+  }
+
+  .swatch-var {
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    color: var(--tropical-teal);
+    word-break: break-all;
+  }
+
+  .swatch-use {
+    font-size: 0.72rem;
+    color: var(--volcanic-ash);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  /* === UI USAGE DEMOS === */
+  .demo-section {
+    margin-top: 56px;
+  }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .demo-card {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.14);
+  }
+
+  .demo-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--pumice);
+    margin-bottom: 10px;
+  }
+
+  /* Navigation Bar Demo */
+  .nav-demo {
+    background: var(--driftwood-dark);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .nav-logo { font-family: 'Cinzel Decorative', serif; color: var(--torch-flame); font-size: 1rem; }
+  .nav-link { color: var(--pale-sand); font-size: 0.85rem; text-decoration: none; }
+  .nav-link.active { color: var(--torch-flame); border-bottom: 2px solid var(--torch-flame); }
+  .nav-cta { background: var(--volcanic-ember); color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 0.82rem; margin-left: auto; font-family: 'Lora', serif; }
+
+  /* Button Demo */
+  .button-demo { padding: 20px; background: var(--cloud-white); border: 1px solid var(--seafoam); border-radius: 10px; }
+  .btn { display: inline-block; padding: 10px 22px; border-radius: 8px; font-family: 'Lora', serif; font-size: 0.88rem; font-weight: 600; margin: 5px; cursor: pointer; border: none; }
+  .btn-primary   { background: var(--volcanic-ember); color: #fff; }
+  .btn-secondary { background: var(--deep-lagoon);    color: #fff; }
+  .btn-outline   { background: transparent; border: 2px solid var(--bamboo-brown); color: var(--bamboo-brown); }
+  .btn-success   { background: var(--palm-green);     color: #fff; }
+  .btn-ghost     { background: var(--pale-sand);      color: var(--driftwood-dark); border: 1px solid var(--sandy-shore); }
+
+  /* Card Demo */
+  .card-demo { background: #fff; border: 1px solid var(--seafoam); border-radius: 10px; overflow: hidden; }
+  .card-header { background: var(--deep-lagoon); color: var(--seafoam); padding: 14px 18px; font-size: 0.9rem; font-weight: 600; }
+  .card-body { padding: 16px 18px; font-size: 0.88rem; line-height: 1.6; color: var(--ash-dark); }
+  .card-footer { background: var(--pale-sand); padding: 12px 18px; border-top: 1px solid var(--sandy-shore); font-size: 0.78rem; color: var(--pumice); }
+
+  /* Alert Demo */
+  .alert-demo { display: flex; flex-direction: column; gap: 10px; }
+  .alert { padding: 12px 16px; border-radius: 8px; font-size: 0.84rem; border-left: 4px solid; }
+  .alert-info    { background: #E8F5FA; color: var(--deep-lagoon);     border-color: var(--tropical-teal); }
+  .alert-success { background: #E8F5E9; color: var(--jungle-deep);     border-color: var(--palm-green); }
+  .alert-warning { background: #FFF3E0; color: var(--driftwood-dark);  border-color: var(--torch-flame); }
+  .alert-danger  { background: #FDECEA; color: #8B1A1A;                border-color: var(--hibiscus-red); }
+
+  /* Typography Demo */
+  .type-demo { padding: 20px; background: #fff; border: 1px solid var(--seafoam); border-radius: 10px; }
+  .type-h1 { font-family: 'Cinzel Decorative', serif; font-size: 1.5rem; color: var(--driftwood-dark); margin-bottom: 8px; }
+  .type-h2 { font-size: 1.1rem; font-weight: 600; color: var(--volcanic-ember); margin-bottom: 6px; }
+  .type-body { font-size: 0.88rem; color: var(--ash-dark); line-height: 1.7; margin-bottom: 6px; }
+  .type-link { color: var(--tropical-teal); text-decoration: underline; font-size: 0.88rem; }
+  .type-muted { color: var(--pumice); font-size: 0.8rem; font-style: italic; }
+
+  /* CSS Variables block */
+  .code-block {
+    background: var(--driftwood-dark);
+    color: var(--pale-sand);
+    padding: 24px 28px;
+    border-radius: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    line-height: 1.9;
+    overflow-x: auto;
+    margin-top: 20px;
+  }
+  .code-comment { color: var(--volcanic-ash); }
+  .code-var { color: var(--sky-blue); }
+  .code-val { color: var(--torch-flame); }
+  .code-label { color: var(--hibiscus-leaf); }
+
+  /* GeneratePress note */
+  .gp-note {
+    background: linear-gradient(135deg, var(--pale-sand), #fff);
+    border: 2px solid var(--sandy-shore);
+    border-radius: 10px;
+    padding: 24px;
+    margin-top: 48px;
+  }
+  .gp-note h3 { font-family: 'Cinzel Decorative', serif; color: var(--driftwood-dark); font-size: 0.95rem; margin-bottom: 12px; }
+  .gp-note p { font-size: 0.85rem; line-height: 1.7; color: var(--ash-dark); margin-bottom: 8px; }
+  .gp-note code { background: var(--pale-sand); padding: 2px 6px; border-radius: 4px; font-size: 0.78rem; color: var(--volcanic-ember); }
+
+  footer-note {
+    display: block;
+    text-align: center;
+    margin-top: 60px;
+    color: var(--pumice);
+    font-size: 0.78rem;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>KEALOA Reference</h1>
+  <p>Website Color Palette — Derived from Banner Art</p>
+</header>
+
+<!-- FIRE / VOLCANIC -->
+<h2 class="section-title">🔥 Fire &amp; Volcanic — Primary Brand Colors</h2>
+<div class="palette-grid">
+  <div class="swatch">
+    <div class="swatch-color" style="background:#C84B0A;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Volcanic Ember</div>
+      <div class="swatch-hex">#C84B0A</div>
+      <div class="swatch-var">--volcanic-ember</div>
+      <div class="swatch-use">Primary CTA buttons, key headings</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#E8720C;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Lava Orange</div>
+      <div class="swatch-hex">#E8720C</div>
+      <div class="swatch-var">--lava-orange</div>
+      <div class="swatch-use">Hover states, icon fills</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#F5A623;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Torch Flame</div>
+      <div class="swatch-hex">#F5A623</div>
+      <div class="swatch-var">--torch-flame</div>
+      <div class="swatch-use">Links, highlights, logo accent</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#D4960A;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Gold Tiki</div>
+      <div class="swatch-hex">#D4960A</div>
+      <div class="swatch-var">--gold-tiki</div>
+      <div class="swatch-use">Active menu items, badges, borders</div>
+    </div>
+  </div>
+</div>
+
+<!-- EARTH / WOOD -->
+<h2 class="section-title">🪵 Earth &amp; Wood — Structure &amp; Warmth</h2>
+<div class="palette-grid">
+  <div class="swatch">
+    <div class="swatch-color" style="background:#5C3A1E;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Driftwood Dark</div>
+      <div class="swatch-hex">#5C3A1E</div>
+      <div class="swatch-var">--driftwood-dark</div>
+      <div class="swatch-use">Navigation bg, footer, dark sections</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#8B5E2E;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Bamboo Brown</div>
+      <div class="swatch-hex">#8B5E2E</div>
+      <div class="swatch-var">--bamboo-brown</div>
+      <div class="swatch-use">Borders, card outlines, dividers</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#C9A66B;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Sandy Shore</div>
+      <div class="swatch-hex">#C9A66B</div>
+      <div class="swatch-var">--sandy-shore</div>
+      <div class="swatch-use">Subtle backgrounds, sidebar tones</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#EDD9A3;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Pale Sand</div>
+      <div class="swatch-hex">#EDD9A3</div>
+      <div class="swatch-var">--pale-sand</div>
+      <div class="swatch-use">Light section backgrounds, alt rows</div>
+    </div>
+  </div>
+</div>
+
+<!-- OCEAN / SKY -->
+<h2 class="section-title">🌊 Ocean &amp; Sky — Secondary Palette</h2>
+<div class="palette-grid">
+  <div class="swatch">
+    <div class="swatch-color" style="background:#0A6E8A;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Deep Lagoon</div>
+      <div class="swatch-hex">#0A6E8A</div>
+      <div class="swatch-var">--deep-lagoon</div>
+      <div class="swatch-use">Footer bg, secondary buttons, headers</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#1A9BB5;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Tropical Teal</div>
+      <div class="swatch-hex">#1A9BB5</div>
+      <div class="swatch-var">--tropical-teal</div>
+      <div class="swatch-use">Links, info accents, tags</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#5BAED6;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Sky Blue</div>
+      <div class="swatch-hex">#5BAED6</div>
+      <div class="swatch-var">--sky-blue</div>
+      <div class="swatch-use">Info badges, progress bars, icons</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#A8D8E8;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Seafoam</div>
+      <div class="swatch-hex">#A8D8E8</div>
+      <div class="swatch-var">--seafoam</div>
+      <div class="swatch-use">Light borders, card backgrounds</div>
+    </div>
+  </div>
+</div>
+
+<!-- JUNGLE -->
+<h2 class="section-title">🌴 Jungle Greens — Accents</h2>
+<div class="palette-grid">
+  <div class="swatch">
+    <div class="swatch-color" style="background:#1B4A1E;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Jungle Deep</div>
+      <div class="swatch-hex">#1B4A1E</div>
+      <div class="swatch-var">--jungle-deep</div>
+      <div class="swatch-use">Dark text alternative, dark mode bg</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#2E7D32;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Palm Green</div>
+      <div class="swatch-hex">#2E7D32</div>
+      <div class="swatch-var">--palm-green</div>
+      <div class="swatch-use">Success states, checkmarks, growth metrics</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#C0392B;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Hibiscus Red</div>
+      <div class="swatch-hex">#C0392B</div>
+      <div class="swatch-var">--hibiscus-red</div>
+      <div class="swatch-use">Error states, alert indicators</div>
+    </div>
+  </div>
+</div>
+
+<!-- NEUTRAL -->
+<h2 class="section-title">🌫 Ash &amp; Neutrals — Text &amp; Backgrounds</h2>
+<div class="palette-grid">
+  <div class="swatch">
+    <div class="swatch-color" style="background:#2C2C2C;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Ash Dark</div>
+      <div class="swatch-hex">#2C2C2C</div>
+      <div class="swatch-var">--ash-dark</div>
+      <div class="swatch-use">Primary body text</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#6B6B6B;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Pumice</div>
+      <div class="swatch-hex">#6B6B6B</div>
+      <div class="swatch-var">--pumice</div>
+      <div class="swatch-use">Secondary text, captions, metadata</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#B0AFA8; border: 1px solid #ddd;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Volcanic Ash</div>
+      <div class="swatch-hex">#B0AFA8</div>
+      <div class="swatch-var">--volcanic-ash</div>
+      <div class="swatch-use">Placeholders, muted dividers</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#F7F3EC; border: 1px solid #ddd;"></div>
+    <div class="swatch-info">
+      <div class="swatch-name">Cloud White</div>
+      <div class="swatch-hex">#F7F3EC</div>
+      <div class="swatch-var">--cloud-white</div>
+      <div class="swatch-use">Page background (warm white)</div>
+    </div>
+  </div>
+</div>
+
+<!-- UI DEMOS -->
+<div class="demo-section">
+  <h2 class="section-title">⚙️ UI Component Demos</h2>
+  <div class="demo-grid">
+
+    <!-- Nav Demo -->
+    <div>
+      <div class="demo-label">Navigation Bar</div>
+      <div class="demo-card">
+        <div class="nav-demo">
+          <span class="nav-logo">Kealoa</span>
+          <a class="nav-link active" href="#">Home</a>
+          <a class="nav-link" href="#">About</a>
+          <a class="nav-link" href="#">Blog</a>
+          <span class="nav-cta">Sign Up</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buttons Demo -->
+    <div>
+      <div class="demo-label">Buttons</div>
+      <div class="button-demo">
+        <button class="btn btn-primary">Primary</button>
+        <button class="btn btn-secondary">Secondary</button>
+        <button class="btn btn-outline">Outline</button>
+        <button class="btn btn-success">Success</button>
+        <button class="btn btn-ghost">Ghost</button>
+      </div>
+    </div>
+
+    <!-- Card Demo -->
+    <div>
+      <div class="demo-label">Content Card</div>
+      <div class="card-demo">
+        <div class="card-header">Discover the Islands</div>
+        <div class="card-body">Explore volcanic shores, dense jungle trails, and crystal lagoons in our curated travel guides.</div>
+        <div class="card-footer">Published Feb 18, 2026 · 4 min read</div>
+      </div>
+    </div>
+
+    <!-- Alerts Demo -->
+    <div>
+      <div class="demo-label">Alerts &amp; Notices</div>
+      <div class="alert-demo">
+        <div class="alert alert-info">ℹ️ New content has been published.</div>
+        <div class="alert alert-success">✅ Your changes were saved.</div>
+        <div class="alert alert-warning">⚠️ Volcanic activity detected nearby.</div>
+        <div class="alert alert-danger">🚨 Access restricted. Please log in.</div>
+      </div>
+    </div>
+
+    <!-- Typography Demo -->
+    <div>
+      <div class="demo-label">Typography</div>
+      <div class="type-demo">
+        <div class="type-h1">Page Title</div>
+        <div class="type-h2">Section Heading</div>
+        <div class="type-body">Body text in Lora for comfortable long-form reading. Warm and authoritative.</div>
+        <div><a class="type-link" href="#">Inline link →</a></div>
+        <div class="type-muted">Caption / metadata text</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CSS VARIABLES CODE -->
+<h2 class="section-title">📋 CSS Variables — Copy-Paste Ready</h2>
+<div class="code-block">
+<span class="code-comment">/* Paste into GeneratePress → Customize → Additional CSS */</span><br>
+:root {<br>
+&nbsp;&nbsp;<span class="code-comment">/* Fire & Volcanic — Primary Brand */</span><br>
+&nbsp;&nbsp;<span class="code-var">--volcanic-ember</span>: <span class="code-val">#C84B0A</span>;<br>
+&nbsp;&nbsp;<span class="code-var">--lava-orange</span>:    <span class="code-val">#E8720C</span>;<br>
+&nbsp;&nbsp;<span class="code-var">--torch-flame</span>:    <span class="code-val">#F5A623</span>;<br>
+&nbsp;&nbsp;<span class="code-var">--gold-tiki</span>:      <span class="code-val">#D4960A</span>;<br><br>
+&nbsp;&nbsp;<span class="code-comment">/* Earth & Wood */</span><br>
+&nbsp;&nbsp;<span class="code-var">--driftwood-dark</span>: <span class="code-val">#5C3A1E</span>;<br>
+&nbsp;&nbsp;<span class="code-var">--bamboo-brown</span>:   <span class="code-val">#8B5E2E</span>;<br>
+&nbsp;&nbsp;<span class="code-var">--sandy-shore</span>:    <span class="code-val">#C9A66B</span>;<br>
+&nbsp;&nbsp;<span class="code-var">--pale-sand</span>:      <span class="code-val">#EDD9A3</span>;<br><br>
+&nbsp;&nbsp;<span class="code-comment">/* Ocean & Sky */</span><br>
+&nbsp;&nbsp;<span class="code-var">--deep-lagoon</span>:    <span class="code-val">#0A6E8A</span>;<br>
+&nbsp;&nbsp;<span class="code-var">--tropical-teal</span>:  <span class="code-val">#1A9BB5</span>;<br>
+&nbsp;&nbsp;<span class="code-var">--sky-blue</span>:       <span class="code-val">#5BAED6</span>;<br>
+&nbsp;&nbsp;<span class="code-var">--seafoam</span>:        <span class="code-val">#A8D8E8</span>;<br><br>
+&nbsp;&nbsp;<span class="code-comment">/* Jungle Greens */</span><br>
+&nbsp;&nbsp;<span class="code-var">--jungle-deep</span>:    <span class="code-val">#1B4A1E</span>;<br>
+&nbsp;&nbsp;<span class="code-var">--palm-green</span>:     <span class="code-val">#2E7D32</span>;<br>
+&nbsp;&nbsp;<span class="code-var">--hibiscus-red</span>:   <span class="code-val">#C0392B</span>;<br><br>
+&nbsp;&nbsp;<span class="code-comment">/* Ash & Neutrals */</span><br>
+&nbsp;&nbsp;<span class="code-var">--ash-dark</span>:       <span class="code-val">#2C2C2C</span>;<br>
+&nbsp;&nbsp;<span class="code-var">--pumice</span>:         <span class="code-val">#6B6B6B</span>;<br>
+&nbsp;&nbsp;<span class="code-var">--volcanic-ash</span>:   <span class="code-val">#B0AFA8</span>;<br>
+&nbsp;&nbsp;<span class="code-var">--cloud-white</span>:    <span class="code-val">#F7F3EC</span>;<br>
+}<br><br>
+<span class="code-comment">/* === GeneratePress Global Colors Mapping === */</span><br>
+<span class="code-label">body</span> { background-color: <span class="code-val">var(--cloud-white)</span>; color: <span class="code-val">var(--ash-dark)</span>; }<br>
+<span class="code-label">a</span> { color: <span class="code-val">var(--tropical-teal)</span>; }<br>
+<span class="code-label">a:hover</span> { color: <span class="code-val">var(--volcanic-ember)</span>; }<br>
+<span class="code-label">.site-header</span> { background: <span class="code-val">var(--driftwood-dark)</span>; }<br>
+<span class="code-label">.main-navigation a</span> { color: <span class="code-val">var(--pale-sand)</span>; }<br>
+<span class="code-label">.main-navigation a:hover,</span><br>
+<span class="code-label">.main-navigation .current-menu-item > a</span> { color: <span class="code-val">var(--torch-flame)</span>; }<br>
+<span class="code-label">.site-footer</span> { background: <span class="code-val">var(--deep-lagoon)</span>; color: <span class="code-val">var(--seafoam)</span>; }<br>
+<span class="code-label">.wp-block-button__link</span> { background: <span class="code-val">var(--volcanic-ember)</span>; }<br>
+<span class="code-label">.wp-block-button__link:hover</span> { background: <span class="code-val">var(--lava-orange)</span>; }<br>
+<span class="code-label">h1, h2, h3</span> { color: <span class="code-val">var(--driftwood-dark)</span>; }<br>
+<span class="code-label">blockquote</span> { border-left: 4px solid <span class="code-val">var(--torch-flame)</span>; background: <span class="code-val">var(--pale-sand)</span>; }<br>
+</div>
+
+<!-- GENERATEPRESS GUIDANCE -->
+<div class="gp-note">
+  <h3>GeneratePress Implementation Notes</h3>
+  <p>In the WordPress Customizer under <strong>GeneratePress → Colors</strong>, map the palette to these fields:</p>
+  <p><strong>Background Color</strong> → <code>#F7F3EC</code> (Cloud White) &nbsp;|&nbsp; <strong>Text Color</strong> → <code>#2C2C2C</code> (Ash Dark)</p>
+  <p><strong>Link Color</strong> → <code>#1A9BB5</code> (Tropical Teal) &nbsp;|&nbsp; <strong>Link Color Hover</strong> → <code>#C84B0A</code> (Volcanic Ember)</p>
+  <p><strong>Navigation Background</strong> → <code>#5C3A1E</code> (Driftwood Dark) &nbsp;|&nbsp; <strong>Navigation Text</strong> → <code>#EDD9A3</code> (Pale Sand)</p>
+  <p><strong>Navigation Hover/Current</strong> → <code>#F5A623</code> (Torch Flame) &nbsp;|&nbsp; <strong>Footer Background</strong> → <code>#0A6E8A</code> (Deep Lagoon)</p>
+  <p>Then paste the complete <code>:root {}</code> block above into <strong>Appearance → Customize → Additional CSS</strong> to make all variables globally available.</p>
+</div>
+
+<footer-note>Kealoa Reference · Color Palette v1.0 · Derived from banner artwork</footer-note>
+
+</body>
+</html>
