@@ -1287,6 +1287,7 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-tab-panel" data-tab="round">
             
             <?php if (!empty($round_history)): ?>
+                <div class="kealoa-round-history">
                     <h3><?php esc_html_e('Round History', 'kealoa-reference'); ?></h3>
                     
                     <?php
