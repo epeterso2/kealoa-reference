@@ -34,7 +34,7 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
      *
      * @return array<string, object> Keyed by subtype slug.
      */
-    public function get_object_subtypes(): array {
+    public function get_object_subtypes() {
         return [
             'rounds'       => (object) ['name' => 'rounds',       'label' => 'KEALOA Rounds'],
             'players'      => (object) ['name' => 'players',      'label' => 'KEALOA Players'],
@@ -50,7 +50,9 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
      * @param string $object_subtype The subtype slug.
      * @return array<int, array{loc: string}> Array of sitemap entry arrays.
      */
-    public function get_url_list(int $page_num, string $object_subtype = ''): array {
+    public function get_url_list($page_num, $object_subtype = '') {
+        $page_num = (int) $page_num;
+        $object_subtype = (string) $object_subtype;
         $max = wp_sitemaps_get_max_urls($this->object_type);
         $offset = ($page_num - 1) * $max;
 
@@ -69,7 +71,8 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
      * @param string $object_subtype The subtype slug.
      * @return int
      */
-    public function get_max_num_pages(string $object_subtype = ''): int {
+    public function get_max_num_pages($object_subtype = '') {
+        $object_subtype = (string) $object_subtype;
         $max = wp_sitemaps_get_max_urls($this->object_type);
         $total = match ($object_subtype) {
             'rounds'       => $this->db->count_rounds(),
