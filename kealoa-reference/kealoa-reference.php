@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.1.38
+ * Version: 1.1.39
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.1.38');
+define('KEALOA_VERSION', '1.1.39');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -301,11 +301,20 @@ function kealoa_rest_game_round(WP_REST_Request $request): WP_REST_Response {
         ];
     }, $guesser_results_raw);
 
+    // Player names (guessers for this round)
+    $guessers = $db->get_round_guessers($round_id);
+    $players = array_map(function ($g) {
+        return $g->full_name;
+    }, $guessers);
+
     $data = [
-        'round_id'       => $round_id,
-        'round_url'      => home_url('/kealoa/round/' . $round_id),
-        'solution_words' => $solution_words,
-        'clues'          => $clues,
+        'round_id'        => $round_id,
+        'round_url'       => home_url('/kealoa/round/' . $round_id),
+        'description'     => $round->description ?? '',
+        'clue_giver'      => $round->clue_giver_name ?? '',
+        'players'         => $players,
+        'solution_words'  => $solution_words,
+        'clues'           => $clues,
         'guesser_results' => $guesser_results,
     ];
 

@@ -159,11 +159,30 @@
             el('div', { className: 'kealoa-game__progress-bar', style: 'width:' + progressPct + '%' })
         ]);
 
-        // Round info
-        var roundInfo = el('div', { className: 'kealoa-game__round-info' }, [
+        // Round info header
+        var roundInfoChildren = [
             el('span', { className: 'kealoa-game__round-label', textContent: 'KEALOA #' + roundData.round_id }),
             el('span', { className: 'kealoa-game__clue-counter', textContent: 'Clue ' + clueNum + ' of ' + totalClues })
-        ]);
+        ];
+        var roundInfo = el('div', { className: 'kealoa-game__round-info' }, roundInfoChildren);
+
+        // Round description and players (shown only on the first clue)
+        var roundDetails = null;
+        if (clueNum === 1) {
+            var detailItems = [];
+            if (roundData.description) {
+                detailItems.push(el('p', { className: 'kealoa-game__round-description', textContent: roundData.description }));
+            }
+            if (roundData.players && roundData.players.length) {
+                detailItems.push(el('p', { className: 'kealoa-game__round-players', innerHTML: '<strong>Players:</strong> ' + roundData.players.map(escapeHtml).join(', ') }));
+            }
+            if (roundData.clue_giver) {
+                detailItems.push(el('p', { className: 'kealoa-game__round-clue-giver', innerHTML: '<strong>Clue Giver:</strong> ' + escapeHtml(roundData.clue_giver) }));
+            }
+            if (detailItems.length) {
+                roundDetails = el('div', { className: 'kealoa-game__round-details' }, detailItems);
+            }
+        }
 
         // Clue card
         var dayOfWeek = getDayOfWeek(clue.puzzle_date);
@@ -211,6 +230,9 @@
 
         container.appendChild(progressBar);
         container.appendChild(roundInfo);
+        if (roundDetails) {
+            container.appendChild(roundDetails);
+        }
         container.appendChild(clueCard);
         container.appendChild(answerSection);
         if (clueNum > 1) {

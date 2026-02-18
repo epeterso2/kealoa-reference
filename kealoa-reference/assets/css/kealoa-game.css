@@ -142,6 +142,38 @@
     color: var(--pumice);
 }
 
+/* Round Details (description, players, clue giver) */
+
+.kealoa-game__round-details {
+    background: var(--pale-sand);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+}
+
+.kealoa-game__round-description {
+    font-size: 15px;
+    color: var(--ash-dark);
+    margin: 0 0 8px 0;
+    line-height: 1.5;
+}
+
+.kealoa-game__round-players {
+    font-size: 14px;
+    color: var(--driftwood-dark);
+    margin: 0 0 4px 0;
+}
+
+.kealoa-game__round-clue-giver {
+    font-size: 14px;
+    color: var(--driftwood-dark);
+    margin: 0;
+}
+
+.kealoa-game__round-details p:last-child {
+    margin-bottom: 0;
+}
+
 /* ==========================================================================
    Clue Card
    ========================================================================== */
