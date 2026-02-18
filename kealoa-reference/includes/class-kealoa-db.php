@@ -836,8 +836,11 @@ class Kealoa_DB {
                 'description' => isset($data['description']) 
                     ? sanitize_textarea_field($data['description']) 
                     : null,
+                'description2' => isset($data['description2']) 
+                    ? sanitize_textarea_field($data['description2']) 
+                    : null,
             ],
-            ['%s', '%d', '%d', '%d', '%s', '%d', '%d', '%s']
+            ['%s', '%d', '%d', '%d', '%s', '%d', '%d', '%s', '%s']
         );
         
         return $result ? $this->wpdb->insert_id : false;
@@ -885,6 +888,12 @@ class Kealoa_DB {
         if (array_key_exists('description', $data)) {
             $update_data['description'] = $data['description'] 
                 ? sanitize_textarea_field($data['description']) 
+                : null;
+            $format[] = '%s';
+        }
+        if (array_key_exists('description2', $data)) {
+            $update_data['description2'] = $data['description2'] 
+                ? sanitize_textarea_field($data['description2']) 
                 : null;
             $format[] = '%s';
         }

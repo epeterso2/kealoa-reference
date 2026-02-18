@@ -208,7 +208,7 @@ class Kealoa_Export {
         fputcsv($output, [
             'round_date', 'round_number', 'episode_number', 'episode_id',
             'episode_url', 'episode_start_seconds', 'clue_giver',
-            'guessers', 'solution_words', 'description',
+            'guessers', 'solution_words', 'description', 'description2',
         ]);
 
         $rounds = $this->db->get_rounds(['limit' => 0, 'orderby' => 'round_date', 'order' => 'ASC']);
@@ -231,6 +231,7 @@ class Kealoa_Export {
                 implode(', ', $guesser_names),
                 implode(', ', $solution_words),
                 $round->description ?? '',
+                $round->description2 ?? '',
             ]);
         }
     }

@@ -405,6 +405,7 @@ class Kealoa_Import {
                 'episode_start_seconds' => $start_seconds,
                 'clue_giver_id' => $clue_giver->id,
                 'description' => $row['description'] ?? null,
+                'description2' => $row['description2'] ?? null,
             ];
             
             // Check if round already exists for this date and round number

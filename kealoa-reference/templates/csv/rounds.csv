@@ -1,4 +1,4 @@
-round_date,round_number,episode_number,episode_id,episode_url,episode_start_time,clue_giver,guessers,solution_words,description
-"2024-01-20",1,150,12345,"https://example.com/episode150","00:20:34","Alice Johnson","Bob Williams, Charlie Brown","WORD1, WORD2, WORD3","First round of the episode"
-"2024-01-20",2,150,12345,"https://example.com/episode150","00:48:10","Charlie Brown","Alice Johnson, Bob Williams","APPLE, BANANA, CHERRY","Second round of the same episode"
-"2024-01-27",1,151,12346,"https://example.com/episode151","00:39:05","Bob Williams","Alice Johnson, Charlie Brown","DOG, CAT, BIRD",""
+round_date,round_number,episode_number,episode_id,episode_url,episode_start_time,clue_giver,guessers,solution_words,description,description2
+"2024-01-20",1,150,12345,"https://example.com/episode150","00:20:34","Alice Johnson","Bob Williams, Charlie Brown","WORD1, WORD2, WORD3","First round of the episode","The solution spells out KEALOA"
+"2024-01-20",2,150,12345,"https://example.com/episode150","00:48:10","Charlie Brown","Alice Johnson, Bob Williams","APPLE, BANANA, CHERRY","Second round of the same episode",""
+"2024-01-27",1,151,12346,"https://example.com/episode151","00:39:05","Bob Williams","Alice Johnson, Charlie Brown","DOG, CAT, BIRD","",""

@@ -117,6 +117,7 @@ class Kealoa_Activator {
             episode_start_seconds int(10) UNSIGNED DEFAULT 0,
             clue_giver_id bigint(20) UNSIGNED NOT NULL,
             description text DEFAULT NULL,
+            description2 text DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),

@@ -465,6 +465,13 @@
             ])
         );
 
+        // Spoiler description (shown only after the game is complete)
+        if (roundData.description2) {
+            container.appendChild(
+                el('p', { className: 'kealoa-game__round-description kealoa-game__round-description--spoiler', textContent: roundData.description2 })
+            );
+        }
+
         // Play again
         container.appendChild(
             el('div', { className: 'kealoa-game__play-again' }, [

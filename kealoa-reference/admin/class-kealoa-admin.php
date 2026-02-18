@@ -1539,7 +1539,16 @@ class Kealoa_Admin {
                     <td>
                         <textarea name="description" id="description" rows="4" class="large-text"><?php echo esc_textarea($round->description ?? ''); ?></textarea>
                         <p class="description">
-                            <?php esc_html_e('A brief text description of the round.', 'kealoa-reference'); ?>
+                            <?php esc_html_e('A brief text description of the round. Shown in the game header before playing.', 'kealoa-reference'); ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="description2"><?php esc_html_e('Spoiler Description', 'kealoa-reference'); ?></label></th>
+                    <td>
+                        <textarea name="description2" id="description2" rows="4" class="large-text"><?php echo esc_textarea($round->description2 ?? ''); ?></textarea>
+                        <p class="description">
+                            <?php esc_html_e('Additional description shown after the game is complete (may contain spoilers).', 'kealoa-reference'); ?>
                         </p>
                     </td>
                 </tr>
@@ -2136,6 +2145,7 @@ class Kealoa_Admin {
             'episode_start_seconds' => Kealoa_Formatter::time_to_seconds($_POST['episode_start_time'] ?? ''),
             'clue_giver_id' => $_POST['clue_giver_id'] ?? 0,
             'description' => $_POST['description'] ?? null,
+            'description2' => $_POST['description2'] ?? null,
         ]);
         
         if ($id) {
@@ -2174,6 +2184,7 @@ class Kealoa_Admin {
             'episode_start_seconds' => Kealoa_Formatter::time_to_seconds($_POST['episode_start_time'] ?? ''),
             'clue_giver_id' => $_POST['clue_giver_id'] ?? 0,
             'description' => $_POST['description'] ?? null,
+            'description2' => $_POST['description2'] ?? null,
         ]);
         
         // Set solution words
