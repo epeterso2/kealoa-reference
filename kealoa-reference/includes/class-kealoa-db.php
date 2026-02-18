@@ -2075,26 +2075,68 @@ class Kealoa_DB {
             ];
         }
 
+        // Track round IDs already added to avoid duplicates
+        $seen_round_ids = [];
+
+        // Helper to build a round result object
+        $add_round_result = function (int $round_id) use (&$results, &$seen_round_ids): void {
+            if (isset($seen_round_ids[$round_id])) {
+                return;
+            }
+            $seen_round_ids[$round_id] = true;
+            $solutions = $this->get_round_solutions($round_id);
+            $words = array_map(fn($s) => strtoupper($s->word), $solutions);
+            $results[] = (object) [
+                'type' => 'round',
+                'name' => 'KEALOA #' . $round_id . ': ' . implode(', ', $words),
+                'url' => home_url('/kealoa/round/' . $round_id . '/'),
+            ];
+        };
+
         // Search round solution words
         $rounds = $this->wpdb->get_results(
             $this->wpdb->prepare(
-                "SELECT DISTINCT rs.round_id, r.round_date, r.round_number
+                "SELECT DISTINCT rs.round_id
                 FROM {$this->round_solutions_table} rs
                 INNER JOIN {$this->rounds_table} r ON rs.round_id = r.id
                 WHERE rs.word LIKE %s
-                ORDER BY r.round_date DESC, r.round_number ASC",
+                ORDER BY rs.round_id DESC",
                 $like
             )
         );
         foreach ($rounds as $rd) {
-            // Get all solution words for this round
-            $solutions = $this->get_round_solutions((int) $rd->round_id);
-            $words = array_map(fn($s) => strtoupper($s->word), $solutions);
-            $results[] = (object) [
-                'type' => 'round',
-                'name' => 'KEALOA #' . $rd->round_id . ': ' . implode(', ', $words),
-                'url' => home_url('/kealoa/round/' . (int) $rd->round_id . '/'),
-            ];
+            $add_round_result((int) $rd->round_id);
+        }
+
+        // Search round descriptions
+        $desc_rounds = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT id FROM {$this->rounds_table}
+                WHERE (description IS NOT NULL AND description LIKE %s)
+                   OR (description2 IS NOT NULL AND description2 LIKE %s)
+                ORDER BY round_date DESC, round_number ASC",
+                $like,
+                $like
+            )
+        );
+        foreach ($desc_rounds as $rd) {
+            $add_round_result((int) $rd->id);
+        }
+
+        // Search clue text and correct answers (link to parent round)
+        $clue_rounds = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT DISTINCT c.round_id
+                FROM {$this->clues_table} c
+                INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
+                WHERE c.clue_text LIKE %s OR c.correct_answer LIKE %s
+                ORDER BY c.round_id DESC",
+                $like,
+                $like
+            )
+        );
+        foreach ($clue_rounds as $rd) {
+            $add_round_result((int) $rd->round_id);
         }
 
         return $results;
