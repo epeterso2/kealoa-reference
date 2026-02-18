@@ -117,6 +117,15 @@ class Kealoa_Admin {
             'kealoa-export',
             [$this, 'render_export_page']
         );
+
+        add_submenu_page(
+            'kealoa-reference',
+            __('Data Check', 'kealoa-reference'),
+            __('Data Check', 'kealoa-reference'),
+            'manage_options',
+            'kealoa-data-check',
+            [$this, 'render_data_check_page']
+        );
     }
 
     /**
@@ -192,6 +201,9 @@ class Kealoa_Admin {
             'update_clue' => $this->handle_update_clue(),
             'delete_clue' => $this->handle_delete_clue(),
             'save_guesses' => $this->handle_save_guesses(),
+            'repair_delete_puzzles' => $this->handle_repair_delete_puzzles(),
+            'repair_delete_rounds' => $this->handle_repair_delete_rounds(),
+            'repair_delete_orphans' => $this->handle_repair_delete_orphans(),
             default => null,
         };
 
@@ -2398,5 +2410,309 @@ class Kealoa_Admin {
         }
 
         wp_send_json_success(['media_id' => $media_id, 'image_url' => $image_url]);
+    }
+
+    // =========================================================================
+    // DATA CHECK PAGE
+    // =========================================================================
+
+    /**
+     * Render the data consistency check page.
+     */
+    public function render_data_check_page(): void {
+        $issues = $this->db->run_consistency_checks();
+        $total_issues = 0;
+        foreach ($issues as $rows) {
+            $total_issues += count($rows);
+        }
+
+        // Human-readable labels and descriptions for each check
+        $check_meta = [
+            'orphan_puzzles' => [
+                'label'       => 'Orphan Puzzles',
+                'description' => 'Puzzles not referenced by any clue (unused puzzles).',
+                'action'      => 'repair_delete_puzzles',
+                'columns'     => ['ID', 'Publication Date', 'Editor'],
+                'fields'      => ['id', 'publication_date', 'editor_name'],
+            ],
+            'rounds_no_clues' => [
+                'label'       => 'Rounds With No Clues',
+                'description' => 'Rounds that have zero clues associated with them.',
+                'action'      => 'repair_delete_rounds',
+                'columns'     => ['ID', 'Date', 'Round #', 'Description'],
+                'fields'      => ['id', 'round_date', 'round_number', 'description'],
+            ],
+            'rounds_no_solutions' => [
+                'label'       => 'Rounds With No Solution Words',
+                'description' => 'Rounds that have no solution words defined.',
+                'action'      => 'repair_delete_rounds',
+                'columns'     => ['ID', 'Date', 'Round #', 'Description'],
+                'fields'      => ['id', 'round_date', 'round_number', 'description'],
+            ],
+            'rounds_no_guessers' => [
+                'label'       => 'Rounds With No Guessers',
+                'description' => 'Rounds that have no guessers assigned.',
+                'action'      => 'repair_delete_rounds',
+                'columns'     => ['ID', 'Date', 'Round #', 'Description'],
+                'fields'      => ['id', 'round_date', 'round_number', 'description'],
+            ],
+            'orphan_puzzle_constructor_puzzles' => [
+                'label'       => 'Puzzle-Constructor Links to Missing Puzzles',
+                'description' => 'Puzzle-constructor junction records referencing puzzles that no longer exist.',
+                'action'      => 'repair_delete_orphans',
+                'table_key'   => 'puzzle_constructors',
+                'columns'     => ['Link ID', 'Puzzle ID', 'Constructor ID'],
+                'fields'      => ['id', 'puzzle_id', 'constructor_id'],
+            ],
+            'orphan_puzzle_constructor_constructors' => [
+                'label'       => 'Puzzle-Constructor Links to Missing Constructors',
+                'description' => 'Puzzle-constructor junction records referencing constructors that no longer exist.',
+                'action'      => 'repair_delete_orphans',
+                'table_key'   => 'puzzle_constructors',
+                'columns'     => ['Link ID', 'Puzzle ID', 'Constructor ID'],
+                'fields'      => ['id', 'puzzle_id', 'constructor_id'],
+            ],
+            'orphan_clue_rounds' => [
+                'label'       => 'Clues Referencing Missing Rounds',
+                'description' => 'Clues that reference rounds which no longer exist.',
+                'action'      => 'repair_delete_orphans',
+                'table_key'   => 'clues',
+                'columns'     => ['Clue ID', 'Round ID', 'Clue #', 'Clue Text'],
+                'fields'      => ['id', 'round_id', 'clue_number', 'clue_text'],
+            ],
+            'orphan_clue_puzzles' => [
+                'label'       => 'Clues Referencing Missing Puzzles',
+                'description' => 'Clues that reference puzzles which no longer exist.',
+                'action'      => 'repair_delete_orphans',
+                'table_key'   => 'clues',
+                'columns'     => ['Clue ID', 'Round ID', 'Clue #', 'Puzzle ID'],
+                'fields'      => ['id', 'round_id', 'clue_number', 'puzzle_id'],
+            ],
+            'orphan_guess_clues' => [
+                'label'       => 'Guesses Referencing Missing Clues',
+                'description' => 'Guesses that reference clues which no longer exist.',
+                'action'      => 'repair_delete_orphans',
+                'table_key'   => 'guesses',
+                'columns'     => ['Guess ID', 'Clue ID', 'Person ID', 'Word'],
+                'fields'      => ['id', 'clue_id', 'guesser_person_id', 'guessed_word'],
+            ],
+            'orphan_guess_persons' => [
+                'label'       => 'Guesses Referencing Missing Persons',
+                'description' => 'Guesses that reference persons who no longer exist.',
+                'action'      => 'repair_delete_orphans',
+                'table_key'   => 'guesses',
+                'columns'     => ['Guess ID', 'Clue ID', 'Person ID', 'Word'],
+                'fields'      => ['id', 'clue_id', 'guesser_person_id', 'guessed_word'],
+            ],
+            'orphan_round_guesser_rounds' => [
+                'label'       => 'Round-Guesser Links to Missing Rounds',
+                'description' => 'Round-guesser records referencing rounds that no longer exist.',
+                'action'      => 'repair_delete_orphans',
+                'table_key'   => 'round_guessers',
+                'columns'     => ['Link ID', 'Round ID', 'Person ID'],
+                'fields'      => ['id', 'round_id', 'person_id'],
+            ],
+            'orphan_round_guesser_persons' => [
+                'label'       => 'Round-Guesser Links to Missing Persons',
+                'description' => 'Round-guesser records referencing persons who no longer exist.',
+                'action'      => 'repair_delete_orphans',
+                'table_key'   => 'round_guessers',
+                'columns'     => ['Link ID', 'Round ID', 'Person ID'],
+                'fields'      => ['id', 'round_id', 'person_id'],
+            ],
+            'orphan_round_solution_rounds' => [
+                'label'       => 'Round Solutions Referencing Missing Rounds',
+                'description' => 'Round solution records referencing rounds that no longer exist.',
+                'action'      => 'repair_delete_orphans',
+                'table_key'   => 'round_solutions',
+                'columns'     => ['ID', 'Round ID', 'Word'],
+                'fields'      => ['id', 'round_id', 'word'],
+            ],
+            'orphan_round_clue_givers' => [
+                'label'       => 'Rounds With Missing Clue Givers',
+                'description' => 'Rounds whose clue_giver_id references a person that no longer exists.',
+                'action'      => null,
+                'columns'     => ['Round ID', 'Date', 'Round #', 'Clue Giver ID'],
+                'fields'      => ['id', 'round_date', 'round_number', 'clue_giver_id'],
+            ],
+        ];
+
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__('Data Consistency Check', 'kealoa-reference') . '</h1>';
+
+        // Show success message if redirected after repair
+        if (isset($_GET['kealoa_repaired'])) {
+            $count = (int) $_GET['kealoa_repaired'];
+            echo '<div class="notice notice-success is-dismissible"><p>'
+                . sprintf(esc_html__('Repair complete: %d record(s) removed.', 'kealoa-reference'), $count)
+                . '</p></div>';
+        }
+
+        if ($total_issues === 0) {
+            echo '<div class="notice notice-success"><p>'
+                . esc_html__('No consistency issues found. All records look good!', 'kealoa-reference')
+                . '</p></div>';
+            echo '</div>';
+            return;
+        }
+
+        echo '<div class="notice notice-warning"><p>'
+            . sprintf(
+                esc_html__('Found %d issue(s) across %d check(s).', 'kealoa-reference'),
+                $total_issues,
+                count($issues)
+            )
+            . '</p></div>';
+
+        foreach ($issues as $check_key => $rows) {
+            $meta = $check_meta[$check_key] ?? null;
+            if (!$meta) {
+                continue;
+            }
+
+            echo '<div class="kealoa-data-check-section" style="margin-top:20px;">';
+            echo '<h2>' . esc_html($meta['label']) . ' (' . count($rows) . ')</h2>';
+            echo '<p class="description">' . esc_html($meta['description']) . '</p>';
+
+            // Results table
+            echo '<table class="widefat striped" style="max-width:800px;">';
+            echo '<thead><tr>';
+            echo '<th style="width:30px;"><input type="checkbox" class="kealoa-check-all" data-group="' . esc_attr($check_key) . '"></th>';
+            foreach ($meta['columns'] as $col) {
+                echo '<th>' . esc_html($col) . '</th>';
+            }
+            echo '</tr></thead><tbody>';
+
+            foreach ($rows as $row) {
+                $row_id = $row->{$meta['fields'][0]};
+                echo '<tr>';
+                echo '<td><input type="checkbox" name="ids[]" value="' . esc_attr($row_id) . '" class="kealoa-check-item" data-group="' . esc_attr($check_key) . '"></td>';
+                foreach ($meta['fields'] as $field) {
+                    echo '<td>' . esc_html($row->$field ?? '') . '</td>';
+                }
+                echo '</tr>';
+            }
+
+            echo '</tbody></table>';
+
+            // Repair button (wrapped in its own form)
+            if ($meta['action']) {
+                echo '<form method="post" style="margin-top:8px;">';
+                wp_nonce_field('kealoa_admin_action', 'kealoa_nonce');
+                echo '<input type="hidden" name="kealoa_action" value="' . esc_attr($meta['action']) . '">';
+                echo '<input type="hidden" name="check_key" value="' . esc_attr($check_key) . '">';
+                if (isset($meta['table_key'])) {
+                    echo '<input type="hidden" name="table_key" value="' . esc_attr($meta['table_key']) . '">';
+                }
+                // Hidden field populated by JS with selected IDs
+                echo '<input type="hidden" name="selected_ids" value="" class="kealoa-selected-ids" data-group="' . esc_attr($check_key) . '">';
+                echo '<button type="submit" class="button button-secondary kealoa-repair-btn" data-group="' . esc_attr($check_key) . '">'
+                    . esc_html__('Delete Selected', 'kealoa-reference')
+                    . '</button>';
+                echo '</form>';
+            }
+
+            echo '</div>';
+        }
+
+        // Inline JS for checkbox handling
+        echo '<script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Check-all toggles
+            document.querySelectorAll(".kealoa-check-all").forEach(function(cb) {
+                cb.addEventListener("change", function() {
+                    var group = this.dataset.group;
+                    document.querySelectorAll(".kealoa-check-item[data-group=\"" + group + "\"]").forEach(function(item) {
+                        item.checked = cb.checked;
+                    });
+                });
+            });
+
+            // On form submit, gather selected IDs into hidden field
+            document.querySelectorAll(".kealoa-repair-btn").forEach(function(btn) {
+                btn.closest("form").addEventListener("submit", function(e) {
+                    var group = btn.dataset.group;
+                    var ids = [];
+                    document.querySelectorAll(".kealoa-check-item[data-group=\"" + group + "\"]:checked").forEach(function(cb) {
+                        ids.push(cb.value);
+                    });
+                    if (ids.length === 0) {
+                        e.preventDefault();
+                        alert("No rows selected.");
+                        return;
+                    }
+                    this.querySelector(".kealoa-selected-ids[data-group=\"" + group + "\"]").value = ids.join(",");
+                    if (!confirm("Delete " + ids.length + " selected record(s)? This cannot be undone.")) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
+        </script>';
+
+        echo '</div>';
+    }
+
+    // =========================================================================
+    // DATA CHECK REPAIR HANDLERS
+    // =========================================================================
+
+    /**
+     * Handle deletion of orphan puzzles (and their puzzle_constructors).
+     */
+    private function handle_repair_delete_puzzles(): void {
+        $ids = $this->parse_selected_ids();
+        $deleted = 0;
+
+        foreach ($ids as $id) {
+            if ($this->db->delete_puzzle($id)) {
+                $deleted++;
+            }
+        }
+
+        wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $deleted));
+        exit;
+    }
+
+    /**
+     * Handle deletion of problematic rounds (and their child records).
+     */
+    private function handle_repair_delete_rounds(): void {
+        $ids = $this->parse_selected_ids();
+        $deleted = 0;
+
+        foreach ($ids as $id) {
+            if ($this->db->delete_round($id)) {
+                $deleted++;
+            }
+        }
+
+        wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $deleted));
+        exit;
+    }
+
+    /**
+     * Handle deletion of orphan junction/child records.
+     */
+    private function handle_repair_delete_orphans(): void {
+        $table_key = sanitize_text_field($_POST['table_key'] ?? '');
+        $ids = $this->parse_selected_ids();
+        $deleted = $this->db->delete_orphan_records($table_key, $ids);
+
+        wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $deleted));
+        exit;
+    }
+
+    /**
+     * Parse comma-separated IDs from the form POST data.
+     *
+     * @return int[]
+     */
+    private function parse_selected_ids(): array {
+        $raw = sanitize_text_field($_POST['selected_ids'] ?? '');
+        if (empty($raw)) {
+            return [];
+        }
+        return array_map('intval', explode(',', $raw));
     }
 }

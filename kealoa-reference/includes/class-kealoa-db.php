@@ -2090,4 +2090,211 @@ class Kealoa_DB {
 
         return $results;
     }
+
+    // =========================================================================
+    // DATABASE CONSISTENCY CHECKS
+    // =========================================================================
+
+    /**
+     * Run all consistency checks and return categorized issues.
+     *
+     * @return array<string, array> Keyed by check name, each value is an array
+     *                              of issue objects with id, description, etc.
+     */
+    public function run_consistency_checks(): array {
+        $issues = [];
+
+        // 1. Orphan puzzles — not referenced by any clue
+        $orphan_puzzles = $this->wpdb->get_results(
+            "SELECT p.id, p.publication_date, p.editor_name
+             FROM {$this->puzzles_table} p
+             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = p.id
+             WHERE c.id IS NULL
+             ORDER BY p.publication_date"
+        );
+        if ($orphan_puzzles) {
+            $issues['orphan_puzzles'] = $orphan_puzzles;
+        }
+
+        // 2. Rounds with no clues
+        $rounds_no_clues = $this->wpdb->get_results(
+            "SELECT r.id, r.round_date, r.round_number, r.description
+             FROM {$this->rounds_table} r
+             LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
+             WHERE c.id IS NULL
+             ORDER BY r.round_date"
+        );
+        if ($rounds_no_clues) {
+            $issues['rounds_no_clues'] = $rounds_no_clues;
+        }
+
+        // 3. Rounds with no solution words
+        $rounds_no_solutions = $this->wpdb->get_results(
+            "SELECT r.id, r.round_date, r.round_number, r.description
+             FROM {$this->rounds_table} r
+             LEFT JOIN {$this->round_solutions_table} rs ON rs.round_id = r.id
+             WHERE rs.id IS NULL
+             ORDER BY r.round_date"
+        );
+        if ($rounds_no_solutions) {
+            $issues['rounds_no_solutions'] = $rounds_no_solutions;
+        }
+
+        // 4. Rounds with no guessers
+        $rounds_no_guessers = $this->wpdb->get_results(
+            "SELECT r.id, r.round_date, r.round_number, r.description
+             FROM {$this->rounds_table} r
+             LEFT JOIN {$this->round_guessers_table} rg ON rg.round_id = r.id
+             WHERE rg.id IS NULL
+             ORDER BY r.round_date"
+        );
+        if ($rounds_no_guessers) {
+            $issues['rounds_no_guessers'] = $rounds_no_guessers;
+        }
+
+        // 5. Puzzle-constructor links referencing non-existent puzzles
+        $orphan_pc_puzzles = $this->wpdb->get_results(
+            "SELECT pc.id, pc.puzzle_id, pc.constructor_id
+             FROM {$this->puzzle_constructors_table} pc
+             LEFT JOIN {$this->puzzles_table} p ON p.id = pc.puzzle_id
+             WHERE p.id IS NULL"
+        );
+        if ($orphan_pc_puzzles) {
+            $issues['orphan_puzzle_constructor_puzzles'] = $orphan_pc_puzzles;
+        }
+
+        // 6. Puzzle-constructor links referencing non-existent constructors
+        $orphan_pc_constructors = $this->wpdb->get_results(
+            "SELECT pc.id, pc.puzzle_id, pc.constructor_id
+             FROM {$this->puzzle_constructors_table} pc
+             LEFT JOIN {$this->constructors_table} c ON c.id = pc.constructor_id
+             WHERE c.id IS NULL"
+        );
+        if ($orphan_pc_constructors) {
+            $issues['orphan_puzzle_constructor_constructors'] = $orphan_pc_constructors;
+        }
+
+        // 7. Clues referencing non-existent rounds
+        $orphan_clue_rounds = $this->wpdb->get_results(
+            "SELECT cl.id, cl.round_id, cl.clue_number, cl.clue_text
+             FROM {$this->clues_table} cl
+             LEFT JOIN {$this->rounds_table} r ON r.id = cl.round_id
+             WHERE r.id IS NULL"
+        );
+        if ($orphan_clue_rounds) {
+            $issues['orphan_clue_rounds'] = $orphan_clue_rounds;
+        }
+
+        // 8. Clues referencing non-existent puzzles
+        $orphan_clue_puzzles = $this->wpdb->get_results(
+            "SELECT cl.id, cl.round_id, cl.clue_number, cl.puzzle_id
+             FROM {$this->clues_table} cl
+             LEFT JOIN {$this->puzzles_table} p ON p.id = cl.puzzle_id
+             WHERE cl.puzzle_id IS NOT NULL AND p.id IS NULL"
+        );
+        if ($orphan_clue_puzzles) {
+            $issues['orphan_clue_puzzles'] = $orphan_clue_puzzles;
+        }
+
+        // 9. Guesses referencing non-existent clues
+        $orphan_guess_clues = $this->wpdb->get_results(
+            "SELECT g.id, g.clue_id, g.guesser_person_id, g.guessed_word
+             FROM {$this->guesses_table} g
+             LEFT JOIN {$this->clues_table} cl ON cl.id = g.clue_id
+             WHERE cl.id IS NULL"
+        );
+        if ($orphan_guess_clues) {
+            $issues['orphan_guess_clues'] = $orphan_guess_clues;
+        }
+
+        // 10. Guesses referencing non-existent persons
+        $orphan_guess_persons = $this->wpdb->get_results(
+            "SELECT g.id, g.clue_id, g.guesser_person_id, g.guessed_word
+             FROM {$this->guesses_table} g
+             LEFT JOIN {$this->persons_table} p ON p.id = g.guesser_person_id
+             WHERE p.id IS NULL"
+        );
+        if ($orphan_guess_persons) {
+            $issues['orphan_guess_persons'] = $orphan_guess_persons;
+        }
+
+        // 11. Round-guesser links referencing non-existent rounds
+        $orphan_rg_rounds = $this->wpdb->get_results(
+            "SELECT rg.id, rg.round_id, rg.person_id
+             FROM {$this->round_guessers_table} rg
+             LEFT JOIN {$this->rounds_table} r ON r.id = rg.round_id
+             WHERE r.id IS NULL"
+        );
+        if ($orphan_rg_rounds) {
+            $issues['orphan_round_guesser_rounds'] = $orphan_rg_rounds;
+        }
+
+        // 12. Round-guesser links referencing non-existent persons
+        $orphan_rg_persons = $this->wpdb->get_results(
+            "SELECT rg.id, rg.round_id, rg.person_id
+             FROM {$this->round_guessers_table} rg
+             LEFT JOIN {$this->persons_table} p ON p.id = rg.person_id
+             WHERE p.id IS NULL"
+        );
+        if ($orphan_rg_persons) {
+            $issues['orphan_round_guesser_persons'] = $orphan_rg_persons;
+        }
+
+        // 13. Round solutions referencing non-existent rounds
+        $orphan_rs_rounds = $this->wpdb->get_results(
+            "SELECT rs.id, rs.round_id, rs.word
+             FROM {$this->round_solutions_table} rs
+             LEFT JOIN {$this->rounds_table} r ON r.id = rs.round_id
+             WHERE r.id IS NULL"
+        );
+        if ($orphan_rs_rounds) {
+            $issues['orphan_round_solution_rounds'] = $orphan_rs_rounds;
+        }
+
+        // 14. Rounds referencing non-existent clue giver (person)
+        $orphan_clue_givers = $this->wpdb->get_results(
+            "SELECT r.id, r.round_date, r.round_number, r.clue_giver_id
+             FROM {$this->rounds_table} r
+             LEFT JOIN {$this->persons_table} p ON p.id = r.clue_giver_id
+             WHERE p.id IS NULL"
+        );
+        if ($orphan_clue_givers) {
+            $issues['orphan_round_clue_givers'] = $orphan_clue_givers;
+        }
+
+        return $issues;
+    }
+
+    /**
+     * Delete orphan records from a junction or child table by ID.
+     *
+     * @param string $table_key Identifier for the table (e.g. 'puzzle_constructors').
+     * @param array  $ids       Array of row IDs to delete.
+     * @return int Number of rows deleted.
+     */
+    public function delete_orphan_records(string $table_key, array $ids): int {
+        $table_map = [
+            'puzzle_constructors'  => $this->puzzle_constructors_table,
+            'clues'                => $this->clues_table,
+            'guesses'              => $this->guesses_table,
+            'round_guessers'       => $this->round_guessers_table,
+            'round_solutions'      => $this->round_solutions_table,
+        ];
+
+        if (!isset($table_map[$table_key]) || empty($ids)) {
+            return 0;
+        }
+
+        $table = $table_map[$table_key];
+        $deleted = 0;
+
+        foreach ($ids as $id) {
+            $result = $this->wpdb->delete($table, ['id' => (int) $id], ['%d']);
+            if ($result) {
+                $deleted++;
+            }
+        }
+
+        return $deleted;
+    }
 }
