@@ -206,18 +206,29 @@
 
 .kealoa-clues-table {
     font-size: 13px;
-    table-layout: fixed;
+    table-layout: auto;
 }
 
 .kealoa-clues-table th,
 .kealoa-clues-table td {
     padding: 8px 6px;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
 }
 
 .kealoa-clues-table th {
     white-space: normal;
+}
+
+/* Narrow columns: shrink to fit content */
+.kealoa-clues-table .kealoa-clue-number,
+.kealoa-clues-table .kealoa-day-cell,
+.kealoa-clues-table .kealoa-puzzle-date,
+.kealoa-clues-table .kealoa-editor,
+.kealoa-clues-table .kealoa-clue-ref,
+.kealoa-clues-table .kealoa-correct-answer,
+.kealoa-clues-table .kealoa-guess,
+.kealoa-clues-table .kealoa-guesser-col {
+    white-space: nowrap;
+    width: 1%;
 }
 
 .kealoa-round-nav {
@@ -292,7 +303,6 @@
 .kealoa-clues-table .kealoa-clue-number {
     font-weight: 700;
     text-align: center;
-    width: 30px;
 }
 
 .kealoa-clues-table .kealoa-correct-answer {
