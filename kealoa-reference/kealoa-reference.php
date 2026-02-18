@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.1.30
+ * Version: 1.1.31
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.1.30');
+define('KEALOA_VERSION', '1.1.31');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -155,6 +155,9 @@ function kealoa_init(): void {
     add_filter('query_vars', 'kealoa_query_vars');
     add_action('template_redirect', 'kealoa_template_redirect');
     add_filter('template_include', 'kealoa_template_include');
+
+    // Force no-sidebar layout for KEALOA virtual pages (GeneratePress compatibility)
+    add_filter('generate_sidebar_layout', 'kealoa_force_no_sidebar');
     
     // Add KEALOA results to WordPress search
     add_filter('the_posts', 'kealoa_inject_search_placeholder', 10, 2);
@@ -317,6 +320,20 @@ function kealoa_template_redirect(): void {
 
     // Store content for the template_include filter
     $GLOBALS['kealoa_virtual_content'] = $content;
+}
+
+/**
+ * Force no-sidebar layout for KEALOA virtual pages.
+ *
+ * GeneratePress determines sidebar layout from post meta. Since virtual
+ * pages have no meta, GP uses its default (which may include sidebars).
+ * This filter ensures KEALOA pages match the static pages' "No Sidebars" setting.
+ */
+function kealoa_force_no_sidebar(string $layout): string {
+    if (!empty($GLOBALS['kealoa_virtual_content'])) {
+        return 'no-sidebar';
+    }
+    return $layout;
 }
 
 /**
