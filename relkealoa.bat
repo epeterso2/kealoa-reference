@@ -1,2 +1,2 @@
-del ..\kealoa-reference.zip
-7z a -x!.git -tzip ..\kealoa-reference .
+del kealoa-reference.zip
+7z a -tzip kealoa-reference kealoa-reference
