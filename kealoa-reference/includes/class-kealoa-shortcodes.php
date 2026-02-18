@@ -1070,10 +1070,10 @@ class Kealoa_Shortcodes {
                     <thead>
                         <tr>
                             <th><?php esc_html_e('Metric', 'kealoa-reference'); ?></th>
-                            <th><?php esc_html_e('Minimum', 'kealoa-reference'); ?></th>
-                            <th><?php esc_html_e('Mean', 'kealoa-reference'); ?></th>
-                            <th><?php esc_html_e('Median', 'kealoa-reference'); ?></th>
-                            <th><?php esc_html_e('Maximum', 'kealoa-reference'); ?></th>
+                            <th data-sort="number"><?php esc_html_e('Minimum', 'kealoa-reference'); ?></th>
+                            <th data-sort="number"><?php esc_html_e('Mean', 'kealoa-reference'); ?></th>
+                            <th data-sort="number"><?php esc_html_e('Median', 'kealoa-reference'); ?></th>
+                            <th data-sort="number"><?php esc_html_e('Maximum', 'kealoa-reference'); ?></th>
                         </tr>
                     </thead>
                     <tbody>

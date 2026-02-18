@@ -245,6 +245,50 @@
     }
 
     /**
+     * Right-justify numeric columns.
+     *
+     * Scans every .kealoa-table for <th> elements with data-sort="number"
+     * and applies the 'kealoa-num' class to the header and every <td> in
+     * the same column position, so CSS can right-align them.
+     */
+    function initNumericAlignment() {
+        var tables = document.querySelectorAll('.kealoa-table');
+
+        for (var t = 0; t < tables.length; t++) {
+            var table = tables[t];
+            var allHeaders = table.querySelectorAll('thead th');
+            var numericCols = [];
+
+            for (var h = 0; h < allHeaders.length; h++) {
+                if (allHeaders[h].getAttribute('data-sort') === 'number') {
+                    allHeaders[h].classList.add('kealoa-num');
+                    numericCols.push(h);
+                }
+            }
+
+            if (numericCols.length === 0) {
+                continue;
+            }
+
+            var rows = table.querySelectorAll('tbody tr');
+            for (var r = 0; r < rows.length; r++) {
+                var cells = rows[r].querySelectorAll('td');
+                for (var c = 0; c < numericCols.length; c++) {
+                    if (cells[numericCols[c]]) {
+                        cells[numericCols[c]].classList.add('kealoa-num');
+                    }
+                }
+            }
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNumericAlignment);
+    } else {
+        initNumericAlignment();
+    }
+
+    /**
      * Tab switching for person view
      */
     function initTabs() {

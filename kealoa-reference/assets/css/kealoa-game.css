@@ -428,6 +428,11 @@
     white-space: nowrap;
 }
 
+/* Right-justify numeric cells (shared class with frontend tables) */
+.kealoa-game .kealoa-num {
+    text-align: right;
+}
+
 .kealoa-game__score-row--user {
     background: var(--pale-sand);
     font-weight: 700;

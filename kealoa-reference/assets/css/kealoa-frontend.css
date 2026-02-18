@@ -98,6 +98,12 @@
     border-bottom: none;
 }
 
+/* Right-justify numeric columns (applied by JS based on data-sort="number") */
+.kealoa-table th.kealoa-num,
+.kealoa-table td.kealoa-num {
+    text-align: right;
+}
+
 /* Responsive table wrapper */
 .kealoa-rounds-table-wrapper {
     overflow-x: auto;

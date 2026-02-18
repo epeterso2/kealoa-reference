@@ -401,10 +401,10 @@
         var scoreTable = el('table', { className: 'kealoa-game__score-table' });
         var thead = el('thead', {}, [
             el('tr', {}, [
-                el('th', { textContent: '#' }),
+                el('th', { className: 'kealoa-num', textContent: '#' }),
                 el('th', { textContent: 'Player' }),
-                el('th', { textContent: 'Score' }),
-                el('th', { textContent: 'Accuracy' })
+                el('th', { className: 'kealoa-num', textContent: 'Score' }),
+                el('th', { className: 'kealoa-num', textContent: 'Accuracy' })
             ])
         ]);
         scoreTable.appendChild(thead);
@@ -420,10 +420,10 @@
             var rowClass = s.isUser ? 'kealoa-game__score-row--user' : '';
             tbody.appendChild(
                 el('tr', { className: rowClass }, [
-                    el('td', { textContent: String(rank) }),
+                    el('td', { className: 'kealoa-num', textContent: String(rank) }),
                     el('td', { textContent: s.name + (s.isUser ? ' \u2b50' : '') }),
-                    el('td', { textContent: s.correct + '/' + s.total }),
-                    el('td', { textContent: s.pct.toFixed(1) + '%' })
+                    el('td', { className: 'kealoa-num', textContent: s.correct + '/' + s.total }),
+                    el('td', { className: 'kealoa-num', textContent: s.pct.toFixed(1) + '%' })
                 ])
             );
         });
