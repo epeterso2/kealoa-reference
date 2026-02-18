@@ -104,12 +104,24 @@
     -webkit-overflow-scrolling: touch;
 }
 
+.kealoa-rounds-table .kealoa-date-cell,
+.kealoa-rounds-table .kealoa-solutions-cell,
 .kealoa-rounds-table .kealoa-results-cell {
     white-space: nowrap;
+    width: 1%;
 }
 
 .kealoa-rounds-table .kealoa-description-cell {
     width: 100%;
+}
+
+.kealoa-rounds-table-wrapper .kealoa-year-table {
+    width: auto;
+}
+
+.kealoa-rounds-table-wrapper .kealoa-year-table th,
+.kealoa-rounds-table-wrapper .kealoa-year-table td {
+    white-space: nowrap;
 }
 
 /* ==========================================================================
@@ -518,12 +530,25 @@
 
 /* Constructors Table */
 
-.kealoa-constructors-table-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+.kealoa-constructors-table-wrapper .kealoa-table {
+    width: auto;
+}
+
+.kealoa-constructors-table-wrapper .kealoa-table th,
+.kealoa-constructors-table-wrapper .kealoa-table td {
+    white-space: nowrap;
 }
 
 /* Constructor View */
+
+.kealoa-constructor-view .kealoa-table {
+    width: auto;
+}
+
+.kealoa-constructor-view .kealoa-table th,
+.kealoa-constructor-view .kealoa-table td {
+    white-space: nowrap;
+}
 
 .kealoa-constructor-view {
     margin: 20px 0;
@@ -581,6 +606,15 @@
 /* ==========================================================================
    Editor View
    ========================================================================== */
+
+.kealoa-editor-view .kealoa-table {
+    width: auto;
+}
+
+.kealoa-editor-view .kealoa-table th,
+.kealoa-editor-view .kealoa-table td {
+    white-space: nowrap;
+}
 
 .kealoa-editor-view {
     margin: 20px 0;
