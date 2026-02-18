@@ -44,8 +44,13 @@ if (empty($round_ids)) {
         <p class="kealoa-game__description">
             <?php esc_html_e('Test your crossword knowledge! You\'ll be given clues from a real KEALOA round and asked to choose the correct answer. See how you stack up against the players who played this round on the show.', 'kealoa-reference'); ?>
         </p>
-        <button type="button" class="kealoa-game__start-btn">
-            <?php esc_html_e('Let\'s Play!', 'kealoa-reference'); ?>
-        </button>
+        <div class="kealoa-game__mode-buttons">
+            <button type="button" class="kealoa-game__start-btn" data-mode="show">
+                <?php esc_html_e('Show Order', 'kealoa-reference'); ?>
+            </button>
+            <button type="button" class="kealoa-game__start-btn" data-mode="random">
+                <?php esc_html_e('Random Order', 'kealoa-reference'); ?>
+            </button>
+        </div>
     </div>
 </div>

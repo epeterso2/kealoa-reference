@@ -54,6 +54,13 @@
     transform: translateY(0);
 }
 
+.kealoa-game__mode-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
 /* ==========================================================================
    Loading
    ========================================================================== */

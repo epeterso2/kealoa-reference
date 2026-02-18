@@ -28,6 +28,7 @@
     var currentClueIndex = 0;
     var userAnswers = [];
     var usedRoundIds = [];
+    var shuffleMode = false;
 
     // =========================================================================
     // Helpers
@@ -78,6 +79,17 @@
         return days[d.getDay()] || '';
     }
 
+    function shuffleArray(arr) {
+        var a = arr.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = a[i];
+            a[i] = a[j];
+            a[j] = tmp;
+        }
+        return a;
+    }
+
     function pickRandomRound() {
         // Prefer rounds not yet played this session
         var available = roundIds.filter(function (id) {
@@ -117,13 +129,16 @@
                     type: 'button',
                     className: 'kealoa-game__start-btn',
                     textContent: 'Try Again',
-                    onClick: startGame
+                    onClick: function () { startGame(); }
                 })
             ])
         );
     }
 
-    function startGame() {
+    function startGame(mode) {
+        if (typeof mode === 'string') {
+            shuffleMode = mode === 'random';
+        }
         showLoading();
         var roundId = pickRandomRound();
         fetch(restUrl + '/' + roundId, {
@@ -137,6 +152,9 @@
             })
             .then(function (data) {
                 roundData = data;
+                if (shuffleMode) {
+                    roundData.clues = shuffleArray(roundData.clues);
+                }
                 currentClueIndex = 0;
                 userAnswers = [];
                 showClue();
@@ -479,7 +497,7 @@
                     type: 'button',
                     className: 'kealoa-game__start-btn',
                     textContent: 'Play Again!',
-                    onClick: startGame
+                    onClick: function () { startGame(); }
                 })
             ])
         );
@@ -495,8 +513,10 @@
     // Init — attach start button handler
     // =========================================================================
 
-    var startBtn = container.querySelector('.kealoa-game__start-btn');
-    if (startBtn) {
-        startBtn.addEventListener('click', startGame);
-    }
+    var startBtns = container.querySelectorAll('.kealoa-game__start-btn');
+    startBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            startGame(btn.getAttribute('data-mode') || 'show');
+        });
+    });
 })();
