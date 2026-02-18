@@ -1,0 +1,45 @@
+/* Paste into GeneratePress → Customize → Additional CSS */
+:root {
+  /* Fire & Volcanic — Primary Brand */
+  --volcanic-ember: #C84B0A;
+  --lava-orange: #E8720C;
+  --torch-flame: #F5A623;
+  --gold-tiki: #D4960A;
+
+  /* Earth & Wood */
+  --driftwood-dark: #5C3A1E;
+  --bamboo-brown: #8B5E2E;
+  --sandy-shore: #C9A66B;
+  --pale-sand: #EDD9A3;
+
+  /* Ocean & Sky */
+  --deep-lagoon: #0A6E8A;
+  --tropical-teal: #1A9BB5;
+  --sky-blue: #5BAED6;
+  --seafoam: #A8D8E8;
+
+  /* Jungle Greens */
+  --jungle-deep: #1B4A1E;
+  --palm-green: #2E7D32;
+  --hibiscus-red: #C0392B;
+
+  /* Ash & Neutrals */
+  --ash-dark: #2C2C2C;
+  --pumice: #6B6B6B;
+  --volcanic-ash: #B0AFA8;
+  --cloud-white: #F7F3EC;
+}
+
+/* === GeneratePress Global Colors Mapping === */
+body { background-color: var(--cloud-white); color: var(--ash-dark); }
+a { color: var(--tropical-teal); }
+a:hover { color: var(--volcanic-ember); }
+.site-header { background: var(--driftwood-dark); }
+.main-navigation a { color: var(--pale-sand); }
+.main-navigation a:hover,
+.main-navigation .current-menu-item > a { color: var(--torch-flame); }
+.site-footer { background: var(--deep-lagoon); color: var(--seafoam); }
+.wp-block-button__link { background: var(--volcanic-ember); }
+.wp-block-button__link:hover { background: var(--lava-orange); }
+h1, h2, h3 { color: var(--driftwood-dark); }
+blockquote { border-left: 4px solid var(--torch-flame); background: var(--pale-sand); }

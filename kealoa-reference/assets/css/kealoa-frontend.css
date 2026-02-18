@@ -19,17 +19,17 @@
 .kealoa-error,
 .kealoa-block-placeholder {
     padding: 20px;
-    background: #f7f7f7;
-    border: 1px solid #ddd;
+    background: var(--cloud-white);
+    border: 1px solid var(--volcanic-ash);
     border-radius: 4px;
     text-align: center;
-    color: #666;
+    color: var(--pumice);
 }
 
 .kealoa-error {
     background: #fef7f7;
-    border-color: #f5c6cb;
-    color: #721c24;
+    border-color: var(--hibiscus-red);
+    color: var(--hibiscus-red);
 }
 
 /* ==========================================================================
@@ -49,13 +49,13 @@
 .kealoa-table td {
     padding: 12px 15px;
     text-align: left;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--volcanic-ash);
 }
 
 .kealoa-table th {
-    background: #f5f5f5;
+    background: var(--cloud-white);
     font-weight: 600;
-    color: #333;
+    color: var(--driftwood-dark);
     white-space: nowrap;
 }
 
@@ -67,7 +67,7 @@
 }
 
 .kealoa-table th[data-sort]:hover {
-    background: #e8e8e8;
+    background: var(--volcanic-ash);
 }
 
 .kealoa-table th[data-sort]::after {
@@ -91,7 +91,7 @@
 }
 
 .kealoa-table tbody tr:hover {
-    background: #fafafa;
+    background: var(--cloud-white);
 }
 
 .kealoa-table tbody tr:last-child td {
@@ -134,7 +134,7 @@
 .kealoa-xwordinfo-link,
 .kealoa-homepage-link,
 .kealoa-constructor-link {
-    color: #0073aa;
+    color: var(--tropical-teal);
     text-decoration: underline;
     transition: color 0.2s ease;
 }
@@ -145,7 +145,7 @@
 .kealoa-xwordinfo-link:hover,
 .kealoa-homepage-link:hover,
 .kealoa-constructor-link:hover {
-    color: #005177;
+    color: var(--volcanic-ember);
     text-decoration: underline;
 }
 
@@ -158,12 +158,12 @@
    ========================================================================== */
 
 .kealoa-guess-correct {
-    color: #28a745;
+    color: var(--palm-green);
     font-weight: 600;
 }
 
 .kealoa-guess-incorrect {
-    color: #dc3545;
+    color: var(--hibiscus-red);
 }
 
 .kealoa-guess-correct::before,
@@ -180,7 +180,7 @@
 }
 
 .kealoa-round-header {
-    background: #f9f9f9;
+    background: var(--cloud-white);
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 30px;
@@ -190,7 +190,7 @@
 .kealoa-round-title {
     margin: 0 0 15px 0;
     font-size: 24px;
-    color: #333;
+    color: var(--driftwood-dark);
 }
 
 .kealoa-round-meta p {
@@ -202,7 +202,7 @@
 .kealoa-round-meta strong {
     min-width: 140px;
     flex-shrink: 0;
-    color: #555;
+    color: var(--pumice);
 }
 
 .kealoa-round-meta span {
@@ -212,8 +212,8 @@
 .kealoa-clues-section h3 {
     margin-top: 0;
     padding-bottom: 10px;
-    border-bottom: 2px solid #0073aa;
-    color: #333;
+    border-bottom: 2px solid var(--deep-lagoon);
+    color: var(--driftwood-dark);
 }
 
 .kealoa-clues-table {
@@ -249,13 +249,13 @@
     align-items: center;
     margin-top: 30px;
     padding-top: 20px;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--volcanic-ash);
 }
 
 .kealoa-round-nav-btn {
     display: inline-block;
     padding: 8px 16px;
-    background: #0073aa;
+    background: var(--deep-lagoon);
     color: #fff;
     text-decoration: none;
     border-radius: 4px;
@@ -264,7 +264,7 @@
 }
 
 .kealoa-round-nav-btn:hover {
-    background: #005a87;
+    background: var(--volcanic-ember);
     color: #fff;
     text-decoration: none;
 }
@@ -274,8 +274,8 @@
    ========================================================================== */
 
 .kealoa-search-results {
-    background: #f9f9f9;
-    border: 1px solid #e0e0e0;
+    background: var(--cloud-white);
+    border: 1px solid var(--volcanic-ash);
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 30px;
@@ -284,7 +284,7 @@
 .kealoa-search-heading {
     margin: 0 0 12px 0;
     font-size: 18px;
-    color: #333;
+    color: var(--driftwood-dark);
 }
 
 .kealoa-search-list {
@@ -296,7 +296,7 @@
 .kealoa-search-item {
     display: block;
     padding: 6px 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--volcanic-ash);
 }
 
 .kealoa-search-item:last-child {
@@ -308,7 +308,7 @@
     min-width: 90px;
     font-size: 0.8em;
     font-weight: 600;
-    color: #555;
+    color: var(--pumice);
     text-transform: uppercase;
 }
 
@@ -318,7 +318,7 @@
 }
 
 .kealoa-clues-table .kealoa-correct-answer {
-    color: #28a745;
+    color: var(--palm-green);
 }
 
 .kealoa-clues-table .kealoa-clue-text {
@@ -351,7 +351,7 @@
 }
 
 .kealoa-person-header {
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    background: linear-gradient(135deg, var(--cloud-white) 0%, var(--pale-sand) 100%);
     padding: 30px;
     border-radius: 8px;
     margin-bottom: 30px;
@@ -408,7 +408,7 @@
 
 .kealoa-round-player-name {
     font-size: 0.85em;
-    color: #555;
+    color: var(--pumice);
     text-align: center;
 }
 
@@ -422,7 +422,7 @@
 .kealoa-person-name {
     margin: 0 0 15px 0;
     font-size: 28px;
-    color: #333;
+    color: var(--driftwood-dark);
 }
 
 .kealoa-person-xwordinfo,
@@ -464,14 +464,14 @@
     display: block;
     font-size: 32px;
     font-weight: 700;
-    color: #0073aa;
+    color: var(--volcanic-ember);
     margin-bottom: 5px;
 }
 
 .kealoa-stat-label {
     display: block;
     font-size: 13px;
-    color: #666;
+    color: var(--pumice);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -488,8 +488,8 @@
 .kealoa-round-history h3 {
     margin: 30px 0 15px 0;
     padding-bottom: 10px;
-    border-bottom: 2px solid #0073aa;
-    color: #333;
+    border-bottom: 2px solid var(--deep-lagoon);
+    color: var(--driftwood-dark);
 }
 
 .kealoa-chart-container {
@@ -501,7 +501,7 @@
 
 .kealoa-person-stats h4 {
     margin: 25px 0 10px 0;
-    color: #555;
+    color: var(--pumice);
 }
 
 /* Summary Stats Table */
@@ -555,7 +555,7 @@
 }
 
 .kealoa-constructor-header {
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    background: linear-gradient(135deg, var(--cloud-white) 0%, var(--pale-sand) 100%);
     padding: 30px;
     border-radius: 8px;
     margin-bottom: 30px;
@@ -577,7 +577,7 @@
 .kealoa-constructor-name {
     margin: 0 0 15px 0;
     font-size: 28px;
-    color: #333;
+    color: var(--driftwood-dark);
 }
 
 .kealoa-cross-link-text {
@@ -599,8 +599,8 @@
 .kealoa-constructor-puzzles h3 {
     margin: 30px 0 15px 0;
     padding-bottom: 10px;
-    border-bottom: 2px solid #0073aa;
-    color: #333;
+    border-bottom: 2px solid var(--deep-lagoon);
+    color: var(--driftwood-dark);
 }
 
 /* ==========================================================================
@@ -621,7 +621,7 @@
 }
 
 .kealoa-editor-header {
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    background: linear-gradient(135deg, var(--cloud-white) 0%, var(--pale-sand) 100%);
     padding: 30px;
     border-radius: 8px;
     margin-bottom: 30px;
@@ -643,7 +643,7 @@
 .kealoa-editor-name {
     margin: 0 0 15px 0;
     font-size: 28px;
-    color: #333;
+    color: var(--driftwood-dark);
 }
 
 /* ==========================================================================
@@ -756,7 +756,7 @@
 
 .kealoa-tab-nav {
     display: flex;
-    border-bottom: 2px solid #ddd;
+    border-bottom: 2px solid var(--volcanic-ash);
     margin-bottom: 20px;
     gap: 0;
 }
@@ -768,19 +768,19 @@
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
-    color: #666;
+    color: var(--pumice);
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
     transition: color 0.2s, border-color 0.2s;
 }
 
 .kealoa-tab-button:hover {
-    color: #2271b1;
+    color: var(--deep-lagoon);
 }
 
 .kealoa-tab-button.active {
-    color: #2271b1;
-    border-bottom-color: #2271b1;
+    color: var(--deep-lagoon);
+    border-bottom-color: var(--deep-lagoon);
 }
 
 .kealoa-tab-panel {
@@ -796,7 +796,7 @@
    ========================================================================== */
 
 .kealoa-round-picker-link {
-    color: #2271b1;
+    color: var(--tropical-teal);
     cursor: pointer;
     text-decoration: underline;
     text-decoration-style: dotted;
@@ -844,13 +844,13 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--volcanic-ash);
 }
 
 .kealoa-round-picker-header h3 {
     margin: 0;
     font-size: 16px;
-    color: #333;
+    color: var(--driftwood-dark);
 }
 
 .kealoa-round-picker-close {
@@ -858,13 +858,13 @@
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: #666;
+    color: var(--pumice);
     padding: 0;
     line-height: 1;
 }
 
 .kealoa-round-picker-close:hover {
-    color: #333;
+    color: var(--ash-dark);
 }
 
 .kealoa-round-picker-list {
@@ -876,7 +876,7 @@
 }
 
 .kealoa-round-picker-list li {
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--volcanic-ash);
 }
 
 .kealoa-round-picker-list li:last-child {
@@ -887,27 +887,27 @@
     display: block;
     padding: 12px 20px;
     text-decoration: none;
-    color: #333;
+    color: var(--ash-dark);
     transition: background 0.15s;
 }
 
 .kealoa-round-picker-list a:hover {
-    background: #f0f5fa;
+    background: var(--cloud-white);
 }
 
 .kealoa-round-picker-list .kealoa-round-picker-date {
     font-weight: 600;
-    color: #2271b1;
+    color: var(--deep-lagoon);
     margin-right: 8px;
 }
 
 .kealoa-round-picker-list .kealoa-round-picker-words {
-    color: #555;
+    color: var(--pumice);
 }
 
 .kealoa-round-picker-list .kealoa-round-picker-score {
     display: block;
     font-size: 12px;
-    color: #888;
+    color: var(--volcanic-ash);
     margin-top: 2px;
 }

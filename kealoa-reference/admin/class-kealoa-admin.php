@@ -130,9 +130,16 @@ class Kealoa_Admin {
         wp_enqueue_media();
 
         wp_enqueue_style(
+            'kealoa-palette',
+            KEALOA_PLUGIN_URL . 'assets/css/kealoa-palette.css',
+            [],
+            KEALOA_VERSION
+        );
+
+        wp_enqueue_style(
             'kealoa-admin',
             KEALOA_PLUGIN_URL . 'assets/css/kealoa-admin.css',
-            [],
+            ['kealoa-palette'],
             KEALOA_VERSION
         );
         

@@ -41,13 +41,13 @@
 .kealoa-card h2 {
     font-size: 48px;
     margin: 0 0 5px 0;
-    color: #0073aa;
+    color: var(--volcanic-ember);
     font-weight: 600;
 }
 
 .kealoa-card p {
     font-size: 16px;
-    color: #666;
+    color: var(--pumice);
     margin: 0 0 15px 0;
 }
 
@@ -136,9 +136,9 @@
    ========================================================================== */
 
 .kealoa-round-info {
-    background: #f0f6fc;
+    background: var(--cloud-white);
     border: 1px solid #c3c4c7;
-    border-left: 4px solid #0073aa;
+    border-left: 4px solid var(--deep-lagoon);
     padding: 15px 20px;
     margin: 20px 0;
 }
@@ -178,12 +178,12 @@
 
 /* Guess Display in Admin */
 .kealoa-admin-wrap .kealoa-guess-correct {
-    color: #00a32a;
+    color: var(--palm-green);
     font-weight: 600;
 }
 
 .kealoa-admin-wrap .kealoa-guess-incorrect {
-    color: #d63638;
+    color: var(--hibiscus-red);
 }
 
 /* ==========================================================================
@@ -200,9 +200,9 @@
    ========================================================================== */
 
 .kealoa-inline-create-section {
-    background: #f9f9f9;
+    background: var(--cloud-white);
     border: 1px solid #c3c4c7;
-    border-left: 4px solid #2271b1;
+    border-left: 4px solid var(--deep-lagoon);
     border-radius: 0 4px 4px 0;
     padding: 15px 20px;
     margin: 10px 0;
