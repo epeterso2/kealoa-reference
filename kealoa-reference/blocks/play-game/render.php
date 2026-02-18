@@ -1,0 +1,51 @@
+<?php
+/**
+ * Play Game Block Render
+ *
+ * Outputs the game container and inline JSON data for a random round.
+ * All game interaction is handled client-side by kealoa-game.js.
+ *
+ * @package KEALOA_Reference
+ */
+
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+$db = new Kealoa_DB();
+
+// Get all round IDs that have at least one clue
+global $wpdb;
+$rounds_table = $wpdb->prefix . 'kealoa_rounds';
+$clues_table = $wpdb->prefix . 'kealoa_clues';
+$round_ids = $wpdb->get_col(
+    "SELECT DISTINCT r.id FROM {$rounds_table} r
+     INNER JOIN {$clues_table} c ON c.round_id = r.id
+     ORDER BY r.id"
+);
+
+if (empty($round_ids)) {
+    echo '<p class="kealoa-block-placeholder">' .
+        esc_html__('No rounds with clues found.', 'kealoa-reference') .
+        '</p>';
+    return;
+}
+
+// Build a compact data payload with all playable round IDs
+// The full round data will be loaded on demand via REST API
+?>
+<div id="kealoa-game" class="kealoa-game"
+     data-rest-url="<?php echo esc_url(rest_url('kealoa/v1/game-round')); ?>"
+     data-nonce="<?php echo esc_attr(wp_create_nonce('wp_rest')); ?>"
+     data-round-ids="<?php echo esc_attr(wp_json_encode(array_map('intval', $round_ids))); ?>">
+    <div class="kealoa-game__welcome">
+        <h2 class="kealoa-game__title"><?php esc_html_e('Play KEALOA!', 'kealoa-reference'); ?></h2>
+        <p class="kealoa-game__description">
+            <?php esc_html_e('Test your crossword knowledge! You\'ll be given clues from a real KEALOA round and asked to choose the correct answer. See how you stack up against the players who played this round on the show.', 'kealoa-reference'); ?>
+        </p>
+        <button type="button" class="kealoa-game__start-btn">
+            <?php esc_html_e('Let\'s Play!', 'kealoa-reference'); ?>
+        </button>
+    </div>
+</div>

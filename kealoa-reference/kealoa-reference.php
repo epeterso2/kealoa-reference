@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.1.36
+ * Version: 1.1.37
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.1.36');
+define('KEALOA_VERSION', '1.1.37');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -159,6 +159,9 @@ function kealoa_init(): void {
     // Force no-sidebar layout for KEALOA virtual pages (GeneratePress compatibility)
     add_filter('generate_sidebar_layout', 'kealoa_force_no_sidebar');
     
+    // Register REST API routes
+    add_action('rest_api_init', 'kealoa_register_rest_routes');
+    
     // Add KEALOA results to WordPress search
     add_filter('the_posts', 'kealoa_inject_search_placeholder', 10, 2);
     add_action('loop_start', 'kealoa_search_loop_start');
@@ -198,6 +201,115 @@ function kealoa_enqueue_frontend_assets(): void {
         KEALOA_VERSION,
         true
     );
+
+    wp_enqueue_style(
+        'kealoa-game',
+        KEALOA_PLUGIN_URL . 'assets/css/kealoa-game.css',
+        ['kealoa-palette'],
+        KEALOA_VERSION
+    );
+
+    wp_enqueue_script(
+        'kealoa-game',
+        KEALOA_PLUGIN_URL . 'assets/js/kealoa-game.js',
+        [],
+        KEALOA_VERSION,
+        true
+    );
+}
+
+/**
+ * Register REST API routes for the interactive game
+ */
+function kealoa_register_rest_routes(): void {
+    register_rest_route('kealoa/v1', '/game-round/(?P<id>\d+)', [
+        'methods'             => 'GET',
+        'callback'            => 'kealoa_rest_game_round',
+        'permission_callback' => '__return_true',
+        'args'                => [
+            'id' => [
+                'required'          => true,
+                'validate_callback' => function ($param) {
+                    return is_numeric($param) && (int) $param > 0;
+                },
+                'sanitize_callback' => 'absint',
+            ],
+        ],
+    ]);
+}
+
+/**
+ * REST callback: return game data for a single round
+ */
+function kealoa_rest_game_round(WP_REST_Request $request): WP_REST_Response {
+    $round_id = (int) $request->get_param('id');
+    $db = new Kealoa_DB();
+
+    $round = $db->get_round($round_id);
+    if (!$round) {
+        return new WP_REST_Response(['message' => 'Round not found.'], 404);
+    }
+
+    // Solution words
+    $solutions = $db->get_round_solutions($round_id);
+    $solution_words = array_map(function ($s) {
+        return $s->word;
+    }, $solutions);
+
+    // Clues with per-clue guesses and constructor info
+    $clues_raw = $db->get_round_clues($round_id);
+    $clues = [];
+
+    foreach ($clues_raw as $clue) {
+        // Build constructor string for the puzzle
+        $constructors = '';
+        if (!empty($clue->puzzle_id)) {
+            $puzzle_constructors = $db->get_puzzle_constructors((int) $clue->puzzle_id);
+            $names = array_map(function ($c) {
+                return $c->full_name;
+            }, $puzzle_constructors);
+            $constructors = implode(' & ', $names);
+        }
+
+        // Get guesses for this clue
+        $guesses_raw = $db->get_clue_guesses((int) $clue->id);
+        $guesses = array_map(function ($g) {
+            return [
+                'guesser_name' => $g->guesser_name,
+                'guessed_word' => $g->guessed_word,
+                'is_correct'   => (bool) $g->is_correct,
+            ];
+        }, $guesses_raw);
+
+        $clues[] = [
+            'puzzle_date'    => $clue->puzzle_date ?? '',
+            'constructors'   => $constructors,
+            'editor'         => $clue->editor_name ?? '',
+            'clue_text'      => $clue->clue_text,
+            'correct_answer' => $clue->correct_answer,
+            'guesses'        => $guesses,
+        ];
+    }
+
+    // Guesser results (overall scores for the round)
+    $guesser_results_raw = $db->get_round_guesser_results($round_id);
+    $guesser_results = array_map(function ($gr) {
+        return [
+            'full_name'       => $gr->full_name,
+            'total_guesses'   => (int) $gr->total_guesses,
+            'correct_guesses' => (int) $gr->correct_guesses,
+        ];
+    }, $guesser_results_raw);
+
+    $data = [
+        'round_id'       => $round_id,
+        'round_url'      => home_url('/kealoa/round/' . $round_id),
+        'solution_words' => $solution_words,
+        'clues'          => $clues,
+        'guesser_results' => $guesser_results,
+    ];
+
+    return new WP_REST_Response($data, 200);
 }
 
 /**

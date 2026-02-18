@@ -74,6 +74,10 @@ class Kealoa_Blocks {
             register_block_type(KEALOA_PLUGIN_DIR . 'blocks/version-info');
         }
         
+        if (file_exists(KEALOA_PLUGIN_DIR . 'blocks/play-game/block.json')) {
+            register_block_type(KEALOA_PLUGIN_DIR . 'blocks/play-game');
+        }
+        
         // Fallback registration if block.json files don't exist yet
         if (!file_exists(KEALOA_PLUGIN_DIR . 'blocks/rounds-table/block.json')) {
             register_block_type('kealoa/rounds-table', [

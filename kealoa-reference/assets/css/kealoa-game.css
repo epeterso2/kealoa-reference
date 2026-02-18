@@ -1,0 +1,538 @@
+/**
+ * KEALOA Reference - Game Styles
+ *
+ * Styles for the interactive KEALOA Play Game block.
+ * Uses CSS variables from kealoa-palette.css.
+ *
+ * @package KEALOA_Reference
+ */
+
+/* ==========================================================================
+   Welcome Screen
+   ========================================================================== */
+
+.kealoa-game__welcome {
+    text-align: center;
+    padding: 60px 30px;
+    background: linear-gradient(135deg, var(--cloud-white) 0%, var(--pale-sand) 100%);
+    border-radius: 12px;
+}
+
+.kealoa-game__title {
+    font-size: 32px;
+    color: var(--driftwood-dark);
+    margin: 0 0 16px 0;
+}
+
+.kealoa-game__description {
+    font-size: 16px;
+    color: var(--pumice);
+    max-width: 600px;
+    margin: 0 auto 30px auto;
+    line-height: 1.6;
+}
+
+.kealoa-game__start-btn {
+    display: inline-block;
+    padding: 14px 40px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--volcanic-ember);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.kealoa-game__start-btn:hover {
+    background: var(--lava-orange);
+    transform: translateY(-1px);
+}
+
+.kealoa-game__start-btn:active {
+    transform: translateY(0);
+}
+
+/* ==========================================================================
+   Loading
+   ========================================================================== */
+
+.kealoa-game__loading {
+    text-align: center;
+    padding: 60px 30px;
+}
+
+.kealoa-game__spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--volcanic-ash);
+    border-top-color: var(--volcanic-ember);
+    border-radius: 50%;
+    margin: 0 auto 16px auto;
+    animation: kealoa-spin 0.8s linear infinite;
+}
+
+@keyframes kealoa-spin {
+    to { transform: rotate(360deg); }
+}
+
+.kealoa-game__loading p {
+    color: var(--pumice);
+    font-size: 16px;
+}
+
+/* ==========================================================================
+   Error
+   ========================================================================== */
+
+.kealoa-game__error {
+    text-align: center;
+    padding: 40px 30px;
+    background: #fef7f7;
+    border-radius: 8px;
+}
+
+.kealoa-game__error p {
+    color: var(--hibiscus-red);
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+/* ==========================================================================
+   Progress Bar
+   ========================================================================== */
+
+.kealoa-game__progress {
+    height: 6px;
+    background: var(--volcanic-ash);
+    border-radius: 3px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.kealoa-game__progress-bar {
+    height: 100%;
+    background: var(--volcanic-ember);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* ==========================================================================
+   Round Info Bar
+   ========================================================================== */
+
+.kealoa-game__round-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.kealoa-game__round-label {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--driftwood-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.kealoa-game__clue-counter {
+    font-size: 14px;
+    color: var(--pumice);
+}
+
+/* ==========================================================================
+   Clue Card
+   ========================================================================== */
+
+.kealoa-game__clue-card {
+    background: var(--cloud-white);
+    border: 1px solid var(--volcanic-ash);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.kealoa-game__clue-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--pumice);
+}
+
+.kealoa-game__clue-meta span {
+    display: inline-block;
+    padding: 3px 10px;
+    background: var(--pale-sand);
+    border-radius: 4px;
+}
+
+.kealoa-game__clue-text {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ash-dark);
+}
+
+.kealoa-game__clue-label {
+    font-weight: 700;
+    color: var(--driftwood-dark);
+}
+
+/* ==========================================================================
+   Answer Buttons
+   ========================================================================== */
+
+.kealoa-game__answers {
+    margin-bottom: 24px;
+}
+
+.kealoa-game__choose-prompt {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--driftwood-dark);
+    margin-bottom: 12px;
+}
+
+.kealoa-game__answer-btn {
+    display: block;
+    width: 100%;
+    padding: 14px 20px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: left;
+    color: var(--ash-dark);
+    background: #fff;
+    border: 2px solid var(--volcanic-ash);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, transform 0.1s;
+}
+
+.kealoa-game__answer-btn:hover {
+    border-color: var(--deep-lagoon);
+    background: var(--cloud-white);
+    transform: translateX(4px);
+}
+
+.kealoa-game__answer-btn:active {
+    transform: translateX(2px);
+}
+
+/* ==========================================================================
+   Running Score
+   ========================================================================== */
+
+.kealoa-game__running-score {
+    text-align: center;
+    font-size: 14px;
+    color: var(--pumice);
+    padding-top: 8px;
+}
+
+/* ==========================================================================
+   Clue Result
+   ========================================================================== */
+
+.kealoa-game__result {
+    text-align: center;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.kealoa-game__result h3 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.kealoa-game__result--correct {
+    background: rgba(46, 125, 50, 0.1);
+}
+
+.kealoa-game__result--correct h3 {
+    color: var(--palm-green);
+}
+
+.kealoa-game__result--incorrect {
+    background: rgba(192, 57, 43, 0.1);
+}
+
+.kealoa-game__result--incorrect h3 {
+    color: var(--hibiscus-red);
+}
+
+.kealoa-game__result-clue {
+    background: var(--cloud-white);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.kealoa-game__result-clue p {
+    margin: 6px 0;
+    font-size: 15px;
+    color: var(--ash-dark);
+}
+
+.kealoa-game__result-answer strong {
+    color: var(--palm-green);
+}
+
+.kealoa-game__result-your-answer strong {
+    color: var(--hibiscus-red);
+}
+
+/* ==========================================================================
+   Player Guesses Table
+   ========================================================================== */
+
+.kealoa-game__player-guesses {
+    margin-bottom: 24px;
+}
+
+.kealoa-game__player-guesses h4 {
+    margin: 0 0 12px 0;
+    font-size: 15px;
+    color: var(--driftwood-dark);
+}
+
+.kealoa-game__guess-table {
+    width: auto;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.kealoa-game__guess-table th {
+    background: var(--cloud-white);
+    font-weight: 600;
+    color: var(--driftwood-dark);
+    padding: 8px 14px;
+    text-align: left;
+    border-bottom: 2px solid var(--volcanic-ash);
+    white-space: nowrap;
+}
+
+.kealoa-game__guess-table td {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--volcanic-ash);
+    white-space: nowrap;
+}
+
+.kealoa-game__guess--correct td:last-child {
+    color: var(--palm-green);
+    font-weight: 700;
+}
+
+.kealoa-game__guess--incorrect td:last-child {
+    color: var(--hibiscus-red);
+    font-weight: 700;
+}
+
+/* ==========================================================================
+   Next Button
+   ========================================================================== */
+
+.kealoa-game__next-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--deep-lagoon);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.kealoa-game__next-btn:hover {
+    background: var(--volcanic-ember);
+}
+
+/* ==========================================================================
+   Final Results
+   ========================================================================== */
+
+.kealoa-game__results-title {
+    text-align: center;
+    font-size: 28px;
+    color: var(--driftwood-dark);
+    margin: 0 0 8px 0;
+}
+
+.kealoa-game__results-round {
+    text-align: center;
+    font-size: 15px;
+    color: var(--pumice);
+    margin-bottom: 24px;
+}
+
+/* Score Table */
+.kealoa-game__score-table {
+    width: auto;
+    border-collapse: collapse;
+    margin: 0 auto 30px auto;
+    font-size: 15px;
+}
+
+.kealoa-game__score-table th {
+    background: var(--cloud-white);
+    font-weight: 600;
+    color: var(--driftwood-dark);
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 2px solid var(--volcanic-ash);
+    white-space: nowrap;
+}
+
+.kealoa-game__score-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--volcanic-ash);
+    white-space: nowrap;
+}
+
+.kealoa-game__score-row--user {
+    background: var(--pale-sand);
+    font-weight: 700;
+}
+
+/* ==========================================================================
+   Clue-by-Clue Review
+   ========================================================================== */
+
+.kealoa-game__review-title {
+    font-size: 20px;
+    color: var(--driftwood-dark);
+    margin: 30px 0 16px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--deep-lagoon);
+}
+
+.kealoa-game__review-list {
+    margin-bottom: 30px;
+}
+
+.kealoa-game__review-item {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border-left: 4px solid transparent;
+}
+
+.kealoa-game__review--correct {
+    background: rgba(46, 125, 50, 0.06);
+    border-left-color: var(--palm-green);
+}
+
+.kealoa-game__review--incorrect {
+    background: rgba(192, 57, 43, 0.06);
+    border-left-color: var(--hibiscus-red);
+}
+
+.kealoa-game__review-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.kealoa-game__review-icon {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.kealoa-game__review--correct .kealoa-game__review-icon {
+    color: var(--palm-green);
+}
+
+.kealoa-game__review--incorrect .kealoa-game__review-icon {
+    color: var(--hibiscus-red);
+}
+
+.kealoa-game__review-num {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--driftwood-dark);
+}
+
+.kealoa-game__review-clue {
+    font-style: italic;
+    color: var(--pumice);
+    margin: 4px 0;
+    font-size: 14px;
+}
+
+.kealoa-game__review-item p:last-child {
+    font-size: 14px;
+    color: var(--ash-dark);
+    margin: 4px 0 0 0;
+}
+
+/* ==========================================================================
+   Round Link & Play Again
+   ========================================================================== */
+
+.kealoa-game__round-link {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.kealoa-game__round-link a {
+    color: var(--tropical-teal);
+    text-decoration: underline;
+    font-size: 15px;
+}
+
+.kealoa-game__round-link a:hover {
+    color: var(--volcanic-ember);
+}
+
+.kealoa-game__play-again {
+    text-align: center;
+    padding: 20px 0;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media screen and (max-width: 480px) {
+    .kealoa-game__welcome {
+        padding: 40px 20px;
+    }
+
+    .kealoa-game__title {
+        font-size: 24px;
+    }
+
+    .kealoa-game__clue-text {
+        font-size: 16px;
+    }
+
+    .kealoa-game__answer-btn {
+        font-size: 14px;
+        padding: 12px 16px;
+    }
+
+    .kealoa-game__start-btn {
+        padding: 12px 30px;
+        font-size: 16px;
+    }
+
+    .kealoa-game__score-table,
+    .kealoa-game__guess-table {
+        font-size: 13px;
+    }
+
+    .kealoa-game__score-table th,
+    .kealoa-game__score-table td,
+    .kealoa-game__guess-table th,
+    .kealoa-game__guess-table td {
+        padding: 8px 10px;
+    }
+}
