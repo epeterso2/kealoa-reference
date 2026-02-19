@@ -18,6 +18,25 @@
     border-radius: 12px;
 }
 
+.kealoa-game__welcome--debug {
+    padding: 20px 30px;
+    background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
+    border: 2px dashed var(--volcanic-ember);
+}
+
+.kealoa-game__debug-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--volcanic-ember);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 12px 0;
+}
+
+.kealoa-game--debug {
+    margin-top: 24px;
+}
+
 .kealoa-game__title {
     font-size: 32px;
     color: var(--driftwood-dark);

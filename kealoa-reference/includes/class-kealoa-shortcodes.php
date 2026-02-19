@@ -257,7 +257,7 @@ class Kealoa_Shortcodes {
             return '<p class="kealoa-error">' . esc_html__('Round not found.', 'kealoa-reference') . '</p>';
         }
 
-        return $this->get_cached_or_render('round_' . $round_id, function () use ($round_id, $round) {
+        $html = $this->get_cached_or_render('round_' . $round_id, function () use ($round_id, $round) {
         
         $solutions = $this->db->get_round_solutions($round_id);
         $guessers = $this->db->get_round_guessers($round_id);
@@ -526,6 +526,27 @@ class Kealoa_Shortcodes {
         return ob_get_clean();
 
         }); // end get_cached_or_render
+
+        // Debug mode: append inline game launcher for this round (outside cache)
+        if (kealoa_is_debug()) {
+            $html .= '<div class="kealoa-game kealoa-game--debug"'
+                . ' data-rest-url="' . esc_url(rest_url('kealoa/v1/game-round')) . '"'
+                . ' data-nonce="' . esc_attr(wp_create_nonce('wp_rest')) . '"'
+                . ' data-round-ids="' . esc_attr(wp_json_encode([$round_id])) . '"'
+                . ' data-force-round="' . esc_attr($round_id) . '">'
+                . '<div class="kealoa-game__welcome kealoa-game__welcome--debug">'
+                . '<p class="kealoa-game__debug-label">' . esc_html__('Debug: Play This Round', 'kealoa-reference') . '</p>'
+                . '<div class="kealoa-game__mode-buttons">'
+                . '<button type="button" class="kealoa-game__start-btn" data-mode="show">'
+                . esc_html__('Show Order', 'kealoa-reference')
+                . '</button>'
+                . '<button type="button" class="kealoa-game__start-btn" data-mode="random">'
+                . esc_html__('Random Order', 'kealoa-reference')
+                . '</button>'
+                . '</div></div></div>';
+        }
+
+        return $html;
     }
 
     /**

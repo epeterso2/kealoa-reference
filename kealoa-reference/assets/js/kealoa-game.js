@@ -10,14 +10,19 @@
 (function () {
     'use strict';
 
-    var container = document.getElementById('kealoa-game');
-    if (!container) {
+    var containers = document.querySelectorAll('.kealoa-game');
+    if (!containers.length) {
         return;
     }
+
+    containers.forEach(function (container) { initGame(container); });
+
+    function initGame(container) {
 
     var restUrl = container.getAttribute('data-rest-url');
     var nonce = container.getAttribute('data-nonce');
     var roundIds = JSON.parse(container.getAttribute('data-round-ids') || '[]');
+    var forceRoundId = container.getAttribute('data-force-round') || null;
 
     if (!roundIds.length) {
         return;
@@ -148,7 +153,7 @@
             shuffleMode = mode === 'random';
         }
         showLoading();
-        var roundId = pickRandomRound();
+        var roundId = forceRoundId ? parseInt(forceRoundId, 10) : pickRandomRound();
         fetch(restUrl + '/' + roundId, {
             headers: { 'X-WP-Nonce': nonce }
         })
@@ -536,4 +541,6 @@
             startGame(btn.getAttribute('data-mode') || 'show');
         });
     });
+
+    } // end initGame
 })();
