@@ -2376,6 +2376,9 @@ class Kealoa_Admin {
      * Redirect with message
      */
     private function redirect_with_message(string $page, string $message, string $type = 'success'): void {
+        // Flush transient caches before redirecting (must happen before exit)
+        Kealoa_Shortcodes::flush_all_caches();
+
         set_transient('kealoa_admin_message', [
             'message' => $message,
             'type' => $type,
@@ -2691,6 +2694,7 @@ class Kealoa_Admin {
             }
         }
 
+        Kealoa_Shortcodes::flush_all_caches();
         wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $deleted));
         exit;
     }
@@ -2708,6 +2712,7 @@ class Kealoa_Admin {
             }
         }
 
+        Kealoa_Shortcodes::flush_all_caches();
         wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $deleted));
         exit;
     }
@@ -2720,6 +2725,7 @@ class Kealoa_Admin {
         $ids = $this->parse_selected_ids();
         $deleted = $this->db->delete_orphan_records($table_key, $ids);
 
+        Kealoa_Shortcodes::flush_all_caches();
         wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $deleted));
         exit;
     }
@@ -2796,6 +2802,7 @@ class Kealoa_Admin {
         $debug_mode = !empty($_POST['debug_mode']);
         update_option('kealoa_debug_mode', $debug_mode);
 
+        Kealoa_Shortcodes::flush_all_caches();
         wp_redirect(admin_url('admin.php?page=kealoa-settings&kealoa_saved=1'));
         exit;
     }
