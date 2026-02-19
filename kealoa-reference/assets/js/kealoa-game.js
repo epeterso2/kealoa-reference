@@ -125,12 +125,20 @@
         container.appendChild(
             el('div', { className: 'kealoa-game__error' }, [
                 el('p', { textContent: message }),
-                el('button', {
-                    type: 'button',
-                    className: 'kealoa-game__start-btn',
-                    textContent: 'Try Again',
-                    onClick: function () { startGame(); }
-                })
+                el('div', { className: 'kealoa-game__mode-buttons' }, [
+                    el('button', {
+                        type: 'button',
+                        className: 'kealoa-game__start-btn',
+                        textContent: 'Show Order',
+                        onClick: function () { startGame('show'); }
+                    }),
+                    el('button', {
+                        type: 'button',
+                        className: 'kealoa-game__start-btn',
+                        textContent: 'Random Order',
+                        onClick: function () { startGame('random'); }
+                    })
+                ])
             ])
         );
     }
@@ -493,12 +501,21 @@
         // Play again
         container.appendChild(
             el('div', { className: 'kealoa-game__play-again' }, [
-                el('button', {
-                    type: 'button',
-                    className: 'kealoa-game__start-btn',
-                    textContent: 'Play Again!',
-                    onClick: function () { startGame(); }
-                })
+                el('p', { className: 'kealoa-game__play-again-label', textContent: 'Play Again!' }),
+                el('div', { className: 'kealoa-game__mode-buttons' }, [
+                    el('button', {
+                        type: 'button',
+                        className: 'kealoa-game__start-btn',
+                        textContent: 'Show Order',
+                        onClick: function () { startGame('show'); }
+                    }),
+                    el('button', {
+                        type: 'button',
+                        className: 'kealoa-game__start-btn',
+                        textContent: 'Random Order',
+                        onClick: function () { startGame('random'); }
+                    })
+                ])
             ])
         );
     }
