@@ -343,10 +343,13 @@
    Person View
    ========================================================================== */
 
+.kealoa-persons-table-wrapper .kealoa-table,
 .kealoa-person-view .kealoa-table {
     width: auto;
 }
 
+.kealoa-persons-table-wrapper .kealoa-table th,
+.kealoa-persons-table-wrapper .kealoa-table td,
 .kealoa-person-view .kealoa-table th,
 .kealoa-person-view .kealoa-table td {
     white-space: nowrap;
@@ -614,10 +617,13 @@
    Editor View
    ========================================================================== */
 
+.kealoa-editors-table-wrapper .kealoa-table,
 .kealoa-editor-view .kealoa-table {
     width: auto;
 }
 
+.kealoa-editors-table-wrapper .kealoa-table th,
+.kealoa-editors-table-wrapper .kealoa-table td,
 .kealoa-editor-view .kealoa-table th,
 .kealoa-editor-view .kealoa-table td {
     white-space: nowrap;
