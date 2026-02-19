@@ -1317,24 +1317,10 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-round-history">
                     <h3><?php esc_html_e('Round History', 'kealoa-reference'); ?></h3>
                     
-                    <?php
-                    // Check if any round dates have multiple rounds
-                    $has_multi_round_dates = false;
-                    foreach ($round_history as $h) {
-                        $h_rounds = $this->db->get_rounds_by_date($h->round_date);
-                        if (count($h_rounds) > 1) {
-                            $has_multi_round_dates = true;
-                            break;
-                        }
-                    }
-                    ?>
                     <table class="kealoa-table kealoa-history-table">
                         <thead>
                             <tr>
                                 <th data-sort="date"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
-                                <?php if ($has_multi_round_dates): ?>
-                                    <th data-sort="number"><?php esc_html_e('Round #', 'kealoa-reference'); ?></th>
-                                <?php endif; ?>
                                 <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
@@ -1347,14 +1333,17 @@ class Kealoa_Shortcodes {
                                 <?php 
                                 $solutions = $this->db->get_round_solutions((int) $history->round_id);
                                 $history_round_num = (int) ($history->round_number ?? 1);
+                                $history_rounds_on_date = $this->db->get_rounds_by_date($history->round_date);
                                 ?>
                                 <tr>
                                     <td>
-                                        <?php echo Kealoa_Formatter::format_round_date_link((int) $history->round_id, $history->round_date); ?>
+                                        <?php 
+                                        echo Kealoa_Formatter::format_round_date_link((int) $history->round_id, $history->round_date);
+                                        if (count($history_rounds_on_date) > 1) {
+                                            echo ' <span class="kealoa-round-number">(#' . esc_html($history_round_num) . ')</span>';
+                                        }
+                                        ?>
                                     </td>
-                                    <?php if ($has_multi_round_dates): ?>
-                                        <td><?php echo esc_html($history_round_num); ?></td>
-                                    <?php endif; ?>
                                     <td><?php echo Kealoa_Formatter::format_solution_words_link((int) $history->round_id, $solutions); ?></td>
                                     <td><?php echo esc_html($history->total_clues); ?></td>
                                     <td><?php echo esc_html($history->correct_count); ?></td>
