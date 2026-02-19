@@ -126,6 +126,15 @@ class Kealoa_Admin {
             'kealoa-data-check',
             [$this, 'render_data_check_page']
         );
+
+        add_submenu_page(
+            'kealoa-reference',
+            __('Settings', 'kealoa-reference'),
+            __('Settings', 'kealoa-reference'),
+            'manage_options',
+            'kealoa-settings',
+            [$this, 'render_settings_page']
+        );
     }
 
     /**
@@ -204,6 +213,7 @@ class Kealoa_Admin {
             'repair_delete_puzzles' => $this->handle_repair_delete_puzzles(),
             'repair_delete_rounds' => $this->handle_repair_delete_rounds(),
             'repair_delete_orphans' => $this->handle_repair_delete_orphans(),
+            'save_settings' => $this->handle_save_settings(),
             default => null,
         };
 
@@ -2725,5 +2735,68 @@ class Kealoa_Admin {
             return [];
         }
         return array_map('intval', explode(',', $raw));
+    }
+
+    // =========================================================================
+    // SETTINGS
+    // =========================================================================
+
+    /**
+     * Render the Settings page.
+     */
+    public function render_settings_page(): void {
+        $debug_mode = get_option('kealoa_debug_mode', false);
+        $saved = isset($_GET['kealoa_saved']);
+        ?>
+        <div class="wrap kealoa-admin-wrap">
+            <h1><?php esc_html_e('KEALOA Settings', 'kealoa-reference'); ?></h1>
+
+            <?php if ($saved): ?>
+                <div class="notice notice-success is-dismissible">
+                    <p><?php esc_html_e('Settings saved.', 'kealoa-reference'); ?></p>
+                </div>
+            <?php endif; ?>
+
+            <form method="post" action="">
+                <input type="hidden" name="kealoa_action" value="save_settings">
+                <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
+
+                <table class="form-table" role="presentation">
+                    <tbody>
+                        <tr>
+                            <th scope="row">
+                                <label for="kealoa_debug_mode">
+                                    <?php esc_html_e('Debug Mode', 'kealoa-reference'); ?>
+                                </label>
+                            </th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" id="kealoa_debug_mode" name="debug_mode" value="1"
+                                        <?php checked($debug_mode); ?>>
+                                    <?php esc_html_e('Enable debug mode', 'kealoa-reference'); ?>
+                                </label>
+                                <p class="description">
+                                    <?php esc_html_e('When enabled, additional diagnostic information may be output for troubleshooting.', 'kealoa-reference'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <?php submit_button(__('Save Settings', 'kealoa-reference')); ?>
+            </form>
+        </div>
+        <?php
+    }
+
+    /**
+     * Handle saving settings.
+     */
+    private function handle_save_settings(): void {
+        $debug_mode = !empty($_POST['debug_mode']);
+        update_option('kealoa_debug_mode', $debug_mode);
+
+        wp_redirect(admin_url('admin.php?page=kealoa-settings&kealoa_saved=1'));
+        exit;
     }
 }

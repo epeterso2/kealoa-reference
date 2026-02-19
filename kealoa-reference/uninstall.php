@@ -41,6 +41,7 @@ $options = [
     'kealoa_db_version',
     'kealoa_items_per_page',
     'kealoa_date_format',
+    'kealoa_debug_mode',
 ];
 
 foreach ($options as $option) {
