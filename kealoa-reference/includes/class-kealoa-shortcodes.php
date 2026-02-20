@@ -272,17 +272,12 @@ class Kealoa_Shortcodes {
         ?>
         <div class="kealoa-round-view">
             <div class="kealoa-round-header">
-                <h2 class="kealoa-round-title">
-                    <?php 
-                    printf(
-                        esc_html__('KEALOA Round #%d: %s', 'kealoa-reference'),
-                        $round_id,
-                        esc_html(Kealoa_Formatter::format_solution_words($solutions))
-                    );
-                    ?>
-                </h2>
                 
                 <div class="kealoa-round-meta">
+                    <p>
+                        <strong><?php esc_html_e('Round:', 'kealoa-reference'); ?></strong>
+                        <span><?php echo esc_html($round_id); ?></span>
+                    </p>
                     <p>
                         <strong><?php esc_html_e('Date:', 'kealoa-reference'); ?></strong>
                         <span><?php 
