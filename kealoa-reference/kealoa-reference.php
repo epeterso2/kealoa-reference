@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.1.75
+ * Version: 1.1.78
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.1.75');
+define('KEALOA_VERSION', '1.1.78');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -399,7 +399,7 @@ function kealoa_template_redirect(): void {
             wp_die(__('Person not found.', 'kealoa-reference'), '', ['response' => 404]);
         }
         $shortcodes = new Kealoa_Shortcodes();
-        $title = $person->full_name;
+        $title = sprintf(__('%s - Player', 'kealoa-reference'), $person->full_name);
         $content = $shortcodes->render_person(['id' => $person->id]);
         $is_kealoa = true;
     } elseif ($round_id) {
@@ -421,13 +421,13 @@ function kealoa_template_redirect(): void {
             wp_die(__('Constructor not found.', 'kealoa-reference'), '', ['response' => 404]);
         }
         $shortcodes = new Kealoa_Shortcodes();
-        $title = $constructor->full_name;
+        $title = sprintf(__('%s - Constructor', 'kealoa-reference'), $constructor->full_name);
         $content = $shortcodes->render_constructor(['id' => (int) $constructor->id]);
         $is_kealoa = true;
     } elseif ($editor_name) {
         $decoded = urldecode($editor_name);
         $shortcodes = new Kealoa_Shortcodes();
-        $title = $decoded;
+        $title = sprintf(__('%s - Editor', 'kealoa-reference'), $decoded);
         $content = $shortcodes->render_editor(['name' => $decoded]);
         $is_kealoa = true;
     }
