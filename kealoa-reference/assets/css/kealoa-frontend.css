@@ -297,6 +297,7 @@
     width: 100%;
     border-collapse: collapse;
     margin: 0;
+    border: none;
 }
 
 .kealoa-search-table th {
@@ -306,6 +307,7 @@
     color: var(--pumice);
     text-transform: uppercase;
     padding: 4px 8px 8px 0;
+    border: none;
 }
 
 .kealoa-search-table th:first-child {
@@ -315,6 +317,7 @@
 .kealoa-search-item td {
     padding: 6px 8px 6px 0;
     vertical-align: top;
+    border: none;
 }
 
 .kealoa-search-type {
