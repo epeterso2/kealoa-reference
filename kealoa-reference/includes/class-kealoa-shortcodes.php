@@ -209,7 +209,7 @@ class Kealoa_Shortcodes {
                         $rounds_on_date = $this->db->get_rounds_by_date($round->round_date);
                         ?>
                         <tr>
-                            <td class="kealoa-date-cell">
+                            <td class="kealoa-date-cell" data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($round->round_date)) * 100 + $round_num); ?>">
                                 <?php 
                                 echo Kealoa_Formatter::format_round_date_link((int) $round->id, $round->round_date);
                                 if (count($rounds_on_date) > 1) {
@@ -1336,7 +1336,7 @@ class Kealoa_Shortcodes {
                                 $history_rounds_on_date = $this->db->get_rounds_by_date($history->round_date);
                                 ?>
                                 <tr>
-                                    <td>
+                                    <td data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($history->round_date)) * 100 + $history_round_num); ?>">
                                         <?php 
                                         echo Kealoa_Formatter::format_round_date_link((int) $history->round_id, $history->round_date);
                                         if (count($history_rounds_on_date) > 1) {

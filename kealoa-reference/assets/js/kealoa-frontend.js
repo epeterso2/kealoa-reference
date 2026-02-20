@@ -94,6 +94,10 @@
 
         switch (sortType) {
             case 'date':
+                var sortAttr = cell.getAttribute('data-sort-value');
+                if (sortAttr) {
+                    return parseFloat(sortAttr);
+                }
                 return parseDateValue(text);
 
             case 'number':
