@@ -23,6 +23,7 @@
     var nonce = container.getAttribute('data-nonce');
     var roundIds = JSON.parse(container.getAttribute('data-round-ids') || '[]');
     var forceRoundId = container.getAttribute('data-force-round') || null;
+    var forceOrder = container.getAttribute('data-force-order') || null;
 
     if (!roundIds.length) {
         return;
@@ -613,6 +614,9 @@
         }).join('');
 
         var gameUrl = window.location.origin + window.location.pathname + '?round=' + roundData.round_id;
+        if (shuffleMode) {
+            gameUrl += '&order=random';
+        }
 
         var lines = [
             'KEALOA #' + roundData.round_id + ' \u2014 ' + roundData.solution_words.join(' / '),
@@ -688,6 +692,11 @@
             startGame(btn.getAttribute('data-mode') || 'show');
         });
     });
+
+    // Auto-start if a forced round and order are specified via URL
+    if (forceRoundId && forceOrder) {
+        startGame(forceOrder);
+    }
 
     } // end initGame
 })();

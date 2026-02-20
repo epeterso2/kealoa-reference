@@ -35,6 +35,7 @@ if (empty($round_ids)) {
 // Build a compact data payload with all playable round IDs
 // The full round data will be loaded on demand via REST API
 $force_round = isset($_GET['round']) ? absint($_GET['round']) : 0;
+$force_order = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : '';
 ?>
 <div class="kealoa-game"
      data-rest-url="<?php echo esc_url(rest_url('kealoa/v1/game-round')); ?>"
@@ -42,6 +43,9 @@ $force_round = isset($_GET['round']) ? absint($_GET['round']) : 0;
      data-round-ids="<?php echo esc_attr(wp_json_encode(array_map('intval', $round_ids))); ?>"
      <?php if ($force_round && in_array($force_round, array_map('intval', $round_ids), true)): ?>
      data-force-round="<?php echo esc_attr($force_round); ?>"
+     <?php endif; ?>
+     <?php if ($force_order === 'random'): ?>
+     data-force-order="random"
      <?php endif; ?>>
     <div class="kealoa-game__welcome">
         <h2 class="kealoa-game__title"><?php esc_html_e('Play KEALOA!', 'kealoa-reference'); ?></h2>
