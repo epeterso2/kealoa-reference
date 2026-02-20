@@ -1860,6 +1860,20 @@ class Kealoa_DB {
     }
 
     /**
+     * Check if an editor name exists in the puzzles table.
+     *
+     * @param string $name The editor name to check
+     * @return bool True if the editor name exists
+     */
+    public function editor_name_exists(string $name): bool {
+        $sql = $this->wpdb->prepare(
+            "SELECT 1 FROM {$this->puzzles_table} WHERE editor_name = %s LIMIT 1",
+            $name
+        );
+        return (bool) $this->wpdb->get_var($sql);
+    }
+
+    /**
      * Get aggregate stats for a single editor
      */
     public function get_editor_stats(string $editor_name): ?object {

@@ -572,6 +572,9 @@ class Kealoa_Shortcodes {
         // Check if this person is also a constructor
         $matching_constructor = $this->db->get_constructor_by_name($person->full_name);
 
+        // Check if this person is also an editor
+        $is_editor = $this->db->editor_name_exists($person->full_name);
+
         $clue_number_results = $this->db->get_person_results_by_clue_number($person_id);
         $answer_length_results = $this->db->get_person_results_by_answer_length($person_id);
         $direction_results = $this->db->get_person_results_by_direction($person_id);
@@ -708,6 +711,14 @@ class Kealoa_Shortcodes {
                             <p class="kealoa-cross-link-text">
                                 <a href="<?php echo esc_url(home_url('/kealoa/constructor/' . urlencode(str_replace(' ', '_', $matching_constructor->full_name)) . '/')); ?>">
                                     <?php esc_html_e('View as Constructor', 'kealoa-reference'); ?>
+                                </a>
+                            </p>
+                        <?php endif; ?>
+                        
+                        <?php if ($is_editor): ?>
+                            <p class="kealoa-cross-link-text">
+                                <a href="<?php echo esc_url(home_url('/kealoa/editor/' . urlencode($person->full_name) . '/')); ?>">
+                                    <?php esc_html_e('View as Editor', 'kealoa-reference'); ?>
                                 </a>
                             </p>
                         <?php endif; ?>
@@ -1512,6 +1523,9 @@ class Kealoa_Shortcodes {
         // Check if this constructor is also a player (person)
         $matching_person = $this->db->get_person_by_name($constructor->full_name);
 
+        // Check if this constructor is also an editor
+        $is_constructor_editor = $this->db->editor_name_exists($constructor->full_name);
+
         // Determine image: media library > XWordInfo
         $con_media_id = (int) ($constructor->media_id ?? 0);
         $con_image_url = '';
@@ -1555,6 +1569,14 @@ class Kealoa_Shortcodes {
                             <p class="kealoa-cross-link-text">
                                 <a href="<?php echo esc_url(home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $matching_person->full_name)) . '/')); ?>">
                                     <?php esc_html_e('View as Player', 'kealoa-reference'); ?>
+                                </a>
+                            </p>
+                        <?php endif; ?>
+                        
+                        <?php if ($is_constructor_editor): ?>
+                            <p class="kealoa-cross-link-text">
+                                <a href="<?php echo esc_url(home_url('/kealoa/editor/' . urlencode($constructor->full_name) . '/')); ?>">
+                                    <?php esc_html_e('View as Editor', 'kealoa-reference'); ?>
                                 </a>
                             </p>
                         <?php endif; ?>
@@ -1769,6 +1791,10 @@ class Kealoa_Shortcodes {
         $puzzles = $this->db->get_editor_puzzles($editor_name);
         $stats = $this->db->get_editor_stats($editor_name);
 
+        // Check if this editor is also a player or constructor
+        $matching_editor_person = $this->db->get_person_by_name($editor_name);
+        $matching_editor_constructor = $this->db->get_constructor_by_name($editor_name);
+
         // Determine editor image: media library > XWordInfo
         $editor_media_id = $this->db->get_editor_media_id($editor_name);
         $editor_image_url = '';
@@ -1807,6 +1833,22 @@ class Kealoa_Shortcodes {
 
                     <div class="kealoa-editor-details">
                         <h2 class="kealoa-editor-name"><?php echo esc_html($editor_name); ?></h2>
+                        
+                        <?php if ($matching_editor_person): ?>
+                            <p class="kealoa-cross-link-text">
+                                <a href="<?php echo esc_url(home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $matching_editor_person->full_name)) . '/')); ?>">
+                                    <?php esc_html_e('View as Player', 'kealoa-reference'); ?>
+                                </a>
+                            </p>
+                        <?php endif; ?>
+                        
+                        <?php if ($matching_editor_constructor): ?>
+                            <p class="kealoa-cross-link-text">
+                                <a href="<?php echo esc_url(home_url('/kealoa/constructor/' . urlencode(str_replace(' ', '_', $matching_editor_constructor->full_name)) . '/')); ?>">
+                                    <?php esc_html_e('View as Constructor', 'kealoa-reference'); ?>
+                                </a>
+                            </p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
