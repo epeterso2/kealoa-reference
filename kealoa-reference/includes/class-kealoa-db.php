@@ -1824,6 +1824,7 @@ class Kealoa_DB {
             "SELECT 
                 pz.id as puzzle_id,
                 pz.publication_date,
+                pz.editor_name,
                 GROUP_CONCAT(DISTINCT r.id ORDER BY r.round_date ASC, r.round_number ASC) as round_ids,
                 GROUP_CONCAT(DISTINCT r.round_date ORDER BY r.round_date ASC, r.round_number ASC) as round_dates,
                 GROUP_CONCAT(DISTINCT r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers
@@ -1832,7 +1833,7 @@ class Kealoa_DB {
             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
             LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
             WHERE pc.constructor_id = %d
-            GROUP BY pz.id, pz.publication_date
+            GROUP BY pz.id, pz.publication_date, pz.editor_name
             ORDER BY pz.publication_date DESC",
             $constructor_id
         );

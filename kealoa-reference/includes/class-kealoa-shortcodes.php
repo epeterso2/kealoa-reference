@@ -1610,6 +1610,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Co-Constructors', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                             </tr>
@@ -1634,6 +1635,15 @@ class Kealoa_Shortcodes {
                                                 return Kealoa_Formatter::format_constructor_link((int) $co->id, $co->full_name);
                                             }, $co_constructors);
                                             echo Kealoa_Formatter::format_list_with_and($co_links);
+                                        } else {
+                                            echo '—';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        if (!empty($puzzle->editor_name)) {
+                                            echo Kealoa_Formatter::format_editor_link($puzzle->editor_name);
                                         } else {
                                             echo '—';
                                         }
