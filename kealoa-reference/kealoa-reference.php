@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.1.91
+ * Version: 1.1.93
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.1.91');
+define('KEALOA_VERSION', '1.1.93');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -104,6 +104,7 @@ require_once KEALOA_PLUGIN_DIR . 'includes/class-kealoa-import.php';
 require_once KEALOA_PLUGIN_DIR . 'includes/class-kealoa-export.php';
 require_once KEALOA_PLUGIN_DIR . 'admin/class-kealoa-admin.php';
 require_once KEALOA_PLUGIN_DIR . 'includes/class-kealoa-blocks.php';
+require_once KEALOA_PLUGIN_DIR . 'includes/class-kealoa-rest-api.php';
 require_once KEALOA_PLUGIN_DIR . 'includes/class-kealoa-sitemap.php';
 
 /**
@@ -247,6 +248,10 @@ function kealoa_register_rest_routes(): void {
             ],
         ],
     ]);
+
+    // Register comprehensive data API routes
+    $api = new Kealoa_REST_API();
+    $api->register_routes();
 }
 
 /**
