@@ -461,30 +461,86 @@
         scoreTable.appendChild(tbody);
         container.appendChild(scoreTable);
 
-        // Clue-by-clue review
+        // Clue-by-clue review table
         container.appendChild(
             el('h3', { className: 'kealoa-game__review-title', textContent: 'Clue-by-Clue Review' })
         );
 
-        var reviewList = el('div', { className: 'kealoa-game__review-list' });
-        userAnswers.forEach(function (answer, idx) {
-            var clue = roundData.clues[idx];
-            var reviewClass = answer.correct ? 'kealoa-game__review--correct' : 'kealoa-game__review--incorrect';
-            var icon = answer.correct ? '\u2713' : '\u2717';
+        // Build review data sorted by original clue number (show order)
+        var reviewData = userAnswers.map(function (answer, idx) {
+            return { answer: answer, clue: roundData.clues[idx] };
+        });
+        reviewData.sort(function (a, b) {
+            return (a.clue.clue_number || 0) - (b.clue.clue_number || 0);
+        });
 
-            reviewList.appendChild(
-                el('div', { className: 'kealoa-game__review-item ' + reviewClass }, [
-                    el('div', { className: 'kealoa-game__review-header' }, [
-                        el('span', { className: 'kealoa-game__review-icon', textContent: icon }),
-                        el('span', { className: 'kealoa-game__review-num', textContent: 'Clue ' + (idx + 1) })
+        var reviewTable = el('table', { className: 'kealoa-table kealoa-game__review-table' });
+
+        var reviewThead = el('thead', {}, [
+            el('tr', {}, [
+                el('th', { className: 'kealoa-num', textContent: '#' }),
+                el('th', { textContent: 'Day' }),
+                el('th', { textContent: 'Puzzle Date' }),
+                el('th', { textContent: 'Constructors' }),
+                el('th', { textContent: 'Editor' }),
+                el('th', { textContent: 'Clue #' }),
+                el('th', { textContent: 'Clue Text' }),
+                el('th', { textContent: 'Answer' }),
+                el('th', { textContent: 'Your Result' })
+            ])
+        ]);
+        reviewTable.appendChild(reviewThead);
+
+        var reviewTbody = el('tbody');
+        reviewData.forEach(function (item) {
+            var clue = item.clue;
+            var answer = item.answer;
+
+            // Format day abbreviation from puzzle_date
+            var dayAbbrev = '\u2014';
+            if (clue.puzzle_date) {
+                var d = new Date(clue.puzzle_date + 'T00:00:00');
+                dayAbbrev = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()] || '\u2014';
+            }
+
+            // Format puzzle date as M/D/YYYY
+            var fmtDate = '\u2014';
+            if (clue.puzzle_date) {
+                var dp = new Date(clue.puzzle_date + 'T00:00:00');
+                fmtDate = (dp.getMonth() + 1) + '/' + dp.getDate() + '/' + dp.getFullYear();
+            }
+
+            // Format clue ref (e.g. "42D")
+            var clueRef = '\u2014';
+            if (clue.puzzle_clue_number && clue.puzzle_clue_direction) {
+                clueRef = clue.puzzle_clue_number + clue.puzzle_clue_direction.toUpperCase();
+            }
+
+            // Player result
+            var resultIcon = answer.correct ? '\u2713' : '\u2717';
+            var resultText = resultIcon + ' ' + answer.chosen.toUpperCase();
+            var resultClass = answer.correct ? 'kealoa-guess-correct' : 'kealoa-guess-incorrect';
+
+            reviewTbody.appendChild(
+                el('tr', {}, [
+                    el('td', { className: 'kealoa-num', textContent: String(clue.clue_number || '') }),
+                    el('td', { textContent: dayAbbrev }),
+                    el('td', { textContent: fmtDate }),
+                    el('td', { textContent: clue.constructors || '\u2014' }),
+                    el('td', { textContent: clue.editor || '\u2014' }),
+                    el('td', { textContent: clueRef }),
+                    el('td', { textContent: clue.clue_text }),
+                    el('td', {}, [
+                        el('strong', { textContent: clue.correct_answer })
                     ]),
-                    el('p', { className: 'kealoa-game__review-clue', textContent: clue.clue_text }),
-                    el('p', { innerHTML: '<strong>Answer:</strong> ' + escapeHtml(clue.correct_answer) +
-                        (answer.correct ? '' : ' &nbsp;|&nbsp; <strong>You said:</strong> ' + escapeHtml(answer.chosen)) })
+                    el('td', {}, [
+                        el('span', { className: resultClass, textContent: resultText })
+                    ])
                 ])
             );
         });
-        container.appendChild(reviewList);
+        reviewTable.appendChild(reviewTbody);
+        container.appendChild(reviewTable);
 
         // View round link
         container.appendChild(

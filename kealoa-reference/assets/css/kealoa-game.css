@@ -465,7 +465,7 @@
 }
 
 /* ==========================================================================
-   Clue-by-Clue Review
+   Clue-by-Clue Review Table
    ========================================================================== */
 
 .kealoa-game__review-title {
@@ -476,64 +476,9 @@
     border-bottom: 2px solid var(--deep-lagoon);
 }
 
-.kealoa-game__review-list {
+.kealoa-game__review-table {
     margin-bottom: 30px;
-}
-
-.kealoa-game__review-item {
-    padding: 12px 16px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    border-left: 4px solid transparent;
-}
-
-.kealoa-game__review--correct {
-    background: rgba(46, 125, 50, 0.06);
-    border-left-color: var(--palm-green);
-}
-
-.kealoa-game__review--incorrect {
-    background: rgba(192, 57, 43, 0.06);
-    border-left-color: var(--hibiscus-red);
-}
-
-.kealoa-game__review-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
-}
-
-.kealoa-game__review-icon {
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.kealoa-game__review--correct .kealoa-game__review-icon {
-    color: var(--palm-green);
-}
-
-.kealoa-game__review--incorrect .kealoa-game__review-icon {
-    color: var(--hibiscus-red);
-}
-
-.kealoa-game__review-num {
-    font-weight: 600;
     font-size: 14px;
-    color: var(--driftwood-dark);
-}
-
-.kealoa-game__review-clue {
-    font-style: italic;
-    color: var(--pumice);
-    margin: 4px 0;
-    font-size: 14px;
-}
-
-.kealoa-game__review-item p:last-child {
-    font-size: 14px;
-    color: var(--ash-dark);
-    margin: 4px 0 0 0;
 }
 
 /* ==========================================================================
