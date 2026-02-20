@@ -275,7 +275,7 @@ class Kealoa_Shortcodes {
                 <h2 class="kealoa-round-title">
                     <?php 
                     printf(
-                        esc_html__('KEALOA #%d: %s', 'kealoa-reference'),
+                        esc_html__('Round #%d: %s', 'kealoa-reference'),
                         $round_id,
                         esc_html(Kealoa_Formatter::format_solution_words($solutions))
                     );
