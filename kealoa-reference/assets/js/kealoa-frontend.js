@@ -210,6 +210,21 @@
                 table._kealoaSortCol = -1;
                 table._kealoaSortAsc = true;
 
+                // Apply default sort if a header specifies data-default-sort
+                var allHeadersInit = table.querySelectorAll('thead th');
+                for (var d = 0; d < allHeadersInit.length; d++) {
+                    var defaultDir = allHeadersInit[d].getAttribute('data-default-sort');
+                    if (defaultDir && allHeadersInit[d].hasAttribute('data-sort')) {
+                        var defaultAsc = defaultDir !== 'desc';
+                        var defaultSortType = allHeadersInit[d].getAttribute('data-sort');
+                        table._kealoaSortCol = d;
+                        table._kealoaSortAsc = defaultAsc;
+                        sortTable(table, d, defaultSortType, defaultAsc);
+                        updateSortIndicators(table, d, defaultAsc);
+                        break;
+                    }
+                }
+
                 for (var h = 0; h < headers.length; h++) {
                     (function (th) {
                         th.style.cursor = 'pointer';

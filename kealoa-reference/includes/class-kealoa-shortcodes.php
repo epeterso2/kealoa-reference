@@ -193,7 +193,7 @@ class Kealoa_Shortcodes {
             <table class="kealoa-table kealoa-rounds-table">
                 <thead>
                     <tr>
-                        <th data-sort="date"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
+                        <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
                         <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                         <th><?php esc_html_e('Results', 'kealoa-reference'); ?></th>
                         <th data-sort="text"><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
