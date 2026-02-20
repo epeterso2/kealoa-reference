@@ -2154,6 +2154,46 @@ class Kealoa_DB {
             $add_round_result((int) $rd->round_id);
         }
 
+        // Include rounds from matching constructors
+        if (!empty($constructors)) {
+            $constructor_ids = array_map(fn($c) => (int) $c->id, $constructors);
+            $placeholders = implode(',', array_fill(0, count($constructor_ids), '%d'));
+            $constructor_rounds = $this->wpdb->get_results(
+                $this->wpdb->prepare(
+                    "SELECT DISTINCT cl.round_id
+                    FROM {$this->puzzle_constructors_table} pc
+                    INNER JOIN {$this->clues_table} cl ON cl.puzzle_id = pc.puzzle_id
+                    INNER JOIN {$this->rounds_table} r ON cl.round_id = r.id
+                    WHERE pc.constructor_id IN ($placeholders)
+                    ORDER BY r.round_date DESC, r.round_number ASC",
+                    ...$constructor_ids
+                )
+            );
+            foreach ($constructor_rounds as $rd) {
+                $add_round_result((int) $rd->round_id);
+            }
+        }
+
+        // Include rounds from matching editors
+        if (!empty($editors)) {
+            $editor_names = array_map(fn($e) => $e->editor_name, $editors);
+            $placeholders = implode(',', array_fill(0, count($editor_names), '%s'));
+            $editor_rounds = $this->wpdb->get_results(
+                $this->wpdb->prepare(
+                    "SELECT DISTINCT cl.round_id
+                    FROM {$this->puzzles_table} pz
+                    INNER JOIN {$this->clues_table} cl ON cl.puzzle_id = pz.id
+                    INNER JOIN {$this->rounds_table} r ON cl.round_id = r.id
+                    WHERE pz.editor_name IN ($placeholders)
+                    ORDER BY r.round_date DESC, r.round_number ASC",
+                    ...$editor_names
+                )
+            );
+            foreach ($editor_rounds as $rd) {
+                $add_round_result((int) $rd->round_id);
+            }
+        }
+
         return $results;
     }
 
