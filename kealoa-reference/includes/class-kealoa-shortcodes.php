@@ -297,6 +297,24 @@ class Kealoa_Shortcodes {
                         <span><?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null); ?></span>
                     </p>
                     <p>
+                        <strong><?php esc_html_e('Solution Words:', 'kealoa-reference'); ?></strong>
+                        <span><?php
+                        // Count how many clues have each solution word as the correct answer
+                        $answer_counts = [];
+                        foreach ($clues as $clue) {
+                            $answer = strtoupper($clue->correct_answer);
+                            $answer_counts[$answer] = ($answer_counts[$answer] ?? 0) + 1;
+                        }
+                        $word_parts = [];
+                        foreach ($solutions as $s) {
+                            $word = strtoupper($s->word);
+                            $count = $answer_counts[$word] ?? 0;
+                            $word_parts[] = esc_html($word) . ' (' . $count . ')';
+                        }
+                        echo implode(', ', $word_parts);
+                        ?></span>
+                    </p>
+                    <p>
                         <strong><?php esc_html_e('Clue Giver:', 'kealoa-reference'); ?></strong>
                         <span><?php 
                         if ($clue_giver) {
