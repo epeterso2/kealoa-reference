@@ -555,11 +555,17 @@
         container.appendChild(reviewTable);
 
         // View round link
+        var gameUrl = window.location.origin + window.location.pathname + '?round=' + roundData.round_id;
         container.appendChild(
             el('p', { className: 'kealoa-game__round-link' }, [
                 el('a', {
+                    href: gameUrl,
+                    textContent: '\uD83C\uDFAE Play this round \u2192'
+                }),
+                document.createTextNode(' \u00A0|\u00A0 '),
+                el('a', {
                     href: roundData.round_url,
-                    textContent: 'View full round details \u2192'
+                    textContent: '\uD83D\uDD0D View full round details \u2192'
                 })
             ])
         );
@@ -606,11 +612,14 @@
             return item.answer.correct ? '\uD83D\uDFE9' : '\uD83D\uDFE5';
         }).join('');
 
+        var gameUrl = window.location.origin + window.location.pathname + '?round=' + roundData.round_id;
+
         var lines = [
             'KEALOA #' + roundData.round_id + ' \u2014 ' + roundData.solution_words.join(' / '),
             correct + '/' + total,
             grid,
-            roundData.round_url
+            '\uD83C\uDFAE Play: ' + gameUrl,
+            '\uD83D\uDD0D Round: ' + roundData.round_url
         ];
         return lines.join('\n');
     }
