@@ -1621,6 +1621,17 @@ class Kealoa_Shortcodes {
             <?php endif; ?>
 
             <?php if (!empty($puzzles)): ?>
+                <?php
+                // Check if any puzzle has co-constructors
+                $has_co_constructors = false;
+                foreach ($puzzles as $p_check) {
+                    $co_check = $this->db->get_puzzle_co_constructors((int) $p_check->puzzle_id, $constructor_id);
+                    if (!empty($co_check)) {
+                        $has_co_constructors = true;
+                        break;
+                    }
+                }
+                ?>
                 <div class="kealoa-constructor-puzzles">
                     <h3><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></h3>
                     
@@ -1629,7 +1640,9 @@ class Kealoa_Shortcodes {
                             <tr>
                                 <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
+                                <?php if ($has_co_constructors): ?>
                                 <th data-sort="text"><?php esc_html_e('Co-Constructors', 'kealoa-reference'); ?></th>
+                                <?php endif; ?>
                                 <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
@@ -1648,6 +1661,7 @@ class Kealoa_Shortcodes {
                                     <td>
                                         <?php echo Kealoa_Formatter::format_puzzle_date_link($puzzle->publication_date); ?>
                                     </td>
+                                    <?php if ($has_co_constructors): ?>
                                     <td>
                                         <?php
                                         if (!empty($co_constructors)) {
@@ -1660,6 +1674,7 @@ class Kealoa_Shortcodes {
                                         }
                                         ?>
                                     </td>
+                                    <?php endif; ?>
                                     <td>
                                         <?php
                                         if (!empty($puzzle->editor_name)) {
