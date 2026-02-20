@@ -1320,7 +1320,7 @@ class Kealoa_Shortcodes {
                     <table class="kealoa-table kealoa-history-table">
                         <thead>
                             <tr>
-                                <th data-sort="date"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
+                                <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
