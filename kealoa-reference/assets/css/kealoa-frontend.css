@@ -446,9 +446,8 @@
 
 .kealoa-person-xwordinfo,
 .kealoa-person-homepage {
-    margin: 8px 0;
-    overflow-wrap: break-word;
-    word-break: break-all;
+    margin: 0 0 8px 0;
+    font-size: 14px;
 }
 
 .kealoa-person-xwordinfo strong,
