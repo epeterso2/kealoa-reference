@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.1.80
+ * Version: 1.1.81
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.1.80');
+define('KEALOA_VERSION', '1.1.81');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -572,15 +572,21 @@ function kealoa_build_search_results_html(array $results): string {
     
     $html = '<div class="kealoa-search-results">';
     $html .= '<h3 class="kealoa-search-heading">' . esc_html__('KEALOA Results', 'kealoa-reference') . '</h3>';
-    $html .= '<ul class="kealoa-search-list">';
+    $html .= '<table class="kealoa-search-table">';
+    $html .= '<thead><tr>';
+    $html .= '<th>' . esc_html__('Type', 'kealoa-reference') . '</th>';
+    $html .= '<th>' . esc_html__('Result', 'kealoa-reference') . '</th>';
+    $html .= '</tr></thead>';
+    $html .= '<tbody>';
     foreach ($results as $result) {
         $label = $type_labels[$result->type] ?? $result->type;
-        $html .= '<li class="kealoa-search-item">';
-        $html .= '<span class="kealoa-search-type">' . esc_html($label) . '</span> ';
-        $html .= '<a href="' . esc_url($result->url) . '">' . esc_html($result->name) . '</a>';
-        $html .= '</li>';
+        $html .= '<tr class="kealoa-search-item">';
+        $html .= '<td class="kealoa-search-type">' . esc_html($label) . '</td>';
+        $html .= '<td><a href="' . esc_url($result->url) . '">' . esc_html($result->name) . '</a></td>';
+        $html .= '</tr>';
     }
-    $html .= '</ul>';
+    $html .= '</tbody>';
+    $html .= '</table>';
     $html .= '</div>';
     
     return $html;
