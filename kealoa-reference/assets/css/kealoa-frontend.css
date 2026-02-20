@@ -924,3 +924,55 @@
     color: var(--volcanic-ash);
     margin-top: 2px;
 }
+
+/* ==========================================================================
+   Social Sharing Bar
+   ========================================================================== */
+
+.kealoa-share-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.kealoa-share-bar__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--pumice);
+    margin-right: 4px;
+}
+
+.kealoa-share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    border: 1px solid var(--volcanic-ash);
+    background: var(--cloud-white);
+    color: var(--pumice);
+    text-decoration: none;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.kealoa-share-btn:hover {
+    background: var(--deep-lagoon);
+    color: #fff;
+    border-color: var(--deep-lagoon);
+}
+
+.kealoa-share-btn--copied {
+    background: var(--palm-green);
+    color: #fff;
+    border-color: var(--palm-green);
+}
+
+.kealoa-share-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}

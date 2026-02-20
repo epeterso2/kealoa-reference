@@ -271,6 +271,7 @@ class Kealoa_Shortcodes {
         ob_start();
         ?>
         <div class="kealoa-round-view">
+            <?php echo Kealoa_Formatter::render_share_bar(sprintf(__('KEALOA Round #%d: %s', 'kealoa-reference'), $round_id, Kealoa_Formatter::format_solution_words($solutions))); ?>
             <div class="kealoa-round-header">
                 
                 <div class="kealoa-round-meta">
@@ -685,6 +686,7 @@ class Kealoa_Shortcodes {
         ob_start();
         ?>
         <div class="kealoa-person-view">
+            <?php echo Kealoa_Formatter::render_share_bar(esc_html($person->full_name)); ?>
             <div class="kealoa-person-header">
                 <div class="kealoa-person-info">
                     <?php if (!empty($person_media_url)): ?>
@@ -1531,6 +1533,7 @@ class Kealoa_Shortcodes {
         ob_start();
         ?>
         <div class="kealoa-constructor-view">
+            <?php echo Kealoa_Formatter::render_share_bar(esc_html($constructor->full_name)); ?>
             <div class="kealoa-constructor-header">
                 <div class="kealoa-constructor-info">
                     <?php if (!empty($con_image_url)): ?>
@@ -1787,6 +1790,7 @@ class Kealoa_Shortcodes {
         ob_start();
         ?>
         <div class="kealoa-editor-view">
+            <?php echo Kealoa_Formatter::render_share_bar(esc_html($editor_name)); ?>
             <div class="kealoa-editor-header">
                 <div class="kealoa-editor-info">
                     <?php if (!empty($editor_image_url)): ?>

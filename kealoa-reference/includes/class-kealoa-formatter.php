@@ -450,4 +450,32 @@ class Kealoa_Formatter {
             esc_html(strtoupper($guessed_word))
         );
     }
-}
+    /**
+     * Render a social sharing bar with Facebook, X (Twitter), Email, and Copy Link buttons.
+     *
+     * @param string $title The page title to share
+     * @return string HTML for the sharing bar
+     */
+    public static function render_share_bar(string $title): string {
+        $encoded_title = rawurlencode($title);
+        // URLs are generated client-side via JS for the current page URL
+        $fb_href = '#';
+        $x_href = '#';
+        $email_href = '#';
+
+        return '<div class="kealoa-share-bar">'
+            . '<span class="kealoa-share-bar__label">' . esc_html__('Share:', 'kealoa-reference') . '</span>'
+            . '<a class="kealoa-share-btn kealoa-share-btn--facebook" title="' . esc_attr__('Share on Facebook', 'kealoa-reference') . '" data-share="facebook" data-title="' . esc_attr($title) . '" href="' . $fb_href . '" target="_blank" rel="noopener noreferrer">'
+            . '<svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>'
+            . '</a>'
+            . '<a class="kealoa-share-btn kealoa-share-btn--x" title="' . esc_attr__('Share on X', 'kealoa-reference') . '" data-share="x" data-title="' . esc_attr($title) . '" href="' . $x_href . '" target="_blank" rel="noopener noreferrer">'
+            . '<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>'
+            . '</a>'
+            . '<a class="kealoa-share-btn kealoa-share-btn--email" title="' . esc_attr__('Share via Email', 'kealoa-reference') . '" data-share="email" data-title="' . esc_attr($title) . '" href="' . $email_href . '">'
+            . '<svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6" fill="none" stroke="currentColor" stroke-width="2"/></svg>'
+            . '</a>'
+            . '<button type="button" class="kealoa-share-btn kealoa-share-btn--copy" title="' . esc_attr__('Copy link to clipboard', 'kealoa-reference') . '" data-share="copy">'
+            . '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+            . '</button>'
+            . '</div>';
+    }}

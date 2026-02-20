@@ -444,4 +444,63 @@
     } else {
         initRoundPicker();
     }
+
+    /**
+     * Social sharing bar
+     *
+     * Wires up share buttons with the current page URL and title.
+     */
+    function initShareBar() {
+        var url = window.location.href;
+
+        document.querySelectorAll('.kealoa-share-bar').forEach(function (bar) {
+            bar.querySelectorAll('[data-share]').forEach(function (btn) {
+                var action = btn.getAttribute('data-share');
+                var title = btn.getAttribute('data-title') || document.title;
+                var encodedUrl = encodeURIComponent(url);
+                var encodedTitle = encodeURIComponent(title);
+
+                if (action === 'facebook') {
+                    btn.href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodedUrl;
+                } else if (action === 'x') {
+                    btn.href = 'https://x.com/intent/tweet?url=' + encodedUrl + '&text=' + encodedTitle;
+                } else if (action === 'email') {
+                    btn.href = 'mailto:?subject=' + encodedTitle + '&body=' + encodedUrl;
+                } else if (action === 'copy') {
+                    btn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(url).then(function () {
+                                showCopyFeedback(btn);
+                            });
+                        } else {
+                            var ta = document.createElement('textarea');
+                            ta.value = url;
+                            ta.style.position = 'fixed';
+                            ta.style.opacity = '0';
+                            document.body.appendChild(ta);
+                            ta.select();
+                            try { document.execCommand('copy'); showCopyFeedback(btn); } catch (ex) {}
+                            document.body.removeChild(ta);
+                        }
+                    });
+                }
+            });
+        });
+
+        function showCopyFeedback(el) {
+            el.classList.add('kealoa-share-btn--copied');
+            el.setAttribute('title', 'Copied!');
+            setTimeout(function () {
+                el.classList.remove('kealoa-share-btn--copied');
+                el.setAttribute('title', 'Copy link to clipboard');
+            }, 2000);
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initShareBar);
+    } else {
+        initShareBar();
+    }
 })();
