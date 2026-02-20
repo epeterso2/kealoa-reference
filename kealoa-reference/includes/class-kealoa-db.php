@@ -566,8 +566,8 @@ class Kealoa_DB {
             ['name' => 'Will Weng',         'start' => '1969-01-06', 'end' => '1977-02-27'],
             ['name' => 'Eugene T. Maleska', 'start' => '1977-02-28', 'end' => '1993-09-05'],
             ['name' => 'Mel Taub',          'start' => '1993-09-06', 'end' => '1993-11-20'],
-            ['name' => 'Joel Fagliano',     'start' => '2024-03-14', 'end' => '2024-12-29'],
             ['name' => 'Will Shortz',       'start' => '1993-11-21', 'end' => '2099-12-31'],
+            ['name' => 'Joel Fagliano',     'start' => '2024-03-14', 'end' => '2024-12-29'],
         ];
 
         $updated = 0;
