@@ -306,7 +306,6 @@
     color: var(--pumice);
     text-transform: uppercase;
     padding: 4px 8px 8px 0;
-    border-bottom: 2px solid var(--volcanic-ash);
 }
 
 .kealoa-search-table th:first-child {
@@ -315,12 +314,7 @@
 
 .kealoa-search-item td {
     padding: 6px 8px 6px 0;
-    border-bottom: 1px solid var(--volcanic-ash);
     vertical-align: top;
-}
-
-.kealoa-search-item:last-child td {
-    border-bottom: none;
 }
 
 .kealoa-search-type {

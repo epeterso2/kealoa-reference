@@ -2174,6 +2174,26 @@ class Kealoa_DB {
             }
         }
 
+        // Include rounds from matching players (as guesser or clue giver)
+        if (!empty($persons)) {
+            $person_ids = array_map(fn($p) => (int) $p->id, $persons);
+            $placeholders = implode(',', array_fill(0, count($person_ids), '%d'));
+            $player_rounds = $this->wpdb->get_results(
+                $this->wpdb->prepare(
+                    "SELECT DISTINCT r.id AS round_id
+                    FROM {$this->rounds_table} r
+                    LEFT JOIN {$this->round_guessers_table} rg ON rg.round_id = r.id
+                    WHERE r.clue_giver_id IN ($placeholders)
+                       OR rg.person_id IN ($placeholders)
+                    ORDER BY r.round_date DESC, r.round_number ASC",
+                    ...array_merge($person_ids, $person_ids)
+                )
+            );
+            foreach ($player_rounds as $rd) {
+                $add_round_result((int) $rd->round_id);
+            }
+        }
+
         // Include rounds from matching editors
         if (!empty($editors)) {
             $editor_names = array_map(fn($e) => $e->editor_name, $editors);
