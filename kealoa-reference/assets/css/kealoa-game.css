@@ -482,6 +482,38 @@
 }
 
 /* ==========================================================================
+   Share Results
+   ========================================================================== */
+
+.kealoa-game__share {
+    text-align: center;
+    margin: 20px 0 30px 0;
+}
+
+.kealoa-game__share-btn {
+    display: inline-block;
+    padding: 10px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--deep-lagoon);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.kealoa-game__share-btn:hover {
+    background: var(--driftwood-dark);
+    transform: translateY(-1px);
+}
+
+.kealoa-game__share-btn--copied {
+    background: var(--palm-green);
+    pointer-events: none;
+}
+
+/* ==========================================================================
    Round Link & Play Again
    ========================================================================== */
 

@@ -461,6 +461,18 @@
         scoreTable.appendChild(tbody);
         container.appendChild(scoreTable);
 
+        // Share results
+        var shareText = buildShareText(userCorrect, totalClues, userAnswers);
+        var shareSection = el('div', { className: 'kealoa-game__share' }, [
+            el('button', {
+                type: 'button',
+                className: 'kealoa-game__share-btn',
+                textContent: '\uD83D\uDCE4 Share Results',
+                onClick: function () { shareResults(shareText, this); }
+            })
+        ]);
+        container.appendChild(shareSection);
+
         // Clue-by-clue review table
         container.appendChild(
             el('h3', { className: 'kealoa-game__review-title', textContent: 'Clue-by-Clue Review' })
@@ -579,6 +591,77 @@
                 ])
             ])
         );
+    }
+
+    function buildShareText(correct, total, answers) {
+        // Sort answers back to show order for the emoji grid
+        var sorted = answers.map(function (a, idx) {
+            return { answer: a, clue: roundData.clues[idx] };
+        });
+        sorted.sort(function (a, b) {
+            return (a.clue.clue_number || 0) - (b.clue.clue_number || 0);
+        });
+
+        var grid = sorted.map(function (item) {
+            return item.answer.correct ? '\uD83D\uDFE9' : '\uD83D\uDFE5';
+        }).join('');
+
+        var lines = [
+            'KEALOA #' + roundData.round_id + ' \u2014 ' + roundData.solution_words.join(' / '),
+            correct + '/' + total,
+            grid,
+            roundData.round_url
+        ];
+        return lines.join('\n');
+    }
+
+    function shareResults(text, btnElement) {
+        if (navigator.share) {
+            navigator.share({ text: text }).catch(function () {
+                // User cancelled or share failed — fall back to clipboard
+                copyToClipboard(text, btnElement);
+            });
+        } else {
+            copyToClipboard(text, btnElement);
+        }
+    }
+
+    function copyToClipboard(text, btnElement) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () {
+                showCopiedFeedback(btnElement);
+            }).catch(function () {
+                fallbackCopy(text, btnElement);
+            });
+        } else {
+            fallbackCopy(text, btnElement);
+        }
+    }
+
+    function fallbackCopy(text, btnElement) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            showCopiedFeedback(btnElement);
+        } catch (e) {
+            // Silently fail
+        }
+        document.body.removeChild(ta);
+    }
+
+    function showCopiedFeedback(btnElement) {
+        var original = btnElement.textContent;
+        btnElement.textContent = '\u2705 Copied!';
+        btnElement.classList.add('kealoa-game__share-btn--copied');
+        setTimeout(function () {
+            btnElement.textContent = original;
+            btnElement.classList.remove('kealoa-game__share-btn--copied');
+        }, 2000);
     }
 
     function escapeHtml(str) {
