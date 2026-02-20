@@ -543,7 +543,7 @@
                     el('td', { textContent: clueRef }),
                     el('td', { textContent: clue.clue_text }),
                     el('td', {}, [
-                        el('strong', { textContent: clue.correct_answer })
+                        el('strong', { className: 'kealoa-guess-correct', textContent: clue.correct_answer })
                     ]),
                     el('td', {}, [
                         el('span', { className: resultClass, textContent: resultText })
