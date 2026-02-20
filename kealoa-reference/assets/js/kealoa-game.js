@@ -134,13 +134,13 @@
                     el('button', {
                         type: 'button',
                         className: 'kealoa-game__start-btn',
-                        textContent: 'Show Order',
+                        textContent: 'In Show Order',
                         onClick: function () { startGame('show'); }
                     }),
                     el('button', {
                         type: 'button',
                         className: 'kealoa-game__start-btn',
-                        textContent: 'Random Order',
+                        textContent: 'In Random Order',
                         onClick: function () { startGame('random'); }
                     })
                 ])
@@ -511,13 +511,13 @@
                     el('button', {
                         type: 'button',
                         className: 'kealoa-game__start-btn',
-                        textContent: 'Show Order',
+                        textContent: 'In Show Order',
                         onClick: function () { startGame('show'); }
                     }),
                     el('button', {
                         type: 'button',
                         className: 'kealoa-game__start-btn',
-                        textContent: 'Random Order',
+                        textContent: 'In Random Order',
                         onClick: function () { startGame('random'); }
                     })
                 ])

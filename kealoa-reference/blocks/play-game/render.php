@@ -46,10 +46,10 @@ if (empty($round_ids)) {
         </p>
         <div class="kealoa-game__mode-buttons">
             <button type="button" class="kealoa-game__start-btn" data-mode="show">
-                <?php esc_html_e('Show Order', 'kealoa-reference'); ?>
+                <?php esc_html_e('In Show Order', 'kealoa-reference'); ?>
             </button>
             <button type="button" class="kealoa-game__start-btn" data-mode="random">
-                <?php esc_html_e('Random Order', 'kealoa-reference'); ?>
+                <?php esc_html_e('In Random Order', 'kealoa-reference'); ?>
             </button>
         </div>
     </div>

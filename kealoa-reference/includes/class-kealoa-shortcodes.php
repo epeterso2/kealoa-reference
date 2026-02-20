@@ -538,10 +538,10 @@ class Kealoa_Shortcodes {
                 . '<p class="kealoa-game__debug-label">' . esc_html__('Debug: Play This Round', 'kealoa-reference') . '</p>'
                 . '<div class="kealoa-game__mode-buttons">'
                 . '<button type="button" class="kealoa-game__start-btn" data-mode="show">'
-                . esc_html__('Show Order', 'kealoa-reference')
+                . esc_html__('In Show Order', 'kealoa-reference')
                 . '</button>'
                 . '<button type="button" class="kealoa-game__start-btn" data-mode="random">'
-                . esc_html__('Random Order', 'kealoa-reference')
+                . esc_html__('In Random Order', 'kealoa-reference')
                 . '</button>'
                 . '</div></div></div>';
         }
