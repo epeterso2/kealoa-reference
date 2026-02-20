@@ -1650,7 +1650,7 @@ class Kealoa_Shortcodes {
                                                     $round_links[] = Kealoa_Formatter::format_round_date_link($rid, $rdate);
                                                 }
                                             }
-                                            echo implode(', ', $round_links);
+                                            echo implode('<br>', $round_links);
                                         } else {
                                             echo '—';
                                         }
@@ -1667,7 +1667,7 @@ class Kealoa_Shortcodes {
                                                     $solution_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
                                                 }
                                             }
-                                            echo implode(', ', $solution_links);
+                                            echo implode('<br>', $solution_links);
                                         } else {
                                             echo '—';
                                         }
@@ -1888,7 +1888,7 @@ class Kealoa_Shortcodes {
                                                     $round_links[] = Kealoa_Formatter::format_round_date_link($rid, $rdate);
                                                 }
                                             }
-                                            echo implode(', ', $round_links);
+                                            echo implode('<br>', $round_links);
                                         } else {
                                             echo '—';
                                         }
@@ -1905,7 +1905,7 @@ class Kealoa_Shortcodes {
                                                     $solution_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
                                                 }
                                             }
-                                            echo implode(', ', $solution_links);
+                                            echo implode('<br>', $solution_links);
                                         } else {
                                             echo '—';
                                         }
