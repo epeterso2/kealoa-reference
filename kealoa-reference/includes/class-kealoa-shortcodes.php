@@ -1586,6 +1586,12 @@ class Kealoa_Shortcodes {
                                 <?php echo Kealoa_Formatter::format_xwordinfo_link($constructor->xwordinfo_profile_name, 'XWordInfo Profile'); ?>
                             </p>
                         <?php endif; ?>
+                        
+                        <?php if ($matching_person && !empty($matching_person->home_page_url)): ?>
+                            <p class="kealoa-constructor-xwordinfo">
+                                <?php echo Kealoa_Formatter::format_home_page_link($matching_person->home_page_url); ?>
+                            </p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
