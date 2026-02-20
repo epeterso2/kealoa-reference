@@ -503,10 +503,10 @@
             );
         }
 
-        // Play again
+        // Play another round
         container.appendChild(
             el('div', { className: 'kealoa-game__play-again' }, [
-                el('p', { className: 'kealoa-game__play-again-label', textContent: 'Play Again!' }),
+                el('p', { className: 'kealoa-game__play-again-label', textContent: 'Play Another Round!' }),
                 el('div', { className: 'kealoa-game__mode-buttons' }, [
                     el('button', {
                         type: 'button',
