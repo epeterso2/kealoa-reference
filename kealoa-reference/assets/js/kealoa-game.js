@@ -618,8 +618,7 @@
             'KEALOA #' + roundData.round_id + ' \u2014 ' + roundData.solution_words.join(' / '),
             correct + '/' + total,
             grid,
-            '\uD83C\uDFAE Play: ' + gameUrl,
-            '\uD83D\uDD0D Round: ' + roundData.round_url
+            '\uD83C\uDFAE Play: ' + gameUrl
         ];
         return lines.join('\n');
     }
