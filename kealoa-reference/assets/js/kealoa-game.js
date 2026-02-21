@@ -24,7 +24,6 @@
         if (words.length === 2) return words[0] + ' and ' + words[1];
         return words.slice(0, -1).join(', ') + ', and ' + words[words.length - 1];
     }
-    }
 
     containers.forEach(function (container) { initGame(container); });
 
