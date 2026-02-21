@@ -222,6 +222,12 @@
     color: var(--driftwood-dark);
 }
 
+/* Responsive table wrapper for clues */
+.kealoa-clues-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 .kealoa-clues-table {
     font-size: 13px;
     table-layout: auto;
@@ -731,6 +737,102 @@
     .kealoa-clues-table .kealoa-guesser-col {
         min-width: 80px;
     }
+
+    /* Hide least-important clues table columns: Editor, Day */
+    .kealoa-clues-table .kealoa-editor,
+    .kealoa-clues-table .kealoa-day-cell {
+        display: none;
+    }
+
+    /* Reduce clues table font size */
+    .kealoa-clues-table {
+        font-size: 12px;
+    }
+
+    .kealoa-clues-table th,
+    .kealoa-clues-table td {
+        padding: 6px 4px;
+    }
+
+    /* Allow clue text to wrap tighter */
+    .kealoa-clues-table .kealoa-clue-text {
+        min-width: 120px;
+    }
+
+    /* Constructor/editor puzzle tables: hide Day column */
+    .kealoa-constructor-puzzles-table .kealoa-day-cell,
+    .kealoa-editor-puzzles-table .kealoa-day-cell,
+    .kealoa-constructor-puzzles-table th:first-child,
+    .kealoa-editor-puzzles-table th:first-child {
+        display: none;
+    }
+
+    /* Allow round history Solution Words to wrap */
+    .kealoa-history-table td {
+        white-space: normal;
+    }
+
+    /* Scrollable tab navigation */
+    .kealoa-tab-nav {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap;
+    }
+
+    .kealoa-tab-button {
+        flex-shrink: 0;
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    /* Hide more clues table columns: Constructors, Puzzle Date, Clue # */
+    .kealoa-clues-table .kealoa-constructors,
+    .kealoa-clues-table .kealoa-puzzle-date,
+    .kealoa-clues-table .kealoa-clue-ref {
+        display: none;
+    }
+
+    /* Compact clues table spacing */
+    .kealoa-clues-table {
+        font-size: 11px;
+    }
+
+    .kealoa-clues-table th,
+    .kealoa-clues-table td {
+        padding: 5px 3px;
+    }
+
+    .kealoa-clues-table .kealoa-guesser-col {
+        min-width: 60px;
+    }
+
+    /* Constructor/editor puzzle tables: more compact */
+    .kealoa-constructor-puzzles-table,
+    .kealoa-editor-puzzles-table {
+        font-size: 12px;
+    }
+
+    /* Rounds table: hide Description column */
+    .kealoa-rounds-table .kealoa-description-cell,
+    .kealoa-rounds-table thead th:nth-child(4) {
+        display: none;
+    }
+
+    /* Persons table: hide Best Score, Best Streak */
+    .kealoa-persons-table th:nth-child(6),
+    .kealoa-persons-table td:nth-child(6),
+    .kealoa-persons-table th:nth-child(7),
+    .kealoa-persons-table td:nth-child(7) {
+        display: none;
+    }
+
+    /* Person round history: hide Streak column */
+    .kealoa-history-table th:nth-child(6),
+    .kealoa-history-table td:nth-child(6) {
+        display: none;
+    }
 }
 
 @media screen and (max-width: 480px) {
@@ -740,6 +842,46 @@
     
     .kealoa-page-container {
         padding: 10px 0;
+    }
+
+    /* Base table: tighten padding */
+    .kealoa-table th,
+    .kealoa-table td {
+        padding: 6px 6px;
+    }
+
+    /* Persons table: also hide Correct column */
+    .kealoa-persons-table th:nth-child(4),
+    .kealoa-persons-table td:nth-child(4) {
+        display: none;
+    }
+
+    /* Rounds page year stats table: hide Guesses and Correct */
+    .kealoa-rounds-table-wrapper .kealoa-year-table th:nth-child(4),
+    .kealoa-rounds-table-wrapper .kealoa-year-table td:nth-child(4),
+    .kealoa-rounds-table-wrapper .kealoa-year-table th:nth-child(5),
+    .kealoa-rounds-table-wrapper .kealoa-year-table td:nth-child(5) {
+        display: none;
+    }
+
+    /* Person view year table: hide Best Score, Best Streak */
+    .kealoa-person-view .kealoa-year-table th:nth-child(6),
+    .kealoa-person-view .kealoa-year-table td:nth-child(6),
+    .kealoa-person-view .kealoa-year-table th:nth-child(7),
+    .kealoa-person-view .kealoa-year-table td:nth-child(7) {
+        display: none;
+    }
+
+    /* Person round history: also hide Answered column */
+    .kealoa-history-table th:nth-child(3),
+    .kealoa-history-table td:nth-child(3) {
+        display: none;
+    }
+
+    /* Tab buttons: even more compact */
+    .kealoa-tab-button {
+        padding: 6px 10px;
+        font-size: 12px;
     }
 }
 

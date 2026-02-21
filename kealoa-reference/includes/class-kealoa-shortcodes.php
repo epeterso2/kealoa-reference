@@ -420,17 +420,18 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-clues-section">
                     <h3><?php esc_html_e('Clues', 'kealoa-reference'); ?></h3>
                     
+                    <div class="kealoa-clues-table-wrapper">
                     <table class="kealoa-table kealoa-clues-table">
                         <thead>
                             <tr>
-                                <th data-sort="number"><?php esc_html_e('#', 'kealoa-reference'); ?></th>
-                                <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
-                                <th data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
-                                <th data-sort="text"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></th>
-                                <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
-                                <th data-sort="clue"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
-                                <th data-sort="text"><?php esc_html_e('Clue Text', 'kealoa-reference'); ?></th>
-                                <th data-sort="text"><?php esc_html_e('Answer', 'kealoa-reference'); ?></th>
+                                <th class="kealoa-clue-number" data-sort="number"><?php esc_html_e('#', 'kealoa-reference'); ?></th>
+                                <th class="kealoa-day-cell" data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
+                                <th class="kealoa-puzzle-date" data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
+                                <th class="kealoa-constructors" data-sort="text"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></th>
+                                <th class="kealoa-editor" data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
+                                <th class="kealoa-clue-ref" data-sort="clue"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
+                                <th class="kealoa-clue-text" data-sort="text"><?php esc_html_e('Clue Text', 'kealoa-reference'); ?></th>
+                                <th class="kealoa-correct-answer" data-sort="text"><?php esc_html_e('Answer', 'kealoa-reference'); ?></th>
                                 <?php foreach ($guessers as $guesser): ?>
                                     <th class="kealoa-guesser-col">
                                         <?php echo Kealoa_Formatter::format_person_link((int) $guesser->id, $guesser->full_name); ?>
@@ -491,6 +492,7 @@ class Kealoa_Shortcodes {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             <?php else: ?>
                 <p class="kealoa-no-data"><?php esc_html_e('No clues recorded for this round.', 'kealoa-reference'); ?></p>
