@@ -567,6 +567,34 @@
             );
         });
         reviewTable.appendChild(reviewTbody);
+
+        // Hide columns where every row has no meaningful content
+        (function () {
+            var rows = reviewTbody.querySelectorAll('tr');
+            var colCount = reviewThead.querySelectorAll('th').length;
+            for (var col = colCount - 1; col >= 0; col--) {
+                var allEmpty = true;
+                for (var r = 0; r < rows.length; r++) {
+                    var cell = rows[r].children[col];
+                    if (cell) {
+                        var text = (cell.textContent || '').trim();
+                        if (text !== '' && text !== '\u2014') {
+                            allEmpty = false;
+                            break;
+                        }
+                    }
+                }
+                if (allEmpty) {
+                    reviewThead.querySelector('tr').children[col].style.display = 'none';
+                    for (var r2 = 0; r2 < rows.length; r2++) {
+                        if (rows[r2].children[col]) {
+                            rows[r2].children[col].style.display = 'none';
+                        }
+                    }
+                }
+            }
+        })();
+
         var reviewWrapper = el('div', { className: 'kealoa-game__table-scroll' });
         reviewWrapper.appendChild(reviewTable);
         container.appendChild(reviewWrapper);
