@@ -880,7 +880,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($round_history)): ?>
                 <div class="kealoa-accuracy-chart-section">
-                    <h3><?php esc_html_e('Accuracy by Round', 'kealoa-reference'); ?></h3>
+                    <h3><?php esc_html_e('Score by Round', 'kealoa-reference'); ?></h3>
                     <div class="kealoa-chart-container">
                         <canvas id="kealoa-accuracy-chart"></canvas>
                     </div>
@@ -895,10 +895,7 @@ class Kealoa_Shortcodes {
                         $rid = (int) $ch->round_id;
                         $ri = $round_info[$rid] ?? null;
                         $chart_labels[] = Kealoa_Formatter::format_date($ch->round_date);
-                        $pct_val = $ch->total_clues > 0
-                            ? round(($ch->correct_count / $ch->total_clues) * 100, 1)
-                            : 0;
-                        $chart_data[] = $pct_val;
+                        $chart_data[] = (int) $ch->correct_count;
                         $chart_words[] = $ri ? $ri['words'] : '';
                         $chart_urls[] = $ri ? $ri['url'] : home_url('/kealoa/round/' . $rid . '/');
                     }
@@ -914,7 +911,7 @@ class Kealoa_Shortcodes {
                                 data: {
                                     labels: <?php echo wp_json_encode($chart_labels); ?>,
                                     datasets: [{
-                                        label: <?php echo wp_json_encode(__('Accuracy %', 'kealoa-reference')); ?>,
+                                        label: <?php echo wp_json_encode(__('Correct', 'kealoa-reference')); ?>,
                                         data: <?php echo wp_json_encode($chart_data); ?>,
                                         borderColor: '#2271b1',
                                         backgroundColor: 'rgba(34, 113, 177, 0.1)',
@@ -937,10 +934,14 @@ class Kealoa_Shortcodes {
                                         y: {
                                             title: {
                                                 display: true,
-                                                text: <?php echo wp_json_encode(__('Accuracy %', 'kealoa-reference')); ?>
+                                                text: <?php echo wp_json_encode(__('Correct', 'kealoa-reference')); ?>
                                             },
                                             min: 0,
-                                            max: 100
+                                            max: 10,
+                                            ticks: {
+                                                stepSize: 1,
+                                                precision: 0
+                                            }
                                         }
                                     },
                                     plugins: {
@@ -957,7 +958,7 @@ class Kealoa_Shortcodes {
                                                     return '';
                                                 },
                                                 label: function(item) {
-                                                    return item.parsed.y + '%';
+                                                    return item.parsed.y + ' correct';
                                                 }
                                             }
                                         }
