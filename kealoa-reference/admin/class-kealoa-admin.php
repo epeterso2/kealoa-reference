@@ -211,6 +211,7 @@ class Kealoa_Admin {
             'delete_clue' => $this->handle_delete_clue(),
             'save_guesses' => $this->handle_save_guesses(),
             'repair_delete_puzzles' => $this->handle_repair_delete_puzzles(),
+            'repair_delete_constructors' => $this->handle_repair_delete_constructors(),
             'repair_delete_rounds' => $this->handle_repair_delete_rounds(),
             'repair_delete_orphans' => $this->handle_repair_delete_orphans(),
             'save_settings' => $this->handle_save_settings(),
@@ -2470,6 +2471,13 @@ class Kealoa_Admin {
                 'columns'     => ['ID', 'Publication Date', 'Editor'],
                 'fields'      => ['id', 'publication_date', 'editor_name'],
             ],
+            'orphan_constructors' => [
+                'label'       => 'Orphan Constructors',
+                'description' => 'Constructors not associated with any puzzle.',
+                'action'      => 'repair_delete_constructors',
+                'columns'     => ['ID', 'Full Name'],
+                'fields'      => ['id', 'full_name'],
+            ],
             'rounds_no_clues' => [
                 'label'       => 'Rounds With No Clues',
                 'description' => 'Rounds that have zero clues associated with them.',
@@ -2701,6 +2709,24 @@ class Kealoa_Admin {
 
         foreach ($ids as $id) {
             if ($this->db->delete_puzzle($id)) {
+                $deleted++;
+            }
+        }
+
+        Kealoa_Shortcodes::flush_all_caches();
+        wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $deleted));
+        exit;
+    }
+
+    /**
+     * Handle deletion of orphan constructors.
+     */
+    private function handle_repair_delete_constructors(): void {
+        $ids = $this->parse_selected_ids();
+        $deleted = 0;
+
+        foreach ($ids as $id) {
+            if ($this->db->delete_constructor($id)) {
                 $deleted++;
             }
         }

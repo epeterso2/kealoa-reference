@@ -2242,7 +2242,19 @@ class Kealoa_DB {
             $issues['orphan_puzzles'] = $orphan_puzzles;
         }
 
-        // 2. Rounds with no clues
+        // 2. Orphan constructors — not associated with any puzzle
+        $orphan_constructors = $this->wpdb->get_results(
+            "SELECT c.id, c.full_name
+             FROM {$this->constructors_table} c
+             LEFT JOIN {$this->puzzle_constructors_table} pc ON pc.constructor_id = c.id
+             WHERE pc.id IS NULL
+             ORDER BY c.full_name"
+        );
+        if ($orphan_constructors) {
+            $issues['orphan_constructors'] = $orphan_constructors;
+        }
+
+        // 3. Rounds with no clues
         $rounds_no_clues = $this->wpdb->get_results(
             "SELECT r.id, r.round_date, r.round_number, r.description
              FROM {$this->rounds_table} r
@@ -2254,7 +2266,7 @@ class Kealoa_DB {
             $issues['rounds_no_clues'] = $rounds_no_clues;
         }
 
-        // 3. Rounds with no solution words
+        // 4. Rounds with no solution words
         $rounds_no_solutions = $this->wpdb->get_results(
             "SELECT r.id, r.round_date, r.round_number, r.description
              FROM {$this->rounds_table} r
@@ -2266,7 +2278,7 @@ class Kealoa_DB {
             $issues['rounds_no_solutions'] = $rounds_no_solutions;
         }
 
-        // 4. Rounds with no guessers
+        // 5. Rounds with no guessers
         $rounds_no_guessers = $this->wpdb->get_results(
             "SELECT r.id, r.round_date, r.round_number, r.description
              FROM {$this->rounds_table} r
@@ -2278,7 +2290,7 @@ class Kealoa_DB {
             $issues['rounds_no_guessers'] = $rounds_no_guessers;
         }
 
-        // 5. Puzzle-constructor links referencing non-existent puzzles
+        // 6. Puzzle-constructor links referencing non-existent puzzles
         $orphan_pc_puzzles = $this->wpdb->get_results(
             "SELECT pc.id, pc.puzzle_id, pc.constructor_id
              FROM {$this->puzzle_constructors_table} pc
@@ -2289,7 +2301,7 @@ class Kealoa_DB {
             $issues['orphan_puzzle_constructor_puzzles'] = $orphan_pc_puzzles;
         }
 
-        // 6. Puzzle-constructor links referencing non-existent constructors
+        // 7. Puzzle-constructor links referencing non-existent constructors
         $orphan_pc_constructors = $this->wpdb->get_results(
             "SELECT pc.id, pc.puzzle_id, pc.constructor_id
              FROM {$this->puzzle_constructors_table} pc
@@ -2300,7 +2312,7 @@ class Kealoa_DB {
             $issues['orphan_puzzle_constructor_constructors'] = $orphan_pc_constructors;
         }
 
-        // 7. Clues referencing non-existent rounds
+        // 8. Clues referencing non-existent rounds
         $orphan_clue_rounds = $this->wpdb->get_results(
             "SELECT cl.id, cl.round_id, cl.clue_number, cl.clue_text
              FROM {$this->clues_table} cl
@@ -2311,7 +2323,7 @@ class Kealoa_DB {
             $issues['orphan_clue_rounds'] = $orphan_clue_rounds;
         }
 
-        // 8. Clues referencing non-existent puzzles
+        // 9. Clues referencing non-existent puzzles
         $orphan_clue_puzzles = $this->wpdb->get_results(
             "SELECT cl.id, cl.round_id, cl.clue_number, cl.puzzle_id
              FROM {$this->clues_table} cl
@@ -2322,7 +2334,7 @@ class Kealoa_DB {
             $issues['orphan_clue_puzzles'] = $orphan_clue_puzzles;
         }
 
-        // 9. Guesses referencing non-existent clues
+        // 10. Guesses referencing non-existent clues
         $orphan_guess_clues = $this->wpdb->get_results(
             "SELECT g.id, g.clue_id, g.guesser_person_id, g.guessed_word
              FROM {$this->guesses_table} g
@@ -2333,7 +2345,7 @@ class Kealoa_DB {
             $issues['orphan_guess_clues'] = $orphan_guess_clues;
         }
 
-        // 10. Guesses referencing non-existent persons
+        // 11. Guesses referencing non-existent persons
         $orphan_guess_persons = $this->wpdb->get_results(
             "SELECT g.id, g.clue_id, g.guesser_person_id, g.guessed_word
              FROM {$this->guesses_table} g
@@ -2344,7 +2356,7 @@ class Kealoa_DB {
             $issues['orphan_guess_persons'] = $orphan_guess_persons;
         }
 
-        // 11. Round-guesser links referencing non-existent rounds
+        // 12. Round-guesser links referencing non-existent rounds
         $orphan_rg_rounds = $this->wpdb->get_results(
             "SELECT rg.id, rg.round_id, rg.person_id
              FROM {$this->round_guessers_table} rg
@@ -2355,7 +2367,7 @@ class Kealoa_DB {
             $issues['orphan_round_guesser_rounds'] = $orphan_rg_rounds;
         }
 
-        // 12. Round-guesser links referencing non-existent persons
+        // 13. Round-guesser links referencing non-existent persons
         $orphan_rg_persons = $this->wpdb->get_results(
             "SELECT rg.id, rg.round_id, rg.person_id
              FROM {$this->round_guessers_table} rg
@@ -2366,7 +2378,7 @@ class Kealoa_DB {
             $issues['orphan_round_guesser_persons'] = $orphan_rg_persons;
         }
 
-        // 13. Round solutions referencing non-existent rounds
+        // 14. Round solutions referencing non-existent rounds
         $orphan_rs_rounds = $this->wpdb->get_results(
             "SELECT rs.id, rs.round_id, rs.word
              FROM {$this->round_solutions_table} rs
@@ -2377,7 +2389,7 @@ class Kealoa_DB {
             $issues['orphan_round_solution_rounds'] = $orphan_rs_rounds;
         }
 
-        // 14. Rounds referencing non-existent clue giver (person)
+        // 15. Rounds referencing non-existent clue giver (person)
         $orphan_clue_givers = $this->wpdb->get_results(
             "SELECT r.id, r.round_date, r.round_number, r.clue_giver_id
              FROM {$this->rounds_table} r
