@@ -548,27 +548,72 @@
    Responsive
    ========================================================================== */
 
-@media screen and (max-width: 480px) {
+@media screen and (max-width: 768px) {
     .kealoa-game__welcome {
         padding: 40px 20px;
     }
 
     .kealoa-game__title {
-        font-size: 24px;
+        font-size: 26px;
+    }
+
+    .kealoa-game__description {
+        font-size: 14px;
+    }
+
+    .kealoa-game__clue-card {
+        padding: 16px;
     }
 
     .kealoa-game__clue-text {
         font-size: 16px;
     }
 
+    .kealoa-game__round-info {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .kealoa-game__round-details {
+        padding: 10px 14px;
+    }
+
+    .kealoa-game__results-title {
+        font-size: 22px;
+    }
+
+    .kealoa-game__review-title {
+        font-size: 17px;
+    }
+
+    .kealoa-game__mode-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .kealoa-game__welcome {
+        padding: 30px 15px;
+    }
+
+    .kealoa-game__title {
+        font-size: 22px;
+    }
+
+    .kealoa-game__clue-text {
+        font-size: 15px;
+    }
+
     .kealoa-game__answer-btn {
         font-size: 14px;
-        padding: 12px 16px;
+        padding: 12px 14px;
     }
 
     .kealoa-game__start-btn {
-        padding: 12px 30px;
+        padding: 12px 24px;
         font-size: 16px;
+        width: 100%;
     }
 
     .kealoa-game__score-table,
@@ -581,5 +626,35 @@
     .kealoa-game__guess-table th,
     .kealoa-game__guess-table td {
         padding: 8px 10px;
+    }
+
+    .kealoa-game__clue-card {
+        padding: 12px;
+    }
+
+    .kealoa-game__clue-meta {
+        gap: 6px;
+        font-size: 12px;
+    }
+
+    .kealoa-game__clue-meta span {
+        padding: 2px 6px;
+    }
+
+    .kealoa-game__result h3 {
+        font-size: 20px;
+    }
+
+    .kealoa-game__results-title {
+        font-size: 20px;
+    }
+
+    .kealoa-game__next-btn {
+        font-size: 15px;
+        padding: 12px;
+    }
+
+    .kealoa-game__share-btn {
+        width: 100%;
     }
 }
