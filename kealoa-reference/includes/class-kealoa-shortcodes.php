@@ -1485,6 +1485,7 @@ class Kealoa_Shortcodes {
         
         $puzzles = $this->db->get_constructor_puzzles($constructor_id);
         $stats = $this->db->get_constructor_stats($constructor_id);
+        $player_results = $this->db->get_constructor_player_results($constructor_id);
 
         // Check if this constructor is also a player (person)
         $matching_person = $this->db->get_person_by_name($constructor->full_name);
@@ -1699,6 +1700,47 @@ class Kealoa_Shortcodes {
             <?php else: ?>
                 <p class="kealoa-no-data"><?php esc_html_e('No puzzles found for this constructor.', 'kealoa-reference'); ?></p>
             <?php endif; ?>
+            
+                </div><!-- end Puzzles tab -->
+                
+                <div class="kealoa-tab-panel" data-tab="by-player">
+            
+            <?php if (!empty($player_results)): ?>
+                <div class="kealoa-constructor-player-stats">
+                    <h3><?php esc_html_e('Results by Player', 'kealoa-reference'); ?></h3>
+                    
+                    <table class="kealoa-table kealoa-constructor-player-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="text"><?php esc_html_e('Player', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($player_results as $result): ?>
+                                <tr>
+                                    <td><?php echo Kealoa_Formatter::format_person_link((int) $result->person_id, $result->full_name); ?></td>
+                                    <td><?php echo esc_html($result->total_answered); ?></td>
+                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td>
+                                        <?php 
+                                        $pct = $result->total_answered > 0 
+                                            ? ($result->correct_count / $result->total_answered) * 100 
+                                            : 0;
+                                        echo Kealoa_Formatter::format_percentage($pct);
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+            
+                </div><!-- end By Player tab -->
+            </div><!-- end kealoa-tabs -->
         </div>
         <?php
         return ob_get_clean();

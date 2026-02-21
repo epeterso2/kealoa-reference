@@ -1842,6 +1842,30 @@ class Kealoa_DB {
     }
 
     /**
+     * Get player results for all clues by a constructor
+     */
+    public function get_constructor_player_results(int $constructor_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT 
+                p.id as person_id,
+                p.full_name,
+                COUNT(*) as total_answered,
+                SUM(g.is_correct) as correct_count
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
+            INNER JOIN {$this->puzzle_constructors_table} pc ON c.puzzle_id = pc.puzzle_id
+            INNER JOIN {$this->persons_table} p ON g.guesser_person_id = p.id
+            WHERE pc.constructor_id = %d
+            GROUP BY p.id, p.full_name
+            ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC",
+            $constructor_id
+        );
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get all editors with aggregate guess stats
      */
     public function get_editors_with_stats(): array {
