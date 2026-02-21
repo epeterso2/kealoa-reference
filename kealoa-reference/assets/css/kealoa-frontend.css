@@ -106,6 +106,9 @@
 
 /* Responsive table wrapper */
 .kealoa-rounds-table-wrapper,
+.kealoa-persons-table-wrapper,
+.kealoa-constructors-table-wrapper,
+.kealoa-editors-table-wrapper,
 .kealoa-table-scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -184,6 +187,8 @@
 
 .kealoa-round-view {
     margin: 20px 0;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .kealoa-round-header {
@@ -192,6 +197,12 @@
     border-radius: 8px;
     margin-bottom: 30px;
     overflow: hidden;
+}
+
+.kealoa-audio-player {
+    max-width: 100%;
+    overflow: hidden;
+    margin-bottom: 20px;
 }
 
 .kealoa-round-title {
@@ -368,6 +379,9 @@
 
 .kealoa-person-view {
     margin: 20px 0;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .kealoa-person-header {
@@ -410,6 +424,7 @@
     flex-wrap: wrap;
     gap: 20px;
     margin-top: 16px;
+    justify-content: center;
 }
 
 .kealoa-round-player {
@@ -698,6 +713,27 @@
         min-width: 0;
         width: 100%;
     }
+
+    /* Person view: constrain all tables within tabs */
+    .kealoa-person-view .kealoa-table {
+        width: 100%;
+        max-width: 100%;
+        table-layout: auto;
+    }
+
+    .kealoa-person-view .kealoa-year-table,
+    .kealoa-person-view .kealoa-clue-number-table,
+    .kealoa-person-view .kealoa-answer-length-table,
+    .kealoa-person-view .kealoa-summary-stats-table,
+    .kealoa-person-view .kealoa-direction-table,
+    .kealoa-person-view .kealoa-day-of-week-table,
+    .kealoa-person-view .kealoa-decade-table,
+    .kealoa-person-view .kealoa-editor-table,
+    .kealoa-person-view .kealoa-constructor-table,
+    .kealoa-person-view .kealoa-history-table {
+        width: 100%;
+        max-width: 100%;
+    }
     
     /* Stats grid: 2 columns */
     .kealoa-stats-grid {
@@ -766,17 +802,23 @@
         min-width: 70px;
     }
     
-    /* Scrollable tab navigation */
+    /* Tab navigation: 2x2 grid so all tabs are visible */
     .kealoa-tab-nav {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        flex-wrap: wrap;
+        gap: 0;
     }
 
     .kealoa-tab-button {
-        flex-shrink: 0;
+        flex: 1 1 45%;
         white-space: nowrap;
         padding: 8px 14px;
         font-size: 13px;
+        text-align: center;
+        border-bottom: 2px solid var(--volcanic-ash);
+    }
+
+    .kealoa-tab-button.active {
+        border-bottom-color: var(--deep-lagoon);
     }
 
     /* Round player photos: smaller */
@@ -790,6 +832,12 @@
         max-height: 150px;
     }
     
+    /* Round meta: contain long values */
+    .kealoa-round-meta span {
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
     /* Round nav buttons */
     .kealoa-round-nav {
         flex-wrap: wrap;
@@ -799,6 +847,16 @@
     .kealoa-round-nav-btn {
         font-size: 13px;
         padding: 6px 12px;
+    }
+
+    /* Rounds listing table: allow wrapping */
+    .kealoa-rounds-table-wrapper .kealoa-table th,
+    .kealoa-rounds-table-wrapper .kealoa-table td {
+        white-space: normal;
+    }
+
+    .kealoa-rounds-table .kealoa-description-cell {
+        min-width: 150px;
     }
 
     /* Person view tables: allow wrapping */
@@ -897,6 +955,16 @@
     .kealoa-tab-button {
         padding: 6px 10px;
         font-size: 12px;
+        flex: 1 1 45%;
+    }
+        font-size: 12px;
+    }
+
+    /* Person details: allow narrower */
+    .kealoa-person-details,
+    .kealoa-constructor-details,
+    .kealoa-editor-details {
+        min-width: 0;
     }
 
     /* Section headers: smaller */
@@ -949,6 +1017,25 @@
     /* Round nav */
     .kealoa-round-nav {
         justify-content: center;
+    }
+
+    .kealoa-round-nav-btn {
+        font-size: 12px;
+        padding: 5px 10px;
+    }
+
+    /* Round players: tighter layout */
+    .kealoa-round-players {
+        gap: 10px;
+    }
+
+    .kealoa-round-player-name {
+        font-size: 12px;
+    }
+
+    /* Rounds listing: compact */
+    .kealoa-rounds-table .kealoa-description-cell {
+        min-width: 120px;
     }
 }
 
@@ -1015,6 +1102,8 @@
 
 .kealoa-tab-panel {
     display: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .kealoa-tab-panel.active {
