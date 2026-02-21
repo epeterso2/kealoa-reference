@@ -1908,6 +1908,56 @@ class Kealoa_DB {
     }
 
     /**
+     * Get player results for all clues edited by an editor
+     */
+    public function get_editor_player_results(string $editor_name): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT 
+                p.id as person_id,
+                p.full_name,
+                COUNT(*) as total_answered,
+                SUM(g.is_correct) as correct_count
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
+            INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
+            INNER JOIN {$this->persons_table} p ON g.guesser_person_id = p.id
+            WHERE pz.editor_name = %s
+            GROUP BY p.id, p.full_name
+            ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC",
+            $editor_name
+        );
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get constructor results for all puzzles edited by an editor
+     */
+    public function get_editor_constructor_results(string $editor_name): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT 
+                con.id as constructor_id,
+                con.full_name,
+                COUNT(DISTINCT pz.id) as puzzle_count,
+                COUNT(DISTINCT c.id) as clue_count,
+                COUNT(g.id) as total_guesses,
+                COALESCE(SUM(g.is_correct), 0) as correct_guesses
+            FROM {$this->puzzles_table} pz
+            INNER JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
+            INNER JOIN {$this->constructors_table} con ON pc.constructor_id = con.id
+            LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
+            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+            WHERE pz.editor_name = %s
+            GROUP BY con.id, con.full_name
+            ORDER BY puzzle_count DESC, con.full_name ASC",
+            $editor_name
+        );
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Check if an editor name exists in the puzzles table.
      *
      * @param string $name The editor name to check
