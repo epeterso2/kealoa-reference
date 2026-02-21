@@ -743,6 +743,7 @@ class Kealoa_Shortcodes {
                     <button class="kealoa-tab-button active" data-tab="player"><?php esc_html_e('Overall Stats', 'kealoa-reference'); ?></button>
                     <button class="kealoa-tab-button" data-tab="puzzle"><?php esc_html_e('By Puzzle', 'kealoa-reference'); ?></button>
                     <button class="kealoa-tab-button" data-tab="constructor"><?php esc_html_e('By Constructor', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="editor"><?php esc_html_e('By Editor', 'kealoa-reference'); ?></button>
                     <button class="kealoa-tab-button" data-tab="round"><?php esc_html_e('Rounds Played', 'kealoa-reference'); ?></button>
                 </div>
                 
@@ -1215,38 +1216,6 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
             
-            <?php if (!empty($editor_results)): ?>
-                <div class="kealoa-editor-stats">
-                    <h3><?php esc_html_e('Results by Editor', 'kealoa-reference'); ?></h3>
-                    
-                    <table class="kealoa-table kealoa-editor-table">
-                        <thead>
-                            <tr>
-                                <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($editor_results as $result): ?>
-                                <tr>
-                                    <td><?php echo Kealoa_Formatter::format_editor_link($result->editor_name); ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php 
-                                        $pct = $result->total_answered > 0 
-                                            ? ($result->correct_count / $result->total_answered) * 100 
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
             <?php endif; ?>
             
                 </div><!-- end Puzzle tab -->
@@ -1288,6 +1257,44 @@ class Kealoa_Shortcodes {
             <?php endif; ?>
             
                 </div><!-- end Constructor tab -->
+                
+                <div class="kealoa-tab-panel" data-tab="editor">
+            
+            <?php if (!empty($editor_results)): ?>
+                <div class="kealoa-editor-stats">
+                    <h3><?php esc_html_e('Results by Editor', 'kealoa-reference'); ?></h3>
+                    
+                    <table class="kealoa-table kealoa-editor-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($editor_results as $result): ?>
+                                <tr>
+                                    <td><?php echo Kealoa_Formatter::format_editor_link($result->editor_name); ?></td>
+                                    <td><?php echo esc_html($result->total_answered); ?></td>
+                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td>
+                                        <?php 
+                                        $pct = $result->total_answered > 0 
+                                            ? ($result->correct_count / $result->total_answered) * 100 
+                                            : 0;
+                                        echo Kealoa_Formatter::format_percentage($pct);
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+            
+                </div><!-- end Editor tab -->
                 
                 <div class="kealoa-tab-panel" data-tab="round">
             
