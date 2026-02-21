@@ -363,7 +363,9 @@
             );
         }
         guessTable.appendChild(tbody);
-        playersSection.appendChild(guessTable);
+        var guessWrapper = el('div', { className: 'kealoa-game__table-scroll' });
+        guessWrapper.appendChild(guessTable);
+        playersSection.appendChild(guessWrapper);
 
         // Next button
         var isLast = currentClueIndex >= totalClues - 1;
@@ -470,7 +472,9 @@
             );
         });
         scoreTable.appendChild(tbody);
-        container.appendChild(scoreTable);
+        var scoreWrapper = el('div', { className: 'kealoa-game__table-scroll' });
+        scoreWrapper.appendChild(scoreTable);
+        container.appendChild(scoreWrapper);
 
         // Share results
         var shareText = buildShareText(userCorrect, totalClues, userAnswers);
@@ -563,7 +567,9 @@
             );
         });
         reviewTable.appendChild(reviewTbody);
-        container.appendChild(reviewTable);
+        var reviewWrapper = el('div', { className: 'kealoa-game__table-scroll' });
+        reviewWrapper.appendChild(reviewTable);
+        container.appendChild(reviewWrapper);
 
         // View round link
         var gameUrl = window.location.origin + window.location.pathname + '?round=' + roundData.round_id;

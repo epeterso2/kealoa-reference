@@ -481,6 +481,12 @@
     font-size: 14px;
 }
 
+/* Responsive table scroll wrapper */
+.kealoa-game__table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 /* ==========================================================================
    Share Results
    ========================================================================== */
@@ -619,6 +625,17 @@
     .kealoa-game__score-table,
     .kealoa-game__guess-table {
         font-size: 13px;
+        width: 100%;
+    }
+
+    .kealoa-game__review-table {
+        font-size: 12px;
+    }
+
+    .kealoa-game__review-table th,
+    .kealoa-game__review-table td {
+        padding: 6px 5px;
+        white-space: nowrap;
     }
 
     .kealoa-game__score-table th,
