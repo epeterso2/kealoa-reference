@@ -245,7 +245,7 @@
             el('div', { className: 'kealoa-game__clue-meta' }, metaItems),
             el('div', { className: 'kealoa-game__clue-text' }, [
                 el('span', { className: 'kealoa-game__clue-label', textContent: 'Clue:' }),
-                el('span', { textContent: ' ' + clue.clue_text })
+                el('span', { className: 'kealoa-game__clue-content', textContent: ' ' + clue.clue_text })
             ])
         ]);
 
