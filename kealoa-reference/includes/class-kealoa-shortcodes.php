@@ -1099,37 +1099,6 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
             
-            <div class="kealoa-per-round-stats">
-                <h3><?php esc_html_e('Per-Round Statistics', 'kealoa-reference'); ?></h3>
-                
-                <table class="kealoa-table kealoa-summary-stats-table">
-                    <thead>
-                        <tr>
-                            <th><?php esc_html_e('Metric', 'kealoa-reference'); ?></th>
-                            <th data-sort="number"><?php esc_html_e('Minimum', 'kealoa-reference'); ?></th>
-                            <th data-sort="number"><?php esc_html_e('Mean', 'kealoa-reference'); ?></th>
-                            <th data-sort="number"><?php esc_html_e('Median', 'kealoa-reference'); ?></th>
-                            <th data-sort="number"><?php esc_html_e('Maximum', 'kealoa-reference'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><?php esc_html_e('Clues Correct', 'kealoa-reference'); ?></td>
-                            <td><?php echo esc_html($stats->min_correct); ?></td>
-                            <td><?php echo esc_html($stats->mean_correct); ?></td>
-                            <td><?php echo esc_html($stats->median_correct); ?></td>
-                            <td><?php echo esc_html($stats->max_correct); ?></td>
-                        </tr>
-                        <tr>
-                            <td><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></td>
-                            <td><?php echo Kealoa_Formatter::format_percentage($stats->min_percentage); ?></td>
-                            <td><?php echo Kealoa_Formatter::format_percentage($stats->mean_percentage); ?></td>
-                            <td><?php echo Kealoa_Formatter::format_percentage($stats->median_percentage); ?></td>
-                            <td><?php echo Kealoa_Formatter::format_percentage($stats->max_percentage); ?></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
             </div>
             
                 </div><!-- end Player tab -->
