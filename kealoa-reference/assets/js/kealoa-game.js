@@ -193,7 +193,7 @@
 
         // Round info header
         var roundInfoChildren = [
-            el('span', { className: 'kealoa-game__round-label', textContent: 'KEALOA #' + roundData.round_id }),
+            el('span', { className: 'kealoa-game__round-label', textContent: 'KEALOA Round #' + roundData.round_id + ': ' + roundData.solution_words.join(' / ') }),
             el('span', { className: 'kealoa-game__clue-counter', textContent: 'Clue ' + clueNum + ' of ' + totalClues })
         ];
         var roundInfo = el('div', { className: 'kealoa-game__round-info' }, roundInfoChildren);
