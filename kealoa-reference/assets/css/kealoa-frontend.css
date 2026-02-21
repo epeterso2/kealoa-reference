@@ -1085,18 +1085,21 @@
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
-    color: var(--pumice);
+    color: var(--deep-lagoon);
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
-    transition: color 0.2s, border-color 0.2s;
+    border-radius: 4px 4px 0 0;
+    transition: color 0.2s, background-color 0.2s, border-color 0.2s;
 }
 
 .kealoa-tab-button:hover {
-    color: var(--deep-lagoon);
+    color: var(--cloud-white);
+    background-color: var(--deep-lagoon);
 }
 
 .kealoa-tab-button.active {
-    color: var(--deep-lagoon);
+    color: var(--cloud-white);
+    background-color: var(--deep-lagoon);
     border-bottom-color: var(--deep-lagoon);
 }
 
