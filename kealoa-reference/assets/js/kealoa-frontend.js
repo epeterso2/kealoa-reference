@@ -256,6 +256,57 @@
         }
     }
 
+    /**
+     * Remove columns that have empty values in all rows.
+     *
+     * Scans every .kealoa-table and hides any column where every <td>
+     * in that column position has empty or whitespace-only text content.
+     */
+    function removeEmptyColumns() {
+        var tables = document.querySelectorAll('.kealoa-table');
+
+        for (var t = 0; t < tables.length; t++) {
+            var table = tables[t];
+            var headers = table.querySelectorAll('thead th');
+            var rows = table.querySelectorAll('tbody tr');
+
+            if (!headers.length || !rows.length) {
+                continue;
+            }
+
+            for (var col = headers.length - 1; col >= 0; col--) {
+                var allEmpty = true;
+
+                for (var r = 0; r < rows.length; r++) {
+                    var cells = rows[r].querySelectorAll('td');
+                    if (col < cells.length) {
+                        var text = (cells[col].textContent || '').trim();
+                        if (text !== '' && text !== '\u2014') {
+                            allEmpty = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (allEmpty) {
+                    headers[col].style.display = 'none';
+                    for (var r2 = 0; r2 < rows.length; r2++) {
+                        var cells2 = rows[r2].querySelectorAll('td');
+                        if (col < cells2.length) {
+                            cells2[col].style.display = 'none';
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', removeEmptyColumns);
+    } else {
+        removeEmptyColumns();
+    }
+
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initTableSorting);
