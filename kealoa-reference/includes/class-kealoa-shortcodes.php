@@ -1216,8 +1216,6 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
             
-            <?php endif; ?>
-            
                 </div><!-- end Puzzle tab -->
                 
                 <div class="kealoa-tab-panel" data-tab="constructor">
