@@ -328,6 +328,16 @@
         }
 
         /**
+         * Clear Puzzle Details button on clue edit form
+         */
+        $(document).on('click', '.kealoa-clear-puzzle-details', function () {
+            $('#puzzle_date').val('');
+            $('#puzzle_constructors').val([]).trigger('change');
+            $('#puzzle_clue_number').val('');
+            $('#puzzle_clue_direction').val('');
+        });
+
+        /**
          * Media Library picker for person/constructor forms
          */
         $(document).on('click', '.kealoa-select-media', function (e) {

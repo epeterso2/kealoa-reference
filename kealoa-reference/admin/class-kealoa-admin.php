@@ -1841,6 +1841,17 @@ class Kealoa_Admin {
                     </td>
                 </tr>
                 <tr>
+                    <th><?php esc_html_e('Puzzle Details', 'kealoa-reference'); ?></th>
+                    <td>
+                        <button type="button" class="button kealoa-clear-puzzle-details">
+                            <?php esc_html_e('Clear Puzzle Details', 'kealoa-reference'); ?>
+                        </button>
+                        <p class="description">
+                            <?php esc_html_e('Clears the date, constructors, clue number, and direction below.', 'kealoa-reference'); ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
                     <th><label for="puzzle_date"><?php esc_html_e('NYT Puzzle Date', 'kealoa-reference'); ?></label></th>
                     <td>
                         <input type="date" name="puzzle_date" id="puzzle_date" class="regular-text"
