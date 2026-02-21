@@ -814,7 +814,7 @@
         padding: 8px 14px;
         font-size: 13px;
         text-align: center;
-        border-bottom: 2px solid var(--volcanic-ash);
+        border-bottom: 2px solid var(--jungle-deep);
     }
 
     .kealoa-tab-button.active {
@@ -1073,7 +1073,7 @@
 
 .kealoa-tab-nav {
     display: flex;
-    border-bottom: 2px solid var(--volcanic-ash);
+    border-bottom: 2px solid var(--jungle-deep);
     margin-bottom: 20px;
     gap: 0;
 }
