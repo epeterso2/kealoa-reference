@@ -1591,6 +1591,14 @@ class Kealoa_Shortcodes {
                 </div>
             </div>
             <?php endif; ?>
+            
+            <div class="kealoa-tabs">
+                <div class="kealoa-tab-nav">
+                    <button class="kealoa-tab-button active" data-tab="puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="by-player"><?php esc_html_e('By Player', 'kealoa-reference'); ?></button>
+                </div>
+                
+                <div class="kealoa-tab-panel active" data-tab="puzzles">
 
             <?php if (!empty($puzzles)): ?>
                 <?php
