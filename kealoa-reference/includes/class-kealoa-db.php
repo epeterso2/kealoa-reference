@@ -1412,20 +1412,20 @@ class Kealoa_DB {
     }
 
     /**
-     * Get person results grouped by answer length
+     * Get person results grouped by answer length (alphanumeric characters only)
      */
     public function get_person_results_by_answer_length(int $person_id): array {
         $sql = $this->wpdb->prepare(
             "SELECT 
-                CHAR_LENGTH(c.correct_answer) as answer_length,
+                CHAR_LENGTH(REGEXP_REPLACE(c.correct_answer, '[^A-Za-z0-9]', '')) as answer_length,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             WHERE g.guesser_person_id = %d
-            GROUP BY CHAR_LENGTH(c.correct_answer)
-            ORDER BY CHAR_LENGTH(c.correct_answer) ASC",
+            GROUP BY CHAR_LENGTH(REGEXP_REPLACE(c.correct_answer, '[^A-Za-z0-9]', ''))
+            ORDER BY CHAR_LENGTH(REGEXP_REPLACE(c.correct_answer, '[^A-Za-z0-9]', '')) ASC",
             $person_id
         );
         
