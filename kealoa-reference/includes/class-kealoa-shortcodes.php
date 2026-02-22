@@ -191,7 +191,6 @@ class Kealoa_Shortcodes {
 
             <?php
             $matrix_data = $this->db->get_answer_by_clue_matrix();
-            // Derive max answer number from actual data
             $max_answers = 0;
             foreach ($matrix_data as $row) {
                 $an = (int) $row->answer_number;
@@ -201,69 +200,49 @@ class Kealoa_Shortcodes {
             }
             ?>
             <?php if (!empty($matrix_data) && $max_answers > 0): ?>
-            <h3><?php esc_html_e('Answers by Clue Number', 'kealoa-reference'); ?></h3>
-            <div class="kealoa-table-scroll">
-            <table class="kealoa-table kealoa-answer-matrix">
+            <h3><?php esc_html_e('Answer Frequency', 'kealoa-reference'); ?></h3>
+            <table class="kealoa-table">
                 <thead>
                     <tr>
                         <th data-sort="number"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
                         <?php for ($an = 1; $an <= $max_answers; $an++): ?>
                             <th data-sort="number"><?php echo esc_html('Answer #' . $an); ?></th>
-                            <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                            <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                            <th data-sort="number"><?php esc_html_e('Frequency', 'kealoa-reference'); ?></th>
                         <?php endfor; ?>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
-                    // Build matrix array: clue_number => answer_number => [count, correct]
                     $matrix = [];
                     $clue_numbers = [];
                     foreach ($matrix_data as $row) {
                         $cn = (int) $row->clue_number;
                         $an = (int) $row->answer_number;
                         $clue_numbers[$cn] = true;
-                        $matrix[$cn][$an] = [
-                            'count' => (int) $row->clue_count,
-                            'correct' => (int) $row->correct_count,
-                        ];
+                        $matrix[$cn][$an] = (int) $row->clue_count;
                     }
                     ksort($clue_numbers);
-                    $col_totals = array_fill(1, $max_answers, 0);
-                    $col_correct_totals = array_fill(1, $max_answers, 0);
                     ?>
                     <?php foreach (array_keys($clue_numbers) as $cn): ?>
+                        <?php
+                        $row_total = 0;
+                        for ($an = 1; $an <= $max_answers; $an++) {
+                            $row_total += $matrix[$cn][$an] ?? 0;
+                        }
+                        ?>
                         <tr>
                             <td><?php echo esc_html($cn); ?></td>
-                            <?php
-                            for ($an = 1; $an <= $max_answers; $an++):
-                                $count = $matrix[$cn][$an]['count'] ?? 0;
-                                $correct = $matrix[$cn][$an]['correct'] ?? 0;
-                                $col_totals[$an] += $count;
-                                $col_correct_totals[$an] += $correct;
-                                $accuracy = $count > 0 ? ($correct / $count) * 100 : 0;
+                            <?php for ($an = 1; $an <= $max_answers; $an++):
+                                $count = $matrix[$cn][$an] ?? 0;
+                                $freq = $row_total > 0 ? ($count / $row_total) * 100 : 0;
                             ?>
                                 <td><?php echo $count > 0 ? esc_html($count) : '—'; ?></td>
-                                <td><?php echo $correct > 0 ? esc_html($correct) : '—'; ?></td>
-                                <td><?php echo $count > 0 ? Kealoa_Formatter::format_percentage($accuracy) : '—'; ?></td>
+                                <td><?php echo $count > 0 ? Kealoa_Formatter::format_percentage($freq) : '—'; ?></td>
                             <?php endfor; ?>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
-                <tfoot>
-                    <tr>
-                        <td class="kealoa-matrix-total"><?php esc_html_e('Total', 'kealoa-reference'); ?></td>
-                        <?php for ($an = 1; $an <= $max_answers; $an++):
-                            $total_accuracy = $col_totals[$an] > 0 ? ($col_correct_totals[$an] / $col_totals[$an]) * 100 : 0;
-                        ?>
-                            <td class="kealoa-matrix-total"><?php echo esc_html($col_totals[$an]); ?></td>
-                            <td class="kealoa-matrix-total"><?php echo esc_html($col_correct_totals[$an]); ?></td>
-                            <td class="kealoa-matrix-total"><?php echo Kealoa_Formatter::format_percentage($total_accuracy); ?></td>
-                        <?php endfor; ?>
-                    </tr>
-                </tfoot>
             </table>
-            </div>
             <?php endif; ?>
 
             <h3><?php esc_html_e('All Rounds', 'kealoa-reference'); ?></h3>

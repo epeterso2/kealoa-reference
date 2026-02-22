@@ -361,24 +361,6 @@
     text-align: center;
 }
 
-/* Answer by Clue Number matrix */
-.kealoa-answer-matrix {
-    width: auto;
-}
-
-.kealoa-answer-matrix th,
-.kealoa-answer-matrix td {
-    white-space: nowrap;
-}
-
-.kealoa-answer-matrix .kealoa-matrix-total {
-    font-weight: 700;
-}
-
-.kealoa-answer-matrix tfoot td {
-    border-top: 2px solid var(--driftwood-dark);
-}
-
 /* ==========================================================================
    Person View
    ========================================================================== */
