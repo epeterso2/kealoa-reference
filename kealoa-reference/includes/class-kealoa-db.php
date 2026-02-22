@@ -820,17 +820,23 @@ class Kealoa_DB {
      * Answer number is the 1-based position of the correct answer
      * within the round's solution word list (ordered by word_order).
      *
-     * @return array Array of objects with clue_number, answer_number, clue_count
+     * @return array Array of objects with clue_number, answer_number, clue_count, correct_count
      */
     public function get_answer_by_clue_matrix(): array {
         $sql = "SELECT
                 c.clue_number,
                 rs.word_order AS answer_number,
-                COUNT(*) AS clue_count
+                COUNT(*) AS clue_count,
+                COALESCE(SUM(g.correct_guesses), 0) AS correct_count
             FROM {$this->clues_table} c
             INNER JOIN {$this->round_solutions_table} rs
                 ON rs.round_id = c.round_id
                 AND UPPER(rs.word) = UPPER(c.correct_answer)
+            LEFT JOIN (
+                SELECT clue_id, SUM(is_correct) AS correct_guesses
+                FROM {$this->guesses_table}
+                GROUP BY clue_id
+            ) g ON g.clue_id = c.id
             GROUP BY c.clue_number, rs.word_order
             ORDER BY c.clue_number ASC, rs.word_order ASC";
 

@@ -209,32 +209,40 @@ class Kealoa_Shortcodes {
                         <th><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
                         <?php for ($an = 1; $an <= $max_answers; $an++): ?>
                             <th><?php echo esc_html('Answer #' . $an); ?></th>
+                            <th><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                         <?php endfor; ?>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
-                    // Build matrix array: clue_number => answer_number => count
+                    // Build matrix array: clue_number => answer_number => [count, correct]
                     $matrix = [];
                     $clue_numbers = [];
                     foreach ($matrix_data as $row) {
                         $cn = (int) $row->clue_number;
                         $an = (int) $row->answer_number;
                         $clue_numbers[$cn] = true;
-                        $matrix[$cn][$an] = (int) $row->clue_count;
+                        $matrix[$cn][$an] = [
+                            'count' => (int) $row->clue_count,
+                            'correct' => (int) $row->correct_count,
+                        ];
                     }
                     ksort($clue_numbers);
                     $col_totals = array_fill(1, $max_answers, 0);
+                    $col_correct_totals = array_fill(1, $max_answers, 0);
                     ?>
                     <?php foreach (array_keys($clue_numbers) as $cn): ?>
                         <tr>
                             <td class="kealoa-clue-number"><?php echo esc_html($cn); ?></td>
                             <?php
                             for ($an = 1; $an <= $max_answers; $an++):
-                                $count = $matrix[$cn][$an] ?? 0;
+                                $count = $matrix[$cn][$an]['count'] ?? 0;
+                                $correct = $matrix[$cn][$an]['correct'] ?? 0;
                                 $col_totals[$an] += $count;
+                                $col_correct_totals[$an] += $correct;
                             ?>
                                 <td class="kealoa-matrix-cell"><?php echo $count > 0 ? esc_html($count) : '—'; ?></td>
+                                <td class="kealoa-matrix-cell"><?php echo $correct > 0 ? esc_html($correct) : '—'; ?></td>
                             <?php endfor; ?>
                         </tr>
                     <?php endforeach; ?>
@@ -244,6 +252,7 @@ class Kealoa_Shortcodes {
                         <td class="kealoa-matrix-total"><?php esc_html_e('Total', 'kealoa-reference'); ?></td>
                         <?php for ($an = 1; $an <= $max_answers; $an++): ?>
                             <td class="kealoa-matrix-total"><?php echo esc_html($col_totals[$an]); ?></td>
+                            <td class="kealoa-matrix-total"><?php echo esc_html($col_correct_totals[$an]); ?></td>
                         <?php endfor; ?>
                     </tr>
                 </tfoot>
