@@ -811,7 +811,7 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-tab-panel active" data-tab="player">
             
             <div class="kealoa-person-stats">
-                <h3><?php esc_html_e('KEALOA Statistics', 'kealoa-reference'); ?></h3>
+                <h2><?php esc_html_e('KEALOA Statistics', 'kealoa-reference'); ?></h2>
                 
                 <div class="kealoa-stats-grid">
                     <div class="kealoa-stat-card">
@@ -842,7 +842,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($round_history)): ?>
                 <div class="kealoa-score-distribution-section">
-                    <h3><?php esc_html_e('Score Distribution', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Score Distribution', 'kealoa-reference'); ?></h2>
                     <div class="kealoa-chart-container">
                         <canvas id="kealoa-score-distribution-chart"></canvas>
                     </div>
@@ -942,7 +942,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($round_history)): ?>
                 <div class="kealoa-accuracy-chart-section">
-                    <h3><?php esc_html_e('Score by Round', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Score by Round', 'kealoa-reference'); ?></h2>
                     <div class="kealoa-chart-container">
                         <canvas id="kealoa-accuracy-chart"></canvas>
                     </div>
@@ -1047,7 +1047,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($year_results)): ?>
                 <div class="kealoa-year-stats">
-                    <h3><?php esc_html_e('Results by Year of Round', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Results by Year of Round', 'kealoa-reference'); ?></h2>
                     
                     <table class="kealoa-table kealoa-year-table">
                         <thead>
@@ -1094,7 +1094,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($clue_number_results)): ?>
                 <div class="kealoa-clue-number-stats">
-                    <h3><?php esc_html_e('Results by Clue Number', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Results by Clue Number', 'kealoa-reference'); ?></h2>
                     
                     <table class="kealoa-table kealoa-clue-number-table">
                         <thead>
@@ -1129,7 +1129,7 @@ class Kealoa_Shortcodes {
 
             <?php if (!empty($answer_length_results)): ?>
                 <div class="kealoa-answer-length-stats">
-                    <h3><?php esc_html_e('Results by Answer Length', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Results by Answer Length', 'kealoa-reference'); ?></h2>
                     
                     <table class="kealoa-table kealoa-answer-length-table">
                         <thead>
@@ -1169,7 +1169,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($direction_results)): ?>
                 <div class="kealoa-direction-stats">
-                    <h3><?php esc_html_e('Results by Clue Direction', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Results by Clue Direction', 'kealoa-reference'); ?></h2>
                     
                     <table class="kealoa-table kealoa-direction-table">
                         <thead>
@@ -1211,7 +1211,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($day_of_week_results)): ?>
                 <div class="kealoa-day-of-week-stats">
-                    <h3><?php esc_html_e('Results by Puzzle Day of Week', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Results by Puzzle Day of Week', 'kealoa-reference'); ?></h2>
                     
                     <table class="kealoa-table kealoa-day-of-week-table">
                         <thead>
@@ -1245,7 +1245,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($decade_results)): ?>
                 <div class="kealoa-decade-stats">
-                    <h3><?php esc_html_e('Results by Puzzle Decade', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Results by Puzzle Decade', 'kealoa-reference'); ?></h2>
                     
                     <table class="kealoa-table kealoa-decade-table">
                         <thead>
@@ -1283,7 +1283,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($constructor_results)): ?>
                 <div class="kealoa-constructor-stats">
-                    <h3><?php esc_html_e('Results by Constructor', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Results by Constructor', 'kealoa-reference'); ?></h2>
                     
                     <table class="kealoa-table kealoa-constructor-table">
                         <thead>
@@ -1321,7 +1321,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($editor_results)): ?>
                 <div class="kealoa-editor-stats">
-                    <h3><?php esc_html_e('Results by Editor', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Results by Editor', 'kealoa-reference'); ?></h2>
                     
                     <table class="kealoa-table kealoa-editor-table">
                         <thead>
@@ -1359,7 +1359,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($round_history)): ?>
                 <div class="kealoa-round-history">
-                    <h3><?php esc_html_e('Round History', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Round History', 'kealoa-reference'); ?></h2>
                     
                     <table class="kealoa-table kealoa-history-table">
                         <thead>
@@ -1674,7 +1674,7 @@ class Kealoa_Shortcodes {
                 }
                 ?>
                 <div class="kealoa-constructor-puzzles">
-                    <h3><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></h2>
                     
                     <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-constructor-puzzles-table">
@@ -1776,7 +1776,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($player_results)): ?>
                 <div class="kealoa-constructor-player-stats">
-                    <h3><?php esc_html_e('Results by Player', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Results by Player', 'kealoa-reference'); ?></h2>
                     
                     <table class="kealoa-table kealoa-constructor-player-table">
                         <thead>
@@ -1814,7 +1814,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($editor_results)): ?>
                 <div class="kealoa-constructor-editor-stats">
-                    <h3><?php esc_html_e('Results by Editor', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Results by Editor', 'kealoa-reference'); ?></h2>
                     
                     <table class="kealoa-table kealoa-constructor-editor-table">
                         <thead>
@@ -2036,7 +2036,7 @@ class Kealoa_Shortcodes {
 
             <?php if (!empty($puzzles)): ?>
                 <div class="kealoa-editor-puzzles">
-                    <h3><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></h2>
                     
                     <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-editor-puzzles-table">
@@ -2130,7 +2130,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($player_results)): ?>
                 <div class="kealoa-editor-player-stats">
-                    <h3><?php esc_html_e('Results by Player', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Results by Player', 'kealoa-reference'); ?></h2>
                     
                     <table class="kealoa-table kealoa-editor-player-table">
                         <thead>
@@ -2168,7 +2168,7 @@ class Kealoa_Shortcodes {
             
             <?php if (!empty($constructor_results)): ?>
                 <div class="kealoa-editor-constructor-stats">
-                    <h3><?php esc_html_e('Results by Constructor', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Results by Constructor', 'kealoa-reference'); ?></h2>
                     
                     <table class="kealoa-table kealoa-editor-constructor-table">
                         <thead>
