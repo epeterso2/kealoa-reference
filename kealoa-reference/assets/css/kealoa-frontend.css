@@ -823,7 +823,7 @@
 
     /* Round player photos: smaller */
     .kealoa-round-player img {
-        max-height: 100px;
+        height: 150px;
     }
 
     .kealoa-xwordinfo-image,
@@ -991,7 +991,7 @@
     }
 
     .kealoa-round-player img {
-        max-height: 75px;
+        height: 100px;
     }
 
     .kealoa-xwordinfo-image,
