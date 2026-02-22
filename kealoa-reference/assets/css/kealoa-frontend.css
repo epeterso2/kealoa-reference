@@ -514,7 +514,14 @@
 .kealoa-constructor-stats h2,
 .kealoa-editor-stats h2,
 .kealoa-accuracy-chart-section h2,
-.kealoa-round-history h2 {
+.kealoa-round-history h2,
+.kealoa-rounds-table-wrapper h3,
+.kealoa-constructor-puzzles h2,
+.kealoa-constructor-player-stats h2,
+.kealoa-constructor-editor-stats h2,
+.kealoa-editor-puzzles h2,
+.kealoa-editor-player-stats h2,
+.kealoa-editor-constructor-stats h2 {
     margin: 30px 0 15px 0;
     padding-bottom: 10px;
     border-bottom: 2px solid var(--deep-lagoon);
@@ -622,13 +629,6 @@
 .kealoa-constructor-xwordinfo strong {
     display: inline-block;
     min-width: 100px;
-}
-
-.kealoa-constructor-puzzles h2 {
-    margin: 30px 0 15px 0;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--deep-lagoon);
-    color: var(--driftwood-dark);
 }
 
 /* ==========================================================================
