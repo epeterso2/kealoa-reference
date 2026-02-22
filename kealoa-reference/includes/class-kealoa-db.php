@@ -816,14 +816,14 @@ class Kealoa_DB {
     }
 
     /**
-     * Get answer-number-by-clue-number matrix across all rounds.
-     * Answer number is the 1-based position of the correct answer
-     * within the round's solution word list (ordered by word_order).
+     * Get answer-number-by-clue-number matrix across all rounds,
+     * partitioned by the number of solution words in the round.
      *
-     * @return array Array of objects with clue_number, answer_number, clue_count, correct_count
+     * @return array Array of objects with solution_count, clue_number, answer_number, clue_count, correct_count
      */
     public function get_answer_by_clue_matrix(): array {
         $sql = "SELECT
+                sc.solution_count,
                 c.clue_number,
                 rs.word_order AS answer_number,
                 COUNT(*) AS clue_count,
@@ -832,13 +832,18 @@ class Kealoa_DB {
             INNER JOIN {$this->round_solutions_table} rs
                 ON rs.round_id = c.round_id
                 AND UPPER(rs.word) = UPPER(c.correct_answer)
+            INNER JOIN (
+                SELECT round_id, COUNT(*) AS solution_count
+                FROM {$this->round_solutions_table}
+                GROUP BY round_id
+            ) sc ON sc.round_id = c.round_id
             LEFT JOIN (
                 SELECT clue_id, SUM(is_correct) AS correct_guesses
                 FROM {$this->guesses_table}
                 GROUP BY clue_id
             ) g ON g.clue_id = c.id
-            GROUP BY c.clue_number, rs.word_order
-            ORDER BY c.clue_number ASC, rs.word_order ASC";
+            GROUP BY sc.solution_count, c.clue_number, rs.word_order
+            ORDER BY sc.solution_count ASC, c.clue_number ASC, rs.word_order ASC";
 
         return $this->wpdb->get_results($sql);
     }

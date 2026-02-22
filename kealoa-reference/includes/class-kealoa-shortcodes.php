@@ -191,22 +191,25 @@ class Kealoa_Shortcodes {
 
             <?php
             $matrix_data = $this->db->get_answer_by_clue_matrix();
-            $max_answers = 0;
+            // Group data by solution count
+            $by_solution_count = [];
             foreach ($matrix_data as $row) {
-                $an = (int) $row->answer_number;
-                if ($an > $max_answers) {
-                    $max_answers = $an;
-                }
+                $sc = (int) $row->solution_count;
+                $by_solution_count[$sc][] = $row;
             }
+            ksort($by_solution_count);
             ?>
-            <?php if (!empty($matrix_data) && $max_answers > 0): ?>
-            <h3><?php esc_html_e('Answer Frequency', 'kealoa-reference'); ?></h3>
+            <?php foreach ($by_solution_count as $sol_count => $sc_data): ?>
+            <h3><?php echo esc_html(sprintf(
+                _n('%d-Answer Rounds', '%d-Answer Rounds', $sol_count, 'kealoa-reference'),
+                $sol_count
+            )); ?></h3>
             <div class="kealoa-table-scroll">
             <table class="kealoa-table">
                 <thead>
                     <tr>
                         <th data-sort="number"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
-                        <?php for ($an = 1; $an <= $max_answers; $an++): ?>
+                        <?php for ($an = 1; $an <= $sol_count; $an++): ?>
                             <th data-sort="number"><?php echo esc_html('Answer #' . $an); ?></th>
                             <th data-sort="number"><?php esc_html_e('Frequency', 'kealoa-reference'); ?></th>
                         <?php endfor; ?>
@@ -216,7 +219,7 @@ class Kealoa_Shortcodes {
                     <?php
                     $matrix = [];
                     $clue_numbers = [];
-                    foreach ($matrix_data as $row) {
+                    foreach ($sc_data as $row) {
                         $cn = (int) $row->clue_number;
                         $an = (int) $row->answer_number;
                         $clue_numbers[$cn] = true;
@@ -227,13 +230,13 @@ class Kealoa_Shortcodes {
                     <?php foreach (array_keys($clue_numbers) as $cn): ?>
                         <?php
                         $row_total = 0;
-                        for ($an = 1; $an <= $max_answers; $an++) {
+                        for ($an = 1; $an <= $sol_count; $an++) {
                             $row_total += $matrix[$cn][$an] ?? 0;
                         }
                         ?>
                         <tr>
                             <td><?php echo esc_html($cn); ?></td>
-                            <?php for ($an = 1; $an <= $max_answers; $an++):
+                            <?php for ($an = 1; $an <= $sol_count; $an++):
                                 $count = $matrix[$cn][$an] ?? 0;
                                 $freq = $row_total > 0 ? ($count / $row_total) * 100 : 0;
                             ?>
@@ -245,7 +248,7 @@ class Kealoa_Shortcodes {
                 </tbody>
             </table>
             </div>
-            <?php endif; ?>
+            <?php endforeach; ?>
 
             <h3><?php esc_html_e('All Rounds', 'kealoa-reference'); ?></h3>
             <table class="kealoa-table kealoa-rounds-table">
