@@ -125,7 +125,8 @@
     width: 100%;
 }
 
-.kealoa-rounds-table-wrapper .kealoa-year-table {
+.kealoa-rounds-table-wrapper .kealoa-year-table,
+.kealoa-rounds-table-wrapper .kealoa-table-scroll .kealoa-table {
     width: auto;
 }
 
