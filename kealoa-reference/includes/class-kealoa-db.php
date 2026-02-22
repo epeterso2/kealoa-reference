@@ -816,6 +816,43 @@ class Kealoa_DB {
     }
 
     /**
+     * Get answer-number-by-clue-number matrix across all rounds.
+     * Answer number is the 1-based position of the correct answer
+     * within the round's solution word list (ordered by word_order).
+     *
+     * @return array Array of objects with clue_number, answer_number, clue_count
+     */
+    public function get_answer_by_clue_matrix(): array {
+        $sql = "SELECT
+                c.clue_number,
+                rs.word_order AS answer_number,
+                COUNT(*) AS clue_count
+            FROM {$this->clues_table} c
+            INNER JOIN {$this->round_solutions_table} rs
+                ON rs.round_id = c.round_id
+                AND UPPER(rs.word) = UPPER(c.correct_answer)
+            GROUP BY c.clue_number, rs.word_order
+            ORDER BY c.clue_number ASC, rs.word_order ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get the maximum number of solution words in any round.
+     *
+     * @return int
+     */
+    public function get_max_solution_count(): int {
+        $sql = "SELECT MAX(cnt) FROM (
+                SELECT COUNT(*) AS cnt
+                FROM {$this->round_solutions_table}
+                GROUP BY round_id
+            ) sub";
+
+        return (int) $this->wpdb->get_var($sql);
+    }
+
+    /**
      * Create a round
      */
     public function create_round(array $data): int|false {

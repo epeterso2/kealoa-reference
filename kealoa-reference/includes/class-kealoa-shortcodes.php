@@ -189,6 +189,68 @@ class Kealoa_Shortcodes {
             </table>
             <?php endif; ?>
 
+            <?php
+            $matrix_data = $this->db->get_answer_by_clue_matrix();
+            $max_answers = $this->db->get_max_solution_count();
+            ?>
+            <?php if (!empty($matrix_data) && $max_answers > 0): ?>
+            <h3><?php esc_html_e('Answers by Clue Number', 'kealoa-reference'); ?></h3>
+            <div class="kealoa-table-scroll">
+            <table class="kealoa-table kealoa-answer-matrix">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
+                        <?php for ($an = 1; $an <= $max_answers; $an++): ?>
+                            <th><?php echo esc_html($an); ?></th>
+                        <?php endfor; ?>
+                        <th><?php esc_html_e('Total', 'kealoa-reference'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    // Build matrix array: clue_number => answer_number => count
+                    $matrix = [];
+                    $clue_numbers = [];
+                    foreach ($matrix_data as $row) {
+                        $cn = (int) $row->clue_number;
+                        $an = (int) $row->answer_number;
+                        $clue_numbers[$cn] = true;
+                        $matrix[$cn][$an] = (int) $row->clue_count;
+                    }
+                    ksort($clue_numbers);
+                    $col_totals = array_fill(1, $max_answers, 0);
+                    $grand_total = 0;
+                    ?>
+                    <?php foreach (array_keys($clue_numbers) as $cn): ?>
+                        <tr>
+                            <td class="kealoa-clue-number"><?php echo esc_html($cn); ?></td>
+                            <?php
+                            $row_total = 0;
+                            for ($an = 1; $an <= $max_answers; $an++):
+                                $count = $matrix[$cn][$an] ?? 0;
+                                $row_total += $count;
+                                $col_totals[$an] += $count;
+                            ?>
+                                <td class="kealoa-matrix-cell"><?php echo $count > 0 ? esc_html($count) : '—'; ?></td>
+                            <?php endfor; ?>
+                            <td class="kealoa-matrix-total"><?php echo esc_html($row_total); ?></td>
+                            <?php $grand_total += $row_total; ?>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td class="kealoa-matrix-total"><?php esc_html_e('Total', 'kealoa-reference'); ?></td>
+                        <?php for ($an = 1; $an <= $max_answers; $an++): ?>
+                            <td class="kealoa-matrix-total"><?php echo esc_html($col_totals[$an]); ?></td>
+                        <?php endfor; ?>
+                        <td class="kealoa-matrix-total"><?php echo esc_html($grand_total); ?></td>
+                    </tr>
+                </tfoot>
+            </table>
+            </div>
+            <?php endif; ?>
+
             <h3><?php esc_html_e('All Rounds', 'kealoa-reference'); ?></h3>
             <table class="kealoa-table kealoa-rounds-table">
                 <thead>
@@ -496,81 +558,6 @@ class Kealoa_Shortcodes {
                 </div>
             <?php else: ?>
                 <p class="kealoa-no-data"><?php esc_html_e('No clues recorded for this round.', 'kealoa-reference'); ?></p>
-            <?php endif; ?>
-
-            <?php if (!empty($clues) && !empty($solutions)): ?>
-                <?php
-                // Build answer number lookup: word => 1-based index
-                $answer_number_map = [];
-                foreach ($solutions as $idx => $sol) {
-                    $answer_number_map[strtoupper($sol->word)] = $idx + 1;
-                }
-
-                // Build cross-tabulation: clue_number => answer_number => count
-                $matrix = [];
-                $clue_numbers = [];
-                $answer_numbers = [];
-                foreach ($clues as $clue) {
-                    $cn = (int) $clue->clue_number;
-                    $answer_word = strtoupper($clue->correct_answer);
-                    $an = $answer_number_map[$answer_word] ?? null;
-                    if ($an === null) {
-                        continue;
-                    }
-                    $clue_numbers[$cn] = true;
-                    $answer_numbers[$an] = true;
-                    $matrix[$cn][$an] = ($matrix[$cn][$an] ?? 0) + 1;
-                }
-                ksort($clue_numbers);
-                ksort($answer_numbers);
-                ?>
-                <div class="kealoa-answer-matrix-section">
-                    <h3><?php esc_html_e('Answers by Clue Number', 'kealoa-reference'); ?></h3>
-                    <div class="kealoa-table-scroll">
-                    <table class="kealoa-table kealoa-answer-matrix">
-                        <thead>
-                            <tr>
-                                <th><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
-                                <?php foreach (array_keys($answer_numbers) as $an): ?>
-                                    <th><?php echo esc_html(strtoupper($solutions[$an - 1]->word)); ?></th>
-                                <?php endforeach; ?>
-                                <th><?php esc_html_e('Total', 'kealoa-reference'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $col_totals = array_fill_keys(array_keys($answer_numbers), 0);
-                            $grand_total = 0;
-                            ?>
-                            <?php foreach (array_keys($clue_numbers) as $cn): ?>
-                                <tr>
-                                    <td class="kealoa-clue-number"><?php echo esc_html($cn); ?></td>
-                                    <?php
-                                    $row_total = 0;
-                                    foreach (array_keys($answer_numbers) as $an):
-                                        $count = $matrix[$cn][$an] ?? 0;
-                                        $row_total += $count;
-                                        $col_totals[$an] += $count;
-                                    ?>
-                                        <td class="kealoa-matrix-cell"><?php echo $count > 0 ? esc_html($count) : '—'; ?></td>
-                                    <?php endforeach; ?>
-                                    <td class="kealoa-matrix-total"><?php echo esc_html($row_total); ?></td>
-                                    <?php $grand_total += $row_total; ?>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td class="kealoa-matrix-total"><?php esc_html_e('Total', 'kealoa-reference'); ?></td>
-                                <?php foreach (array_keys($answer_numbers) as $an): ?>
-                                    <td class="kealoa-matrix-total"><?php echo esc_html($col_totals[$an]); ?></td>
-                                <?php endforeach; ?>
-                                <td class="kealoa-matrix-total"><?php echo esc_html($grand_total); ?></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                    </div>
-                </div>
             <?php endif; ?>
 
             <?php
