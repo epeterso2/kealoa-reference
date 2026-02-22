@@ -206,10 +206,11 @@ class Kealoa_Shortcodes {
             <table class="kealoa-table kealoa-answer-matrix">
                 <thead>
                     <tr>
-                        <th><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
                         <?php for ($an = 1; $an <= $max_answers; $an++): ?>
-                            <th><?php echo esc_html('Answer #' . $an); ?></th>
-                            <th><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                            <th data-sort="number"><?php echo esc_html('Answer #' . $an); ?></th>
+                            <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                            <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                         <?php endfor; ?>
                     </tr>
                 </thead>
@@ -233,16 +234,18 @@ class Kealoa_Shortcodes {
                     ?>
                     <?php foreach (array_keys($clue_numbers) as $cn): ?>
                         <tr>
-                            <td class="kealoa-clue-number"><?php echo esc_html($cn); ?></td>
+                            <td><?php echo esc_html($cn); ?></td>
                             <?php
                             for ($an = 1; $an <= $max_answers; $an++):
                                 $count = $matrix[$cn][$an]['count'] ?? 0;
                                 $correct = $matrix[$cn][$an]['correct'] ?? 0;
                                 $col_totals[$an] += $count;
                                 $col_correct_totals[$an] += $correct;
+                                $accuracy = $count > 0 ? ($correct / $count) * 100 : 0;
                             ?>
-                                <td class="kealoa-matrix-cell"><?php echo $count > 0 ? esc_html($count) : '—'; ?></td>
-                                <td class="kealoa-matrix-cell"><?php echo $correct > 0 ? esc_html($correct) : '—'; ?></td>
+                                <td><?php echo $count > 0 ? esc_html($count) : '—'; ?></td>
+                                <td><?php echo $correct > 0 ? esc_html($correct) : '—'; ?></td>
+                                <td><?php echo $count > 0 ? Kealoa_Formatter::format_percentage($accuracy) : '—'; ?></td>
                             <?php endfor; ?>
                         </tr>
                     <?php endforeach; ?>
@@ -250,9 +253,12 @@ class Kealoa_Shortcodes {
                 <tfoot>
                     <tr>
                         <td class="kealoa-matrix-total"><?php esc_html_e('Total', 'kealoa-reference'); ?></td>
-                        <?php for ($an = 1; $an <= $max_answers; $an++): ?>
+                        <?php for ($an = 1; $an <= $max_answers; $an++):
+                            $total_accuracy = $col_totals[$an] > 0 ? ($col_correct_totals[$an] / $col_totals[$an]) * 100 : 0;
+                        ?>
                             <td class="kealoa-matrix-total"><?php echo esc_html($col_totals[$an]); ?></td>
                             <td class="kealoa-matrix-total"><?php echo esc_html($col_correct_totals[$an]); ?></td>
+                            <td class="kealoa-matrix-total"><?php echo Kealoa_Formatter::format_percentage($total_accuracy); ?></td>
                         <?php endfor; ?>
                     </tr>
                 </tfoot>
