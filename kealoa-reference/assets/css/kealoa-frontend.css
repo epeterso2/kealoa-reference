@@ -361,6 +361,51 @@
     text-align: center;
 }
 
+/* Answer by Clue Number matrix */
+.kealoa-answer-matrix-section {
+    margin-top: 30px;
+}
+
+.kealoa-answer-matrix-section h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--driftwood-dark);
+    margin-bottom: 12px;
+}
+
+.kealoa-answer-matrix {
+    width: auto;
+}
+
+.kealoa-answer-matrix th,
+.kealoa-answer-matrix td {
+    text-align: center;
+    white-space: nowrap;
+    padding: 6px 12px;
+}
+
+.kealoa-answer-matrix th {
+    background-color: var(--deep-lagoon);
+    color: #fff;
+}
+
+.kealoa-answer-matrix .kealoa-clue-number {
+    font-weight: 600;
+    text-align: center;
+}
+
+.kealoa-answer-matrix .kealoa-matrix-cell {
+    color: var(--driftwood-dark);
+}
+
+.kealoa-answer-matrix .kealoa-matrix-total {
+    font-weight: 700;
+}
+
+.kealoa-answer-matrix tfoot td {
+    border-top: 2px solid var(--deep-lagoon);
+}
+
 /* ==========================================================================
    Person View
    ========================================================================== */
