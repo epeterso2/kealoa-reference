@@ -191,7 +191,14 @@ class Kealoa_Shortcodes {
 
             <?php
             $matrix_data = $this->db->get_answer_by_clue_matrix();
-            $max_answers = $this->db->get_max_solution_count();
+            // Derive max answer number from actual data
+            $max_answers = 0;
+            foreach ($matrix_data as $row) {
+                $an = (int) $row->answer_number;
+                if ($an > $max_answers) {
+                    $max_answers = $an;
+                }
+            }
             ?>
             <?php if (!empty($matrix_data) && $max_answers > 0): ?>
             <h3><?php esc_html_e('Answers by Clue Number', 'kealoa-reference'); ?></h3>
