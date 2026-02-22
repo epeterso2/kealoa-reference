@@ -201,9 +201,8 @@ class Kealoa_Shortcodes {
                     <tr>
                         <th><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
                         <?php for ($an = 1; $an <= $max_answers; $an++): ?>
-                            <th><?php echo esc_html($an); ?></th>
+                            <th><?php echo esc_html('Answer #' . $an); ?></th>
                         <?php endfor; ?>
-                        <th><?php esc_html_e('Total', 'kealoa-reference'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -219,22 +218,17 @@ class Kealoa_Shortcodes {
                     }
                     ksort($clue_numbers);
                     $col_totals = array_fill(1, $max_answers, 0);
-                    $grand_total = 0;
                     ?>
                     <?php foreach (array_keys($clue_numbers) as $cn): ?>
                         <tr>
                             <td class="kealoa-clue-number"><?php echo esc_html($cn); ?></td>
                             <?php
-                            $row_total = 0;
                             for ($an = 1; $an <= $max_answers; $an++):
                                 $count = $matrix[$cn][$an] ?? 0;
-                                $row_total += $count;
                                 $col_totals[$an] += $count;
                             ?>
                                 <td class="kealoa-matrix-cell"><?php echo $count > 0 ? esc_html($count) : '—'; ?></td>
                             <?php endfor; ?>
-                            <td class="kealoa-matrix-total"><?php echo esc_html($row_total); ?></td>
-                            <?php $grand_total += $row_total; ?>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -244,7 +238,6 @@ class Kealoa_Shortcodes {
                         <?php for ($an = 1; $an <= $max_answers; $an++): ?>
                             <td class="kealoa-matrix-total"><?php echo esc_html($col_totals[$an]); ?></td>
                         <?php endfor; ?>
-                        <td class="kealoa-matrix-total"><?php echo esc_html($grand_total); ?></td>
                     </tr>
                 </tfoot>
             </table>
