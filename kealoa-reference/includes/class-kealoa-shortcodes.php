@@ -201,6 +201,7 @@ class Kealoa_Shortcodes {
             ?>
             <?php if (!empty($matrix_data) && $max_answers > 0): ?>
             <h3><?php esc_html_e('Answer Frequency', 'kealoa-reference'); ?></h3>
+            <div class="kealoa-table-scroll">
             <table class="kealoa-table">
                 <thead>
                     <tr>
@@ -243,6 +244,7 @@ class Kealoa_Shortcodes {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
             <?php endif; ?>
 
             <h3><?php esc_html_e('All Rounds', 'kealoa-reference'); ?></h3>
