@@ -405,15 +405,9 @@
 }
 
 .kealoa-xwordinfo-image,
-.kealoa-entity-image {
-    max-height: 200px;
-    width: auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
+.kealoa-entity-image,
 .kealoa-player-image {
-    max-height: 200px;
+    height: 200px;
     width: auto;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -821,15 +815,12 @@
         border-bottom-color: var(--deep-lagoon);
     }
 
-    /* Round player photos: smaller */
-    .kealoa-round-player img {
-        height: 150px;
-    }
-
+    /* Round player photos */
+    .kealoa-round-player img,
     .kealoa-xwordinfo-image,
     .kealoa-entity-image,
     .kealoa-player-image {
-        max-height: 150px;
+        height: 200px;
     }
     
     /* Round meta: contain long values */
@@ -990,14 +981,11 @@
         gap: 12px;
     }
 
-    .kealoa-round-player img {
-        height: 100px;
-    }
-
+    .kealoa-round-player img,
     .kealoa-xwordinfo-image,
     .kealoa-entity-image,
     .kealoa-player-image {
-        max-height: 120px;
+        height: 200px;
     }
 
     /* Chart container: shorter */
