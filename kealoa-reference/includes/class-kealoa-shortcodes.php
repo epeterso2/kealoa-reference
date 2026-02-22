@@ -155,11 +155,11 @@ class Kealoa_Shortcodes {
 
             <div class="kealoa-tabs">
                 <div class="kealoa-tab-nav">
-                    <button class="kealoa-tab-button active" data-tab="stats"><?php esc_html_e('Stats', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="rounds-played"><?php esc_html_e('Rounds Played', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button active" data-tab="rounds-played"><?php esc_html_e('Rounds Played', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="stats"><?php esc_html_e('Stats', 'kealoa-reference'); ?></button>
                 </div>
                 
-                <div class="kealoa-tab-panel active" data-tab="stats">
+                <div class="kealoa-tab-panel" data-tab="stats">
 
             <?php $yearly_stats = $this->db->get_rounds_stats_by_year(); ?>
             <?php if (!empty($yearly_stats)): ?>
@@ -260,7 +260,7 @@ class Kealoa_Shortcodes {
 
                 </div><!-- end Stats tab -->
                 
-                <div class="kealoa-tab-panel" data-tab="rounds-played">
+                <div class="kealoa-tab-panel active" data-tab="rounds-played">
 
             <h3><?php esc_html_e('All Rounds', 'kealoa-reference'); ?></h3>
             <table class="kealoa-table kealoa-rounds-table">
