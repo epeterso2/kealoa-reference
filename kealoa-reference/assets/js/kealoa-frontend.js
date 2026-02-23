@@ -561,10 +561,12 @@
      * Attach to any .kealoa-filter-controls element that has a data-target
      * pointing to the ID of a .kealoa-table. Supports:
      *   - Text search (data-filter="search", data-col="N")
-     *   - Minimum threshold (data-filter="min", data-col="N")
+     *   - Minimum threshold (data-filter="min", data-col="N") — supports multiple
      *   - Accuracy range (data-filter="range-min" / "range-max", data-col="N")
      *   - Top/Bottom N by accuracy (data-filter="topn-dir" + "topn-count")
      *   - Above/Below average (data-filter="vs-avg", data-avg="X")
+     *   - Year from row attribute (data-filter="year", reads data-year on <tr>)
+     *   - Perfect score (data-filter="perfect", data-col="N", reads data-total on <td>)
      */
     function initTableFilters() {
         var filterContainers = document.querySelectorAll('.kealoa-filter-controls');
@@ -583,12 +585,14 @@
 
             // Gather filter inputs
             var searchInput = container.querySelector('[data-filter="search"]');
-            var minInput = container.querySelector('[data-filter="min"]');
+            var minInputs = Array.prototype.slice.call(container.querySelectorAll('[data-filter="min"]'));
             var rangeMinInput = container.querySelector('[data-filter="range-min"]');
             var rangeMaxInput = container.querySelector('[data-filter="range-max"]');
             var topnDirSelect = container.querySelector('[data-filter="topn-dir"]');
             var topnCountInput = container.querySelector('[data-filter="topn-count"]');
             var vsAvgSelect = container.querySelector('[data-filter="vs-avg"]');
+            var yearSelect = container.querySelector('[data-filter="year"]');
+            var perfectSelect = container.querySelector('[data-filter="perfect"]');
             var resetBtn = container.querySelector('.kealoa-filter-reset');
 
             function getCellNumeric(row, colIndex) {
@@ -608,9 +612,6 @@
                 var searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
                 var searchCol = searchInput ? parseInt(searchInput.getAttribute('data-col'), 10) : 0;
 
-                var minVal = minInput ? parseFloat(minInput.value) : NaN;
-                var minCol = minInput ? parseInt(minInput.getAttribute('data-col'), 10) : 1;
-
                 var rangeMinVal = rangeMinInput ? parseFloat(rangeMinInput.value) : NaN;
                 var rangeMaxVal = rangeMaxInput ? parseFloat(rangeMaxInput.value) : NaN;
                 var rangeCol = rangeMinInput ? parseInt(rangeMinInput.getAttribute('data-col'), 10) : 3;
@@ -621,7 +622,12 @@
                 var vsAvg = vsAvgSelect ? vsAvgSelect.value : '';
                 var avgVal = vsAvgSelect ? parseFloat(vsAvgSelect.getAttribute('data-avg')) : 0;
 
-                // First pass: determine which rows pass search, min, range, avg filters
+                var yearVal = yearSelect ? yearSelect.value : '';
+
+                var perfectVal = perfectSelect ? perfectSelect.value : '';
+                var perfectCol = perfectSelect ? parseInt(perfectSelect.getAttribute('data-col'), 10) : 2;
+
+                // First pass: determine which rows pass all basic filters
                 var passing = [];
                 allRows.forEach(function (row) {
                     var show = true;
@@ -634,10 +640,17 @@
                         }
                     }
 
-                    // Minimum threshold
-                    if (!isNaN(minVal) && show) {
-                        if (getCellNumeric(row, minCol) < minVal) {
-                            show = false;
+                    // Minimum thresholds (multiple)
+                    if (show) {
+                        for (var m = 0; m < minInputs.length; m++) {
+                            var minVal = parseFloat(minInputs[m].value);
+                            if (!isNaN(minVal)) {
+                                var minCol = parseInt(minInputs[m].getAttribute('data-col'), 10);
+                                if (getCellNumeric(row, minCol) < minVal) {
+                                    show = false;
+                                    break;
+                                }
+                            }
                         }
                     }
 
@@ -660,6 +673,29 @@
                             show = false;
                         } else if (vsAvg === 'below' && rowAcc > avgVal) {
                             show = false;
+                        }
+                    }
+
+                    // Year filter (from data-year attribute on <tr>)
+                    if (yearVal && show) {
+                        var rowYear = row.getAttribute('data-year') || '';
+                        if (rowYear !== yearVal) {
+                            show = false;
+                        }
+                    }
+
+                    // Perfect score filter (compare cell value to data-total)
+                    if (perfectVal && show) {
+                        var cell = row.cells[perfectCol];
+                        if (cell) {
+                            var correct = getCellNumeric(row, perfectCol);
+                            var total = parseFloat(cell.getAttribute('data-total') || '0');
+                            var isPerfect = total > 0 && correct >= total;
+                            if (perfectVal === 'perfect' && !isPerfect) {
+                                show = false;
+                            } else if (perfectVal === 'imperfect' && isPerfect) {
+                                show = false;
+                            }
                         }
                     }
 
@@ -709,13 +745,10 @@
             // Reset button
             if (resetBtn) {
                 resetBtn.addEventListener('click', function () {
-                    if (searchInput) searchInput.value = '';
-                    if (minInput) minInput.value = '';
-                    if (rangeMinInput) rangeMinInput.value = '';
-                    if (rangeMaxInput) rangeMaxInput.value = '';
-                    if (topnDirSelect) topnDirSelect.value = '';
-                    if (topnCountInput) topnCountInput.value = '';
-                    if (vsAvgSelect) vsAvgSelect.value = '';
+                    var allInputs = container.querySelectorAll('.kealoa-filter-input');
+                    allInputs.forEach(function (input) { input.value = ''; });
+                    var allSelects = container.querySelectorAll('.kealoa-filter-select');
+                    allSelects.forEach(function (sel) { sel.value = ''; });
                     applyFilters();
                 });
             }

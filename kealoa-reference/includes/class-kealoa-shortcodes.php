@@ -1486,7 +1486,53 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-round-history">
                     <h2><?php esc_html_e('Round History', 'kealoa-reference'); ?></h2>
 
-                    <table class="kealoa-table kealoa-history-table">
+                    <div class="kealoa-filter-controls" data-target="kealoa-person-round-history-table">
+                        <div class="kealoa-filter-row">
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-rh-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                                <input type="text" id="kealoa-rh-search" class="kealoa-filter-input" data-filter="search" data-col="1" placeholder="<?php esc_attr_e('Solution words...', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-rh-year"><?php esc_html_e('Year', 'kealoa-reference'); ?></label>
+                                <select id="kealoa-rh-year" class="kealoa-filter-select" data-filter="year" data-col="0">
+                                    <option value=""><?php esc_html_e('All Years', 'kealoa-reference'); ?></option>
+                                    <?php
+                                    $rh_years = [];
+                                    foreach ($round_history as $rh) {
+                                        $rh_years[(int) date('Y', strtotime($rh->round_date))] = true;
+                                    }
+                                    krsort($rh_years);
+                                    foreach (array_keys($rh_years) as $rh_year): ?>
+                                        <option value="<?php echo esc_attr($rh_year); ?>"><?php echo esc_html($rh_year); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-rh-min-correct"><?php esc_html_e('Min. Correct', 'kealoa-reference'); ?></label>
+                                <input type="number" id="kealoa-rh-min-correct" class="kealoa-filter-input" data-filter="min" data-col="2" min="0" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                            </div>
+                        </div>
+                        <div class="kealoa-filter-row">
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-rh-min-streak"><?php esc_html_e('Min. Streak', 'kealoa-reference'); ?></label>
+                                <input type="number" id="kealoa-rh-min-streak" class="kealoa-filter-input" data-filter="min" data-col="3" min="0" placeholder="<?php esc_attr_e('e.g. 3', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-rh-perfect"><?php esc_html_e('Score', 'kealoa-reference'); ?></label>
+                                <select id="kealoa-rh-perfect" class="kealoa-filter-select" data-filter="perfect" data-col="2">
+                                    <option value=""><?php esc_html_e('All Scores', 'kealoa-reference'); ?></option>
+                                    <option value="perfect"><?php esc_html_e('Perfect Only', 'kealoa-reference'); ?></option>
+                                    <option value="imperfect"><?php esc_html_e('Not Perfect', 'kealoa-reference'); ?></option>
+                                </select>
+                            </div>
+                            <div class="kealoa-filter-group kealoa-filter-actions">
+                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                <span class="kealoa-filter-count"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="kealoa-table kealoa-history-table" id="kealoa-person-round-history-table">
                         <thead>
                             <tr>
                                 <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
@@ -1502,7 +1548,7 @@ class Kealoa_Shortcodes {
                                 $history_round_num = (int) ($history->round_number ?? 1);
                                 $history_rounds_on_date = $this->db->get_rounds_by_date($history->round_date);
                                 ?>
-                                <tr>
+                                <tr data-year="<?php echo esc_attr(date('Y', strtotime($history->round_date))); ?>">
                                     <td data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($history->round_date)) * 100 + $history_round_num); ?>">
                                         <?php
                                         echo Kealoa_Formatter::format_round_date_link((int) $history->round_id, $history->round_date);
@@ -1512,7 +1558,7 @@ class Kealoa_Shortcodes {
                                         ?>
                                     </td>
                                     <td><?php echo Kealoa_Formatter::format_solution_words_link((int) $history->round_id, $solutions); ?></td>
-                                    <td><?php echo esc_html($history->correct_count); ?></td>
+                                    <td data-total="<?php echo esc_attr((int) $history->total_clues); ?>"><?php echo esc_html($history->correct_count); ?></td>
                                     <td><?php echo esc_html($this->db->get_person_round_streak((int) $history->round_id, $person_id)); ?></td>
                                 </tr>
                             <?php endforeach; ?>
