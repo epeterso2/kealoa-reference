@@ -38,7 +38,7 @@ class Kealoa_DB {
     public function __construct() {
         global $wpdb;
         $this->wpdb = $wpdb;
-        
+
         $this->constructors_table = $wpdb->prefix . 'kealoa_constructors';
         $this->persons_table = $wpdb->prefix . 'kealoa_persons';
         $this->puzzles_table = $wpdb->prefix . 'kealoa_puzzles';
@@ -91,33 +91,33 @@ class Kealoa_DB {
             'search' => '',
         ];
         $args = wp_parse_args($args, $defaults);
-        
+
         $sql = "SELECT * FROM {$this->constructors_table}";
         $where = [];
         $values = [];
-        
+
         if (!empty($args['search'])) {
             $where[] = "full_name LIKE %s";
             $values[] = '%' . $this->wpdb->esc_like($args['search']) . '%';
         }
-        
+
         if (!empty($where)) {
             $sql .= " WHERE " . implode(' AND ', $where);
         }
-        
+
         $allowed_orderby = ['id', 'full_name', 'created_at'];
         $orderby = in_array($args['orderby'], $allowed_orderby) ? $args['orderby'] : 'full_name';
         $order = strtoupper($args['order']) === 'DESC' ? 'DESC' : 'ASC';
-        
+
         $sql .= " ORDER BY {$orderby} {$order}";
         $sql .= " LIMIT %d OFFSET %d";
         $values[] = $args['limit'];
         $values[] = $args['offset'];
-        
+
         if (!empty($values)) {
             $sql = $this->wpdb->prepare($sql, ...$values);
         }
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -126,14 +126,14 @@ class Kealoa_DB {
      */
     public function count_constructors(string $search = ''): int {
         $sql = "SELECT COUNT(*) FROM {$this->constructors_table}";
-        
+
         if (!empty($search)) {
             $sql .= $this->wpdb->prepare(
                 " WHERE full_name LIKE %s",
                 '%' . $this->wpdb->esc_like($search) . '%'
             );
         }
-        
+
         return (int) $this->wpdb->get_var($sql);
     }
 
@@ -143,11 +143,11 @@ class Kealoa_DB {
     public function create_constructor(array $data): int|false {
         $insert_data = [
             'full_name' => sanitize_text_field($data['full_name']),
-            'xwordinfo_profile_name' => isset($data['xwordinfo_profile_name']) 
-                ? sanitize_text_field($data['xwordinfo_profile_name']) 
+            'xwordinfo_profile_name' => isset($data['xwordinfo_profile_name'])
+                ? sanitize_text_field($data['xwordinfo_profile_name'])
                 : null,
-            'xwordinfo_image_url' => isset($data['xwordinfo_image_url']) 
-                ? esc_url_raw($data['xwordinfo_image_url']) 
+            'xwordinfo_image_url' => isset($data['xwordinfo_image_url'])
+                ? esc_url_raw($data['xwordinfo_image_url'])
                 : null,
         ];
         $format = ['%s', '%s', '%s'];
@@ -162,7 +162,7 @@ class Kealoa_DB {
             $insert_data,
             $format
         );
-        
+
         return $result ? $this->wpdb->insert_id : false;
     }
 
@@ -172,20 +172,20 @@ class Kealoa_DB {
     public function update_constructor(int $id, array $data): bool {
         $update_data = [];
         $format = [];
-        
+
         if (isset($data['full_name'])) {
             $update_data['full_name'] = sanitize_text_field($data['full_name']);
             $format[] = '%s';
         }
         if (array_key_exists('xwordinfo_profile_name', $data)) {
-            $update_data['xwordinfo_profile_name'] = $data['xwordinfo_profile_name'] 
-                ? sanitize_text_field($data['xwordinfo_profile_name']) 
+            $update_data['xwordinfo_profile_name'] = $data['xwordinfo_profile_name']
+                ? sanitize_text_field($data['xwordinfo_profile_name'])
                 : null;
             $format[] = '%s';
         }
         if (array_key_exists('xwordinfo_image_url', $data)) {
-            $update_data['xwordinfo_image_url'] = $data['xwordinfo_image_url'] 
-                ? esc_url_raw($data['xwordinfo_image_url']) 
+            $update_data['xwordinfo_image_url'] = $data['xwordinfo_image_url']
+                ? esc_url_raw($data['xwordinfo_image_url'])
                 : null;
             $format[] = '%s';
         }
@@ -193,11 +193,11 @@ class Kealoa_DB {
             $update_data['media_id'] = $data['media_id'] ? (int) $data['media_id'] : null;
             $format[] = '%d';
         }
-        
+
         if (empty($update_data)) {
             return false;
         }
-        
+
         $result = $this->wpdb->update(
             $this->constructors_table,
             $update_data,
@@ -205,7 +205,7 @@ class Kealoa_DB {
             $format,
             ['%d']
         );
-        
+
         return $result !== false;
     }
 
@@ -218,7 +218,7 @@ class Kealoa_DB {
             ['id' => $id],
             ['%d']
         );
-        
+
         return $result !== false;
     }
 
@@ -263,33 +263,33 @@ class Kealoa_DB {
             'search' => '',
         ];
         $args = wp_parse_args($args, $defaults);
-        
+
         $sql = "SELECT * FROM {$this->persons_table}";
         $where = [];
         $values = [];
-        
+
         if (!empty($args['search'])) {
             $where[] = "full_name LIKE %s";
             $values[] = '%' . $this->wpdb->esc_like($args['search']) . '%';
         }
-        
+
         if (!empty($where)) {
             $sql .= " WHERE " . implode(' AND ', $where);
         }
-        
+
         $allowed_orderby = ['id', 'full_name', 'created_at'];
         $orderby = in_array($args['orderby'], $allowed_orderby) ? $args['orderby'] : 'full_name';
         $order = strtoupper($args['order']) === 'DESC' ? 'DESC' : 'ASC';
-        
+
         $sql .= " ORDER BY {$orderby} {$order}";
         $sql .= " LIMIT %d OFFSET %d";
         $values[] = $args['limit'];
         $values[] = $args['offset'];
-        
+
         if (!empty($values)) {
             $sql = $this->wpdb->prepare($sql, ...$values);
         }
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -298,14 +298,14 @@ class Kealoa_DB {
      */
     public function count_persons(string $search = ''): int {
         $sql = "SELECT COUNT(*) FROM {$this->persons_table}";
-        
+
         if (!empty($search)) {
             $sql .= $this->wpdb->prepare(
                 " WHERE full_name LIKE %s",
                 '%' . $this->wpdb->esc_like($search) . '%'
             );
         }
-        
+
         return (int) $this->wpdb->get_var($sql);
     }
 
@@ -315,11 +315,11 @@ class Kealoa_DB {
     public function create_person(array $data): int|false {
         $insert_data = [
             'full_name' => sanitize_text_field($data['full_name']),
-            'home_page_url' => isset($data['home_page_url']) 
-                ? esc_url_raw($data['home_page_url']) 
+            'home_page_url' => isset($data['home_page_url'])
+                ? esc_url_raw($data['home_page_url'])
                 : null,
-            'image_url' => isset($data['image_url']) 
-                ? esc_url_raw($data['image_url']) 
+            'image_url' => isset($data['image_url'])
+                ? esc_url_raw($data['image_url'])
                 : null,
             'hide_xwordinfo' => !empty($data['hide_xwordinfo']) ? 1 : 0,
         ];
@@ -335,7 +335,7 @@ class Kealoa_DB {
             $insert_data,
             $format
         );
-        
+
         return $result ? $this->wpdb->insert_id : false;
     }
 
@@ -345,20 +345,20 @@ class Kealoa_DB {
     public function update_person(int $id, array $data): bool {
         $update_data = [];
         $format = [];
-        
+
         if (isset($data['full_name'])) {
             $update_data['full_name'] = sanitize_text_field($data['full_name']);
             $format[] = '%s';
         }
         if (array_key_exists('home_page_url', $data)) {
-            $update_data['home_page_url'] = $data['home_page_url'] 
-                ? esc_url_raw($data['home_page_url']) 
+            $update_data['home_page_url'] = $data['home_page_url']
+                ? esc_url_raw($data['home_page_url'])
                 : null;
             $format[] = '%s';
         }
         if (array_key_exists('image_url', $data)) {
-            $update_data['image_url'] = $data['image_url'] 
-                ? esc_url_raw($data['image_url']) 
+            $update_data['image_url'] = $data['image_url']
+                ? esc_url_raw($data['image_url'])
                 : null;
             $format[] = '%s';
         }
@@ -370,11 +370,11 @@ class Kealoa_DB {
             $update_data['hide_xwordinfo'] = !empty($data['hide_xwordinfo']) ? 1 : 0;
             $format[] = '%d';
         }
-        
+
         if (empty($update_data)) {
             return false;
         }
-        
+
         $result = $this->wpdb->update(
             $this->persons_table,
             $update_data,
@@ -382,7 +382,7 @@ class Kealoa_DB {
             $format,
             ['%d']
         );
-        
+
         return $result !== false;
     }
 
@@ -395,7 +395,7 @@ class Kealoa_DB {
             ['id' => $id],
             ['%d']
         );
-        
+
         return $result !== false;
     }
 
@@ -439,11 +439,11 @@ class Kealoa_DB {
             'constructor_search' => '',
         ];
         $args = wp_parse_args($args, $defaults);
-        
+
         $allowed_orderby = ['id', 'publication_date', 'created_at'];
         $orderby = in_array($args['orderby'], $allowed_orderby) ? $args['orderby'] : 'publication_date';
         $order = strtoupper($args['order']) === 'ASC' ? 'ASC' : 'DESC';
-        
+
         if (!empty($args['constructor_search'])) {
             $sql = $this->wpdb->prepare(
                 "SELECT DISTINCT p.* FROM {$this->puzzles_table} p
@@ -462,7 +462,7 @@ class Kealoa_DB {
                 $args['offset']
             );
         }
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -491,20 +491,20 @@ class Kealoa_DB {
             'publication_date' => sanitize_text_field($data['publication_date']),
         ];
         $format = ['%s'];
-        
+
         if (array_key_exists('editor_name', $data)) {
             $insert_data['editor_name'] = $data['editor_name'] !== null && $data['editor_name'] !== ''
                 ? sanitize_text_field($data['editor_name'])
                 : null;
             $format[] = '%s';
         }
-        
+
         $result = $this->wpdb->insert(
             $this->puzzles_table,
             $insert_data,
             $format
         );
-        
+
         return $result ? $this->wpdb->insert_id : false;
     }
 
@@ -515,19 +515,19 @@ class Kealoa_DB {
         if (!isset($data['publication_date'])) {
             return false;
         }
-        
+
         $update_data = [
             'publication_date' => sanitize_text_field($data['publication_date']),
         ];
         $format = ['%s'];
-        
+
         if (array_key_exists('editor_name', $data)) {
             $update_data['editor_name'] = $data['editor_name'] !== null && $data['editor_name'] !== ''
                 ? sanitize_text_field($data['editor_name'])
                 : null;
             $format[] = '%s';
         }
-        
+
         $result = $this->wpdb->update(
             $this->puzzles_table,
             $update_data,
@@ -535,7 +535,7 @@ class Kealoa_DB {
             $format,
             ['%d']
         );
-        
+
         return $result !== false;
     }
 
@@ -545,13 +545,13 @@ class Kealoa_DB {
     public function delete_puzzle(int $id): bool {
         // First delete related constructors
         $this->wpdb->delete($this->puzzle_constructors_table, ['puzzle_id' => $id], ['%d']);
-        
+
         $result = $this->wpdb->delete(
             $this->puzzles_table,
             ['id' => $id],
             ['%d']
         );
-        
+
         return $result !== false;
     }
 
@@ -601,7 +601,7 @@ class Kealoa_DB {
             ORDER BY pc.constructor_order ASC",
             $puzzle_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -611,7 +611,7 @@ class Kealoa_DB {
     public function set_puzzle_constructors(int $puzzle_id, array $constructor_ids): bool {
         // Delete existing constructors
         $this->wpdb->delete($this->puzzle_constructors_table, ['puzzle_id' => $puzzle_id], ['%d']);
-        
+
         // Insert new constructors
         $order = 1;
         foreach ($constructor_ids as $constructor_id) {
@@ -625,7 +625,7 @@ class Kealoa_DB {
                 ['%d', '%d', '%d']
             );
         }
-        
+
         return true;
     }
 
@@ -638,7 +638,7 @@ class Kealoa_DB {
      */
     public function get_round(int $id): ?object {
         $sql = $this->wpdb->prepare(
-            "SELECT r.*, p.full_name as clue_giver_name 
+            "SELECT r.*, p.full_name as clue_giver_name
             FROM {$this->rounds_table} r
             LEFT JOIN {$this->persons_table} p ON r.clue_giver_id = p.id
             WHERE r.id = %d",
@@ -708,7 +708,7 @@ class Kealoa_DB {
      */
     public function get_rounds_by_date(string $date): array {
         $sql = $this->wpdb->prepare(
-            "SELECT r.*, p.full_name as clue_giver_name 
+            "SELECT r.*, p.full_name as clue_giver_name
             FROM {$this->rounds_table} r
             LEFT JOIN {$this->persons_table} p ON r.clue_giver_id = p.id
             WHERE r.round_date = %s
@@ -740,24 +740,24 @@ class Kealoa_DB {
             'offset' => 0,
         ];
         $args = wp_parse_args($args, $defaults);
-        
+
         $allowed_orderby = ['id', 'round_date', 'episode_number', 'created_at'];
         $orderby = in_array($args['orderby'], $allowed_orderby) ? $args['orderby'] : 'round_date';
         $order = strtoupper($args['order']) === 'ASC' ? 'ASC' : 'DESC';
-        
+
         // Add secondary sort by round_number when ordering by date
         $secondary_sort = ($orderby === 'round_date') ? ', r.round_number ASC' : '';
-        
+
         $limit_clause = '';
         if ((int) $args['limit'] > 0) {
             $limit_clause = $this->wpdb->prepare(' LIMIT %d OFFSET %d', $args['limit'], $args['offset']);
         }
-        
-        $sql = "SELECT r.*, p.full_name as clue_giver_name 
+
+        $sql = "SELECT r.*, p.full_name as clue_giver_name
             FROM {$this->rounds_table} r
             LEFT JOIN {$this->persons_table} p ON r.clue_giver_id = p.id
             ORDER BY {$orderby} {$order}{$secondary_sort}{$limit_clause}";
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -881,16 +881,16 @@ class Kealoa_DB {
                     : null,
                 'episode_start_seconds' => (int) ($data['episode_start_seconds'] ?? 0),
                 'clue_giver_id' => (int) $data['clue_giver_id'],
-                'description' => isset($data['description']) 
-                    ? sanitize_textarea_field($data['description']) 
+                'description' => isset($data['description'])
+                    ? sanitize_textarea_field($data['description'])
                     : null,
-                'description2' => isset($data['description2']) 
-                    ? sanitize_textarea_field($data['description2']) 
+                'description2' => isset($data['description2'])
+                    ? sanitize_textarea_field($data['description2'])
                     : null,
             ],
             ['%s', '%d', '%d', '%d', '%s', '%d', '%d', '%s', '%s']
         );
-        
+
         return $result ? $this->wpdb->insert_id : false;
     }
 
@@ -900,7 +900,7 @@ class Kealoa_DB {
     public function update_round(int $id, array $data): bool {
         $update_data = [];
         $format = [];
-        
+
         if (isset($data['round_date'])) {
             $update_data['round_date'] = sanitize_text_field($data['round_date']);
             $format[] = '%s';
@@ -934,22 +934,22 @@ class Kealoa_DB {
             $format[] = '%d';
         }
         if (array_key_exists('description', $data)) {
-            $update_data['description'] = $data['description'] 
-                ? sanitize_textarea_field($data['description']) 
+            $update_data['description'] = $data['description']
+                ? sanitize_textarea_field($data['description'])
                 : null;
             $format[] = '%s';
         }
         if (array_key_exists('description2', $data)) {
-            $update_data['description2'] = $data['description2'] 
-                ? sanitize_textarea_field($data['description2']) 
+            $update_data['description2'] = $data['description2']
+                ? sanitize_textarea_field($data['description2'])
                 : null;
             $format[] = '%s';
         }
-        
+
         if (empty($update_data)) {
             return false;
         }
-        
+
         $result = $this->wpdb->update(
             $this->rounds_table,
             $update_data,
@@ -957,7 +957,7 @@ class Kealoa_DB {
             $format,
             ['%d']
         );
-        
+
         return $result !== false;
     }
 
@@ -969,7 +969,7 @@ class Kealoa_DB {
         $clue_ids = $this->wpdb->get_col(
             $this->wpdb->prepare("SELECT id FROM {$this->clues_table} WHERE round_id = %d", $id)
         );
-        
+
         if (!empty($clue_ids)) {
             $placeholders = implode(',', array_fill(0, count($clue_ids), '%d'));
             $this->wpdb->query(
@@ -979,17 +979,17 @@ class Kealoa_DB {
                 )
             );
         }
-        
+
         $this->wpdb->delete($this->clues_table, ['round_id' => $id], ['%d']);
         $this->wpdb->delete($this->round_solutions_table, ['round_id' => $id], ['%d']);
         $this->wpdb->delete($this->round_guessers_table, ['round_id' => $id], ['%d']);
-        
+
         $result = $this->wpdb->delete(
             $this->rounds_table,
             ['id' => $id],
             ['%d']
         );
-        
+
         return $result !== false;
     }
 
@@ -998,12 +998,12 @@ class Kealoa_DB {
      */
     public function get_round_solutions(int $round_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT * FROM {$this->round_solutions_table} 
-            WHERE round_id = %d 
+            "SELECT * FROM {$this->round_solutions_table}
+            WHERE round_id = %d
             ORDER BY word_order ASC",
             $round_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -1013,7 +1013,7 @@ class Kealoa_DB {
     public function set_round_solutions(int $round_id, array $words): bool {
         // Delete existing solutions
         $this->wpdb->delete($this->round_solutions_table, ['round_id' => $round_id], ['%d']);
-        
+
         // Insert new solutions
         $order = 1;
         foreach ($words as $word) {
@@ -1027,7 +1027,7 @@ class Kealoa_DB {
                 ['%d', '%s', '%d']
             );
         }
-        
+
         return true;
     }
 
@@ -1042,7 +1042,7 @@ class Kealoa_DB {
             ORDER BY p.full_name ASC",
             $round_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -1052,7 +1052,7 @@ class Kealoa_DB {
     public function set_round_guessers(int $round_id, array $person_ids): bool {
         // Delete existing guessers
         $this->wpdb->delete($this->round_guessers_table, ['round_id' => $round_id], ['%d']);
-        
+
         // Insert new guessers
         foreach ($person_ids as $person_id) {
             $this->wpdb->insert(
@@ -1064,7 +1064,7 @@ class Kealoa_DB {
                 ['%d', '%d']
             );
         }
-        
+
         return true;
     }
 
@@ -1099,7 +1099,7 @@ class Kealoa_DB {
             ORDER BY c.clue_number ASC",
             $round_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -1129,7 +1129,7 @@ class Kealoa_DB {
         }
 
         $result = $this->wpdb->insert($this->clues_table, $insert_data, $format);
-        
+
         return $result ? $this->wpdb->insert_id : false;
     }
 
@@ -1139,7 +1139,7 @@ class Kealoa_DB {
     public function update_clue(int $id, array $data): bool {
         $update_data = [];
         $format = [];
-        
+
         if (isset($data['clue_number'])) {
             $update_data['clue_number'] = (int) $data['clue_number'];
             $format[] = '%d';
@@ -1164,11 +1164,11 @@ class Kealoa_DB {
             $update_data['correct_answer'] = strtoupper(sanitize_text_field($data['correct_answer']));
             $format[] = '%s';
         }
-        
+
         if (empty($update_data)) {
             return false;
         }
-        
+
         $result = $this->wpdb->update(
             $this->clues_table,
             $update_data,
@@ -1176,7 +1176,7 @@ class Kealoa_DB {
             $format,
             ['%d']
         );
-        
+
         return $result !== false;
     }
 
@@ -1186,13 +1186,13 @@ class Kealoa_DB {
     public function delete_clue(int $id): bool {
         // Delete related guesses
         $this->wpdb->delete($this->guesses_table, ['clue_id' => $id], ['%d']);
-        
+
         $result = $this->wpdb->delete(
             $this->clues_table,
             ['id' => $id],
             ['%d']
         );
-        
+
         return $result !== false;
     }
 
@@ -1212,7 +1212,7 @@ class Kealoa_DB {
             ORDER BY p.full_name ASC",
             $clue_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -1225,20 +1225,20 @@ class Kealoa_DB {
         if (!$clue) {
             return false;
         }
-        
+
         $guessed_word = strtoupper(sanitize_text_field($guessed_word));
         $is_correct = ($guessed_word === $clue->correct_answer) ? 1 : 0;
-        
+
         // Check if guess exists
         $existing = $this->wpdb->get_row(
             $this->wpdb->prepare(
-                "SELECT id FROM {$this->guesses_table} 
+                "SELECT id FROM {$this->guesses_table}
                 WHERE clue_id = %d AND guesser_person_id = %d",
                 $clue_id,
                 $guesser_person_id
             )
         );
-        
+
         if ($existing) {
             $result = $this->wpdb->update(
                 $this->guesses_table,
@@ -1265,7 +1265,7 @@ class Kealoa_DB {
                 ['%d', '%d', '%s', '%d']
             );
         }
-        
+
         return $result !== false;
     }
 
@@ -1281,7 +1281,7 @@ class Kealoa_DB {
             ],
             ['%d', '%d']
         );
-        
+
         return $result !== false;
     }
 
@@ -1305,7 +1305,7 @@ class Kealoa_DB {
      */
     public function get_round_guesser_results(int $round_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 p.id as person_id,
                 p.full_name,
                 COUNT(g.id) as total_guesses,
@@ -1319,7 +1319,7 @@ class Kealoa_DB {
             ORDER BY p.full_name ASC",
             $round_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -1334,11 +1334,11 @@ class Kealoa_DB {
                 $person_id
             )
         );
-        
+
         // Get total clues answered and correct answers (only from rounds where person is a guesser)
         $guess_stats = $this->wpdb->get_row(
             $this->wpdb->prepare(
-                "SELECT 
+                "SELECT
                     COUNT(*) as total_clues_answered,
                     SUM(g.is_correct) as total_correct
                 FROM {$this->guesses_table} g
@@ -1348,11 +1348,11 @@ class Kealoa_DB {
                 $person_id
             )
         );
-        
+
         // Get per-round statistics for min/max/mean/median calculations
         $round_results = $this->wpdb->get_results(
             $this->wpdb->prepare(
-                "SELECT 
+                "SELECT
                     c.round_id,
                     COUNT(*) as clue_count,
                     SUM(g.is_correct) as correct_count
@@ -1364,12 +1364,12 @@ class Kealoa_DB {
                 $person_id
             )
         );
-        
+
         $correct_counts = array_map(fn($r) => (int) $r->correct_count, $round_results);
         $percentages = array_map(function($r) {
             return $r->clue_count > 0 ? ((int) $r->correct_count / (int) $r->clue_count) * 100 : 0;
         }, $round_results);
-        
+
         // Calculate longest streak of consecutive correct answers in a single round
         $best_streak = 0;
         $streak_rows = $this->wpdb->get_results(
@@ -1399,13 +1399,13 @@ class Kealoa_DB {
                 $streak = 0;
             }
         }
-        
+
         return (object) [
             'rounds_played' => $rounds_played,
             'total_clues_answered' => (int) ($guess_stats->total_clues_answered ?? 0),
             'total_correct' => (int) ($guess_stats->total_correct ?? 0),
-            'overall_percentage' => $guess_stats->total_clues_answered > 0 
-                ? round(($guess_stats->total_correct / $guess_stats->total_clues_answered) * 100, 1) 
+            'overall_percentage' => $guess_stats->total_clues_answered > 0
+                ? round(($guess_stats->total_correct / $guess_stats->total_clues_answered) * 100, 1)
                 : 0,
             'min_correct' => !empty($correct_counts) ? min($correct_counts) : 0,
             'max_correct' => !empty($correct_counts) ? max($correct_counts) : 0,
@@ -1426,15 +1426,15 @@ class Kealoa_DB {
         if (empty($values)) {
             return 0;
         }
-        
+
         sort($values);
         $count = count($values);
         $middle = (int) floor($count / 2);
-        
+
         if ($count % 2 === 0) {
             return ($values[$middle - 1] + $values[$middle]) / 2;
         }
-        
+
         return $values[$middle];
     }
 
@@ -1443,7 +1443,7 @@ class Kealoa_DB {
      */
     public function get_person_results_by_clue_number(int $person_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 c.clue_number,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
@@ -1455,7 +1455,7 @@ class Kealoa_DB {
             ORDER BY c.clue_number ASC",
             $person_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -1464,7 +1464,7 @@ class Kealoa_DB {
      */
     public function get_person_results_by_answer_length(int $person_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 CHAR_LENGTH(REGEXP_REPLACE(c.correct_answer, '[^A-Za-z0-9]', '')) as answer_length,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
@@ -1476,7 +1476,7 @@ class Kealoa_DB {
             ORDER BY CHAR_LENGTH(REGEXP_REPLACE(c.correct_answer, '[^A-Za-z0-9]', '')) ASC",
             $person_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -1485,7 +1485,7 @@ class Kealoa_DB {
      */
     public function get_person_results_by_direction(int $person_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 c.puzzle_clue_direction as direction,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
@@ -1497,7 +1497,7 @@ class Kealoa_DB {
             ORDER BY c.puzzle_clue_direction ASC",
             $person_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -1506,7 +1506,7 @@ class Kealoa_DB {
      */
     public function get_person_results_by_day_of_week(int $person_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 DAYOFWEEK(pz.publication_date) as day_of_week,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
@@ -1519,7 +1519,7 @@ class Kealoa_DB {
             ORDER BY DAYOFWEEK(pz.publication_date) ASC",
             $person_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -1528,7 +1528,7 @@ class Kealoa_DB {
      */
     public function get_person_results_by_decade(int $person_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 FLOOR(YEAR(pz.publication_date) / 10) * 10 as decade,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
@@ -1541,7 +1541,7 @@ class Kealoa_DB {
             ORDER BY decade ASC",
             $person_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -1550,7 +1550,7 @@ class Kealoa_DB {
      */
     public function get_person_results_by_year(int $person_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 YEAR(r.round_date) as year,
                 COUNT(DISTINCT r.id) as rounds_played,
                 COUNT(g.id) as total_answered,
@@ -1574,7 +1574,7 @@ class Kealoa_DB {
             $person_id,
             $person_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -1627,7 +1627,7 @@ class Kealoa_DB {
      */
     public function get_person_results_by_constructor(int $person_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 con.id as constructor_id,
                 con.full_name,
                 con.xwordinfo_profile_name,
@@ -1643,7 +1643,7 @@ class Kealoa_DB {
             ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC",
             $person_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -1652,7 +1652,7 @@ class Kealoa_DB {
      */
     public function get_person_results_by_editor(int $person_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 COALESCE(p.editor_name, 'Unknown') as editor_name,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
@@ -1665,7 +1665,7 @@ class Kealoa_DB {
             ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC",
             $person_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -1742,7 +1742,7 @@ class Kealoa_DB {
      */
     public function get_person_round_history(int $person_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 r.id as round_id,
                 r.round_date,
                 r.round_number,
@@ -1757,10 +1757,10 @@ class Kealoa_DB {
             LEFT JOIN {$this->guesses_table} g ON c.id = g.clue_id AND g.guesser_person_id = rg.person_id
             WHERE rg.person_id = %d
             GROUP BY r.id, r.round_date, r.round_number, r.episode_number, r.episode_url, r.episode_start_seconds
-            ORDER BY r.round_date DESC, r.round_number ASC",
+            ORDER BY r.round_date DESC, r.round_number DESC",
             $person_id
         );
-        
+
         return $this->wpdb->get_results($sql);
     }
 
@@ -1777,9 +1777,9 @@ class Kealoa_DB {
             $person_id,
             $round_id
         );
-        
+
         $results = $this->wpdb->get_results($sql);
-        
+
         $max_streak = 0;
         $current_streak = 0;
         foreach ($results as $row) {
@@ -1792,7 +1792,7 @@ class Kealoa_DB {
                 $current_streak = 0;
             }
         }
-        
+
         return $max_streak;
     }
 
@@ -1804,7 +1804,7 @@ class Kealoa_DB {
      * Get all persons (players) with round, guess, and accuracy stats
      */
     public function get_persons_with_stats(): array {
-        $sql = "SELECT 
+        $sql = "SELECT
                 p.id,
                 p.full_name,
                 COUNT(DISTINCT rg.round_id) as rounds_played,
@@ -1825,7 +1825,7 @@ class Kealoa_DB {
      * Get constructors that have puzzles, with puzzle and clue counts
      */
     public function get_constructors_with_stats(): array {
-        $sql = "SELECT 
+        $sql = "SELECT
                 con.id,
                 con.full_name,
                 con.xwordinfo_profile_name,
@@ -1849,7 +1849,7 @@ class Kealoa_DB {
      */
     public function get_constructor_stats(int $constructor_id): ?object {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 COUNT(DISTINCT pc.puzzle_id) as puzzle_count,
                 COUNT(DISTINCT c.id) as clue_count,
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses,
@@ -1869,7 +1869,7 @@ class Kealoa_DB {
      */
     public function get_constructor_puzzles(int $constructor_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 pz.id as puzzle_id,
                 pz.publication_date,
                 pz.editor_name,
@@ -1894,7 +1894,7 @@ class Kealoa_DB {
      */
     public function get_constructor_player_results(int $constructor_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 p.id as person_id,
                 p.full_name,
                 COUNT(*) as total_answered,
@@ -1918,7 +1918,7 @@ class Kealoa_DB {
      */
     public function get_constructor_editor_results(int $constructor_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 COALESCE(pz.editor_name, 'Unknown') as editor_name,
                 COUNT(DISTINCT pz.id) as puzzle_count,
                 COUNT(DISTINCT c.id) as clue_count,
@@ -1941,7 +1941,7 @@ class Kealoa_DB {
      * Get all editors with aggregate guess stats
      */
     public function get_editors_with_stats(): array {
-        $sql = "SELECT 
+        $sql = "SELECT
                 COALESCE(p.editor_name, 'Unknown') as editor_name,
                 COUNT(DISTINCT g.id) as clues_guessed,
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses
@@ -1960,7 +1960,7 @@ class Kealoa_DB {
      */
     public function get_editor_player_results(string $editor_name): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 p.id as person_id,
                 p.full_name,
                 COUNT(*) as total_answered,
@@ -1984,7 +1984,7 @@ class Kealoa_DB {
      */
     public function get_editor_constructor_results(string $editor_name): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 con.id as constructor_id,
                 con.full_name,
                 COUNT(DISTINCT pz.id) as puzzle_count,
@@ -2024,7 +2024,7 @@ class Kealoa_DB {
      */
     public function get_editor_stats(string $editor_name): ?object {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 COUNT(DISTINCT p.id) as puzzle_count,
                 COUNT(DISTINCT c.id) as clue_count,
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses,
@@ -2044,7 +2044,7 @@ class Kealoa_DB {
      */
     public function get_editor_puzzles(string $editor_name): array {
         $sql = $this->wpdb->prepare(
-            "SELECT 
+            "SELECT
                 pz.id as puzzle_id,
                 pz.publication_date,
                 GROUP_CONCAT(DISTINCT con.full_name ORDER BY pc.constructor_order ASC SEPARATOR ', ') as constructor_names,
