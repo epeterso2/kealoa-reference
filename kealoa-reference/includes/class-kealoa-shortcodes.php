@@ -521,7 +521,7 @@ class Kealoa_Shortcodes {
 
             <?php if (!empty($clues)): ?>
                 <div class="kealoa-clues-section">
-                    <h3><?php esc_html_e('Clues', 'kealoa-reference'); ?></h3>
+                    <h2><?php esc_html_e('Clues', 'kealoa-reference'); ?></h2>
 
                     <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-clues-table">
