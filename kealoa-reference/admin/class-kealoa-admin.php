@@ -140,10 +140,11 @@ class Kealoa_Admin {
     }
 
     /**
-     * Add KEALOA menu to admin bar (toolbar)
+     * Add KEALOA menu to admin bar (toolbar) - frontend only
      */
     public function add_admin_bar_menu($wp_admin_bar): void {
-        if (!current_user_can('manage_options')) {
+        // Only show on frontend, not in admin backend
+        if (is_admin() || !current_user_can('manage_options')) {
             return;
         }
 
