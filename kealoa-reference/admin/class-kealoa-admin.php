@@ -240,8 +240,10 @@ class Kealoa_Admin {
             return;
         }
 
-        // Remove default edit link (which won't work for our fake post)
+        // Remove any existing edit links that WordPress might have added
         $wp_admin_bar->remove_node('edit');
+        $wp_admin_bar->remove_node('edit-post');
+        $wp_admin_bar->remove_node('edit-page');
 
         // Add appropriate edit link based on object type
         switch ($object_type) {
@@ -250,6 +252,7 @@ class Kealoa_Admin {
                     'id'    => 'edit',
                     'title' => __('Edit Person', 'kealoa-reference'),
                     'href'  => admin_url('admin.php?page=kealoa-persons&action=edit&id=' . $object_id),
+                    'meta'  => ['title' => __('Edit this person', 'kealoa-reference')],
                 ]);
                 break;
 
@@ -258,6 +261,7 @@ class Kealoa_Admin {
                     'id'    => 'edit',
                     'title' => __('Edit Round', 'kealoa-reference'),
                     'href'  => admin_url('admin.php?page=kealoa-rounds&action=edit&id=' . $object_id),
+                    'meta'  => ['title' => __('Edit this round', 'kealoa-reference')],
                 ]);
                 break;
 
@@ -266,6 +270,7 @@ class Kealoa_Admin {
                     'id'    => 'edit',
                     'title' => __('Edit Constructor', 'kealoa-reference'),
                     'href'  => admin_url('admin.php?page=kealoa-constructors&action=edit&id=' . $object_id),
+                    'meta'  => ['title' => __('Edit this constructor', 'kealoa-reference')],
                 ]);
                 break;
         }
