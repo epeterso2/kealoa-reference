@@ -480,6 +480,10 @@
     font-size: 14px;
 }
 
+.kealoa-game__review-clue-text {
+    white-space: normal !important;
+}
+
 /* Responsive table scroll wrapper */
 .kealoa-game__table-scroll {
     overflow-x: auto;

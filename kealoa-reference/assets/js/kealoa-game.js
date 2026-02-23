@@ -556,7 +556,7 @@
                     el('td', { textContent: clue.constructors || '\u2014' }),
                     el('td', { textContent: clue.editor || '\u2014' }),
                     el('td', { textContent: clueRef }),
-                    el('td', { textContent: clue.clue_text }),
+                    el('td', { className: 'kealoa-game__review-clue-text', textContent: clue.clue_text }),
                     el('td', {}, [
                         el('strong', { className: 'kealoa-guess-correct', textContent: clue.correct_answer })
                     ]),
