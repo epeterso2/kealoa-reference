@@ -947,13 +947,17 @@ class Kealoa_Shortcodes {
                                             beginAtZero: true,
                                             ticks: {
                                                 stepSize: 1,
-                                                precision: 0
+                                                precision: 0,
+                                                autoSkip: false
                                             }
                                         },
                                         y: {
                                             title: {
                                                 display: true,
                                                 text: <?php echo wp_json_encode(__('Correct Answers', 'kealoa-reference')); ?>
+                                            },
+                                            ticks: {
+                                                autoSkip: false
                                             }
                                         }
                                     },
@@ -1044,7 +1048,8 @@ class Kealoa_Shortcodes {
                                             max: 10,
                                             ticks: {
                                                 stepSize: 2,
-                                                precision: 0
+                                                precision: 0,
+                                                autoSkip: false
                                             }
                                         }
                                     },
