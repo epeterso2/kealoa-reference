@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.2.50
+ * Version: 1.2.51
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.2.50');
+define('KEALOA_VERSION', '1.2.51');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -170,6 +170,9 @@ function kealoa_init(): void {
 
     // Force no-sidebar layout for KEALOA virtual pages (GeneratePress compatibility)
     add_filter('generate_sidebar_layout', 'kealoa_force_no_sidebar');
+
+    // Prevent WordPress from adding edit link for virtual KEALOA pages
+    add_filter('get_edit_post_link', 'kealoa_filter_edit_post_link', 10, 2);
 
     // Register REST API routes
     add_action('rest_api_init', 'kealoa_register_rest_routes');
@@ -407,6 +410,9 @@ function kealoa_template_redirect(): void {
         $title = sprintf(__('%s - Player', 'kealoa-reference'), $person->full_name);
         $content = $shortcodes->render_person(['id' => $person->id]);
         $is_kealoa = true;
+        // Store object info for admin bar
+        $GLOBALS['kealoa_object_type'] = 'person';
+        $GLOBALS['kealoa_object_id'] = $person->id;
     } elseif ($round_id) {
         $db = new Kealoa_DB();
         $round = $db->get_round((int) $round_id);
@@ -419,6 +425,9 @@ function kealoa_template_redirect(): void {
         $title = sprintf(__('KEALOA Round #%d: %s', 'kealoa-reference'), (int) $round_id, $solution_text);
         $content = $shortcodes->render_round(['id' => (int) $round_id]);
         $is_kealoa = true;
+        // Store object info for admin bar
+        $GLOBALS['kealoa_object_type'] = 'round';
+        $GLOBALS['kealoa_object_id'] = (int) $round_id;
     } elseif ($constructor_name) {
         $db = new Kealoa_DB();
         $constructor = $db->get_constructor_by_name(urldecode($constructor_name));
@@ -429,6 +438,9 @@ function kealoa_template_redirect(): void {
         $title = sprintf(__('%s - Constructor', 'kealoa-reference'), $constructor->full_name);
         $content = $shortcodes->render_constructor(['id' => (int) $constructor->id]);
         $is_kealoa = true;
+        // Store object info for admin bar
+        $GLOBALS['kealoa_object_type'] = 'constructor';
+        $GLOBALS['kealoa_object_id'] = $constructor->id;
     } elseif ($editor_name) {
         $decoded = urldecode($editor_name);
         $shortcodes = new Kealoa_Shortcodes();
@@ -484,6 +496,17 @@ function kealoa_force_no_sidebar(string $layout): string {
         return 'no-sidebar';
     }
     return $layout;
+}
+
+/**
+ * Filter edit post link to prevent WordPress from adding edit link for virtual KEALOA pages.
+ */
+function kealoa_filter_edit_post_link($link, $post_id) {
+    // If this is our fake post (ID = 0) for a KEALOA virtual page, return empty to prevent default edit link
+    if ($post_id === 0 && !empty($GLOBALS['kealoa_object_type'])) {
+        return '';
+    }
+    return $link;
 }
 
 /**

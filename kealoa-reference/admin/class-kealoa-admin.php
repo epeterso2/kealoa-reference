@@ -226,51 +226,47 @@ class Kealoa_Admin {
      * Modify the Edit link in admin bar when viewing KEALOA objects
      */
     public function modify_edit_link($wp_admin_bar): void {
-        if (!current_user_can('manage_options')) {
+        // Only run on frontend
+        if (is_admin() || !current_user_can('manage_options')) {
             return;
         }
 
-        // Check if we're viewing a KEALOA object
-        $person_name = get_query_var('kealoa_person_name');
-        $round_id = get_query_var('kealoa_round_id');
-        $constructor_name = get_query_var('kealoa_constructor_name');
+        // Check if we're viewing a KEALOA object (stored by kealoa_template_redirect)
+        $object_type = $GLOBALS['kealoa_object_type'] ?? null;
+        $object_id = $GLOBALS['kealoa_object_id'] ?? null;
 
-        if ($person_name) {
-            // Get person ID
-            $person = $this->db->get_person_by_name(urldecode($person_name));
-            if ($person) {
-                // Remove default edit link and add our own
-                $wp_admin_bar->remove_node('edit');
+        if (!$object_type || !$object_id) {
+            return;
+        }
+
+        // Remove default edit link (which won't work for our fake post)
+        $wp_admin_bar->remove_node('edit');
+
+        // Add appropriate edit link based on object type
+        switch ($object_type) {
+            case 'person':
                 $wp_admin_bar->add_node([
                     'id'    => 'edit',
                     'title' => __('Edit Person', 'kealoa-reference'),
-                    'href'  => admin_url('admin.php?page=kealoa-persons&action=edit&id=' . $person->id),
+                    'href'  => admin_url('admin.php?page=kealoa-persons&action=edit&id=' . $object_id),
                 ]);
-            }
-        } elseif ($round_id) {
-            // Round is already an ID
-            $round = $this->db->get_round((int) $round_id);
-            if ($round) {
-                // Remove default edit link and add our own
-                $wp_admin_bar->remove_node('edit');
+                break;
+
+            case 'round':
                 $wp_admin_bar->add_node([
                     'id'    => 'edit',
                     'title' => __('Edit Round', 'kealoa-reference'),
-                    'href'  => admin_url('admin.php?page=kealoa-rounds&action=edit&id=' . $round_id),
+                    'href'  => admin_url('admin.php?page=kealoa-rounds&action=edit&id=' . $object_id),
                 ]);
-            }
-        } elseif ($constructor_name) {
-            // Get constructor ID
-            $constructor = $this->db->get_constructor_by_name(urldecode($constructor_name));
-            if ($constructor) {
-                // Remove default edit link and add our own
-                $wp_admin_bar->remove_node('edit');
+                break;
+
+            case 'constructor':
                 $wp_admin_bar->add_node([
                     'id'    => 'edit',
                     'title' => __('Edit Constructor', 'kealoa-reference'),
-                    'href'  => admin_url('admin.php?page=kealoa-constructors&action=edit&id=' . $constructor->id),
+                    'href'  => admin_url('admin.php?page=kealoa-constructors&action=edit&id=' . $object_id),
                 ]);
-            }
+                break;
         }
     }
 
