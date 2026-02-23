@@ -490,7 +490,7 @@
 
         // Clue-by-clue review table
         container.appendChild(
-            el('h3', { className: 'kealoa-game__review-title', textContent: 'Clue-by-Clue Review' })
+            el('h2', { className: 'kealoa-game__review-title', textContent: 'Clue-by-Clue Review' })
         );
 
         // Build review data sorted by original clue number (show order)
