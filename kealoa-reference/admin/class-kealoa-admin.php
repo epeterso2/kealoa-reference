@@ -30,6 +30,8 @@ class Kealoa_Admin {
         $this->db = new Kealoa_DB();
 
         add_action('admin_menu', [$this, 'add_admin_menus']);
+        add_action('admin_bar_menu', [$this, 'add_admin_bar_menu'], 100);
+        add_action('admin_bar_menu', [$this, 'modify_edit_link'], 999);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('admin_init', [$this, 'handle_form_submissions']);
 
@@ -135,6 +137,141 @@ class Kealoa_Admin {
             'kealoa-settings',
             [$this, 'render_settings_page']
         );
+    }
+
+    /**
+     * Add KEALOA menu to admin bar (toolbar)
+     */
+    public function add_admin_bar_menu($wp_admin_bar): void {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        // Add parent menu item
+        $wp_admin_bar->add_node([
+            'id'    => 'kealoa-reference',
+            'title' => __('KEALOA', 'kealoa-reference'),
+            'href'  => admin_url('admin.php?page=kealoa-reference'),
+            'meta'  => [
+                'title' => __('KEALOA Reference', 'kealoa-reference'),
+            ],
+        ]);
+
+        // Add submenu items
+        $wp_admin_bar->add_node([
+            'id'     => 'kealoa-dashboard',
+            'parent' => 'kealoa-reference',
+            'title'  => __('Dashboard', 'kealoa-reference'),
+            'href'   => admin_url('admin.php?page=kealoa-reference'),
+        ]);
+
+        $wp_admin_bar->add_node([
+            'id'     => 'kealoa-rounds',
+            'parent' => 'kealoa-reference',
+            'title'  => __('Rounds', 'kealoa-reference'),
+            'href'   => admin_url('admin.php?page=kealoa-rounds'),
+        ]);
+
+        $wp_admin_bar->add_node([
+            'id'     => 'kealoa-persons',
+            'parent' => 'kealoa-reference',
+            'title'  => __('Persons', 'kealoa-reference'),
+            'href'   => admin_url('admin.php?page=kealoa-persons'),
+        ]);
+
+        $wp_admin_bar->add_node([
+            'id'     => 'kealoa-constructors',
+            'parent' => 'kealoa-reference',
+            'title'  => __('Constructors', 'kealoa-reference'),
+            'href'   => admin_url('admin.php?page=kealoa-constructors'),
+        ]);
+
+        $wp_admin_bar->add_node([
+            'id'     => 'kealoa-puzzles',
+            'parent' => 'kealoa-reference',
+            'title'  => __('Puzzles', 'kealoa-reference'),
+            'href'   => admin_url('admin.php?page=kealoa-puzzles'),
+        ]);
+
+        $wp_admin_bar->add_node([
+            'id'     => 'kealoa-import',
+            'parent' => 'kealoa-reference',
+            'title'  => __('Import', 'kealoa-reference'),
+            'href'   => admin_url('admin.php?page=kealoa-import'),
+        ]);
+
+        $wp_admin_bar->add_node([
+            'id'     => 'kealoa-export',
+            'parent' => 'kealoa-reference',
+            'title'  => __('Export', 'kealoa-reference'),
+            'href'   => admin_url('admin.php?page=kealoa-export'),
+        ]);
+
+        $wp_admin_bar->add_node([
+            'id'     => 'kealoa-data-check',
+            'parent' => 'kealoa-reference',
+            'title'  => __('Data Check', 'kealoa-reference'),
+            'href'   => admin_url('admin.php?page=kealoa-data-check'),
+        ]);
+
+        $wp_admin_bar->add_node([
+            'id'     => 'kealoa-settings',
+            'parent' => 'kealoa-reference',
+            'title'  => __('Settings', 'kealoa-reference'),
+            'href'   => admin_url('admin.php?page=kealoa-settings'),
+        ]);
+    }
+
+    /**
+     * Modify the Edit link in admin bar when viewing KEALOA objects
+     */
+    public function modify_edit_link($wp_admin_bar): void {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        // Check if we're viewing a KEALOA object
+        $person_name = get_query_var('kealoa_person_name');
+        $round_id = get_query_var('kealoa_round_id');
+        $constructor_name = get_query_var('kealoa_constructor_name');
+
+        if ($person_name) {
+            // Get person ID
+            $person = $this->db->get_person_by_name(urldecode($person_name));
+            if ($person) {
+                // Remove default edit link and add our own
+                $wp_admin_bar->remove_node('edit');
+                $wp_admin_bar->add_node([
+                    'id'    => 'edit',
+                    'title' => __('Edit Person', 'kealoa-reference'),
+                    'href'  => admin_url('admin.php?page=kealoa-persons&action=edit&id=' . $person->id),
+                ]);
+            }
+        } elseif ($round_id) {
+            // Round is already an ID
+            $round = $this->db->get_round((int) $round_id);
+            if ($round) {
+                // Remove default edit link and add our own
+                $wp_admin_bar->remove_node('edit');
+                $wp_admin_bar->add_node([
+                    'id'    => 'edit',
+                    'title' => __('Edit Round', 'kealoa-reference'),
+                    'href'  => admin_url('admin.php?page=kealoa-rounds&action=edit&id=' . $round_id),
+                ]);
+            }
+        } elseif ($constructor_name) {
+            // Get constructor ID
+            $constructor = $this->db->get_constructor_by_name(urldecode($constructor_name));
+            if ($constructor) {
+                // Remove default edit link and add our own
+                $wp_admin_bar->remove_node('edit');
+                $wp_admin_bar->add_node([
+                    'id'    => 'edit',
+                    'title' => __('Edit Constructor', 'kealoa-reference'),
+                    'href'  => admin_url('admin.php?page=kealoa-constructors&action=edit&id=' . $constructor->id),
+                ]);
+            }
+        }
     }
 
     /**
