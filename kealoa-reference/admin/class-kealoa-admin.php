@@ -447,6 +447,21 @@ class Kealoa_Admin {
             <?php endif; ?>
 
             <div class="kealoa-import-section">
+                <h2><?php esc_html_e('Puzzle Editors', 'kealoa-reference'); ?></h2>
+                <p><?php esc_html_e('Auto-populate puzzle editor names based on publication dates using historical NYT editor information.', 'kealoa-reference'); ?></p>
+
+                <form method="post" style="margin-top: 10px;">
+                    <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
+                    <input type="hidden" name="kealoa_action" value="auto_populate_editors" />
+                    <input type="submit" class="button button-secondary" value="<?php esc_attr_e('Auto-Populate Editors', 'kealoa-reference'); ?>"
+                           onclick="return confirm('<?php esc_attr_e('This will overwrite all existing editor names based on puzzle dates. Continue?', 'kealoa-reference'); ?>');" />
+                    <p class="description" style="margin-top: 10px;">
+                        <?php esc_html_e('This will update editor names for all puzzles based on their publication dates. Existing editor names will be overwritten.', 'kealoa-reference'); ?>
+                    </p>
+                </form>
+            </div>
+
+            <div class="kealoa-import-section" style="margin-top: 30px;">
                 <h2><?php esc_html_e('Import CSV File', 'kealoa-reference'); ?></h2>
                 <p><?php esc_html_e('Select a data type and upload your CSV file. Import order matters: Constructors/Persons first, then Puzzles, then Rounds, then Clues, then Guesses.', 'kealoa-reference'); ?></p>
 
@@ -627,21 +642,6 @@ class Kealoa_Admin {
                     <li><?php esc_html_e('For Guesses: is_correct is automatically calculated by comparing guessed_word to the clue\'s correct_answer.', 'kealoa-reference'); ?></li>
                     <li><?php esc_html_e('All text is trimmed. Solution words and answers are automatically uppercased.', 'kealoa-reference'); ?></li>
                 </ul>
-            </div>
-
-            <div class="kealoa-import-section" style="margin-top: 30px;">
-                <h2><?php esc_html_e('Puzzle Editors', 'kealoa-reference'); ?></h2>
-                <p><?php esc_html_e('Auto-populate puzzle editor names based on publication dates using historical NYT editor information.', 'kealoa-reference'); ?></p>
-
-                <form method="post" style="margin-top: 10px;">
-                    <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
-                    <input type="hidden" name="kealoa_action" value="auto_populate_editors" />
-                    <input type="submit" class="button button-secondary" value="<?php esc_attr_e('Auto-Populate Editors', 'kealoa-reference'); ?>"
-                           onclick="return confirm('<?php esc_attr_e('This will overwrite all existing editor names based on puzzle dates. Continue?', 'kealoa-reference'); ?>');" />
-                    <p class="description" style="margin-top: 10px;">
-                        <?php esc_html_e('This will update editor names for all puzzles based on their publication dates. Existing editor names will be overwritten.', 'kealoa-reference'); ?>
-                    </p>
-                </form>
             </div>
         </div>
         <?php
