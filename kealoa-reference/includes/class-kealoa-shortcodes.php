@@ -1043,7 +1043,7 @@ class Kealoa_Shortcodes {
                                             min: 0,
                                             max: 10,
                                             ticks: {
-                                                stepSize: 1,
+                                                stepSize: 2,
                                                 precision: 0
                                             }
                                         }
