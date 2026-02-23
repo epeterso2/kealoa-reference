@@ -28,11 +28,11 @@ class Kealoa_Admin {
      */
     public function __construct() {
         $this->db = new Kealoa_DB();
-        
+
         add_action('admin_menu', [$this, 'add_admin_menus']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('admin_init', [$this, 'handle_form_submissions']);
-        
+
         // AJAX handlers
         add_action('wp_ajax_kealoa_get_persons', [$this, 'ajax_get_persons']);
         add_action('wp_ajax_kealoa_get_constructors', [$this, 'ajax_get_constructors']);
@@ -53,7 +53,7 @@ class Kealoa_Admin {
             'dashicons-games',
             30
         );
-        
+
         // Submenus
         add_submenu_page(
             'kealoa-reference',
@@ -63,7 +63,7 @@ class Kealoa_Admin {
             'kealoa-reference',
             [$this, 'render_dashboard_page']
         );
-        
+
         add_submenu_page(
             'kealoa-reference',
             __('Rounds', 'kealoa-reference'),
@@ -72,7 +72,7 @@ class Kealoa_Admin {
             'kealoa-rounds',
             [$this, 'render_rounds_page']
         );
-        
+
         add_submenu_page(
             'kealoa-reference',
             __('Persons', 'kealoa-reference'),
@@ -81,7 +81,7 @@ class Kealoa_Admin {
             'kealoa-persons',
             [$this, 'render_persons_page']
         );
-        
+
         add_submenu_page(
             'kealoa-reference',
             __('Constructors', 'kealoa-reference'),
@@ -90,7 +90,7 @@ class Kealoa_Admin {
             'kealoa-constructors',
             [$this, 'render_constructors_page']
         );
-        
+
         add_submenu_page(
             'kealoa-reference',
             __('Puzzles', 'kealoa-reference'),
@@ -99,7 +99,7 @@ class Kealoa_Admin {
             'kealoa-puzzles',
             [$this, 'render_puzzles_page']
         );
-        
+
         add_submenu_page(
             'kealoa-reference',
             __('Import Data', 'kealoa-reference'),
@@ -108,7 +108,7 @@ class Kealoa_Admin {
             'kealoa-import',
             [$this, 'render_import_page']
         );
-        
+
         add_submenu_page(
             'kealoa-reference',
             __('Export Data', 'kealoa-reference'),
@@ -144,7 +144,7 @@ class Kealoa_Admin {
         if (strpos($hook, 'kealoa') === false) {
             return;
         }
-        
+
         wp_enqueue_media();
 
         wp_enqueue_style(
@@ -160,7 +160,7 @@ class Kealoa_Admin {
             ['kealoa-palette'],
             KEALOA_VERSION
         );
-        
+
         wp_enqueue_script(
             'kealoa-admin',
             KEALOA_PLUGIN_URL . 'assets/js/kealoa-admin.js',
@@ -168,7 +168,7 @@ class Kealoa_Admin {
             KEALOA_VERSION,
             true
         );
-        
+
         wp_localize_script('kealoa-admin', 'kealoaAdmin', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('kealoa_admin_nonce'),
@@ -182,16 +182,16 @@ class Kealoa_Admin {
         if (!isset($_POST['kealoa_action']) || !current_user_can('manage_options')) {
             return;
         }
-        
+
         if (!wp_verify_nonce($_POST['kealoa_nonce'] ?? '', 'kealoa_admin_action')) {
             wp_die(__('Security check failed.', 'kealoa-reference'));
         }
-        
+
         // Remove magic quotes added by WordPress
         $_POST = wp_unslash($_POST);
-        
+
         $action = sanitize_text_field($_POST['kealoa_action']);
-        
+
         match($action) {
             'create_person' => $this->handle_create_person(),
             'update_person' => $this->handle_update_person(),
@@ -237,7 +237,7 @@ class Kealoa_Admin {
         ?>
         <div class="wrap kealoa-admin-wrap">
             <h1><?php esc_html_e('KEALOA Reference Dashboard', 'kealoa-reference'); ?></h1>
-            
+
             <div class="kealoa-dashboard-cards">
                 <div class="kealoa-card">
                     <h2><?php echo esc_html($rounds_count); ?></h2>
@@ -246,7 +246,7 @@ class Kealoa_Admin {
                         <?php esc_html_e('Manage Rounds', 'kealoa-reference'); ?>
                     </a>
                 </div>
-                
+
                 <div class="kealoa-card">
                     <h2><?php echo esc_html($persons_count); ?></h2>
                     <p><?php esc_html_e('Persons', 'kealoa-reference'); ?></p>
@@ -254,7 +254,7 @@ class Kealoa_Admin {
                         <?php esc_html_e('Manage Persons', 'kealoa-reference'); ?>
                     </a>
                 </div>
-                
+
                 <div class="kealoa-card">
                     <h2><?php echo esc_html($constructors_count); ?></h2>
                     <p><?php esc_html_e('Constructors', 'kealoa-reference'); ?></p>
@@ -262,7 +262,7 @@ class Kealoa_Admin {
                         <?php esc_html_e('Manage Constructors', 'kealoa-reference'); ?>
                     </a>
                 </div>
-                
+
                 <div class="kealoa-card">
                     <h2><?php echo esc_html($puzzles_count); ?></h2>
                     <p><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></p>
@@ -271,7 +271,7 @@ class Kealoa_Admin {
                     </a>
                 </div>
             </div>
-            
+
             <div class="kealoa-shortcodes-info">
                 <h2><?php esc_html_e('Available Shortcodes', 'kealoa-reference'); ?></h2>
                 <table class="widefat">
@@ -297,7 +297,7 @@ class Kealoa_Admin {
                     </tbody>
                 </table>
             </div>
-            
+
             <div class="kealoa-blocks-info">
                 <h2><?php esc_html_e('Available Blocks', 'kealoa-reference'); ?></h2>
                 <p><?php esc_html_e('The following Gutenberg blocks are available in the block editor:', 'kealoa-reference'); ?></p>
@@ -336,7 +336,7 @@ class Kealoa_Admin {
         <div class="wrap kealoa-admin-wrap">
             <h1><?php esc_html_e('Export Data', 'kealoa-reference'); ?></h1>
             <p><?php esc_html_e('Download your KEALOA data as CSV files. Exported files are compatible with the import format.', 'kealoa-reference'); ?></p>
-            
+
             <table class="widefat" style="margin-top: 20px;">
                 <thead>
                     <tr>
@@ -359,7 +359,7 @@ class Kealoa_Admin {
                     <?php endforeach; ?>
                 </tbody>
             </table>
-            
+
             <div style="margin-top: 30px;">
                 <h2><?php esc_html_e('Export All Data', 'kealoa-reference'); ?></h2>
                 <p><?php esc_html_e('Download all data types as a single ZIP archive.', 'kealoa-reference'); ?></p>
@@ -377,7 +377,7 @@ class Kealoa_Admin {
     public function render_import_page(): void {
         $templates = Kealoa_Import::get_templates();
         $import_result = null;
-        
+
         // Handle form submission
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['kealoa_import_nonce'])) {
             if (wp_verify_nonce($_POST['kealoa_import_nonce'], 'kealoa_import_csv')) {
@@ -394,11 +394,11 @@ class Kealoa_Admin {
         ?>
         <div class="wrap kealoa-admin-wrap">
             <h1><?php esc_html_e('Import Data', 'kealoa-reference'); ?></h1>
-            
+
             <?php if ($import_result): ?>
                 <div class="notice notice-<?php echo $import_result['success'] ? 'success' : 'error'; ?> is-dismissible">
                     <p>
-                        <?php 
+                        <?php
                         printf(
                             esc_html__('Import complete: %d imported, %d skipped.', 'kealoa-reference'),
                             $import_result['imported'],
@@ -421,7 +421,7 @@ class Kealoa_Admin {
                                         <td><?php echo esc_html($detail['label']); ?></td>
                                         <td><?php echo esc_html($detail['imported']); ?></td>
                                         <td>
-                                            <?php 
+                                            <?php
                                             echo esc_html($detail['skipped']);
                                             if (!empty($detail['message'])) {
                                                 echo ' <em>(' . esc_html($detail['message']) . ')</em>';
@@ -445,11 +445,99 @@ class Kealoa_Admin {
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
-            
+
             <div class="kealoa-import-section">
+                <h2><?php esc_html_e('Import CSV File', 'kealoa-reference'); ?></h2>
+                <p><?php esc_html_e('Select a data type and upload your CSV file. Import order matters: Constructors/Persons first, then Puzzles, then Rounds, then Clues, then Guesses.', 'kealoa-reference'); ?></p>
+
+                <form method="post" enctype="multipart/form-data" class="kealoa-form">
+                    <?php wp_nonce_field('kealoa_import_csv', 'kealoa_import_nonce'); ?>
+
+                    <table class="form-table">
+                        <tr>
+                            <th><label for="import_type"><?php esc_html_e('Data Type', 'kealoa-reference'); ?></label></th>
+                            <td>
+                                <select name="import_type" id="import_type" required>
+                                    <option value=""><?php esc_html_e('— Select —', 'kealoa-reference'); ?></option>
+                                    <option value="constructors"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></option>
+                                    <option value="persons"><?php esc_html_e('Persons', 'kealoa-reference'); ?></option>
+                                    <option value="puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></option>
+                                    <option value="rounds"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></option>
+                                    <option value="clues"><?php esc_html_e('Clues', 'kealoa-reference'); ?></option>
+                                    <option value="guesses"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="csv_file"><?php esc_html_e('CSV File', 'kealoa-reference'); ?></label></th>
+                            <td>
+                                <input type="file" name="csv_file" id="csv_file" accept=".csv" required />
+                                <p class="description">
+                                    <?php esc_html_e('Select a CSV file to import. The first row must contain column headers.', 'kealoa-reference'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><?php esc_html_e('Options', 'kealoa-reference'); ?></th>
+                            <td>
+                                <label for="csv_overwrite">
+                                    <input type="checkbox" name="overwrite" id="csv_overwrite" value="1" />
+                                    <?php esc_html_e('Overwrite existing data', 'kealoa-reference'); ?>
+                                </label>
+                                <p class="description">
+                                    <?php esc_html_e('When checked, imported data will overwrite existing records. When unchecked, existing records will be skipped.', 'kealoa-reference'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <p class="submit">
+                        <input type="submit" class="button button-primary" value="<?php esc_attr_e('Import', 'kealoa-reference'); ?>" />
+                    </p>
+                </form>
+            </div>
+
+            <div class="kealoa-import-section" style="margin-top: 30px;">
+                <h2><?php esc_html_e('Import All Data from ZIP', 'kealoa-reference'); ?></h2>
+                <p><?php esc_html_e('Upload a ZIP file created by "Export All Data" to import all data types at once. The ZIP file should contain CSV files (constructors.csv, persons.csv, puzzles.csv, rounds.csv, clues.csv, guesses.csv). Files are imported in the correct dependency order automatically.', 'kealoa-reference'); ?></p>
+
+                <form method="post" enctype="multipart/form-data" class="kealoa-form">
+                    <?php wp_nonce_field('kealoa_import_zip', 'kealoa_import_zip_nonce'); ?>
+
+                    <table class="form-table">
+                        <tr>
+                            <th><label for="zip_file"><?php esc_html_e('ZIP File', 'kealoa-reference'); ?></label></th>
+                            <td>
+                                <input type="file" name="zip_file" id="zip_file" accept=".zip" required />
+                                <p class="description">
+                                    <?php esc_html_e('Select a ZIP file exported from KEALOA Reference.', 'kealoa-reference'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><?php esc_html_e('Options', 'kealoa-reference'); ?></th>
+                            <td>
+                                <label for="zip_overwrite">
+                                    <input type="checkbox" name="overwrite" id="zip_overwrite" value="1" />
+                                    <?php esc_html_e('Overwrite existing data', 'kealoa-reference'); ?>
+                                </label>
+                                <p class="description">
+                                    <?php esc_html_e('When checked, imported data will overwrite existing records. When unchecked, existing records will be skipped.', 'kealoa-reference'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <p class="submit">
+                        <input type="submit" class="button button-primary" value="<?php esc_attr_e('Import ZIP', 'kealoa-reference'); ?>" />
+                    </p>
+                </form>
+            </div>
+
+            <div class="kealoa-import-section" style="margin-top: 30px;">
                 <h2><?php esc_html_e('Download Templates', 'kealoa-reference'); ?></h2>
                 <p><?php esc_html_e('Download CSV templates to see the expected format for each data type. Fill in your data and upload to import.', 'kealoa-reference'); ?></p>
-                
+
                 <table class="widefat">
                     <thead>
                         <tr>
@@ -528,95 +616,7 @@ class Kealoa_Admin {
                     </tbody>
                 </table>
             </div>
-            
-            <div class="kealoa-import-section" style="margin-top: 30px;">
-                <h2><?php esc_html_e('Import All Data from ZIP', 'kealoa-reference'); ?></h2>
-                <p><?php esc_html_e('Upload a ZIP file created by "Export All Data" to import all data types at once. The ZIP file should contain CSV files (constructors.csv, persons.csv, puzzles.csv, rounds.csv, clues.csv, guesses.csv). Files are imported in the correct dependency order automatically.', 'kealoa-reference'); ?></p>
-                
-                <form method="post" enctype="multipart/form-data" class="kealoa-form">
-                    <?php wp_nonce_field('kealoa_import_zip', 'kealoa_import_zip_nonce'); ?>
-                    
-                    <table class="form-table">
-                        <tr>
-                            <th><label for="zip_file"><?php esc_html_e('ZIP File', 'kealoa-reference'); ?></label></th>
-                            <td>
-                                <input type="file" name="zip_file" id="zip_file" accept=".zip" required />
-                                <p class="description">
-                                    <?php esc_html_e('Select a ZIP file exported from KEALOA Reference.', 'kealoa-reference'); ?>
-                                </p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th><?php esc_html_e('Options', 'kealoa-reference'); ?></th>
-                            <td>
-                                <label for="zip_overwrite">
-                                    <input type="checkbox" name="overwrite" id="zip_overwrite" value="1" />
-                                    <?php esc_html_e('Overwrite existing data', 'kealoa-reference'); ?>
-                                </label>
-                                <p class="description">
-                                    <?php esc_html_e('When checked, imported data will overwrite existing records. When unchecked, existing records will be skipped.', 'kealoa-reference'); ?>
-                                </p>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <p class="submit">
-                        <input type="submit" class="button button-primary" value="<?php esc_attr_e('Import ZIP', 'kealoa-reference'); ?>" />
-                    </p>
-                </form>
-            </div>
-            
-            <div class="kealoa-import-section" style="margin-top: 30px;">
-                <h2><?php esc_html_e('Import CSV File', 'kealoa-reference'); ?></h2>
-                <p><?php esc_html_e('Select a data type and upload your CSV file. Import order matters: Constructors/Persons first, then Puzzles, then Rounds, then Clues, then Guesses.', 'kealoa-reference'); ?></p>
-                
-                <form method="post" enctype="multipart/form-data" class="kealoa-form">
-                    <?php wp_nonce_field('kealoa_import_csv', 'kealoa_import_nonce'); ?>
-                    
-                    <table class="form-table">
-                        <tr>
-                            <th><label for="import_type"><?php esc_html_e('Data Type', 'kealoa-reference'); ?></label></th>
-                            <td>
-                                <select name="import_type" id="import_type" required>
-                                    <option value=""><?php esc_html_e('— Select —', 'kealoa-reference'); ?></option>
-                                    <option value="constructors"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></option>
-                                    <option value="persons"><?php esc_html_e('Persons', 'kealoa-reference'); ?></option>
-                                    <option value="puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></option>
-                                    <option value="rounds"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></option>
-                                    <option value="clues"><?php esc_html_e('Clues', 'kealoa-reference'); ?></option>
-                                    <option value="guesses"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></option>
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th><label for="csv_file"><?php esc_html_e('CSV File', 'kealoa-reference'); ?></label></th>
-                            <td>
-                                <input type="file" name="csv_file" id="csv_file" accept=".csv" required />
-                                <p class="description">
-                                    <?php esc_html_e('Select a CSV file to import. The first row must contain column headers.', 'kealoa-reference'); ?>
-                                </p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th><?php esc_html_e('Options', 'kealoa-reference'); ?></th>
-                            <td>
-                                <label for="csv_overwrite">
-                                    <input type="checkbox" name="overwrite" id="csv_overwrite" value="1" />
-                                    <?php esc_html_e('Overwrite existing data', 'kealoa-reference'); ?>
-                                </label>
-                                <p class="description">
-                                    <?php esc_html_e('When checked, imported data will overwrite existing records. When unchecked, existing records will be skipped.', 'kealoa-reference'); ?>
-                                </p>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <p class="submit">
-                        <input type="submit" class="button button-primary" value="<?php esc_attr_e('Import', 'kealoa-reference'); ?>" />
-                    </p>
-                </form>
-            </div>
-            
+
             <div class="kealoa-import-section" style="margin-top: 30px;">
                 <h2><?php esc_html_e('Import Notes', 'kealoa-reference'); ?></h2>
                 <ul>
@@ -676,10 +676,10 @@ class Kealoa_Admin {
                 'errors' => ['Failed to upload file.'],
             ];
         }
-        
+
         $import_type = sanitize_text_field($_POST['import_type'] ?? '');
         $allowed_types = ['constructors', 'persons', 'puzzles', 'rounds', 'clues', 'guesses'];
-        
+
         if (!in_array($import_type, $allowed_types)) {
             return [
                 'success' => false,
@@ -688,16 +688,16 @@ class Kealoa_Admin {
                 'errors' => ['Invalid import type selected.'],
             ];
         }
-        
+
         $file_path = $_FILES['csv_file']['tmp_name'];
         $overwrite = !empty($_POST['overwrite']);
         $importer = new Kealoa_Import($this->db);
-        
+
         $method = 'import_' . $import_type;
         $result = $importer->$method($file_path, $overwrite);
-        
+
         $result['success'] = $result['imported'] > 0 || empty($result['errors']);
-        
+
         return $result;
     }
 
@@ -707,15 +707,15 @@ class Kealoa_Admin {
     public function render_persons_page(): void {
         $action = $_GET['action'] ?? 'list';
         $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-        
+
         echo '<div class="wrap kealoa-admin-wrap">';
-        
+
         match($action) {
             'add' => $this->render_person_form(),
             'edit' => $this->render_person_form($id),
             default => $this->render_persons_list(),
         };
-        
+
         echo '</div>';
     }
 
@@ -727,13 +727,13 @@ class Kealoa_Admin {
         $paged = max(1, (int) ($_GET['paged'] ?? 1));
         $per_page = 20;
         $offset = ($paged - 1) * $per_page;
-        
+
         $persons = $this->db->get_persons([
             'search' => $search,
             'limit' => $per_page,
             'offset' => $offset,
         ]);
-        
+
         $total = $this->db->count_persons($search);
         $total_pages = ceil($total / $per_page);
         ?>
@@ -741,7 +741,7 @@ class Kealoa_Admin {
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons&action=add')); ?>" class="page-title-action">
             <?php esc_html_e('Add New', 'kealoa-reference'); ?>
         </a>
-        
+
         <form method="get" class="kealoa-search-form">
             <input type="hidden" name="page" value="kealoa-persons" />
             <p class="search-box">
@@ -749,7 +749,7 @@ class Kealoa_Admin {
                 <input type="submit" class="button" value="<?php esc_attr_e('Search', 'kealoa-reference'); ?>" />
             </p>
         </form>
-        
+
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
@@ -791,8 +791,8 @@ class Kealoa_Admin {
                                 <a href="<?php echo esc_url(home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $person->full_name)) . '/')); ?>" target="_blank">
                                     <?php esc_html_e('View', 'kealoa-reference'); ?>
                                 </a> |
-                                <a href="#" class="kealoa-delete-link" 
-                                   data-type="person" 
+                                <a href="#" class="kealoa-delete-link"
+                                   data-type="person"
                                    data-id="<?php echo esc_attr($person->id); ?>"
                                    data-nonce="<?php echo wp_create_nonce('kealoa_admin_action'); ?>">
                                     <?php esc_html_e('Delete', 'kealoa-reference'); ?>
@@ -803,7 +803,7 @@ class Kealoa_Admin {
                 <?php endif; ?>
             </tbody>
         </table>
-        
+
         <?php if ($total_pages > 1): ?>
             <div class="tablenav bottom">
                 <div class="tablenav-pages">
@@ -830,22 +830,22 @@ class Kealoa_Admin {
         $is_edit = $person !== null;
         ?>
         <h1>
-            <?php echo $is_edit 
-                ? esc_html__('Edit Person', 'kealoa-reference') 
+            <?php echo $is_edit
+                ? esc_html__('Edit Person', 'kealoa-reference')
                 : esc_html__('Add New Person', 'kealoa-reference'); ?>
         </h1>
-        
+
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons')); ?>" class="button">
             &larr; <?php esc_html_e('Back to Persons', 'kealoa-reference'); ?>
         </a>
-        
+
         <form method="post" class="kealoa-form">
             <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
             <input type="hidden" name="kealoa_action" value="<?php echo $is_edit ? 'update_person' : 'create_person'; ?>" />
             <?php if ($is_edit): ?>
                 <input type="hidden" name="person_id" value="<?php echo esc_attr($id); ?>" />
             <?php endif; ?>
-            
+
             <table class="form-table">
                 <tr>
                     <th><label for="full_name"><?php esc_html_e('Full Name', 'kealoa-reference'); ?> *</label></th>
@@ -903,9 +903,9 @@ class Kealoa_Admin {
                     </td>
                 </tr>
             </table>
-            
+
             <p class="submit">
-                <input type="submit" class="button button-primary" 
+                <input type="submit" class="button button-primary"
                        value="<?php echo $is_edit ? esc_attr__('Update Person', 'kealoa-reference') : esc_attr__('Add Person', 'kealoa-reference'); ?>" />
             </p>
         </form>
@@ -918,15 +918,15 @@ class Kealoa_Admin {
     public function render_constructors_page(): void {
         $action = $_GET['action'] ?? 'list';
         $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-        
+
         echo '<div class="wrap kealoa-admin-wrap">';
-        
+
         match($action) {
             'add' => $this->render_constructor_form(),
             'edit' => $this->render_constructor_form($id),
             default => $this->render_constructors_list(),
         };
-        
+
         echo '</div>';
     }
 
@@ -938,13 +938,13 @@ class Kealoa_Admin {
         $paged = max(1, (int) ($_GET['paged'] ?? 1));
         $per_page = 20;
         $offset = ($paged - 1) * $per_page;
-        
+
         $constructors = $this->db->get_constructors([
             'search' => $search,
             'limit' => $per_page,
             'offset' => $offset,
         ]);
-        
+
         $total = $this->db->count_constructors($search);
         $total_pages = ceil($total / $per_page);
         ?>
@@ -952,7 +952,7 @@ class Kealoa_Admin {
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-constructors&action=add')); ?>" class="page-title-action">
             <?php esc_html_e('Add New', 'kealoa-reference'); ?>
         </a>
-        
+
         <form method="get" class="kealoa-search-form">
             <input type="hidden" name="page" value="kealoa-constructors" />
             <p class="search-box">
@@ -960,9 +960,9 @@ class Kealoa_Admin {
                 <input type="submit" class="button" value="<?php esc_attr_e('Search', 'kealoa-reference'); ?>" />
             </p>
         </form>
-        
+
         <p class="description"><?php esc_html_e('Crossword puzzle constructors with XWordInfo profiles.', 'kealoa-reference'); ?></p>
-        
+
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
@@ -997,8 +997,8 @@ class Kealoa_Admin {
                                 <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-constructors&action=edit&id=' . $constructor->id)); ?>">
                                     <?php esc_html_e('Edit', 'kealoa-reference'); ?>
                                 </a> |
-                                <a href="#" class="kealoa-delete-link" 
-                                   data-type="constructor" 
+                                <a href="#" class="kealoa-delete-link"
+                                   data-type="constructor"
                                    data-id="<?php echo esc_attr($constructor->id); ?>"
                                    data-nonce="<?php echo wp_create_nonce('kealoa_admin_action'); ?>">
                                     <?php esc_html_e('Delete', 'kealoa-reference'); ?>
@@ -1009,7 +1009,7 @@ class Kealoa_Admin {
                 <?php endif; ?>
             </tbody>
         </table>
-        
+
         <?php if ($total_pages > 1): ?>
             <div class="tablenav bottom">
                 <div class="tablenav-pages">
@@ -1036,22 +1036,22 @@ class Kealoa_Admin {
         $is_edit = $constructor !== null;
         ?>
         <h1>
-            <?php echo $is_edit 
-                ? esc_html__('Edit Constructor', 'kealoa-reference') 
+            <?php echo $is_edit
+                ? esc_html__('Edit Constructor', 'kealoa-reference')
                 : esc_html__('Add New Constructor', 'kealoa-reference'); ?>
         </h1>
-        
+
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-constructors')); ?>" class="button">
             &larr; <?php esc_html_e('Back to Constructors', 'kealoa-reference'); ?>
         </a>
-        
+
         <form method="post" class="kealoa-form">
             <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
             <input type="hidden" name="kealoa_action" value="<?php echo $is_edit ? 'update_constructor' : 'create_constructor'; ?>" />
             <?php if ($is_edit): ?>
                 <input type="hidden" name="constructor_id" value="<?php echo esc_attr($id); ?>" />
             <?php endif; ?>
-            
+
             <table class="form-table">
                 <tr>
                     <th><label for="full_name"><?php esc_html_e('Full Name', 'kealoa-reference'); ?> *</label></th>
@@ -1105,9 +1105,9 @@ class Kealoa_Admin {
                     </td>
                 </tr>
             </table>
-            
+
             <p class="submit">
-                <input type="submit" class="button button-primary" 
+                <input type="submit" class="button button-primary"
                        value="<?php echo $is_edit ? esc_attr__('Update Constructor', 'kealoa-reference') : esc_attr__('Add Constructor', 'kealoa-reference'); ?>" />
             </p>
         </form>
@@ -1120,15 +1120,15 @@ class Kealoa_Admin {
     public function render_puzzles_page(): void {
         $action = $_GET['action'] ?? 'list';
         $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-        
+
         echo '<div class="wrap kealoa-admin-wrap">';
-        
+
         match($action) {
             'add' => $this->render_puzzle_form(),
             'edit' => $this->render_puzzle_form($id),
             default => $this->render_puzzles_list(),
         };
-        
+
         echo '</div>';
     }
 
@@ -1140,13 +1140,13 @@ class Kealoa_Admin {
         $paged = max(1, (int) ($_GET['paged'] ?? 1));
         $per_page = 20;
         $offset = ($paged - 1) * $per_page;
-        
+
         $puzzles = $this->db->get_puzzles([
             'constructor_search' => $search,
             'limit' => $per_page,
             'offset' => $offset,
         ]);
-        
+
         $total = $this->db->count_puzzles($search);
         $total_pages = ceil($total / $per_page);
         ?>
@@ -1154,7 +1154,7 @@ class Kealoa_Admin {
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-puzzles&action=add')); ?>" class="page-title-action">
             <?php esc_html_e('Add New', 'kealoa-reference'); ?>
         </a>
-        
+
         <form method="get" class="kealoa-search-form">
             <input type="hidden" name="page" value="kealoa-puzzles" />
             <p class="search-box">
@@ -1162,14 +1162,14 @@ class Kealoa_Admin {
                 <input type="submit" class="button" value="<?php esc_attr_e('Search', 'kealoa-reference'); ?>" />
             </p>
         </form>
-        
+
         <form method="post" style="display: inline-block; margin-bottom: 10px;">
             <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
             <input type="hidden" name="kealoa_action" value="auto_populate_editors" />
             <input type="submit" class="button" value="<?php esc_attr_e('Auto-Populate Editors', 'kealoa-reference'); ?>"
                    onclick="return confirm('<?php esc_attr_e('This will overwrite all existing editor names based on puzzle dates. Continue?', 'kealoa-reference'); ?>');" />
         </form>
-        
+
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
@@ -1205,8 +1205,8 @@ class Kealoa_Admin {
                                 <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-puzzles&action=edit&id=' . $puzzle->id)); ?>">
                                     <?php esc_html_e('Edit', 'kealoa-reference'); ?>
                                 </a> |
-                                <a href="#" class="kealoa-delete-link" 
-                                   data-type="puzzle" 
+                                <a href="#" class="kealoa-delete-link"
+                                   data-type="puzzle"
                                    data-id="<?php echo esc_attr($puzzle->id); ?>"
                                    data-nonce="<?php echo wp_create_nonce('kealoa_admin_action'); ?>">
                                     <?php esc_html_e('Delete', 'kealoa-reference'); ?>
@@ -1217,7 +1217,7 @@ class Kealoa_Admin {
                 <?php endif; ?>
             </tbody>
         </table>
-        
+
         <?php if ($total_pages > 1): ?>
             <div class="tablenav bottom">
                 <div class="tablenav-pages">
@@ -1247,22 +1247,22 @@ class Kealoa_Admin {
         $all_constructors = $this->db->get_constructors(['limit' => 1000]);
         ?>
         <h1>
-            <?php echo $is_edit 
-                ? esc_html__('Edit Puzzle', 'kealoa-reference') 
+            <?php echo $is_edit
+                ? esc_html__('Edit Puzzle', 'kealoa-reference')
                 : esc_html__('Add New Puzzle', 'kealoa-reference'); ?>
         </h1>
-        
+
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-puzzles')); ?>" class="button">
             &larr; <?php esc_html_e('Back to Puzzles', 'kealoa-reference'); ?>
         </a>
-        
+
         <form method="post" class="kealoa-form">
             <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
             <input type="hidden" name="kealoa_action" value="<?php echo $is_edit ? 'update_puzzle' : 'create_puzzle'; ?>" />
             <?php if ($is_edit): ?>
                 <input type="hidden" name="puzzle_id" value="<?php echo esc_attr($id); ?>" />
             <?php endif; ?>
-            
+
             <table class="form-table">
                 <tr>
                     <th><label for="publication_date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?> *</label></th>
@@ -1298,9 +1298,9 @@ class Kealoa_Admin {
                     </td>
                 </tr>
             </table>
-            
+
             <p class="submit">
-                <input type="submit" class="button button-primary" 
+                <input type="submit" class="button button-primary"
                        value="<?php echo $is_edit ? esc_attr__('Update Puzzle', 'kealoa-reference') : esc_attr__('Add Puzzle', 'kealoa-reference'); ?>" />
             </p>
         </form>
@@ -1313,11 +1313,11 @@ class Kealoa_Admin {
     public function render_rounds_page(): void {
         $action = $_GET['action'] ?? 'list';
         $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-        
+
         echo '<div class="wrap kealoa-admin-wrap">';
-        
+
         $clue_id = isset($_GET['clue_id']) ? (int) $_GET['clue_id'] : 0;
-        
+
         match($action) {
             'add' => $this->render_round_form(),
             'edit' => $this->render_round_form($id),
@@ -1325,7 +1325,7 @@ class Kealoa_Admin {
             'edit_clue' => $this->render_edit_clue_form($id, $clue_id),
             default => $this->render_rounds_list(),
         };
-        
+
         echo '</div>';
     }
 
@@ -1341,7 +1341,7 @@ class Kealoa_Admin {
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds&action=add')); ?>" class="page-title-action">
             <?php esc_html_e('Add New', 'kealoa-reference'); ?>
         </a>
-        
+
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
@@ -1362,7 +1362,7 @@ class Kealoa_Admin {
                     </tr>
                 <?php else: ?>
                     <?php foreach ($rounds as $round): ?>
-                        <?php 
+                        <?php
                         $solutions = $this->db->get_round_solutions((int) $round->id);
                         $clue_count = $this->db->get_round_clue_count((int) $round->id);
                         ?>
@@ -1384,8 +1384,8 @@ class Kealoa_Admin {
                                 <a href="<?php echo esc_url(home_url('/kealoa/round/' . $round->id . '/')); ?>" target="_blank">
                                     <?php esc_html_e('View', 'kealoa-reference'); ?>
                                 </a> |
-                                <a href="#" class="kealoa-delete-link" 
-                                   data-type="round" 
+                                <a href="#" class="kealoa-delete-link"
+                                   data-type="round"
                                    data-id="<?php echo esc_attr($round->id); ?>"
                                    data-nonce="<?php echo wp_create_nonce('kealoa_admin_action'); ?>">
                                     <?php esc_html_e('Delete', 'kealoa-reference'); ?>
@@ -1396,7 +1396,7 @@ class Kealoa_Admin {
                 <?php endif; ?>
             </tbody>
         </table>
-        
+
         <?php if ($total_pages > 1): ?>
             <div class="tablenav bottom">
                 <div class="tablenav-pages">
@@ -1427,28 +1427,28 @@ class Kealoa_Admin {
         $all_persons = $this->db->get_persons(['limit' => 1000]);
         ?>
         <h1>
-            <?php echo $is_edit 
-                ? esc_html__('Edit Round', 'kealoa-reference') 
+            <?php echo $is_edit
+                ? esc_html__('Edit Round', 'kealoa-reference')
                 : esc_html__('Add New Round', 'kealoa-reference'); ?>
         </h1>
-        
+
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds')); ?>" class="button">
             &larr; <?php esc_html_e('Back to Rounds', 'kealoa-reference'); ?>
         </a>
-        
+
         <?php if ($is_edit): ?>
             <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $id)); ?>" class="button">
                 <?php esc_html_e('Manage Clues', 'kealoa-reference'); ?>
             </a>
         <?php endif; ?>
-        
+
         <form method="post" class="kealoa-form">
             <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
             <input type="hidden" name="kealoa_action" value="<?php echo $is_edit ? 'update_round' : 'create_round'; ?>" />
             <?php if ($is_edit): ?>
                 <input type="hidden" name="round_id" value="<?php echo esc_attr($id); ?>" />
             <?php endif; ?>
-            
+
             <table class="form-table">
                 <tr>
                     <th><label for="round_date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?> *</label></th>
@@ -1497,7 +1497,7 @@ class Kealoa_Admin {
                 <tr>
                     <th><label for="episode_start_time"><?php esc_html_e('Start Time', 'kealoa-reference'); ?></label></th>
                     <td>
-                        <input type="text" name="episode_start_time" id="episode_start_time" 
+                        <input type="text" name="episode_start_time" id="episode_start_time"
                                placeholder="HH:MM:SS" pattern="[0-9]{1,2}:[0-9]{2}:[0-9]{2}"
                                value="<?php echo esc_attr(Kealoa_Formatter::seconds_to_time((int) ($round->episode_start_seconds ?? 0))); ?>" />
                         <p class="description">
@@ -1564,9 +1564,9 @@ class Kealoa_Admin {
                     </td>
                 </tr>
             </table>
-            
+
             <p class="submit">
-                <input type="submit" class="button button-primary" 
+                <input type="submit" class="button button-primary"
                        value="<?php echo $is_edit ? esc_attr__('Update Round', 'kealoa-reference') : esc_attr__('Add Round', 'kealoa-reference'); ?>" />
             </p>
         </form>
@@ -1582,7 +1582,7 @@ class Kealoa_Admin {
             echo '<div class="notice notice-error"><p>' . esc_html__('Round not found.', 'kealoa-reference') . '</p></div>';
             return;
         }
-        
+
         $clues = $this->db->get_round_clues($round_id);
         $solutions = $this->db->get_round_solutions($round_id);
         $guessers = $this->db->get_round_guessers($round_id);
@@ -1590,14 +1590,14 @@ class Kealoa_Admin {
         $all_constructors = $this->db->get_constructors(['limit' => 1000]);
         ?>
         <h1><?php printf(esc_html__('Clues for Round %s', 'kealoa-reference'), Kealoa_Formatter::format_date($round->round_date)); ?></h1>
-        
+
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds')); ?>" class="button">
             &larr; <?php esc_html_e('Back to Rounds', 'kealoa-reference'); ?>
         </a>
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds&action=edit&id=' . $round_id)); ?>" class="button">
             <?php esc_html_e('Edit Round', 'kealoa-reference'); ?>
         </a>
-        
+
         <div class="kealoa-round-info">
             <p>
                 <strong><?php esc_html_e('Solution Words:', 'kealoa-reference'); ?></strong>
@@ -1605,15 +1605,15 @@ class Kealoa_Admin {
             </p>
             <p>
                 <strong><?php esc_html_e('Players:', 'kealoa-reference'); ?></strong>
-                <?php 
+                <?php
                 $guesser_names = array_map(fn($g) => $g->full_name, $guessers);
                 echo esc_html(Kealoa_Formatter::format_list_with_and($guesser_names));
                 ?>
             </p>
         </div>
-        
+
         <h2><?php esc_html_e('Existing Clues', 'kealoa-reference'); ?></h2>
-        
+
         <?php if (empty($clues)): ?>
             <p><?php esc_html_e('No clues added yet.', 'kealoa-reference'); ?></p>
         <?php else: ?>
@@ -1662,8 +1662,8 @@ class Kealoa_Admin {
                                 <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds&action=edit_clue&id=' . $round_id . '&clue_id=' . $clue->id)); ?>">
                                     <?php esc_html_e('Edit', 'kealoa-reference'); ?>
                                 </a> |
-                                <a href="#" class="kealoa-delete-link" 
-                                   data-type="clue" 
+                                <a href="#" class="kealoa-delete-link"
+                                   data-type="clue"
                                    data-id="<?php echo esc_attr($clue->id); ?>"
                                    data-nonce="<?php echo wp_create_nonce('kealoa_admin_action'); ?>">
                                     <?php esc_html_e('Delete', 'kealoa-reference'); ?>
@@ -1674,14 +1674,14 @@ class Kealoa_Admin {
                 </tbody>
             </table>
         <?php endif; ?>
-        
+
         <h2><?php esc_html_e('Add New Clue', 'kealoa-reference'); ?></h2>
-        
+
         <form method="post" class="kealoa-form">
             <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
             <input type="hidden" name="kealoa_action" value="create_clue" />
             <input type="hidden" name="round_id" value="<?php echo esc_attr($round_id); ?>" />
-            
+
             <table class="form-table">
                 <tr>
                     <th><label for="clue_number"><?php esc_html_e('Clue Number', 'kealoa-reference'); ?></label></th>
@@ -1753,9 +1753,9 @@ class Kealoa_Admin {
                     </td>
                 </tr>
             </table>
-            
+
             <h3><?php esc_html_e('Guesser Answers', 'kealoa-reference'); ?></h3>
-            
+
             <table class="form-table">
                 <?php foreach ($guessers as $guesser): ?>
                     <tr>
@@ -1773,7 +1773,7 @@ class Kealoa_Admin {
                     </tr>
                 <?php endforeach; ?>
             </table>
-            
+
             <p class="submit">
                 <input type="submit" class="button button-primary" value="<?php esc_attr_e('Add Clue', 'kealoa-reference'); ?>" />
             </p>
@@ -1787,22 +1787,22 @@ class Kealoa_Admin {
     private function render_edit_clue_form(int $round_id, int $clue_id): void {
         $round = $this->db->get_round($round_id);
         $clue = $this->db->get_clue($clue_id);
-        
+
         if (!$round || !$clue || $clue->round_id != $round_id) {
             echo '<div class="notice notice-error"><p>' . esc_html__('Clue not found.', 'kealoa-reference') . '</p></div>';
             return;
         }
-        
+
         $solutions = $this->db->get_round_solutions($round_id);
         $guessers = $this->db->get_round_guessers($round_id);
         $all_constructors = $this->db->get_constructors(['limit' => 1000]);
         $clue_guesses = $this->db->get_clue_guesses($clue_id);
-        
+
         // Get the puzzle for this clue
         $puzzle = $this->db->get_puzzle((int) $clue->puzzle_id);
         $puzzle_constructors = $puzzle ? $this->db->get_puzzle_constructors((int) $puzzle->id) : [];
         $puzzle_constructor_ids = array_map(fn($c) => (int) $c->id, $puzzle_constructors);
-        
+
         // Build a map of guesser_id => guessed_word
         $guess_map = [];
         foreach ($clue_guesses as $g) {
@@ -1810,11 +1810,11 @@ class Kealoa_Admin {
         }
         ?>
         <h1><?php printf(esc_html__('Edit Clue #%d', 'kealoa-reference'), $clue->clue_number); ?></h1>
-        
+
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $round_id)); ?>" class="button">
             &larr; <?php esc_html_e('Back to Clues', 'kealoa-reference'); ?>
         </a>
-        
+
         <div class="kealoa-round-info">
             <p>
                 <strong><?php esc_html_e('Round:', 'kealoa-reference'); ?></strong>
@@ -1826,13 +1826,13 @@ class Kealoa_Admin {
                 <?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?>
             </p>
         </div>
-        
+
         <form method="post" class="kealoa-form">
             <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
             <input type="hidden" name="kealoa_action" value="update_clue" />
             <input type="hidden" name="clue_id" value="<?php echo esc_attr($clue_id); ?>" />
             <input type="hidden" name="round_id" value="<?php echo esc_attr($round_id); ?>" />
-            
+
             <table class="form-table">
                 <tr>
                     <th><label for="clue_number"><?php esc_html_e('Clue Number', 'kealoa-reference'); ?></label></th>
@@ -1919,9 +1919,9 @@ class Kealoa_Admin {
                     </td>
                 </tr>
             </table>
-            
+
             <h3><?php esc_html_e('Guesser Answers', 'kealoa-reference'); ?></h3>
-            
+
             <table class="form-table">
                 <?php foreach ($guessers as $guesser): ?>
                     <?php $current_guess = $guess_map[$guesser->id] ?? ''; ?>
@@ -1941,7 +1941,7 @@ class Kealoa_Admin {
                     </tr>
                 <?php endforeach; ?>
             </table>
-            
+
             <p class="submit">
                 <input type="submit" class="button button-primary" value="<?php esc_attr_e('Update Clue', 'kealoa-reference'); ?>" />
                 <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $round_id)); ?>" class="button">
@@ -1961,18 +1961,18 @@ class Kealoa_Admin {
      */
     public function ajax_get_persons(): void {
         check_ajax_referer('kealoa_admin_nonce', 'nonce');
-        
+
         if (!current_user_can('manage_options')) {
             wp_send_json_error(['message' => 'Unauthorized']);
         }
-        
+
         $persons = $this->db->get_persons(['limit' => 1000]);
-        
+
         $data = array_map(fn($p) => [
             'id' => $p->id,
             'full_name' => $p->full_name,
         ], $persons);
-        
+
         wp_send_json_success($data);
     }
 
@@ -1981,18 +1981,18 @@ class Kealoa_Admin {
      */
     public function ajax_get_constructors(): void {
         check_ajax_referer('kealoa_admin_nonce', 'nonce');
-        
+
         if (!current_user_can('manage_options')) {
             wp_send_json_error(['message' => 'Unauthorized']);
         }
-        
+
         $constructors = $this->db->get_constructors(['limit' => 1000]);
-        
+
         $data = array_map(fn($c) => [
             'id' => $c->id,
             'full_name' => $c->full_name,
         ], $constructors);
-        
+
         wp_send_json_success($data);
     }
 
@@ -2011,7 +2011,7 @@ class Kealoa_Admin {
             'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
             'hide_xwordinfo' => !empty($_POST['hide_xwordinfo']),
         ]);
-        
+
         if ($id) {
             $this->redirect_with_message('kealoa-persons', 'Person created successfully.');
         } else {
@@ -2024,7 +2024,7 @@ class Kealoa_Admin {
      */
     private function handle_update_person(): void {
         $id = (int) ($_POST['person_id'] ?? 0);
-        
+
         $result = $this->db->update_person($id, [
             'full_name' => $_POST['full_name'] ?? '',
             'home_page_url' => $_POST['home_page_url'] ?? null,
@@ -2032,7 +2032,7 @@ class Kealoa_Admin {
             'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
             'hide_xwordinfo' => !empty($_POST['hide_xwordinfo']),
         ]);
-        
+
         if ($result) {
             $this->redirect_with_message('kealoa-persons', 'Person updated successfully.');
         } else {
@@ -2059,7 +2059,7 @@ class Kealoa_Admin {
             'xwordinfo_image_url' => $_POST['xwordinfo_image_url'] ?? null,
             'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
         ]);
-        
+
         if ($id) {
             $this->redirect_with_message('kealoa-constructors', 'Constructor created successfully.');
         } else {
@@ -2072,14 +2072,14 @@ class Kealoa_Admin {
      */
     private function handle_update_constructor(): void {
         $id = (int) ($_POST['constructor_id'] ?? 0);
-        
+
         $result = $this->db->update_constructor($id, [
             'full_name' => $_POST['full_name'] ?? '',
             'xwordinfo_profile_name' => $_POST['xwordinfo_profile_name'] ?? null,
             'xwordinfo_image_url' => $_POST['xwordinfo_image_url'] ?? null,
             'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
         ]);
-        
+
         if ($result) {
             $this->redirect_with_message('kealoa-constructors', 'Constructor updated successfully.');
         } else {
@@ -2104,7 +2104,7 @@ class Kealoa_Admin {
             'publication_date' => $_POST['publication_date'] ?? '',
             'editor_name' => $_POST['editor_name'] ?? null,
         ]);
-        
+
         if ($id) {
             $constructors = $_POST['constructors'] ?? [];
             if (!empty($constructors)) {
@@ -2121,15 +2121,15 @@ class Kealoa_Admin {
      */
     private function handle_update_puzzle(): void {
         $id = (int) ($_POST['puzzle_id'] ?? 0);
-        
+
         $result = $this->db->update_puzzle($id, [
             'publication_date' => $_POST['publication_date'] ?? '',
             'editor_name' => $_POST['editor_name'] ?? null,
         ]);
-        
+
         $constructors = $_POST['constructors'] ?? [];
         $this->db->set_puzzle_constructors($id, array_map('intval', $constructors));
-        
+
         if ($result) {
             $this->redirect_with_message('kealoa-puzzles', 'Puzzle updated successfully.');
         } else {
@@ -2169,7 +2169,7 @@ class Kealoa_Admin {
             'description' => $_POST['description'] ?? null,
             'description2' => $_POST['description2'] ?? null,
         ]);
-        
+
         if ($id) {
             // Set solution words
             $solution_words = $_POST['solution_words'] ?? '';
@@ -2178,13 +2178,13 @@ class Kealoa_Admin {
                 $words = array_filter($words);
                 $this->db->set_round_solutions($id, $words);
             }
-            
+
             // Set guessers
             $guessers = $_POST['guessers'] ?? [];
             if (!empty($guessers)) {
                 $this->db->set_round_guessers($id, array_map('intval', $guessers));
             }
-            
+
             $this->redirect_with_message('kealoa-rounds', 'Round created successfully.');
         } else {
             $this->redirect_with_message('kealoa-rounds', 'Failed to create round.', 'error');
@@ -2196,7 +2196,7 @@ class Kealoa_Admin {
      */
     private function handle_update_round(): void {
         $id = (int) ($_POST['round_id'] ?? 0);
-        
+
         $result = $this->db->update_round($id, [
             'round_date' => $_POST['round_date'] ?? '',
             'round_number' => $_POST['round_number'] ?? 1,
@@ -2208,7 +2208,7 @@ class Kealoa_Admin {
             'description' => $_POST['description'] ?? null,
             'description2' => $_POST['description2'] ?? null,
         ]);
-        
+
         // Set solution words
         $solution_words = $_POST['solution_words'] ?? '';
         if (!empty($solution_words)) {
@@ -2218,11 +2218,11 @@ class Kealoa_Admin {
         } else {
             $this->db->set_round_solutions($id, []);
         }
-        
+
         // Set guessers
         $guessers = $_POST['guessers'] ?? [];
         $this->db->set_round_guessers($id, array_map('intval', $guessers));
-        
+
         if ($result) {
             $this->redirect_with_message('kealoa-rounds', 'Round updated successfully.');
         } else {
@@ -2244,11 +2244,11 @@ class Kealoa_Admin {
      */
     private function handle_create_clue(): void {
         $round_id = (int) ($_POST['round_id'] ?? 0);
-        
+
         // Get or create puzzle based on date
         $puzzle_date = sanitize_text_field($_POST['puzzle_date'] ?? '');
         $puzzle_id = 0;
-        
+
         if (!empty($puzzle_date)) {
             // Check if puzzle already exists for this date
             $existing_puzzle = $this->db->get_puzzle_by_date($puzzle_date);
@@ -2259,7 +2259,7 @@ class Kealoa_Admin {
                 $puzzle_id = $this->db->create_puzzle([
                     'publication_date' => $puzzle_date,
                 ]);
-                
+
                 // Set constructors if provided
                 if ($puzzle_id && !empty($_POST['puzzle_constructors'])) {
                     $constructor_ids = array_map('intval', $_POST['puzzle_constructors']);
@@ -2267,7 +2267,7 @@ class Kealoa_Admin {
                 }
             }
         }
-        
+
         $clue_id = $this->db->create_clue([
             'round_id' => $round_id,
             'clue_number' => $_POST['clue_number'] ?? 1,
@@ -2277,7 +2277,7 @@ class Kealoa_Admin {
             'clue_text' => $_POST['clue_text'] ?? '',
             'correct_answer' => $_POST['correct_answer'] ?? '',
         ]);
-        
+
         if ($clue_id) {
             // Save guesses
             $guesses = $_POST['guesses'] ?? [];
@@ -2286,7 +2286,7 @@ class Kealoa_Admin {
                     $this->db->set_guess($clue_id, (int) $guesser_id, $guessed_word);
                 }
             }
-            
+
             wp_redirect(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $round_id . '&message=clue_created'));
             exit;
         } else {
@@ -2302,15 +2302,15 @@ class Kealoa_Admin {
         $clue_id = (int) ($_POST['clue_id'] ?? 0);
         $round_id = (int) ($_POST['round_id'] ?? 0);
         $clue = $this->db->get_clue($clue_id);
-        
+
         if (!$clue) {
             return;
         }
-        
+
         // Get or create puzzle based on date (same logic as create_clue)
         $puzzle_date = sanitize_text_field($_POST['puzzle_date'] ?? '');
         $puzzle_id = 0;
-        
+
         if (!empty($puzzle_date)) {
             // Check if puzzle already exists for this date
             $existing_puzzle = $this->db->get_puzzle_by_date($puzzle_date);
@@ -2321,7 +2321,7 @@ class Kealoa_Admin {
                 $puzzle_id = $this->db->create_puzzle([
                     'publication_date' => $puzzle_date,
                 ]);
-                
+
                 // Set constructors if provided
                 if ($puzzle_id && !empty($_POST['puzzle_constructors'])) {
                     $constructor_ids = array_map('intval', $_POST['puzzle_constructors']);
@@ -2329,7 +2329,7 @@ class Kealoa_Admin {
                 }
             }
         }
-        
+
         $this->db->update_clue($clue_id, [
             'clue_number' => $_POST['clue_number'] ?? 1,
             'puzzle_id' => $puzzle_id ?: null,
@@ -2338,7 +2338,7 @@ class Kealoa_Admin {
             'clue_text' => $_POST['clue_text'] ?? '',
             'correct_answer' => $_POST['correct_answer'] ?? '',
         ]);
-        
+
         // Update guesses
         $guesses = $_POST['guesses'] ?? [];
         foreach ($guesses as $guesser_id => $guessed_word) {
@@ -2348,7 +2348,7 @@ class Kealoa_Admin {
                 $this->db->delete_guess($clue_id, (int) $guesser_id);
             }
         }
-        
+
         wp_redirect(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $clue->round_id . '&message=clue_updated'));
         exit;
     }
@@ -2359,7 +2359,7 @@ class Kealoa_Admin {
     private function handle_delete_clue(): void {
         $id = (int) ($_POST['id'] ?? 0);
         $clue = $this->db->get_clue($id);
-        
+
         if ($clue) {
             $round_id = $clue->round_id;
             $this->db->delete_clue($id);
@@ -2374,7 +2374,7 @@ class Kealoa_Admin {
     private function handle_save_guesses(): void {
         $clue_id = (int) ($_POST['clue_id'] ?? 0);
         $guesses = $_POST['guesses'] ?? [];
-        
+
         foreach ($guesses as $guesser_id => $guessed_word) {
             if (!empty($guessed_word)) {
                 $this->db->set_guess($clue_id, (int) $guesser_id, $guessed_word);
@@ -2395,7 +2395,7 @@ class Kealoa_Admin {
             'message' => $message,
             'type' => $type,
         ], 30);
-        
+
         wp_redirect(admin_url('admin.php?page=' . $page));
         exit;
     }
