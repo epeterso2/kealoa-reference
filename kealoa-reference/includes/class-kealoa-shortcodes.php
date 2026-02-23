@@ -1142,7 +1142,7 @@ class Kealoa_Shortcodes {
                                 $yr_best_streak_val = $best_streaks_by_year[$yr] ?? 0;
                                 ?>
                                 <tr>
-                                    <td><?php echo esc_html($yr); ?></td>
+                                    <td><a class="kealoa-year-tab-link" data-year="<?php echo esc_attr($yr); ?>" data-tab-target="round" data-filter-target="kealoa-rh-year"><?php echo esc_html($yr); ?></a></td>
                                     <td><?php echo esc_html($result->rounds_played); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>

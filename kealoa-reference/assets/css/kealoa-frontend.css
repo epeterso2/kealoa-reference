@@ -1240,6 +1240,17 @@
     text-decoration-style: solid;
 }
 
+.kealoa-year-tab-link {
+    color: var(--tropical-teal);
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+}
+
+.kealoa-year-tab-link:hover {
+    text-decoration-style: solid;
+}
+
 .kealoa-stat-card .kealoa-stat-value .kealoa-round-picker-link {
     color: inherit;
     font-size: inherit;

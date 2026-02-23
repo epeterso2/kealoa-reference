@@ -763,4 +763,67 @@
     } else {
         initTableFilters();
     }
+
+    /**
+     * Year-tab links: click a year value to switch to a tab and set a filter.
+     *
+     * Usage: <a class="kealoa-year-tab-link" data-year="2024"
+     *           data-tab-target="round" data-filter-target="kealoa-rh-year">
+     */
+    function initYearTabLinks() {
+        document.addEventListener('click', function (e) {
+            var link = e.target.closest('.kealoa-year-tab-link');
+            if (!link) return;
+
+            e.preventDefault();
+
+            var year = link.getAttribute('data-year');
+            var tabTarget = link.getAttribute('data-tab-target');
+            var filterTarget = link.getAttribute('data-filter-target');
+
+            if (!tabTarget) return;
+
+            // Find the containing .kealoa-tabs
+            var tabsContainer = link.closest('.kealoa-tabs');
+            if (!tabsContainer) return;
+
+            // Switch tab
+            var buttons = tabsContainer.querySelectorAll('.kealoa-tab-button');
+            var panels = tabsContainer.querySelectorAll('.kealoa-tab-panel');
+
+            buttons.forEach(function (btn) {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-tab') === tabTarget) {
+                    btn.classList.add('active');
+                }
+            });
+            panels.forEach(function (panel) {
+                panel.classList.remove('active');
+                if (panel.getAttribute('data-tab') === tabTarget) {
+                    panel.classList.add('active');
+                }
+            });
+
+            // Set filter value and trigger change
+            if (filterTarget && year) {
+                var filterEl = document.getElementById(filterTarget);
+                if (filterEl) {
+                    filterEl.value = year;
+                    filterEl.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+
+            // Scroll the tab into view
+            var activePanel = tabsContainer.querySelector('.kealoa-tab-panel[data-tab="' + tabTarget + '"]');
+            if (activePanel) {
+                activePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initYearTabLinks);
+    } else {
+        initYearTabLinks();
+    }
 })();
