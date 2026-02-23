@@ -106,7 +106,7 @@
             const roundOptions = [
                 { label: __('— Select a Round —', 'kealoa-reference'), value: 0 }
             ];
-            
+
             kealoaData.rounds.forEach(function (round) {
                 roundOptions.push({
                     label: round.date + ' (Episode ' + round.episode + ')',
@@ -201,7 +201,7 @@
             const personOptions = [
                 { label: __('— Select a Person —', 'kealoa-reference'), value: 0 }
             ];
-            
+
             kealoaData.persons.forEach(function (person) {
                 personOptions.push({
                     label: person.name,
@@ -341,7 +341,7 @@
             const constructorOptions = [
                 { label: __('— Select a Constructor —', 'kealoa-reference'), value: 0 }
             ];
-            
+
             kealoaData.constructors.forEach(function (constructor) {
                 constructorOptions.push({
                     label: constructor.name,
@@ -458,7 +458,7 @@
             const editorOptions = [
                 { label: __('— Select an Editor —', 'kealoa-reference'), value: '' }
             ];
-            
+
             kealoaData.editors.forEach(function (editor) {
                 editorOptions.push({
                     label: editor.name,
@@ -568,6 +568,29 @@
                 icon: 'games',
                 label: __('KEALOA Play Game', 'kealoa-reference'),
                 instructions: __('This block displays an interactive KEALOA game on the front end. Visitors can play a random round and compare their scores with the show\'s players.', 'kealoa-reference')
+            });
+        },
+
+        save: function () {
+            return null;
+        }
+    });
+
+    /**
+     * KEALOA Rounds Stats Block
+     */
+    registerBlockType('kealoa/rounds-stats', {
+        title: __('KEALOA Rounds Stats', 'kealoa-reference'),
+        description: __('Displays KEALOA round statistics: total rounds, clues, guesses, correct answers, and accuracy.', 'kealoa-reference'),
+        icon: 'chart-bar',
+        category: 'widgets',
+        keywords: [__('kealoa', 'kealoa-reference'), __('rounds', 'kealoa-reference'), __('stats', 'kealoa-reference'), __('statistics', 'kealoa-reference')],
+        attributes: {},
+
+        edit: function (props) {
+            return createElement(ServerSideRender, {
+                block: 'kealoa/rounds-stats',
+                attributes: props.attributes
             });
         },
 

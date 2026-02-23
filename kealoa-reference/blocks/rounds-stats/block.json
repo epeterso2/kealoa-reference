@@ -1,0 +1,19 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "kealoa/rounds-stats",
+    "version": "1.0.0",
+    "title": "KEALOA Rounds Stats",
+    "category": "widgets",
+    "icon": "chart-bar",
+    "description": "Displays KEALOA round statistics: total rounds, clues, guesses, correct answers, and accuracy.",
+    "keywords": ["kealoa", "rounds", "stats", "statistics"],
+    "supports": {
+        "html": false,
+        "align": ["wide", "full"]
+    },
+    "textdomain": "kealoa-reference",
+    "attributes": {},
+    "editorScript": "file:../../assets/js/blocks-editor.js",
+    "render": "file:./render.php"
+}
