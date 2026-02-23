@@ -1182,7 +1182,7 @@ class Kealoa_Shortcodes {
                                 <tr>
                                     <td><?php echo esc_html($cn); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($correct_clue_rounds[$cn] ?? []); ?>"><?php echo esc_html($result->correct_count); ?></a></td>
+                                    <td><?php echo esc_html($result->correct_count); ?></td>
                                     <td>
                                         <?php
                                         $pct = $result->total_answered > 0
