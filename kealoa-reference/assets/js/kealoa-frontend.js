@@ -13,13 +13,13 @@
      * Weekday order map for sorting
      */
     var WEEKDAY_ORDER = {
-        'sunday': 0, 'sun': 0,
-        'monday': 1, 'mon': 1,
-        'tuesday': 2, 'tue': 2,
-        'wednesday': 3, 'wed': 3,
-        'thursday': 4, 'thu': 4,
-        'friday': 5, 'fri': 5,
-        'saturday': 6, 'sat': 6
+        'monday': 0, 'mon': 0,
+        'tuesday': 1, 'tue': 1,
+        'wednesday': 2, 'wed': 2,
+        'thursday': 3, 'thu': 3,
+        'friday': 4, 'fri': 4,
+        'saturday': 5, 'sat': 5,
+        'sunday': 6, 'sun': 6
     };
 
     /**
@@ -366,18 +366,18 @@
         tabContainers.forEach(function(container) {
             var buttons = container.querySelectorAll('.kealoa-tab-button');
             var panels = container.querySelectorAll('.kealoa-tab-panel');
-            
+
             buttons.forEach(function(button) {
                 button.addEventListener('click', function() {
                     var tabName = this.getAttribute('data-tab');
-                    
+
                     buttons.forEach(function(btn) {
                         btn.classList.remove('active');
                     });
                     panels.forEach(function(panel) {
                         panel.classList.remove('active');
                     });
-                    
+
                     this.classList.add('active');
                     var targetPanel = container.querySelector('.kealoa-tab-panel[data-tab="' + tabName + '"]');
                     if (targetPanel) {

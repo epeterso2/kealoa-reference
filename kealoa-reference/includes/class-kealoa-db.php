@@ -1516,7 +1516,7 @@ class Kealoa_DB {
             INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
             WHERE g.guesser_person_id = %d
             GROUP BY DAYOFWEEK(pz.publication_date)
-            ORDER BY DAYOFWEEK(pz.publication_date) ASC",
+            ORDER BY MOD(DAYOFWEEK(pz.publication_date) + 5, 7) ASC",
             $person_id
         );
 
