@@ -929,8 +929,32 @@ class Kealoa_Shortcodes {
                                     datasets: [{
                                         label: <?php echo wp_json_encode(__('Rounds', 'kealoa-reference')); ?>,
                                         data: <?php echo wp_json_encode($score_data); ?>,
-                                        backgroundColor: 'rgba(34, 113, 177, 0.7)',
-                                        borderColor: '#2271b1',
+                                        backgroundColor: [
+                                            'rgba(46, 125, 50, 0.7)',
+                                            'rgba(85, 139, 47, 0.7)',
+                                            'rgba(124, 179, 66, 0.7)',
+                                            'rgba(158, 157, 36, 0.7)',
+                                            'rgba(192, 202, 51, 0.7)',
+                                            'rgba(253, 216, 53, 0.7)',
+                                            'rgba(255, 179, 0, 0.7)',
+                                            'rgba(251, 140, 0, 0.7)',
+                                            'rgba(244, 81, 30, 0.7)',
+                                            'rgba(229, 57, 53, 0.7)',
+                                            'rgba(198, 40, 40, 0.7)'
+                                        ],
+                                        borderColor: [
+                                            '#2e7d32',
+                                            '#558b2f',
+                                            '#7cb342',
+                                            '#9e9d24',
+                                            '#c0ca33',
+                                            '#fdd835',
+                                            '#ffb300',
+                                            '#fb8c00',
+                                            '#f4511e',
+                                            '#e53935',
+                                            '#c62828'
+                                        ],
                                         borderWidth: 1
                                     }]
                                 },
