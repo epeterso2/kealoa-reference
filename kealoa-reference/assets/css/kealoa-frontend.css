@@ -532,7 +532,7 @@
 .kealoa-chart-container {
     position: relative;
     width: 100%;
-    height: 300px;
+    height: 600px;
     margin-bottom: 20px;
 }
 
@@ -687,12 +687,12 @@
     .kealoa-table {
         font-size: 13px;
     }
-    
+
     .kealoa-table th,
     .kealoa-table td {
         padding: 8px 10px;
     }
-    
+
     /* Person/constructor/editor info: stack vertically */
     .kealoa-person-info,
     .kealoa-constructor-info,
@@ -701,7 +701,7 @@
         align-items: center;
         text-align: center;
     }
-    
+
     .kealoa-person-details,
     .kealoa-constructor-details,
     .kealoa-editor-details {
@@ -729,30 +729,30 @@
         width: 100%;
         max-width: 100%;
     }
-    
+
     /* Stats grid: 2 columns */
     .kealoa-stats-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
     }
-    
+
     .kealoa-stat-card {
         padding: 14px;
     }
-    
+
     .kealoa-stat-value {
         font-size: 24px;
     }
-    
+
     /* Round meta: stack label/value */
     .kealoa-round-meta p {
         flex-direction: column;
     }
-    
+
     .kealoa-round-meta strong {
         min-width: auto;
     }
-    
+
     /* Word-break long URLs */
     .kealoa-person-xwordinfo,
     .kealoa-person-homepage,
@@ -760,14 +760,14 @@
         overflow-wrap: break-word;
         word-break: break-all;
     }
-    
+
     .kealoa-person-xwordinfo strong,
     .kealoa-person-homepage strong,
     .kealoa-constructor-xwordinfo strong {
         display: block;
         min-width: auto;
     }
-    
+
     /* Reduce header padding */
     .kealoa-round-header,
     .kealoa-person-header,
@@ -775,28 +775,28 @@
     .kealoa-editor-header {
         padding: 15px;
     }
-    
+
     /* Reduce entity name size */
     .kealoa-person-name,
     .kealoa-constructor-name,
     .kealoa-editor-name {
         font-size: 22px;
     }
-    
+
     /* Clues table: reduce size */
     .kealoa-clues-table {
         font-size: 12px;
     }
-    
+
     .kealoa-clues-table th,
     .kealoa-clues-table td {
         padding: 6px 5px;
     }
-    
+
     .kealoa-clues-table .kealoa-guesser-col {
         min-width: 70px;
     }
-    
+
     /* Tab navigation: 2x2 grid so all tabs are visible */
     .kealoa-tab-nav {
         flex-wrap: wrap;
@@ -823,7 +823,7 @@
     .kealoa-player-image {
         height: 200px;
     }
-    
+
     /* Round meta: contain long values */
     .kealoa-round-meta span {
         overflow-wrap: break-word;
@@ -835,7 +835,7 @@
         flex-wrap: wrap;
         gap: 10px;
     }
-    
+
     .kealoa-round-nav-btn {
         font-size: 13px;
         padding: 6px 12px;
@@ -877,7 +877,7 @@
 
     /* Chart container: shorter on mobile */
     .kealoa-chart-container {
-        height: 220px;
+        height: 440px;
     }
 }
 
@@ -886,7 +886,7 @@
     .kealoa-stats-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .kealoa-page-container {
         padding: 10px 0;
     }
@@ -979,7 +979,7 @@
 
     /* Chart container: shorter */
     .kealoa-chart-container {
-        height: 180px;
+        height: 360px;
     }
 
     /* Search results: compact */
@@ -1025,12 +1025,12 @@
         box-shadow: none;
         border: 1px solid #ddd;
     }
-    
+
     .kealoa-stat-card {
         box-shadow: none;
         border: 1px solid #ddd;
     }
-    
+
     .kealoa-person-link,
     .kealoa-round-link,
     .kealoa-episode-link,
