@@ -1142,7 +1142,7 @@ class Kealoa_Shortcodes {
                                 $yr_best_streak_val = $best_streaks_by_year[$yr] ?? 0;
                                 ?>
                                 <tr>
-                                    <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($yr_round_ids); ?>"><?php echo esc_html($yr); ?></a></td>
+                                    <td><?php echo esc_html($yr); ?></td>
                                     <td><?php echo esc_html($result->rounds_played); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
