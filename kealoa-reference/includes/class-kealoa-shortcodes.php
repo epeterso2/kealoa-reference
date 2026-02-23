@@ -1492,6 +1492,54 @@ class Kealoa_Shortcodes {
 
         $highest_scores = $this->db->get_all_persons_highest_round_scores();
         $longest_streaks = $this->db->get_all_persons_longest_streaks();
+        $best_score_round_ids = $this->db->get_all_persons_highest_round_score_round_ids();
+        $best_streak_round_ids = $this->db->get_all_persons_longest_streak_round_ids();
+
+        // Collect all unique round IDs needed for picker links
+        $all_round_ids = [];
+        foreach ($best_score_round_ids as $ids) {
+            $all_round_ids = array_merge($all_round_ids, $ids);
+        }
+        foreach ($best_streak_round_ids as $ids) {
+            $all_round_ids = array_merge($all_round_ids, $ids);
+        }
+        $all_round_ids = array_unique($all_round_ids);
+
+        // Build round info for all needed rounds
+        $round_info = [];
+        foreach ($all_round_ids as $rid) {
+            $round = $this->db->get_round($rid);
+            if ($round) {
+                $solutions = $this->db->get_round_solutions($rid);
+                $round_info[$rid] = [
+                    'url' => home_url('/kealoa/round/' . $rid . '/'),
+                    'date' => Kealoa_Formatter::format_date($round->round_date),
+                    'words' => Kealoa_Formatter::format_solution_words($solutions),
+                ];
+            }
+        }
+
+        // Get per-person scores for all needed rounds
+        $person_round_scores = $this->db->get_person_scores_for_rounds($all_round_ids);
+
+        // Helper: build JSON for round picker from array of round_ids and a person_id
+        $build_picker_json = function(array $round_ids, int $person_id) use ($round_info, $person_round_scores): string {
+            $rounds = [];
+            foreach ($round_ids as $rid) {
+                if (isset($round_info[$rid])) {
+                    $ri = $round_info[$rid];
+                    $score_data = $person_round_scores[$person_id][$rid] ?? null;
+                    $score = $score_data ? ($score_data['correct'] . '/' . $score_data['total']) : '';
+                    $rounds[] = [
+                        'url' => $ri['url'],
+                        'date' => $ri['date'],
+                        'words' => $ri['words'],
+                        'score' => $score,
+                    ];
+                }
+            }
+            return esc_attr(wp_json_encode($rounds));
+        };
 
         ob_start();
         ?>
@@ -1500,8 +1548,8 @@ class Kealoa_Shortcodes {
                 <thead>
                     <tr>
                         <th data-sort="text"><?php esc_html_e('Player', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Rounds Played', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Clues Guessed', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Best Score', 'kealoa-reference'); ?></th>
@@ -1510,9 +1558,10 @@ class Kealoa_Shortcodes {
                 </thead>
                 <tbody>
                     <?php foreach ($persons as $person): ?>
+                        <?php $pid = (int) $person->id; ?>
                         <tr>
                             <td>
-                                <?php echo Kealoa_Formatter::format_person_link((int) $person->id, $person->full_name); ?>
+                                <?php echo Kealoa_Formatter::format_person_link($pid, $person->full_name); ?>
                             </td>
                             <td><?php echo esc_html($person->rounds_played); ?></td>
                             <td><?php echo esc_html($person->clues_guessed); ?></td>
@@ -1525,8 +1574,8 @@ class Kealoa_Shortcodes {
                                 echo Kealoa_Formatter::format_percentage((float) $accuracy);
                                 ?>
                             </td>
-                            <td><?php echo esc_html($highest_scores[(int) $person->id] ?? 0); ?></td>
-                            <td><?php echo esc_html($longest_streaks[(int) $person->id] ?? 0); ?></td>
+                            <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($best_score_round_ids[$pid] ?? [], $pid); ?>"><?php echo esc_html($highest_scores[$pid] ?? 0); ?></a></td>
+                            <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($best_streak_round_ids[$pid] ?? [], $pid); ?>"><?php echo esc_html($longest_streaks[$pid] ?? 0); ?></a></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

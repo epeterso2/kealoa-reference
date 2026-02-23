@@ -2109,6 +2109,79 @@ class Kealoa_DB {
     }
 
     /**
+     * Get the round IDs where each person achieved their highest score.
+     *
+     * Returns an associative array keyed by person_id, each value is an array of round_ids.
+     *
+     * @return array<int, int[]>
+     */
+    public function get_all_persons_highest_round_score_round_ids(): array {
+        $sql = "SELECT sub.guesser_person_id, sub.round_id, sub.round_score
+            FROM (
+                SELECT g.guesser_person_id, c.round_id, SUM(g.is_correct) as round_score
+                FROM {$this->guesses_table} g
+                INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+                GROUP BY g.guesser_person_id, c.round_id
+            ) sub
+            INNER JOIN (
+                SELECT guesser_person_id, MAX(round_score) as max_score
+                FROM (
+                    SELECT g.guesser_person_id, c.round_id, SUM(g.is_correct) as round_score
+                    FROM {$this->guesses_table} g
+                    INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+                    GROUP BY g.guesser_person_id, c.round_id
+                ) inner_sub
+                GROUP BY guesser_person_id
+            ) best ON sub.guesser_person_id = best.guesser_person_id AND sub.round_score = best.max_score
+            ORDER BY sub.guesser_person_id";
+
+        $results = $this->wpdb->get_results($sql);
+        $map = [];
+        foreach ($results as $row) {
+            $map[(int) $row->guesser_person_id][] = (int) $row->round_id;
+        }
+        return $map;
+    }
+
+    /**
+     * Get person scores for a set of round IDs.
+     *
+     * Returns a nested array: [person_id][round_id] => ['correct' => int, 'total' => int]
+     *
+     * @param int[] $round_ids
+     * @return array<int, array<int, array{correct: int, total: int}>>
+     */
+    public function get_person_scores_for_rounds(array $round_ids): array {
+        if (empty($round_ids)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($round_ids), '%d'));
+        $sql = $this->wpdb->prepare(
+            "SELECT g.guesser_person_id, c.round_id,
+                SUM(g.is_correct) as correct_count,
+                COUNT(c.id) as total_clues
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            WHERE c.round_id IN ($placeholders)
+            GROUP BY g.guesser_person_id, c.round_id",
+            ...$round_ids
+        );
+
+        $results = $this->wpdb->get_results($sql);
+        $map = [];
+        foreach ($results as $row) {
+            $person_id = (int) $row->guesser_person_id;
+            $round_id = (int) $row->round_id;
+            $map[$person_id][$round_id] = [
+                'correct' => (int) $row->correct_count,
+                'total' => (int) $row->total_clues,
+            ];
+        }
+        return $map;
+    }
+
+    /**
      * Get the longest streak of consecutive correct answers in a single round for each person.
      *
      * Returns an associative array keyed by person_id.
@@ -2146,6 +2219,87 @@ class Kealoa_DB {
                 }
             } else {
                 $streak = 0;
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * Get the round IDs where each person achieved their longest streak.
+     *
+     * Returns an associative array keyed by person_id, each value is an array of round_ids.
+     *
+     * @return array<int, int[]>
+     */
+    public function get_all_persons_longest_streak_round_ids(): array {
+        $sql = "SELECT g.guesser_person_id, c.round_id, c.clue_number, g.is_correct
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            ORDER BY g.guesser_person_id ASC, c.round_id ASC, c.clue_number ASC";
+
+        $rows = $this->wpdb->get_results($sql);
+
+        // First pass: find the best streak value per person
+        $best = [];
+        $prev_person = null;
+        $prev_round = null;
+        $streak = 0;
+
+        foreach ($rows as $row) {
+            $person_id = (int) $row->guesser_person_id;
+            $round_id = (int) $row->round_id;
+            $correct = (int) $row->is_correct;
+
+            if ($person_id !== $prev_person || $round_id !== $prev_round) {
+                $streak = 0;
+                $prev_person = $person_id;
+                $prev_round = $round_id;
+            }
+
+            if ($correct) {
+                $streak++;
+                if (!isset($best[$person_id]) || $streak > $best[$person_id]) {
+                    $best[$person_id] = $streak;
+                }
+            } else {
+                $streak = 0;
+            }
+        }
+
+        // Second pass: collect round IDs that achieved the best streak for each person
+        $map = [];
+        $round_best_streak = [];
+        $prev_person = null;
+        $prev_round = null;
+        $streak = 0;
+
+        foreach ($rows as $row) {
+            $person_id = (int) $row->guesser_person_id;
+            $round_id = (int) $row->round_id;
+            $correct = (int) $row->is_correct;
+
+            if ($person_id !== $prev_person || $round_id !== $prev_round) {
+                $streak = 0;
+                $prev_person = $person_id;
+                $prev_round = $round_id;
+            }
+
+            if ($correct) {
+                $streak++;
+                $key = $person_id . '-' . $round_id;
+                if (!isset($round_best_streak[$key]) || $streak > $round_best_streak[$key]) {
+                    $round_best_streak[$key] = $streak;
+                }
+            } else {
+                $streak = 0;
+            }
+        }
+
+        foreach ($round_best_streak as $key => $streak_val) {
+            [$person_id, $round_id] = array_map('intval', explode('-', $key));
+            if (isset($best[$person_id]) && $streak_val === $best[$person_id]) {
+                $map[$person_id][] = $round_id;
             }
         }
 
