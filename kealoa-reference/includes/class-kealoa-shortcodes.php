@@ -1356,7 +1356,61 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-constructor-stats">
                     <h2><?php esc_html_e('Results by Constructor', 'kealoa-reference'); ?></h2>
 
-                    <table class="kealoa-table kealoa-constructor-table">
+                    <div class="kealoa-filter-controls" data-target="kealoa-person-constructor-table">
+                        <div class="kealoa-filter-row">
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-constructor-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                                <input type="text" id="kealoa-constructor-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Constructor name...', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-constructor-min-answered"><?php esc_html_e('Min. Answered', 'kealoa-reference'); ?></label>
+                                <input type="number" id="kealoa-constructor-min-answered" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-constructor-acc-min"><?php esc_html_e('Accuracy Range', 'kealoa-reference'); ?></label>
+                                <div class="kealoa-filter-range">
+                                    <input type="number" id="kealoa-constructor-acc-min" class="kealoa-filter-input" data-filter="range-min" data-col="3" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
+                                    <span class="kealoa-filter-range-sep">&ndash;</span>
+                                    <input type="number" id="kealoa-constructor-acc-max" class="kealoa-filter-input" data-filter="range-max" data-col="3" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kealoa-filter-row">
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-constructor-topn"><?php esc_html_e('Show Top/Bottom', 'kealoa-reference'); ?></label>
+                                <div class="kealoa-filter-topn">
+                                    <select id="kealoa-constructor-topn-dir" class="kealoa-filter-select" data-filter="topn-dir">
+                                        <option value=""><?php esc_html_e('All', 'kealoa-reference'); ?></option>
+                                        <option value="top"><?php esc_html_e('Top', 'kealoa-reference'); ?></option>
+                                        <option value="bottom"><?php esc_html_e('Bottom', 'kealoa-reference'); ?></option>
+                                    </select>
+                                    <input type="number" id="kealoa-constructor-topn" class="kealoa-filter-input" data-filter="topn-count" min="1" placeholder="N">
+                                </div>
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-constructor-avg"><?php esc_html_e('vs. Average', 'kealoa-reference'); ?></label>
+                                <select id="kealoa-constructor-avg" class="kealoa-filter-select" data-filter="vs-avg" data-avg="<?php echo esc_attr($stats->overall_percentage); ?>">
+                                    <option value=""><?php esc_html_e('All', 'kealoa-reference'); ?></option>
+                                    <option value="above"><?php echo esc_html(sprintf(
+                                        /* translators: %s is the player's overall accuracy percentage */
+                                        __('Above Average (%s)', 'kealoa-reference'),
+                                        Kealoa_Formatter::format_percentage((float) $stats->overall_percentage)
+                                    )); ?></option>
+                                    <option value="below"><?php echo esc_html(sprintf(
+                                        /* translators: %s is the player's overall accuracy percentage */
+                                        __('Below Average (%s)', 'kealoa-reference'),
+                                        Kealoa_Formatter::format_percentage((float) $stats->overall_percentage)
+                                    )); ?></option>
+                                </select>
+                            </div>
+                            <div class="kealoa-filter-group kealoa-filter-actions">
+                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                <span class="kealoa-filter-count"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="kealoa-table kealoa-constructor-table" id="kealoa-person-constructor-table">
                         <thead>
                             <tr>
                                 <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>

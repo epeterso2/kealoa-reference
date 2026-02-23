@@ -554,4 +554,180 @@
     } else {
         initShareBar();
     }
+
+    /**
+     * Table filter controls
+     *
+     * Attach to any .kealoa-filter-controls element that has a data-target
+     * pointing to the ID of a .kealoa-table. Supports:
+     *   - Text search (data-filter="search", data-col="N")
+     *   - Minimum threshold (data-filter="min", data-col="N")
+     *   - Accuracy range (data-filter="range-min" / "range-max", data-col="N")
+     *   - Top/Bottom N by accuracy (data-filter="topn-dir" + "topn-count")
+     *   - Above/Below average (data-filter="vs-avg", data-avg="X")
+     */
+    function initTableFilters() {
+        var filterContainers = document.querySelectorAll('.kealoa-filter-controls');
+
+        filterContainers.forEach(function (container) {
+            var tableId = container.getAttribute('data-target');
+            if (!tableId) return;
+            var table = document.getElementById(tableId);
+            if (!table) return;
+
+            var tbody = table.querySelector('tbody');
+            if (!tbody) return;
+
+            var allRows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+            var countEl = container.querySelector('.kealoa-filter-count');
+
+            // Gather filter inputs
+            var searchInput = container.querySelector('[data-filter="search"]');
+            var minInput = container.querySelector('[data-filter="min"]');
+            var rangeMinInput = container.querySelector('[data-filter="range-min"]');
+            var rangeMaxInput = container.querySelector('[data-filter="range-max"]');
+            var topnDirSelect = container.querySelector('[data-filter="topn-dir"]');
+            var topnCountInput = container.querySelector('[data-filter="topn-count"]');
+            var vsAvgSelect = container.querySelector('[data-filter="vs-avg"]');
+            var resetBtn = container.querySelector('.kealoa-filter-reset');
+
+            function getCellNumeric(row, colIndex) {
+                var cell = row.cells[colIndex];
+                if (!cell) return 0;
+                var text = (cell.textContent || '').trim().replace(/[,%$]/g, '');
+                var val = parseFloat(text);
+                return isNaN(val) ? 0 : val;
+            }
+
+            function getCellText(row, colIndex) {
+                var cell = row.cells[colIndex];
+                return cell ? (cell.textContent || '').trim().toLowerCase() : '';
+            }
+
+            function applyFilters() {
+                var searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
+                var searchCol = searchInput ? parseInt(searchInput.getAttribute('data-col'), 10) : 0;
+
+                var minVal = minInput ? parseFloat(minInput.value) : NaN;
+                var minCol = minInput ? parseInt(minInput.getAttribute('data-col'), 10) : 1;
+
+                var rangeMinVal = rangeMinInput ? parseFloat(rangeMinInput.value) : NaN;
+                var rangeMaxVal = rangeMaxInput ? parseFloat(rangeMaxInput.value) : NaN;
+                var rangeCol = rangeMinInput ? parseInt(rangeMinInput.getAttribute('data-col'), 10) : 3;
+
+                var topnDir = topnDirSelect ? topnDirSelect.value : '';
+                var topnCount = topnCountInput ? parseInt(topnCountInput.value, 10) : NaN;
+
+                var vsAvg = vsAvgSelect ? vsAvgSelect.value : '';
+                var avgVal = vsAvgSelect ? parseFloat(vsAvgSelect.getAttribute('data-avg')) : 0;
+
+                // First pass: determine which rows pass search, min, range, avg filters
+                var passing = [];
+                allRows.forEach(function (row) {
+                    var show = true;
+
+                    // Text search
+                    if (searchVal && show) {
+                        var cellText = getCellText(row, searchCol);
+                        if (cellText.indexOf(searchVal) === -1) {
+                            show = false;
+                        }
+                    }
+
+                    // Minimum threshold
+                    if (!isNaN(minVal) && show) {
+                        if (getCellNumeric(row, minCol) < minVal) {
+                            show = false;
+                        }
+                    }
+
+                    // Accuracy range
+                    if (!isNaN(rangeMinVal) && show) {
+                        if (getCellNumeric(row, rangeCol) < rangeMinVal) {
+                            show = false;
+                        }
+                    }
+                    if (!isNaN(rangeMaxVal) && show) {
+                        if (getCellNumeric(row, rangeCol) > rangeMaxVal) {
+                            show = false;
+                        }
+                    }
+
+                    // Above/below average
+                    if (vsAvg && show) {
+                        var rowAcc = getCellNumeric(row, rangeCol);
+                        if (vsAvg === 'above' && rowAcc < avgVal) {
+                            show = false;
+                        } else if (vsAvg === 'below' && rowAcc > avgVal) {
+                            show = false;
+                        }
+                    }
+
+                    if (show) {
+                        passing.push(row);
+                    }
+                });
+
+                // Top/Bottom N: sort passing rows by accuracy column, then slice
+                var visible = passing;
+                if (topnDir && !isNaN(topnCount) && topnCount > 0) {
+                    var sorted = passing.slice().sort(function (a, b) {
+                        var accA = getCellNumeric(a, rangeCol);
+                        var accB = getCellNumeric(b, rangeCol);
+                        return topnDir === 'top' ? (accB - accA) : (accA - accB);
+                    });
+                    var topSet = sorted.slice(0, topnCount);
+                    visible = passing.filter(function (row) {
+                        return topSet.indexOf(row) !== -1;
+                    });
+                }
+
+                // Apply visibility
+                var visibleCount = 0;
+                allRows.forEach(function (row) {
+                    if (visible.indexOf(row) !== -1) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Update count display
+                if (countEl) {
+                    countEl.textContent = visibleCount + ' / ' + allRows.length;
+                }
+            }
+
+            // Attach event listeners
+            var inputs = container.querySelectorAll('.kealoa-filter-input, .kealoa-filter-select');
+            inputs.forEach(function (input) {
+                input.addEventListener('input', applyFilters);
+                input.addEventListener('change', applyFilters);
+            });
+
+            // Reset button
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function () {
+                    if (searchInput) searchInput.value = '';
+                    if (minInput) minInput.value = '';
+                    if (rangeMinInput) rangeMinInput.value = '';
+                    if (rangeMaxInput) rangeMaxInput.value = '';
+                    if (topnDirSelect) topnDirSelect.value = '';
+                    if (topnCountInput) topnCountInput.value = '';
+                    if (vsAvgSelect) vsAvgSelect.value = '';
+                    applyFilters();
+                });
+            }
+
+            // Initial count
+            applyFilters();
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTableFilters);
+    } else {
+        initTableFilters();
+    }
 })();

@@ -1042,6 +1042,140 @@
 }
 
 /* ==========================================================================
+   Filter Controls
+   ========================================================================== */
+
+.kealoa-filter-controls {
+    background: var(--cloud-white);
+    border: 1px solid var(--volcanic-ash);
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.kealoa-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.kealoa-filter-row + .kealoa-filter-row {
+    margin-top: 12px;
+}
+
+.kealoa-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.kealoa-filter-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--pumice);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.kealoa-filter-input,
+.kealoa-filter-select {
+    padding: 6px 10px;
+    border: 1px solid var(--volcanic-ash);
+    border-radius: 4px;
+    font-size: 14px;
+    color: var(--ash-dark);
+    background: #fff;
+    transition: border-color 0.2s;
+}
+
+.kealoa-filter-input:focus,
+.kealoa-filter-select:focus {
+    outline: none;
+    border-color: var(--tropical-teal);
+    box-shadow: 0 0 0 2px rgba(26, 155, 181, 0.15);
+}
+
+.kealoa-filter-input[type="number"] {
+    width: 80px;
+}
+
+.kealoa-filter-input[data-filter="search"] {
+    width: 180px;
+}
+
+.kealoa-filter-range {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.kealoa-filter-range-sep {
+    color: var(--pumice);
+    font-weight: 600;
+}
+
+.kealoa-filter-topn {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.kealoa-filter-topn .kealoa-filter-select {
+    width: 100px;
+}
+
+.kealoa-filter-topn .kealoa-filter-input {
+    width: 60px;
+}
+
+.kealoa-filter-actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+
+.kealoa-filter-reset {
+    padding: 6px 14px;
+    border: 1px solid var(--volcanic-ash);
+    border-radius: 4px;
+    background: none;
+    color: var(--deep-lagoon);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.kealoa-filter-reset:hover {
+    background: var(--deep-lagoon);
+    color: var(--cloud-white);
+}
+
+.kealoa-filter-count {
+    font-size: 13px;
+    color: var(--pumice);
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .kealoa-filter-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .kealoa-filter-input[data-filter="search"] {
+        width: 100%;
+    }
+
+    .kealoa-filter-actions {
+        margin-left: 0;
+    }
+}
+
+/* ==========================================================================
    Tabs
    ========================================================================== */
 
