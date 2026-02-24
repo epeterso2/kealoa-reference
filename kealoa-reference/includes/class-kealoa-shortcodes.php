@@ -2705,17 +2705,27 @@ class Kealoa_Shortcodes {
 
             <?php foreach ($rounds_clues as $rc): ?>
                 <div class="kealoa-puzzle-round-clues">
-                    <?php if (count($rounds_clues) > 1): ?>
                     <h3>
                         <?php
-                        echo sprintf(
-                            /* translators: %s: round date link */
-                            esc_html__('Round: %s', 'kealoa-reference'),
-                            Kealoa_Formatter::format_round_date_link((int) $rc['round_id'], $rc['round_date'])
-                        );
+                        $round_date_link = Kealoa_Formatter::format_round_date_link((int) $rc['round_id'], $rc['round_date']);
+                        $solutions = $this->db->get_round_solutions((int) $rc['round_id']);
+                        $solution_words = Kealoa_Formatter::format_solution_words($solutions);
+
+                        // Check if multiple rounds share the same date
+                        $same_date_count = 0;
+                        foreach ($rounds_clues as $other_rc) {
+                            if ($other_rc['round_date'] === $rc['round_date']) {
+                                $same_date_count++;
+                            }
+                        }
+
+                        if ($same_date_count > 1) {
+                            echo $round_date_link . ' (#' . esc_html($rc['round_number']) . ') — ' . esc_html($solution_words);
+                        } else {
+                            echo $round_date_link . ' — ' . esc_html($solution_words);
+                        }
                         ?>
                     </h3>
-                    <?php endif; ?>
 
                     <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-puzzle-clues-table">
