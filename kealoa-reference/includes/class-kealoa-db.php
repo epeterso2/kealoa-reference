@@ -787,17 +787,6 @@ class Kealoa_DB {
     }
 
     /**
-     * Get next available round number for a date
-     */
-    public function get_next_round_number(string $date): int {
-        $sql = $this->wpdb->prepare(
-            "SELECT COALESCE(MAX(round_number), 0) + 1 FROM {$this->rounds_table} WHERE round_date = %s",
-            $date
-        );
-        return (int) $this->wpdb->get_var($sql);
-    }
-
-    /**
      * Get all rounds
      */
     public function get_rounds(array $args = []): array {
@@ -914,21 +903,6 @@ class Kealoa_DB {
             ORDER BY sc.solution_count ASC, c.clue_number ASC, rs.word_order ASC";
 
         return $this->wpdb->get_results($sql);
-    }
-
-    /**
-     * Get the maximum number of solution words in any round.
-     *
-     * @return int
-     */
-    public function get_max_solution_count(): int {
-        $sql = "SELECT MAX(cnt) FROM (
-                SELECT COUNT(*) AS cnt
-                FROM {$this->round_solutions_table}
-                GROUP BY round_id
-            ) sub";
-
-        return (int) $this->wpdb->get_var($sql);
     }
 
     /**
