@@ -2342,6 +2342,24 @@ class Kealoa_Shortcodes {
         $clues = $this->db->get_puzzle_clues($puzzle_id);
         $player_results = $this->db->get_puzzle_player_results($puzzle_id);
 
+        // Determine editor image: media library > XWordInfo
+        $editor_image_url = '';
+        $editor_image_source = '';
+        if (!empty($puzzle->editor_name)) {
+            $editor_media_id = $this->db->get_editor_media_id($puzzle->editor_name);
+            if ($editor_media_id > 0) {
+                $media_src = wp_get_attachment_image_src($editor_media_id, 'medium');
+                if ($media_src) {
+                    $editor_image_url = $media_src[0];
+                    $editor_image_source = 'media';
+                }
+            }
+            if (empty($editor_image_source)) {
+                $editor_image_url = Kealoa_Formatter::xwordinfo_image_url_from_name($puzzle->editor_name);
+                $editor_image_source = 'xwordinfo';
+            }
+        }
+
         // Group clues by round
         $rounds_clues = [];
         foreach ($clues as $clue) {
@@ -2467,6 +2485,22 @@ class Kealoa_Shortcodes {
                             <span class="kealoa-puzzle-constructor-name"><?php echo esc_html($con->full_name); ?></span>
                         </div>
                     <?php endforeach; ?>
+
+                    <?php if (!empty($editor_image_url)): ?>
+                        <?php $editor_url = home_url('/kealoa/editor/' . urlencode($puzzle->editor_name) . '/'); ?>
+                        <div class="kealoa-puzzle-constructor">
+                            <a href="<?php echo esc_url($editor_url); ?>">
+                                <?php if ($editor_image_source === 'media'): ?>
+                                    <img src="<?php echo esc_url($editor_image_url); ?>"
+                                         alt="<?php echo esc_attr($puzzle->editor_name); ?>"
+                                         class="kealoa-entity-image" />
+                                <?php else: ?>
+                                    <?php echo Kealoa_Formatter::format_xwordinfo_image($editor_image_url, $puzzle->editor_name); ?>
+                                <?php endif; ?>
+                            </a>
+                            <span class="kealoa-puzzle-constructor-name"><?php echo esc_html($puzzle->editor_name); ?></span>
+                        </div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
             </div>
