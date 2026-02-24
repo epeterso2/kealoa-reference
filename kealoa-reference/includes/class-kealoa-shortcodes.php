@@ -1752,6 +1752,11 @@ class Kealoa_Shortcodes {
                 </thead>
                 <tbody>
                     <?php foreach ($constructors as $constructor): ?>
+                        <?php
+                        $accuracy = $constructor->total_guesses > 0
+                            ? ($constructor->correct_guesses / $constructor->total_guesses) * 100
+                            : 0;
+                        ?>
                         <tr>
                             <td>
                                 <?php echo Kealoa_Formatter::format_constructor_link((int) $constructor->id, $constructor->full_name); ?>
@@ -1761,12 +1766,7 @@ class Kealoa_Shortcodes {
                             <td><?php echo esc_html(number_format_i18n((int) $constructor->total_guesses)); ?></td>
                             <td><?php echo esc_html(number_format_i18n((int) $constructor->correct_guesses)); ?></td>
                             <td data-value="<?php echo esc_attr(number_format((float) $accuracy, 2, '.', '')); ?>">
-                                <?php
-                                $accuracy = $constructor->total_guesses > 0
-                                    ? ($constructor->correct_guesses / $constructor->total_guesses) * 100
-                                    : 0;
-                                echo Kealoa_Formatter::format_percentage((float) $accuracy);
-                                ?>
+                                <?php echo Kealoa_Formatter::format_percentage((float) $accuracy); ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -2135,30 +2135,67 @@ class Kealoa_Shortcodes {
         ob_start();
         ?>
         <div class="kealoa-editors-table-wrapper">
-            <table class="kealoa-table kealoa-editors-table">
+            <div class="kealoa-filter-controls" data-target="kealoa-editors-table">
+                <div class="kealoa-filter-row">
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ed-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                        <input type="text" id="kealoa-ed-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Editor name...', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ed-min-puzzles"><?php esc_html_e('Min. Puzzles', 'kealoa-reference'); ?></label>
+                        <input type="number" id="kealoa-ed-min-puzzles" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 3', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ed-min-clues"><?php esc_html_e('Min. Clues', 'kealoa-reference'); ?></label>
+                        <input type="number" id="kealoa-ed-min-clues" class="kealoa-filter-input" data-filter="min" data-col="2" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ed-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
+                        <input type="number" id="kealoa-ed-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="3" min="1" placeholder="<?php esc_attr_e('e.g. 10', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ed-acc-min"><?php esc_html_e('Accuracy Range', 'kealoa-reference'); ?></label>
+                        <div class="kealoa-filter-range">
+                            <input type="number" id="kealoa-ed-acc-min" class="kealoa-filter-input" data-filter="range-min" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
+                            <span class="kealoa-filter-range-sep">&ndash;</span>
+                            <input type="number" id="kealoa-ed-acc-max" class="kealoa-filter-input" data-filter="range-max" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
+                        </div>
+                    </div>
+                    <div class="kealoa-filter-group kealoa-filter-actions">
+                        <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                        <span class="kealoa-filter-count"></span>
+                    </div>
+                </div>
+            </div>
+
+            <table class="kealoa-table kealoa-editors-table" id="kealoa-editors-table">
                 <thead>
                     <tr>
                         <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Clues Guessed', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($editors as $editor): ?>
+                        <?php
+                        $accuracy = $editor->total_guesses > 0
+                            ? ($editor->correct_guesses / $editor->total_guesses) * 100
+                            : 0;
+                        ?>
                         <tr>
                             <td>
                                 <?php echo Kealoa_Formatter::format_editor_link($editor->editor_name); ?>
                             </td>
-                            <td><?php echo esc_html($editor->clues_guessed); ?></td>
-                            <td><?php echo esc_html($editor->correct_guesses); ?></td>
-                            <td>
-                                <?php
-                                $accuracy = $editor->clues_guessed > 0
-                                    ? ($editor->correct_guesses / $editor->clues_guessed) * 100
-                                    : 0;
-                                echo Kealoa_Formatter::format_percentage((float) $accuracy);
-                                ?>
+                            <td><?php echo esc_html($editor->puzzle_count); ?></td>
+                            <td><?php echo esc_html($editor->clue_count); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $editor->total_guesses)); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $editor->correct_guesses)); ?></td>
+                            <td data-value="<?php echo esc_attr(number_format((float) $accuracy, 2, '.', '')); ?>">
+                                <?php echo Kealoa_Formatter::format_percentage((float) $accuracy); ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

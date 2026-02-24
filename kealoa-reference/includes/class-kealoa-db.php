@@ -2011,7 +2011,9 @@ class Kealoa_DB {
     public function get_editors_with_stats(): array {
         $sql = "SELECT
                 COALESCE(p.editor_name, 'Unknown') as editor_name,
-                COUNT(DISTINCT g.id) as clues_guessed,
+                COUNT(DISTINCT p.id) as puzzle_count,
+                COUNT(DISTINCT c.id) as clue_count,
+                COUNT(DISTINCT g.id) as total_guesses,
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses
             FROM {$this->puzzles_table} p
             INNER JOIN {$this->clues_table} c ON c.puzzle_id = p.id
