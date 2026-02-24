@@ -2588,6 +2588,22 @@ class Kealoa_DB {
             $add_puzzle_result($pz);
         }
 
+        // Search puzzles by clue text and correct answers
+        $clue_puzzles = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT DISTINCT pz.id as puzzle_id, pz.publication_date, COALESCE(pz.editor_name, '') as editor_name
+                FROM {$this->clues_table} c
+                INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
+                WHERE c.clue_text LIKE %s OR c.correct_answer LIKE %s
+                ORDER BY pz.publication_date DESC",
+                $like,
+                $like
+            )
+        );
+        foreach ($clue_puzzles as $pz) {
+            $add_puzzle_result($pz);
+        }
+
         // Helper to build a round result object
         $add_round_result = function (int $round_id) use (&$results, &$seen_round_ids): void {
             if (isset($seen_round_ids[$round_id])) {
@@ -2631,22 +2647,6 @@ class Kealoa_DB {
         );
         foreach ($desc_rounds as $rd) {
             $add_round_result((int) $rd->id);
-        }
-
-        // Search clue text and correct answers (link to parent round)
-        $clue_rounds = $this->wpdb->get_results(
-            $this->wpdb->prepare(
-                "SELECT DISTINCT c.round_id
-                FROM {$this->clues_table} c
-                INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
-                WHERE c.clue_text LIKE %s OR c.correct_answer LIKE %s
-                ORDER BY c.round_id DESC",
-                $like,
-                $like
-            )
-        );
-        foreach ($clue_rounds as $rd) {
-            $add_round_result((int) $rd->round_id);
         }
 
         // Include rounds from matching constructors
