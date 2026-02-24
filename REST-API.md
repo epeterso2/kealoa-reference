@@ -19,6 +19,7 @@ All endpoints are public (no authentication required). All responses are JSON.
   - [List Persons](#list-persons)
   - [Get Person](#get-person)
   - [Person Rounds](#person-rounds)
+  - [Person Puzzles](#person-puzzles)
   - [Person Stats by Year](#person-stats-by-year)
   - [Person Stats by Day of Week](#person-stats-by-day-of-week)
   - [Person Stats by Constructor](#person-stats-by-constructor)
@@ -284,6 +285,52 @@ Returns the complete round history for a person.
   "person_id": 1,
   "full_name": "Jane Smith",
   "rounds": [ ... ]
+}
+```
+
+**Errors:**
+
+| Status | Description       |
+|--------|-------------------|
+| 404    | Person not found. |
+
+---
+
+### Person Puzzles
+
+```
+GET /persons/{id}/puzzles
+```
+
+Returns all puzzles from rounds the person has played.
+
+**Parameters:**
+
+| Parameter | Type    | Required | Description   |
+|-----------|---------|----------|---------------|
+| `id`      | integer | Yes      | Person ID.    |
+
+**Response:**
+
+```json
+{
+  "person_id": 1,
+  "full_name": "Jane Smith",
+  "total": 25,
+  "puzzles": [
+    {
+      "puzzle_id": 10,
+      "publication_date": "2024-01-10",
+      "day_of_week": "Wednesday",
+      "editor_name": "Will Shortz",
+      "constructors": [
+        { "id": 1, "full_name": "Constructor Name" }
+      ],
+      "round_ids": [5, 12],
+      "round_dates": ["2024-03-15", "2024-06-01"],
+      "url": "https://example.com/kealoa/puzzle/2024-01-10/"
+    }
+  ]
 }
 ```
 
@@ -578,7 +625,7 @@ Returns a single constructor with stats and puzzle list.
 GET /editors
 ```
 
-Returns all editors with puzzle and clue counts. Not paginated.
+Returns all editors with puzzle, clue, and guess stats. Not paginated.
 
 **Response item:**
 
@@ -587,6 +634,9 @@ Returns all editors with puzzle and clue counts. Not paginated.
   "editor_name": "Will Shortz",
   "puzzle_count": 50,
   "clue_count": 200,
+  "total_guesses": 800,
+  "correct_guesses": 600,
+  "accuracy": 75.0,
   "url": "https://example.com/kealoa/editor/Will%20Shortz/"
 }
 ```

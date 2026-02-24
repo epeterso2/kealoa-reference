@@ -13,6 +13,7 @@
  *   GET /persons                         - List players (paginated)
  *   GET /persons/{id}                    - Single player with stats
  *   GET /persons/{id}/rounds             - Player round history
+ *   GET /persons/{id}/puzzles            - Puzzles from rounds the player has played
  *   GET /persons/{id}/stats/by-year      - Player stats by year
  *   GET /persons/{id}/stats/by-day       - Player stats by day of week
  *   GET /persons/{id}/stats/by-constructor - Player stats by constructor
@@ -116,6 +117,13 @@ class Kealoa_REST_API {
         register_rest_route(self::NAMESPACE, '/persons/(?P<id>\d+)/rounds', [
             'methods'             => 'GET',
             'callback'            => [$this, 'get_person_rounds'],
+            'permission_callback' => '__return_true',
+            'args'                => $this->id_arg(),
+        ]);
+
+        register_rest_route(self::NAMESPACE, '/persons/(?P<id>\d+)/puzzles', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'get_person_puzzles'],
             'permission_callback' => '__return_true',
             'args'                => $this->id_arg(),
         ]);
@@ -437,6 +445,52 @@ class Kealoa_REST_API {
         ], 200);
     }
 
+    public function get_person_puzzles(WP_REST_Request $request): WP_REST_Response {
+        $id     = (int) $request->get_param('id');
+        $person = $this->db->get_person($id);
+
+        if (!$person) {
+            return new WP_REST_Response(['message' => 'Person not found.'], 404);
+        }
+
+        $puzzles = $this->db->get_person_puzzles($id);
+
+        $items = array_map(function ($p) {
+            $constructor_ids   = !empty($p->constructor_ids) ? explode(',', $p->constructor_ids) : [];
+            $constructor_names = !empty($p->constructor_names) ? explode(', ', $p->constructor_names) : [];
+            $round_ids         = !empty($p->round_ids) ? explode(',', $p->round_ids) : [];
+            $round_dates       = !empty($p->round_dates) ? explode(',', $p->round_dates) : [];
+
+            $constructors = [];
+            for ($i = 0; $i < count($constructor_ids); $i++) {
+                $constructors[] = [
+                    'id'        => (int) $constructor_ids[$i],
+                    'full_name' => $constructor_names[$i] ?? '',
+                ];
+            }
+
+            $day_name = date('l', strtotime($p->publication_date));
+
+            return [
+                'puzzle_id'        => (int) $p->puzzle_id,
+                'publication_date' => $p->publication_date,
+                'day_of_week'      => $day_name,
+                'editor_name'      => $p->editor_name ?? '',
+                'constructors'     => $constructors,
+                'round_ids'        => array_map('intval', $round_ids),
+                'round_dates'      => $round_dates,
+                'url'              => home_url('/kealoa/puzzle/' . $p->publication_date . '/'),
+            ];
+        }, $puzzles);
+
+        return new WP_REST_Response([
+            'person_id'  => $id,
+            'full_name'  => $person->full_name,
+            'total'      => count($items),
+            'puzzles'    => $items,
+        ], 200);
+    }
+
     public function get_person_stats_by_year(WP_REST_Request $request): WP_REST_Response {
         $id = (int) $request->get_param('id');
         if (!$this->db->get_person($id)) {
@@ -583,11 +637,16 @@ class Kealoa_REST_API {
         $editors = $this->db->get_editors_with_stats();
 
         $items = array_map(function ($e) {
+            $total   = (int) $e->total_guesses;
+            $correct = (int) $e->correct_guesses;
             return [
-                'editor_name'  => $e->editor_name,
-                'puzzle_count' => (int) $e->puzzle_count,
-                'clue_count'   => (int) ($e->clue_count ?? 0),
-                'url'          => home_url('/kealoa/editor/' . urlencode($e->editor_name) . '/'),
+                'editor_name'     => $e->editor_name,
+                'puzzle_count'    => (int) $e->puzzle_count,
+                'clue_count'      => (int) $e->clue_count,
+                'total_guesses'   => $total,
+                'correct_guesses' => $correct,
+                'accuracy'        => $total > 0 ? round(($correct / $total) * 100, 1) : 0,
+                'url'             => home_url('/kealoa/editor/' . urlencode($e->editor_name) . '/'),
             ];
         }, $editors);
 
