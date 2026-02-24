@@ -560,7 +560,8 @@
      *
      * Attach to any .kealoa-filter-controls element that has a data-target
      * pointing to the ID of a .kealoa-table. Supports:
-     *   - Text search (data-filter="search", data-col="N")
+     *   - Text search (data-filter="search", data-col="N") — supports multiple
+     *   - Exact match select (data-filter="exact", data-col="N")
      *   - Minimum threshold (data-filter="min", data-col="N") — supports multiple
      *   - Accuracy range (data-filter="range-min" / "range-max", data-col="N")
      *   - Top/Bottom N by accuracy (data-filter="topn-dir" + "topn-count")
@@ -584,7 +585,8 @@
             var countEl = container.querySelector('.kealoa-filter-count');
 
             // Gather filter inputs
-            var searchInput = container.querySelector('[data-filter="search"]');
+            var searchInputs = Array.prototype.slice.call(container.querySelectorAll('[data-filter="search"]'));
+            var exactSelects = Array.prototype.slice.call(container.querySelectorAll('[data-filter="exact"]'));
             var minInputs = Array.prototype.slice.call(container.querySelectorAll('[data-filter="min"]'));
             var rangeMinInput = container.querySelector('[data-filter="range-min"]');
             var rangeMaxInput = container.querySelector('[data-filter="range-max"]');
@@ -609,9 +611,6 @@
             }
 
             function applyFilters() {
-                var searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
-                var searchCol = searchInput ? parseInt(searchInput.getAttribute('data-col'), 10) : 0;
-
                 var rangeMinVal = rangeMinInput ? parseFloat(rangeMinInput.value) : NaN;
                 var rangeMaxVal = rangeMaxInput ? parseFloat(rangeMaxInput.value) : NaN;
                 var rangeCol = rangeMinInput ? parseInt(rangeMinInput.getAttribute('data-col'), 10) : 3;
@@ -632,11 +631,31 @@
                 allRows.forEach(function (row) {
                     var show = true;
 
-                    // Text search
-                    if (searchVal && show) {
-                        var cellText = getCellText(row, searchCol);
-                        if (cellText.indexOf(searchVal) === -1) {
-                            show = false;
+                    // Text search (multiple)
+                    if (show) {
+                        for (var s = 0; s < searchInputs.length; s++) {
+                            var sVal = searchInputs[s].value.trim().toLowerCase();
+                            if (sVal) {
+                                var sCol = parseInt(searchInputs[s].getAttribute('data-col'), 10);
+                                if (getCellText(row, sCol).indexOf(sVal) === -1) {
+                                    show = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // Exact match selects
+                    if (show) {
+                        for (var e = 0; e < exactSelects.length; e++) {
+                            var eVal = exactSelects[e].value;
+                            if (eVal) {
+                                var eCol = parseInt(exactSelects[e].getAttribute('data-col'), 10);
+                                if (getCellText(row, eCol).indexOf(eVal.toLowerCase()) !== 0) {
+                                    show = false;
+                                    break;
+                                }
+                            }
                         }
                     }
 

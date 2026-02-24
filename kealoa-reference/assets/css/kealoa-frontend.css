@@ -1068,7 +1068,8 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    min-width: 0;
+    flex: 0 1 auto;
+    min-width: 120px;
 }
 
 .kealoa-filter-group label {
@@ -1088,6 +1089,8 @@
     color: var(--ash-dark);
     background: #fff;
     transition: border-color 0.2s;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .kealoa-filter-input:focus,
@@ -1098,17 +1101,23 @@
 }
 
 .kealoa-filter-input[type="number"] {
-    width: 80px;
+    max-width: 100px;
 }
 
 .kealoa-filter-input[data-filter="search"] {
-    width: 180px;
+    max-width: 220px;
 }
 
 .kealoa-filter-range {
     display: flex;
     align-items: center;
     gap: 6px;
+}
+
+.kealoa-filter-range .kealoa-filter-input {
+    flex: 1;
+    min-width: 60px;
+    max-width: none;
 }
 
 .kealoa-filter-range-sep {
@@ -1128,6 +1137,7 @@
 
 .kealoa-filter-topn .kealoa-filter-input {
     width: 60px;
+    max-width: none;
 }
 
 .kealoa-filter-actions {
@@ -1135,6 +1145,7 @@
     align-items: center;
     gap: 12px;
     margin-left: auto;
+    min-width: auto;
 }
 
 .kealoa-filter-reset {
@@ -1166,29 +1177,21 @@
     }
 
     .kealoa-filter-row {
-        flex-direction: column;
         gap: 10px;
     }
 
     .kealoa-filter-group {
-        width: 100%;
+        flex: 1 1 calc(50% - 10px);
+        min-width: 0;
     }
 
-    .kealoa-filter-input[data-filter="search"] {
-        width: 100%;
-    }
-
+    .kealoa-filter-input[data-filter="search"],
     .kealoa-filter-input[type="number"] {
-        width: 100%;
+        max-width: none;
     }
 
     .kealoa-filter-range {
         width: 100%;
-    }
-
-    .kealoa-filter-range .kealoa-filter-input {
-        flex: 1;
-        min-width: 0;
     }
 
     .kealoa-filter-topn {
@@ -1207,19 +1210,19 @@
         min-width: 0;
     }
 
-    .kealoa-filter-select {
-        width: 100%;
-    }
-
     .kealoa-filter-actions {
         margin-left: 0;
-        width: 100%;
+        flex: 1 1 100%;
     }
 }
 
 @media (max-width: 480px) {
     .kealoa-filter-controls {
         padding: 10px;
+    }
+
+    .kealoa-filter-group {
+        flex: 1 1 100%;
     }
 
     .kealoa-filter-group label {

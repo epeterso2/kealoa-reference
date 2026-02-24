@@ -2287,8 +2287,38 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-editor-puzzles">
                     <h2><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></h2>
 
+                    <div class="kealoa-filter-controls" data-target="kealoa-editor-puzzles-table">
+                        <div class="kealoa-filter-row">
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-ep-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                                <input type="text" id="kealoa-ep-search" class="kealoa-filter-input" data-filter="search" data-col="2" placeholder="<?php esc_attr_e('Constructor name...', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-ep-day"><?php esc_html_e('Day', 'kealoa-reference'); ?></label>
+                                <select id="kealoa-ep-day" class="kealoa-filter-select" data-filter="exact" data-col="0">
+                                    <option value=""><?php esc_html_e('All Days', 'kealoa-reference'); ?></option>
+                                    <option value="Mon"><?php esc_html_e('Monday', 'kealoa-reference'); ?></option>
+                                    <option value="Tue"><?php esc_html_e('Tuesday', 'kealoa-reference'); ?></option>
+                                    <option value="Wed"><?php esc_html_e('Wednesday', 'kealoa-reference'); ?></option>
+                                    <option value="Thu"><?php esc_html_e('Thursday', 'kealoa-reference'); ?></option>
+                                    <option value="Fri"><?php esc_html_e('Friday', 'kealoa-reference'); ?></option>
+                                    <option value="Sat"><?php esc_html_e('Saturday', 'kealoa-reference'); ?></option>
+                                    <option value="Sun"><?php esc_html_e('Sunday', 'kealoa-reference'); ?></option>
+                                </select>
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-ep-search-words"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></label>
+                                <input type="text" id="kealoa-ep-search-words" class="kealoa-filter-input" data-filter="search" data-col="4" placeholder="<?php esc_attr_e('e.g. KEALOA', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group kealoa-filter-actions">
+                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                <span class="kealoa-filter-count"></span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="kealoa-table-scroll">
-                    <table class="kealoa-table kealoa-editor-puzzles-table">
+                    <table class="kealoa-table kealoa-editor-puzzles-table" id="kealoa-editor-puzzles-table">
                         <thead>
                             <tr>
                                 <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
@@ -2419,7 +2449,32 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-editor-constructor-stats">
                     <h2><?php esc_html_e('Results by Constructor', 'kealoa-reference'); ?></h2>
 
-                    <table class="kealoa-table kealoa-editor-constructor-table">
+                    <div class="kealoa-filter-controls" data-target="kealoa-editor-constructor-table">
+                        <div class="kealoa-filter-row">
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-ec-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                                <input type="text" id="kealoa-ec-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Constructor name...', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-ec-min-clues"><?php esc_html_e('Min. Clues', 'kealoa-reference'); ?></label>
+                                <input type="number" id="kealoa-ec-min-clues" class="kealoa-filter-input" data-filter="min" data-col="2" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-ec-acc-min"><?php esc_html_e('Accuracy Range', 'kealoa-reference'); ?></label>
+                                <div class="kealoa-filter-range">
+                                    <input type="number" id="kealoa-ec-acc-min" class="kealoa-filter-input" data-filter="range-min" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
+                                    <span class="kealoa-filter-range-sep">&ndash;</span>
+                                    <input type="number" id="kealoa-ec-acc-max" class="kealoa-filter-input" data-filter="range-max" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
+                                </div>
+                            </div>
+                            <div class="kealoa-filter-group kealoa-filter-actions">
+                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                <span class="kealoa-filter-count"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="kealoa-table kealoa-editor-constructor-table" id="kealoa-editor-constructor-table">
                         <thead>
                             <tr>
                                 <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
