@@ -2516,6 +2516,78 @@ class Kealoa_DB {
         // Track round IDs already added to avoid duplicates
         $seen_round_ids = [];
 
+        // Track puzzle IDs already added to avoid duplicates
+        $seen_puzzle_ids = [];
+
+        // Helper to build a puzzle result object
+        $add_puzzle_result = function (object $puzzle) use (&$results, &$seen_puzzle_ids): void {
+            $pid = (int) $puzzle->puzzle_id;
+            if (isset($seen_puzzle_ids[$pid])) {
+                return;
+            }
+            $seen_puzzle_ids[$pid] = true;
+
+            $constructors = $this->get_puzzle_constructors($pid);
+            $con_names = array_map(fn($c) => $c->full_name, $constructors);
+            $day_name = date('l', strtotime($puzzle->publication_date));
+            $label = $day_name . ', ' . $puzzle->publication_date;
+            if (!empty($con_names)) {
+                $label .= ' — ' . implode(' & ', $con_names);
+            }
+            if (!empty($puzzle->editor_name)) {
+                $label .= ' (ed. ' . $puzzle->editor_name . ')';
+            }
+            $results[] = (object) [
+                'type' => 'puzzle',
+                'name' => $label,
+                'url'  => home_url('/kealoa/puzzle/' . $puzzle->publication_date . '/'),
+            ];
+        };
+
+        // Search puzzles by publication date
+        $date_puzzles = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT id as puzzle_id, publication_date, COALESCE(editor_name, '') as editor_name
+                FROM {$this->puzzles_table}
+                WHERE publication_date LIKE %s
+                ORDER BY publication_date DESC",
+                $like
+            )
+        );
+        foreach ($date_puzzles as $pz) {
+            $add_puzzle_result($pz);
+        }
+
+        // Search puzzles by constructor name
+        $con_puzzles = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT DISTINCT pz.id as puzzle_id, pz.publication_date, COALESCE(pz.editor_name, '') as editor_name
+                FROM {$this->puzzles_table} pz
+                INNER JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
+                INNER JOIN {$this->constructors_table} con ON pc.constructor_id = con.id
+                WHERE con.full_name LIKE %s
+                ORDER BY pz.publication_date DESC",
+                $like
+            )
+        );
+        foreach ($con_puzzles as $pz) {
+            $add_puzzle_result($pz);
+        }
+
+        // Search puzzles by editor name
+        $ed_puzzles = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT id as puzzle_id, publication_date, COALESCE(editor_name, '') as editor_name
+                FROM {$this->puzzles_table}
+                WHERE editor_name LIKE %s
+                ORDER BY publication_date DESC",
+                $like
+            )
+        );
+        foreach ($ed_puzzles as $pz) {
+            $add_puzzle_result($pz);
+        }
+
         // Helper to build a round result object
         $add_round_result = function (int $round_id) use (&$results, &$seen_round_ids): void {
             if (isset($seen_round_ids[$round_id])) {
