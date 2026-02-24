@@ -1721,11 +1721,15 @@ class Kealoa_Shortcodes {
                         <input type="number" id="kealoa-con-min-clues" class="kealoa-filter-input" data-filter="min" data-col="2" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
                     </div>
                     <div class="kealoa-filter-group">
+                        <label for="kealoa-con-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
+                        <input type="number" id="kealoa-con-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="3" min="1" placeholder="<?php esc_attr_e('e.g. 10', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
                         <label for="kealoa-con-acc-min"><?php esc_html_e('Accuracy Range', 'kealoa-reference'); ?></label>
                         <div class="kealoa-filter-range">
-                            <input type="number" id="kealoa-con-acc-min" class="kealoa-filter-input" data-filter="range-min" data-col="3" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
+                            <input type="number" id="kealoa-con-acc-min" class="kealoa-filter-input" data-filter="range-min" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
                             <span class="kealoa-filter-range-sep">&ndash;</span>
-                            <input type="number" id="kealoa-con-acc-max" class="kealoa-filter-input" data-filter="range-max" data-col="3" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
+                            <input type="number" id="kealoa-con-acc-max" class="kealoa-filter-input" data-filter="range-max" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
                         </div>
                     </div>
                     <div class="kealoa-filter-group kealoa-filter-actions">
@@ -1741,6 +1745,8 @@ class Kealoa_Shortcodes {
                         <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                     </tr>
                 </thead>
@@ -1752,7 +1758,9 @@ class Kealoa_Shortcodes {
                             </td>
                             <td><?php echo esc_html($constructor->puzzle_count); ?></td>
                             <td><?php echo esc_html($constructor->clue_count); ?></td>
-                            <td>
+                            <td><?php echo esc_html(number_format_i18n((int) $constructor->total_guesses)); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $constructor->correct_guesses)); ?></td>
+                            <td data-value="<?php echo esc_attr(number_format((float) $accuracy, 2, '.', '')); ?>">
                                 <?php
                                 $accuracy = $constructor->total_guesses > 0
                                     ? ($constructor->correct_guesses / $constructor->total_guesses) * 100
