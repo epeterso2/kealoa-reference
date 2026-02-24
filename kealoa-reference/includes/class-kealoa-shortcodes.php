@@ -1704,7 +1704,36 @@ class Kealoa_Shortcodes {
         ob_start();
         ?>
         <div class="kealoa-constructors-table-wrapper">
-            <table class="kealoa-table kealoa-constructors-table">
+            <div class="kealoa-filter-controls" data-target="kealoa-constructors-table">
+                <div class="kealoa-filter-row">
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-con-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                        <input type="text" id="kealoa-con-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Constructor name...', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-con-min-puzzles"><?php esc_html_e('Min. Puzzles', 'kealoa-reference'); ?></label>
+                        <input type="number" id="kealoa-con-min-puzzles" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 3', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-con-min-clues"><?php esc_html_e('Min. Clues', 'kealoa-reference'); ?></label>
+                        <input type="number" id="kealoa-con-min-clues" class="kealoa-filter-input" data-filter="min" data-col="2" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-con-acc-min"><?php esc_html_e('Accuracy Range', 'kealoa-reference'); ?></label>
+                        <div class="kealoa-filter-range">
+                            <input type="number" id="kealoa-con-acc-min" class="kealoa-filter-input" data-filter="range-min" data-col="3" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
+                            <span class="kealoa-filter-range-sep">&ndash;</span>
+                            <input type="number" id="kealoa-con-acc-max" class="kealoa-filter-input" data-filter="range-max" data-col="3" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
+                        </div>
+                    </div>
+                    <div class="kealoa-filter-group kealoa-filter-actions">
+                        <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                        <span class="kealoa-filter-count"></span>
+                    </div>
+                </div>
+            </div>
+
+            <table class="kealoa-table kealoa-constructors-table" id="kealoa-constructors-table">
                 <thead>
                     <tr>
                         <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
