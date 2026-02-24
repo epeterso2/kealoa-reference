@@ -1120,6 +1120,10 @@
     max-width: none;
 }
 
+.kealoa-filter-range .kealoa-filter-input[type="date"] {
+    min-width: 130px;
+}
+
 .kealoa-filter-range-sep {
     color: var(--pumice);
     font-weight: 600;

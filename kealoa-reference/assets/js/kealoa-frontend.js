@@ -566,6 +566,7 @@
      *   - Accuracy range (data-filter="range-min" / "range-max", data-col="N")
      *   - Top/Bottom N by accuracy (data-filter="topn-dir" + "topn-count")
      *   - Above/Below average (data-filter="vs-avg", data-avg="X")
+     *   - Date range (data-filter="date-min" / "date-max", data-col="N")
      *   - Year from row attribute (data-filter="year", reads data-year on <tr>)
      *   - Perfect score (data-filter="perfect", data-col="N", reads data-total on <td>)
      */
@@ -593,6 +594,8 @@
             var topnDirSelect = container.querySelector('[data-filter="topn-dir"]');
             var topnCountInput = container.querySelector('[data-filter="topn-count"]');
             var vsAvgSelect = container.querySelector('[data-filter="vs-avg"]');
+            var dateMinInput = container.querySelector('[data-filter="date-min"]');
+            var dateMaxInput = container.querySelector('[data-filter="date-max"]');
             var yearSelect = container.querySelector('[data-filter="year"]');
             var perfectSelect = container.querySelector('[data-filter="perfect"]');
             var resetBtn = container.querySelector('.kealoa-filter-reset');
@@ -620,6 +623,13 @@
 
                 var vsAvg = vsAvgSelect ? vsAvgSelect.value : '';
                 var avgVal = vsAvgSelect ? parseFloat(vsAvgSelect.getAttribute('data-avg')) : 0;
+
+                var dateMinStr = dateMinInput ? dateMinInput.value : '';
+                var dateMaxStr = dateMaxInput ? dateMaxInput.value : '';
+                var dateCol = dateMinInput ? parseInt(dateMinInput.getAttribute('data-col'), 10)
+                            : (dateMaxInput ? parseInt(dateMaxInput.getAttribute('data-col'), 10) : 1);
+                var dateMinTs = dateMinStr ? new Date(dateMinStr + 'T00:00:00').getTime() : NaN;
+                var dateMaxTs = dateMaxStr ? new Date(dateMaxStr + 'T23:59:59').getTime() : NaN;
 
                 var yearVal = yearSelect ? yearSelect.value : '';
 
@@ -691,6 +701,17 @@
                         if (vsAvg === 'above' && rowAcc < avgVal) {
                             show = false;
                         } else if (vsAvg === 'below' && rowAcc > avgVal) {
+                            show = false;
+                        }
+                    }
+
+                    // Date range filter
+                    if (show && (!isNaN(dateMinTs) || !isNaN(dateMaxTs))) {
+                        var cellDateTs = parseDateValue(getCellText(row, dateCol));
+                        if (!isNaN(dateMinTs) && cellDateTs < dateMinTs) {
+                            show = false;
+                        }
+                        if (!isNaN(dateMaxTs) && cellDateTs > dateMaxTs) {
                             show = false;
                         }
                     }

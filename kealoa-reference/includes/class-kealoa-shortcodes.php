@@ -2310,6 +2310,14 @@ class Kealoa_Shortcodes {
                                 <label for="kealoa-ep-search-words"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></label>
                                 <input type="text" id="kealoa-ep-search-words" class="kealoa-filter-input" data-filter="search" data-col="4" placeholder="<?php esc_attr_e('e.g. KEALOA', 'kealoa-reference'); ?>">
                             </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-ep-date-from"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></label>
+                                <div class="kealoa-filter-range">
+                                    <input type="date" id="kealoa-ep-date-from" class="kealoa-filter-input" data-filter="date-min" data-col="1">
+                                    <span class="kealoa-filter-range-sep">&ndash;</span>
+                                    <input type="date" id="kealoa-ep-date-to" class="kealoa-filter-input" data-filter="date-max" data-col="1">
+                                </div>
+                            </div>
                             <div class="kealoa-filter-group kealoa-filter-actions">
                                 <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
                                 <span class="kealoa-filter-count"></span>
