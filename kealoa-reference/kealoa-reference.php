@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.2.77
+ * Version: 1.2.78
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.2.77');
+define('KEALOA_VERSION', '1.2.78');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -279,6 +279,10 @@ function kealoa_rest_game_round(WP_REST_Request $request): WP_REST_Response {
 
     // Clues with per-clue guesses and constructor info
     $clues_raw = $db->get_round_clues($round_id);
+    $guessers = $db->get_round_guessers($round_id);
+    $guesser_ids = array_map(function ($g) {
+        return (int) $g->id;
+    }, $guessers);
     $clues = [];
 
     foreach ($clues_raw as $clue) {
@@ -292,15 +296,18 @@ function kealoa_rest_game_round(WP_REST_Request $request): WP_REST_Response {
             $constructors = implode(' & ', $names);
         }
 
-        // Get guesses for this clue
+        // Get guesses for this clue, filtered to round guessers
         $guesses_raw = $db->get_clue_guesses((int) $clue->id);
-        $guesses = array_map(function ($g) {
-            return [
-                'guesser_name' => $g->guesser_name,
-                'guessed_word' => $g->guessed_word,
-                'is_correct'   => (bool) $g->is_correct,
-            ];
-        }, $guesses_raw);
+        $guesses = [];
+        foreach ($guesses_raw as $g) {
+            if (in_array((int) $g->guesser_person_id, $guesser_ids, true)) {
+                $guesses[] = [
+                    'guesser_name' => $g->guesser_name,
+                    'guessed_word' => $g->guessed_word,
+                    'is_correct'   => (bool) $g->is_correct,
+                ];
+            }
+        }
 
         $clues[] = [
             'clue_number'            => (int) $clue->clue_number,
