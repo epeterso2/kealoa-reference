@@ -1238,48 +1238,6 @@ class Kealoa_Shortcodes {
 
                 <div class="kealoa-tab-panel" data-tab="puzzle">
 
-            <?php if (!empty($direction_results)): ?>
-                <div class="kealoa-direction-stats">
-                    <h2><?php esc_html_e('Results by Clue Direction', 'kealoa-reference'); ?></h2>
-
-                    <table class="kealoa-table kealoa-direction-table">
-                        <thead>
-                            <tr>
-                                <th data-sort="text"><?php esc_html_e('Direction', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($direction_results as $result): ?>
-                                <tr>
-                                    <td><?php
-                                        if ($result->direction === 'A') {
-                                            esc_html_e('Across', 'kealoa-reference');
-                                        } elseif ($result->direction === 'D') {
-                                            esc_html_e('Down', 'kealoa-reference');
-                                        } else {
-                                            esc_html_e('No Direction', 'kealoa-reference');
-                                        }
-                                    ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php
-                                        $pct = $result->total_answered > 0
-                                            ? ($result->correct_count / $result->total_answered) * 100
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-
             <?php if (!empty($day_of_week_results)): ?>
                 <div class="kealoa-day-of-week-stats">
                     <h2><?php esc_html_e('Results by Puzzle Day of Week', 'kealoa-reference'); ?></h2>
@@ -1331,6 +1289,48 @@ class Kealoa_Shortcodes {
                             <?php foreach ($decade_results as $result): ?>
                                 <tr>
                                     <td><?php echo esc_html($result->decade . 's'); ?></td>
+                                    <td><?php echo esc_html($result->total_answered); ?></td>
+                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td>
+                                        <?php
+                                        $pct = $result->total_answered > 0
+                                            ? ($result->correct_count / $result->total_answered) * 100
+                                            : 0;
+                                        echo Kealoa_Formatter::format_percentage($pct);
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($direction_results)): ?>
+                <div class="kealoa-direction-stats">
+                    <h2><?php esc_html_e('Results by Clue Direction', 'kealoa-reference'); ?></h2>
+
+                    <table class="kealoa-table kealoa-direction-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="text"><?php esc_html_e('Direction', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($direction_results as $result): ?>
+                                <tr>
+                                    <td><?php
+                                        if ($result->direction === 'A') {
+                                            esc_html_e('Across', 'kealoa-reference');
+                                        } elseif ($result->direction === 'D') {
+                                            esc_html_e('Down', 'kealoa-reference');
+                                        } else {
+                                            esc_html_e('No Direction', 'kealoa-reference');
+                                        }
+                                    ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
                                     <td>
