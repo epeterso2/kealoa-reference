@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "kealoa/puzzle-view",
+    "version": "1.0.0",
+    "title": "KEALOA Puzzle View",
+    "category": "widgets",
+    "icon": "grid-view",
+    "description": "Displays a single puzzle with constructor images, clue details, and round information.",
+    "keywords": ["kealoa", "puzzle", "constructors", "crossword"],
+    "supports": {
+        "html": false,
+        "align": ["wide", "full"]
+    },
+    "textdomain": "kealoa-reference",
+    "attributes": {
+        "puzzleDate": {
+            "type": "string",
+            "default": ""
+        }
+    },
+    "editorScript": "file:../../assets/js/blocks-editor.js",
+    "render": "file:./render.php"
+}

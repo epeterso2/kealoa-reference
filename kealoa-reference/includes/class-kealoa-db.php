@@ -616,6 +616,49 @@ class Kealoa_DB {
     }
 
     /**
+     * Get clues for a puzzle, with round details
+     */
+    public function get_puzzle_clues(int $puzzle_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT c.*,
+                r.id as round_id,
+                r.round_date,
+                r.round_number,
+                r.episode_number
+            FROM {$this->clues_table} c
+            LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
+            WHERE c.puzzle_id = %d
+            ORDER BY r.round_date ASC, r.round_number ASC, c.clue_number ASC",
+            $puzzle_id
+        );
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get player results for clues from a specific puzzle
+     */
+    public function get_puzzle_player_results(int $puzzle_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT
+                p.id as person_id,
+                p.full_name,
+                COUNT(g.id) as total_guesses,
+                COALESCE(SUM(g.is_correct), 0) as correct_guesses
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
+            INNER JOIN {$this->persons_table} p ON g.guesser_person_id = p.id
+            WHERE c.puzzle_id = %d
+            GROUP BY p.id, p.full_name
+            ORDER BY (COALESCE(SUM(g.is_correct), 0) / COUNT(g.id)) DESC, COUNT(g.id) DESC",
+            $puzzle_id
+        );
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get constructors for a puzzle
      */
     public function get_puzzle_constructors(int $puzzle_id): array {

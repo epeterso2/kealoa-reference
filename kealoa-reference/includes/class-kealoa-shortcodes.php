@@ -42,6 +42,7 @@ class Kealoa_Shortcodes {
         add_shortcode('kealoa_editors_table', [$this, 'render_editors_table']);
         add_shortcode('kealoa_editor', [$this, 'render_editor']);
         add_shortcode('kealoa_puzzles_table', [$this, 'render_puzzles_table']);
+        add_shortcode('kealoa_puzzle', [$this, 'render_puzzle']);
         add_shortcode('kealoa_version', [$this, 'render_version']);
     }
 
@@ -2306,6 +2307,293 @@ class Kealoa_Shortcodes {
                 </tbody>
             </table>
             </div>
+        </div>
+        <?php
+        return ob_get_clean();
+
+        }); // end get_cached_or_render
+    }
+
+    /**
+     * Render single puzzle view shortcode
+     *
+     * [kealoa_puzzle date="2024-01-15"]
+     */
+    public function render_puzzle(array $atts = []): string {
+        $atts = shortcode_atts([
+            'date' => '',
+        ], $atts, 'kealoa_puzzle');
+
+        $puzzle_date = sanitize_text_field($atts['date']);
+        if (empty($puzzle_date)) {
+            return '<p class="kealoa-error">' . esc_html__('Please specify a puzzle date.', 'kealoa-reference') . '</p>';
+        }
+
+        $puzzle = $this->db->get_puzzle_by_date($puzzle_date);
+        if (!$puzzle) {
+            return '<p class="kealoa-error">' . esc_html__('Puzzle not found.', 'kealoa-reference') . '</p>';
+        }
+
+        $puzzle_id = (int) $puzzle->id;
+
+        return $this->get_cached_or_render('puzzle_' . $puzzle_id, function () use ($puzzle_id, $puzzle) {
+
+        $constructors = $this->db->get_puzzle_constructors($puzzle_id);
+        $clues = $this->db->get_puzzle_clues($puzzle_id);
+        $player_results = $this->db->get_puzzle_player_results($puzzle_id);
+
+        // Group clues by round
+        $rounds_clues = [];
+        foreach ($clues as $clue) {
+            $rid = (int) $clue->round_id;
+            if (!isset($rounds_clues[$rid])) {
+                $rounds_clues[$rid] = [
+                    'round_id' => $rid,
+                    'round_date' => $clue->round_date,
+                    'round_number' => $clue->round_number,
+                    'episode_number' => $clue->episode_number,
+                    'clues' => [],
+                ];
+            }
+            $rounds_clues[$rid]['clues'][] = $clue;
+        }
+
+        $formatted_date = date('n/j/Y', strtotime($puzzle->publication_date));
+        $day_name = date('l', strtotime($puzzle->publication_date));
+
+        ob_start();
+        ?>
+        <div class="kealoa-puzzle-view">
+            <div class="kealoa-puzzle-header">
+                <div class="kealoa-puzzle-info">
+                    <div class="kealoa-puzzle-details">
+                        <h2 class="kealoa-puzzle-title"><?php echo esc_html($day_name . ', ' . $formatted_date); ?></h2>
+
+                        <p>
+                            <strong class="kealoa-meta-label"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></strong>
+                            <span>
+                                <?php
+                                if (!empty($constructors)) {
+                                    $links = array_map(function($c) {
+                                        return Kealoa_Formatter::format_constructor_link((int) $c->id, $c->full_name);
+                                    }, $constructors);
+                                    echo Kealoa_Formatter::format_list_with_and($links);
+                                } else {
+                                    echo '—';
+                                }
+                                ?>
+                            </span>
+                        </p>
+
+                        <?php if (!empty($puzzle->editor_name)): ?>
+                        <p>
+                            <strong class="kealoa-meta-label"><?php esc_html_e('Editor', 'kealoa-reference'); ?></strong>
+                            <span><?php echo Kealoa_Formatter::format_editor_link($puzzle->editor_name); ?></span>
+                        </p>
+                        <?php endif; ?>
+
+                        <p>
+                            <strong class="kealoa-meta-label"><?php esc_html_e('XWordInfo', 'kealoa-reference'); ?></strong>
+                            <span><?php echo Kealoa_Formatter::format_puzzle_xwordinfo_link($puzzle->publication_date); ?></span>
+                        </p>
+
+                        <?php if (!empty($rounds_clues)): ?>
+                        <p>
+                            <strong class="kealoa-meta-label"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></strong>
+                            <span>
+                                <?php
+                                $round_links = [];
+                                foreach ($rounds_clues as $rc) {
+                                    $round_links[] = Kealoa_Formatter::format_round_date_link((int) $rc['round_id'], $rc['round_date']);
+                                }
+                                echo implode(', ', $round_links);
+                                ?>
+                            </span>
+                        </p>
+                        <?php endif; ?>
+
+                        <?php if (!empty($rounds_clues)): ?>
+                        <p>
+                            <strong class="kealoa-meta-label"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></strong>
+                            <span>
+                                <?php
+                                $sol_parts = [];
+                                foreach ($rounds_clues as $rc) {
+                                    $solutions = $this->db->get_round_solutions((int) $rc['round_id']);
+                                    $sol_parts[] = Kealoa_Formatter::format_solution_words_link((int) $rc['round_id'], $solutions);
+                                }
+                                echo implode(', ', $sol_parts);
+                                ?>
+                            </span>
+                        </p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <?php if (!empty($constructors)): ?>
+                <div class="kealoa-puzzle-constructors-images">
+                    <?php foreach ($constructors as $con): ?>
+                        <?php
+                        $con_media_id = (int) ($con->media_id ?? 0);
+                        $con_image_url = '';
+                        $con_image_source = '';
+
+                        if ($con_media_id > 0) {
+                            $media_src = wp_get_attachment_image_src($con_media_id, 'medium');
+                            if ($media_src) {
+                                $con_image_url = $media_src[0];
+                                $con_image_source = 'media';
+                            }
+                        }
+
+                        if (empty($con_image_source)) {
+                            $con_image_url = Kealoa_Formatter::xwordinfo_image_url_from_name($con->full_name);
+                            $con_image_source = 'xwordinfo';
+                        }
+
+                        $con_slug = str_replace(' ', '_', $con->full_name);
+                        $con_url = home_url('/kealoa/constructor/' . urlencode($con_slug) . '/');
+                        ?>
+                        <div class="kealoa-puzzle-constructor">
+                            <a href="<?php echo esc_url($con_url); ?>">
+                                <?php if ($con_image_source === 'media'): ?>
+                                    <img src="<?php echo esc_url($con_image_url); ?>"
+                                         alt="<?php echo esc_attr($con->full_name); ?>"
+                                         class="kealoa-entity-image" />
+                                <?php else: ?>
+                                    <?php echo Kealoa_Formatter::format_xwordinfo_image($con_image_url, $con->full_name); ?>
+                                <?php endif; ?>
+                            </a>
+                            <span class="kealoa-puzzle-constructor-name"><?php echo esc_html($con->full_name); ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+            </div>
+
+            <?php if (!empty($clues)): ?>
+            <div class="kealoa-tabs">
+                <div class="kealoa-tab-nav">
+                    <button class="kealoa-tab-button active" data-tab="clues"><?php esc_html_e('Clues', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="by-player"><?php esc_html_e('By Player', 'kealoa-reference'); ?></button>
+                </div>
+
+                <div class="kealoa-tab-panel active" data-tab="clues">
+
+            <?php foreach ($rounds_clues as $rc): ?>
+                <div class="kealoa-puzzle-round-clues">
+                    <?php if (count($rounds_clues) > 1): ?>
+                    <h3>
+                        <?php
+                        echo sprintf(
+                            /* translators: %s: round date link */
+                            esc_html__('Round: %s', 'kealoa-reference'),
+                            Kealoa_Formatter::format_round_date_link((int) $rc['round_id'], $rc['round_date'])
+                        );
+                        ?>
+                    </h3>
+                    <?php endif; ?>
+
+                    <div class="kealoa-table-scroll">
+                    <table class="kealoa-table kealoa-puzzle-clues-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="number"><?php esc_html_e('#', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Clue Ref', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Clue Text', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Answer', 'kealoa-reference'); ?></th>
+                                <?php
+                                // Get guessers for this round
+                                $round_guessers = $this->db->get_round_guessers((int) $rc['round_id']);
+                                foreach ($round_guessers as $guesser):
+                                ?>
+                                    <th class="kealoa-guesser-col">
+                                        <?php echo Kealoa_Formatter::format_person_link((int) $guesser->id, $guesser->full_name); ?>
+                                    </th>
+                                <?php endforeach; ?>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($rc['clues'] as $clue): ?>
+                                <?php $clue_guesses = $this->db->get_clue_guesses((int) $clue->id); ?>
+                                <tr>
+                                    <td class="kealoa-clue-number"><?php echo esc_html($clue->clue_number); ?></td>
+                                    <td class="kealoa-clue-ref">
+                                        <?php echo esc_html(Kealoa_Formatter::format_clue_direction((int) $clue->puzzle_clue_number, $clue->puzzle_clue_direction)); ?>
+                                    </td>
+                                    <td class="kealoa-clue-text"><?php echo esc_html($clue->clue_text); ?></td>
+                                    <td class="kealoa-correct-answer">
+                                        <strong><?php echo esc_html($clue->correct_answer); ?></strong>
+                                    </td>
+                                    <?php foreach ($round_guessers as $guesser): ?>
+                                        <td class="kealoa-guess">
+                                            <?php
+                                            $guess = null;
+                                            foreach ($clue_guesses as $g) {
+                                                if ($g->guesser_person_id == $guesser->id) {
+                                                    $guess = $g;
+                                                    break;
+                                                }
+                                            }
+                                            if ($guess) {
+                                                $is_correct = (bool) $guess->is_correct;
+                                                $css_class = $is_correct ? 'kealoa-guess-correct' : 'kealoa-guess-incorrect';
+                                                echo '<span class="' . $css_class . '">' . esc_html($guess->guess_text) . '</span>';
+                                            } else {
+                                                echo '—';
+                                            }
+                                            ?>
+                                        </td>
+                                    <?php endforeach; ?>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+
+                </div><!-- end Clues tab -->
+
+                <div class="kealoa-tab-panel" data-tab="by-player">
+
+            <?php if (!empty($player_results)): ?>
+                <div class="kealoa-puzzle-player-stats">
+                    <h2><?php esc_html_e('Results by Player', 'kealoa-reference'); ?></h2>
+
+                    <table class="kealoa-table kealoa-puzzle-player-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="text"><?php esc_html_e('Player', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($player_results as $result): ?>
+                                <tr>
+                                    <td><?php echo Kealoa_Formatter::format_person_link((int) $result->person_id, $result->full_name); ?></td>
+                                    <td><?php echo esc_html($result->total_guesses); ?></td>
+                                    <td><?php echo esc_html($result->correct_guesses); ?></td>
+                                    <td>
+                                        <?php
+                                        $pct = $result->total_guesses > 0
+                                            ? ($result->correct_guesses / $result->total_guesses) * 100
+                                            : 0;
+                                        echo Kealoa_Formatter::format_percentage($pct);
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+
+                </div><!-- end By Player tab -->
+            </div><!-- end kealoa-tabs -->
+            <?php endif; ?>
         </div>
         <?php
         return ob_get_clean();

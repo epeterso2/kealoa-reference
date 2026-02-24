@@ -40,6 +40,7 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
             'players'      => (object) ['name' => 'players',      'label' => 'KEALOA Players'],
             'constructors' => (object) ['name' => 'constructors', 'label' => 'KEALOA Constructors'],
             'editors'      => (object) ['name' => 'editors',      'label' => 'KEALOA Editors'],
+            'puzzles'      => (object) ['name' => 'puzzles',      'label' => 'KEALOA Puzzles'],
         ];
     }
 
@@ -61,6 +62,7 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
             'players'      => $this->get_player_urls($max, $offset),
             'constructors' => $this->get_constructor_urls($max, $offset),
             'editors'      => $this->get_editor_urls($max, $offset),
+            'puzzles'      => $this->get_puzzle_urls($max, $offset),
             default        => [],
         };
     }
@@ -79,6 +81,7 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
             'players'      => $this->db->count_persons(),
             'constructors' => $this->db->count_constructors(),
             'editors'      => $this->count_editors(),
+            'puzzles'      => $this->db->count_puzzles(),
             default        => 0,
         };
 
@@ -162,6 +165,26 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
         return $urls;
     }
 
+    /**
+     * @return array<int, array{loc: string}>
+     */
+    private function get_puzzle_urls(int $limit, int $offset): array {
+        $puzzles = $this->db->get_puzzles([
+            'limit'   => $limit,
+            'offset'  => $offset,
+            'orderby' => 'publication_date',
+            'order'   => 'DESC',
+        ]);
+
+        $urls = [];
+        foreach ($puzzles as $puzzle) {
+            $urls[] = [
+                'loc' => home_url('/kealoa/puzzle/' . $puzzle->publication_date . '/'),
+            ];
+        }
+        return $urls;
+    }
+
     // =========================================================================
     // EDITOR HELPERS (editors are not a first-class entity with an id)
     // =========================================================================
@@ -223,6 +246,9 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
         }
         foreach ($this->get_editor_urls(50000, 0) as $u) {
             $urls[] = array_merge($u, ['subtype' => 'editors']);
+        }
+        foreach ($this->get_puzzle_urls(50000, 0) as $u) {
+            $urls[] = array_merge($u, ['subtype' => 'puzzles']);
         }
 
         return $urls;

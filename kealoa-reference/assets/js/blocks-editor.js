@@ -10,7 +10,7 @@
     const { registerBlockType } = wp.blocks;
     const { createElement, Fragment } = wp.element;
     const { InspectorControls } = wp.blockEditor;
-    const { PanelBody, SelectControl, RangeControl, Placeholder } = wp.components;
+    const { PanelBody, SelectControl, TextControl, Placeholder } = wp.components;
     const { __ } = wp.i18n;
     const { serverSideRender: ServerSideRender } = wp;
 
@@ -615,6 +615,87 @@
                 block: 'kealoa/puzzles-table',
                 attributes: props.attributes
             });
+        },
+
+        save: function () {
+            return null;
+        }
+    });
+
+    /**
+     * KEALOA Puzzle View Block
+     */
+    registerBlockType('kealoa/puzzle-view', {
+        title: __('KEALOA Puzzle View', 'kealoa-reference'),
+        description: __('Displays a single puzzle with constructor images, clue details, and round information.', 'kealoa-reference'),
+        icon: 'grid-view',
+        category: 'widgets',
+        keywords: [__('kealoa', 'kealoa-reference'), __('puzzle', 'kealoa-reference'), __('constructors', 'kealoa-reference'), __('crossword', 'kealoa-reference')],
+        attributes: {
+            puzzleDate: {
+                type: 'string',
+                default: ''
+            }
+        },
+
+        edit: function (props) {
+            const { attributes, setAttributes } = props;
+            const { puzzleDate } = attributes;
+
+            if (!puzzleDate) {
+                return createElement(
+                    Fragment,
+                    null,
+                    createElement(
+                        InspectorControls,
+                        null,
+                        createElement(
+                            PanelBody,
+                            { title: __('Puzzle Selection', 'kealoa-reference'), initialOpen: true },
+                            createElement(TextControl, {
+                                label: __('Puzzle Date (YYYY-MM-DD)', 'kealoa-reference'),
+                                value: puzzleDate,
+                                onChange: function (value) { setAttributes({ puzzleDate: value }); }
+                            })
+                        )
+                    ),
+                    createElement(
+                        Placeholder,
+                        {
+                            icon: 'grid-view',
+                            label: __('KEALOA Puzzle View', 'kealoa-reference'),
+                            instructions: __('Enter a puzzle date (YYYY-MM-DD) in the block settings.', 'kealoa-reference')
+                        },
+                        createElement(TextControl, {
+                            value: puzzleDate,
+                            placeholder: __('e.g. 2024-01-15', 'kealoa-reference'),
+                            onChange: function (value) { setAttributes({ puzzleDate: value }); }
+                        })
+                    )
+                );
+            }
+
+            return createElement(
+                Fragment,
+                null,
+                createElement(
+                    InspectorControls,
+                    null,
+                    createElement(
+                        PanelBody,
+                        { title: __('Puzzle Selection', 'kealoa-reference'), initialOpen: true },
+                        createElement(TextControl, {
+                            label: __('Puzzle Date (YYYY-MM-DD)', 'kealoa-reference'),
+                            value: puzzleDate,
+                            onChange: function (value) { setAttributes({ puzzleDate: value }); }
+                        })
+                    )
+                ),
+                createElement(ServerSideRender, {
+                    block: 'kealoa/puzzle-view',
+                    attributes: attributes
+                })
+            );
         },
 
         save: function () {

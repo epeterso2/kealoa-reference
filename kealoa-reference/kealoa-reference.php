@@ -3,7 +3,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://epeterso2.com/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.2.85
+ * Version: 1.2.86
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.2.85');
+define('KEALOA_VERSION', '1.2.86');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -380,6 +380,12 @@ function kealoa_register_rewrite_rules(): void {
         'index.php?kealoa_editor_name=$matches[1]',
         'top'
     );
+
+    add_rewrite_rule(
+        '^kealoa/puzzle/([0-9]{4}-[0-9]{2}-[0-9]{2})/?$',
+        'index.php?kealoa_puzzle_date=$matches[1]',
+        'top'
+    );
 }
 
 /**
@@ -390,6 +396,7 @@ function kealoa_query_vars(array $vars): array {
     $vars[] = 'kealoa_round_id';
     $vars[] = 'kealoa_constructor_name';
     $vars[] = 'kealoa_editor_name';
+    $vars[] = 'kealoa_puzzle_date';
     return $vars;
 }
 
@@ -404,6 +411,7 @@ function kealoa_template_redirect(): void {
     $round_id = get_query_var('kealoa_round_id');
     $constructor_name = get_query_var('kealoa_constructor_name');
     $editor_name = get_query_var('kealoa_editor_name');
+    $puzzle_date = get_query_var('kealoa_puzzle_date');
 
     $title = '';
     $content = '';
@@ -456,6 +464,19 @@ function kealoa_template_redirect(): void {
         $title = sprintf(__('%s - Editor', 'kealoa-reference'), $decoded);
         $content = $shortcodes->render_editor(['name' => $decoded]);
         $is_kealoa = true;
+    } elseif ($puzzle_date) {
+        $db = new Kealoa_DB();
+        $puzzle = $db->get_puzzle_by_date($puzzle_date);
+        if (!$puzzle) {
+            wp_die(__('Puzzle not found.', 'kealoa-reference'), '', ['response' => 404]);
+        }
+        $shortcodes = new Kealoa_Shortcodes();
+        $formatted_date = date('n/j/Y', strtotime($puzzle->publication_date));
+        $title = sprintf(__('Puzzle: %s', 'kealoa-reference'), $formatted_date);
+        $content = $shortcodes->render_puzzle(['date' => $puzzle->publication_date]);
+        $is_kealoa = true;
+        $GLOBALS['kealoa_object_type'] = 'puzzle';
+        $GLOBALS['kealoa_object_id'] = $puzzle->id;
     }
 
     if (!$is_kealoa) {

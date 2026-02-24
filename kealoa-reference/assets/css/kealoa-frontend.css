@@ -680,6 +680,117 @@
 }
 
 /* ==========================================================================
+   Puzzle View
+   ========================================================================== */
+
+.kealoa-puzzle-view {
+    margin: 20px 0;
+}
+
+.kealoa-puzzle-view .kealoa-table {
+    width: auto;
+}
+
+.kealoa-puzzle-view .kealoa-table th,
+.kealoa-puzzle-view .kealoa-table td {
+    white-space: nowrap;
+}
+
+.kealoa-puzzle-header {
+    background: linear-gradient(135deg, var(--cloud-white) 0%, var(--pale-sand) 100%);
+    padding: 30px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.kealoa-puzzle-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.kealoa-puzzle-details {
+    flex: 1;
+    min-width: 250px;
+    overflow: hidden;
+}
+
+.kealoa-puzzle-title {
+    margin: 0 0 15px 0;
+    font-size: 28px;
+    color: var(--driftwood-dark);
+}
+
+.kealoa-puzzle-details p {
+    display: flex;
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+.kealoa-meta-label {
+    min-width: 140px;
+    flex-shrink: 0;
+    color: var(--pumice);
+}
+
+.kealoa-puzzle-constructors-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 16px;
+    justify-content: center;
+}
+
+.kealoa-puzzle-constructor {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.kealoa-puzzle-constructor img {
+    height: 200px;
+    width: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.kealoa-puzzle-constructor-name {
+    font-size: 0.85em;
+    color: var(--pumice);
+    text-align: center;
+}
+
+.kealoa-puzzle-round-clues h3 {
+    margin-top: 25px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--deep-lagoon);
+    color: var(--driftwood-dark);
+}
+
+.kealoa-puzzle-clues-table {
+    font-size: 13px;
+    table-layout: auto;
+}
+
+.kealoa-puzzle-clues-table th,
+.kealoa-puzzle-clues-table td {
+    padding: 8px 6px;
+}
+
+.kealoa-puzzle-clues-table th {
+    white-space: normal;
+}
+
+.kealoa-puzzle-player-stats h2 {
+    margin: 30px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--deep-lagoon);
+    color: var(--driftwood-dark);
+}
+
+/* ==========================================================================
    Responsive Styles
    ========================================================================== */
 
@@ -694,10 +805,11 @@
         padding: 8px 10px;
     }
 
-    /* Person/constructor/editor info: stack vertically */
+    /* Person/constructor/editor/puzzle info: stack vertically */
     .kealoa-person-info,
     .kealoa-constructor-info,
-    .kealoa-editor-info {
+    .kealoa-editor-info,
+    .kealoa-puzzle-info {
         flex-direction: column;
         align-items: center;
         text-align: center;
@@ -705,9 +817,18 @@
 
     .kealoa-person-details,
     .kealoa-constructor-details,
-    .kealoa-editor-details {
+    .kealoa-editor-details,
+    .kealoa-puzzle-details {
         min-width: 0;
         width: 100%;
+    }
+
+    .kealoa-puzzle-details p {
+        flex-direction: column;
+    }
+
+    .kealoa-meta-label {
+        min-width: auto;
     }
 
     /* Person view: constrain all tables within tabs */
@@ -773,14 +894,16 @@
     .kealoa-round-header,
     .kealoa-person-header,
     .kealoa-constructor-header,
-    .kealoa-editor-header {
+    .kealoa-editor-header,
+    .kealoa-puzzle-header {
         padding: 15px;
     }
 
     /* Reduce entity name size */
     .kealoa-person-name,
     .kealoa-constructor-name,
-    .kealoa-editor-name {
+    .kealoa-editor-name,
+    .kealoa-puzzle-title {
         font-size: 22px;
     }
 
@@ -819,6 +942,7 @@
 
     /* Round player photos */
     .kealoa-round-player img,
+    .kealoa-puzzle-constructor img,
     .kealoa-xwordinfo-image,
     .kealoa-entity-image,
     .kealoa-player-image {
@@ -872,7 +996,9 @@
     .kealoa-constructor-view .kealoa-table th,
     .kealoa-constructor-view .kealoa-table td,
     .kealoa-editor-view .kealoa-table th,
-    .kealoa-editor-view .kealoa-table td {
+    .kealoa-editor-view .kealoa-table td,
+    .kealoa-puzzle-view .kealoa-table th,
+    .kealoa-puzzle-view .kealoa-table td {
         white-space: normal;
     }
 
@@ -917,7 +1043,8 @@
     .kealoa-round-header,
     .kealoa-person-header,
     .kealoa-constructor-header,
-    .kealoa-editor-header {
+    .kealoa-editor-header,
+    .kealoa-puzzle-header {
         padding: 12px;
     }
 
@@ -927,7 +1054,8 @@
 
     .kealoa-person-name,
     .kealoa-constructor-name,
-    .kealoa-editor-name {
+    .kealoa-editor-name,
+    .kealoa-puzzle-title {
         font-size: 20px;
     }
 
@@ -956,7 +1084,8 @@
     /* Person details: allow narrower */
     .kealoa-person-details,
     .kealoa-constructor-details,
-    .kealoa-editor-details {
+    .kealoa-editor-details,
+    .kealoa-puzzle-details {
         min-width: 0;
     }
 
@@ -972,6 +1101,7 @@
     }
 
     .kealoa-round-player img,
+    .kealoa-puzzle-constructor img,
     .kealoa-xwordinfo-image,
     .kealoa-entity-image,
     .kealoa-player-image {
