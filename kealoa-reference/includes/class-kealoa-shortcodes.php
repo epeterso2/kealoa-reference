@@ -847,11 +847,11 @@ class Kealoa_Shortcodes {
             <div class="kealoa-tabs">
                 <div class="kealoa-tab-nav">
                     <button class="kealoa-tab-button active" data-tab="player"><?php esc_html_e('Overall Stats', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="puzzle"><?php esc_html_e('Puzzle Stats', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="round"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></button>
                     <button class="kealoa-tab-button" data-tab="puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="puzzle"><?php esc_html_e('By Puzzle', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="constructor"><?php esc_html_e('By Constructor', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="editor"><?php esc_html_e('By Editor', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="round"><?php esc_html_e('Rounds Played', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="constructor"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="editor"><?php esc_html_e('Editors', 'kealoa-reference'); ?></button>
                 </div>
 
                 <div class="kealoa-tab-panel active" data-tab="player">
