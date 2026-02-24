@@ -2569,16 +2569,12 @@ class Kealoa_Shortcodes {
             $rounds_clues[$rid]['clues'][] = $clue;
         }
 
-        $formatted_date = date('n/j/Y', strtotime($puzzle->publication_date));
-        $day_name = date('l', strtotime($puzzle->publication_date));
-
         ob_start();
         ?>
         <div class="kealoa-puzzle-view">
             <div class="kealoa-puzzle-header">
                 <div class="kealoa-puzzle-info">
                     <div class="kealoa-puzzle-details">
-                        <h2 class="kealoa-puzzle-title"><?php echo esc_html($day_name . ', ' . $formatted_date); ?></h2>
 
                         <p>
                             <strong class="kealoa-meta-label"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></strong>
