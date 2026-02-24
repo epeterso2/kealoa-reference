@@ -831,8 +831,22 @@ class Kealoa_DB {
     public function get_rounds_overview_stats(): object {
         $total_rounds = $this->count_rounds();
 
+        $total_players = (int) $this->wpdb->get_var(
+            "SELECT COUNT(DISTINCT person_id) FROM {$this->round_guessers_table}"
+        );
+
         $total_clues = (int) $this->wpdb->get_var(
             "SELECT COUNT(*) FROM {$this->clues_table}"
+        );
+
+        $total_puzzles = (int) $this->wpdb->get_var(
+            "SELECT COUNT(DISTINCT puzzle_id) FROM {$this->clues_table} WHERE puzzle_id IS NOT NULL"
+        );
+
+        $total_constructors = (int) $this->wpdb->get_var(
+            "SELECT COUNT(DISTINCT pc.constructor_id)
+             FROM {$this->puzzle_constructors_table} pc
+             INNER JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id"
         );
 
         $guess_stats = $this->wpdb->get_row(
@@ -843,8 +857,11 @@ class Kealoa_DB {
         $total_correct = (int) ($guess_stats->total_correct ?? 0);
 
         return (object) [
+            'total_players' => $total_players,
             'total_rounds' => $total_rounds,
             'total_clues' => $total_clues,
+            'total_puzzles' => $total_puzzles,
+            'total_constructors' => $total_constructors,
             'total_guesses' => $total_guesses,
             'total_correct' => $total_correct,
             'accuracy' => $total_guesses > 0

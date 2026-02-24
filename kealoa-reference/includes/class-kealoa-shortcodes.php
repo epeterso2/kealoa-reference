@@ -128,12 +128,24 @@ class Kealoa_Shortcodes {
         ?>
         <div class="kealoa-stats-grid">
             <div class="kealoa-stat-card">
+                <span class="kealoa-stat-value"><?php echo esc_html($overview->total_players); ?></span>
+                <span class="kealoa-stat-label"><?php esc_html_e('Players', 'kealoa-reference'); ?></span>
+            </div>
+            <div class="kealoa-stat-card">
                 <span class="kealoa-stat-value"><?php echo esc_html($overview->total_rounds); ?></span>
                 <span class="kealoa-stat-label"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></span>
             </div>
             <div class="kealoa-stat-card">
                 <span class="kealoa-stat-value"><?php echo esc_html($overview->total_clues); ?></span>
                 <span class="kealoa-stat-label"><?php esc_html_e('Clues', 'kealoa-reference'); ?></span>
+            </div>
+            <div class="kealoa-stat-card">
+                <span class="kealoa-stat-value"><?php echo esc_html($overview->total_puzzles); ?></span>
+                <span class="kealoa-stat-label"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></span>
+            </div>
+            <div class="kealoa-stat-card">
+                <span class="kealoa-stat-value"><?php echo esc_html($overview->total_constructors); ?></span>
+                <span class="kealoa-stat-label"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></span>
             </div>
             <div class="kealoa-stat-card">
                 <span class="kealoa-stat-value"><?php echo esc_html($overview->total_guesses); ?></span>
