@@ -2092,6 +2092,30 @@ class Kealoa_DB {
     }
 
     /**
+     * Get all puzzles with constructor/round details for the puzzles table
+     */
+    public function get_all_puzzles_with_details(): array {
+        $sql = "SELECT
+                pz.id as puzzle_id,
+                pz.publication_date,
+                COALESCE(pz.editor_name, 'Unknown') as editor_name,
+                GROUP_CONCAT(DISTINCT con.full_name ORDER BY pc.constructor_order ASC SEPARATOR ', ') as constructor_names,
+                GROUP_CONCAT(DISTINCT con.id ORDER BY pc.constructor_order ASC) as constructor_ids,
+                GROUP_CONCAT(DISTINCT r.id ORDER BY r.round_date ASC, r.round_number ASC) as round_ids,
+                GROUP_CONCAT(DISTINCT r.round_date ORDER BY r.round_date ASC, r.round_number ASC) as round_dates,
+                GROUP_CONCAT(DISTINCT r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers
+            FROM {$this->puzzles_table} pz
+            LEFT JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
+            LEFT JOIN {$this->constructors_table} con ON pc.constructor_id = con.id
+            LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
+            LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
+            GROUP BY pz.id, pz.publication_date, pz.editor_name
+            ORDER BY pz.publication_date DESC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get co-constructors for a constructor's puzzles
      */
     public function get_puzzle_co_constructors(int $puzzle_id, int $exclude_constructor_id): array {

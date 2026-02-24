@@ -599,4 +599,27 @@
         }
     });
 
+    /**
+     * KEALOA Puzzles Table Block
+     */
+    registerBlockType('kealoa/puzzles-table', {
+        title: __('KEALOA Puzzles Table', 'kealoa-reference'),
+        description: __('Displays a table of all puzzles with publication date, constructors, editor, and round details.', 'kealoa-reference'),
+        icon: 'grid-view',
+        category: 'widgets',
+        keywords: [__('kealoa', 'kealoa-reference'), __('puzzles', 'kealoa-reference'), __('table', 'kealoa-reference'), __('crossword', 'kealoa-reference')],
+        attributes: {},
+
+        edit: function (props) {
+            return createElement(ServerSideRender, {
+                block: 'kealoa/puzzles-table',
+                attributes: props.attributes
+            });
+        },
+
+        save: function () {
+            return null;
+        }
+    });
+
 })(window.wp);

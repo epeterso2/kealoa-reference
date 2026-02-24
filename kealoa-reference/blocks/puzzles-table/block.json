@@ -1,0 +1,19 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "kealoa/puzzles-table",
+    "version": "1.0.0",
+    "title": "KEALOA Puzzles Table",
+    "category": "widgets",
+    "icon": "grid-view",
+    "description": "Displays a table of all puzzles with publication date, constructors, editor, and round details.",
+    "keywords": ["kealoa", "puzzles", "table", "crossword"],
+    "supports": {
+        "html": false,
+        "align": ["wide", "full"]
+    },
+    "textdomain": "kealoa-reference",
+    "attributes": {},
+    "editorScript": "file:../../assets/js/blocks-editor.js",
+    "render": "file:./render.php"
+}
