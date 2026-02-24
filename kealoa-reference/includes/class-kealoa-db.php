@@ -561,17 +561,8 @@ class Kealoa_DB {
      * @return int Number of puzzles updated
      */
     public function auto_populate_editor_names(): int {
-        $editors = [
-            ['name' => 'Margaret P. Farrar', 'start' => '1942-02-15', 'end' => '1969-01-05'],
-            ['name' => 'Will Weng',         'start' => '1969-01-06', 'end' => '1977-02-27'],
-            ['name' => 'Eugene T. Maleska', 'start' => '1977-02-28', 'end' => '1993-09-05'],
-            ['name' => 'Mel Taub',          'start' => '1993-09-06', 'end' => '1993-11-20'],
-            ['name' => 'Will Shortz',       'start' => '1993-11-21', 'end' => '2099-12-31'],
-            ['name' => 'Joel Fagliano',     'start' => '2024-03-14', 'end' => '2024-12-29'],
-        ];
-
         $updated = 0;
-        foreach ($editors as $editor) {
+        foreach (self::get_editor_date_ranges() as $editor) {
             $result = $this->wpdb->query(
                 $this->wpdb->prepare(
                     "UPDATE {$this->puzzles_table}
@@ -588,6 +579,40 @@ class Kealoa_DB {
         }
 
         return $updated;
+    }
+
+    /**
+     * Get the NYT crossword editor date ranges.
+     *
+     * Later entries override earlier ones for overlapping date ranges.
+     *
+     * @return array<array{name: string, start: string, end: string}>
+     */
+    public static function get_editor_date_ranges(): array {
+        return [
+            ['name' => 'Margaret P. Farrar', 'start' => '1942-02-15', 'end' => '1969-01-05'],
+            ['name' => 'Will Weng',         'start' => '1969-01-06', 'end' => '1977-02-27'],
+            ['name' => 'Eugene T. Maleska', 'start' => '1977-02-28', 'end' => '1993-09-05'],
+            ['name' => 'Mel Taub',          'start' => '1993-09-06', 'end' => '1993-11-20'],
+            ['name' => 'Will Shortz',       'start' => '1993-11-21', 'end' => '2099-12-31'],
+            ['name' => 'Joel Fagliano',     'start' => '2024-03-14', 'end' => '2024-12-29'],
+        ];
+    }
+
+    /**
+     * Get the editor name for a given publication date based on historical date ranges.
+     *
+     * @param string $date Publication date in Y-m-d format
+     * @return string|null Editor name, or null if no editor matches
+     */
+    public static function get_editor_for_date(string $date): ?string {
+        $editor_name = null;
+        foreach (self::get_editor_date_ranges() as $editor) {
+            if ($date >= $editor['start'] && $date <= $editor['end']) {
+                $editor_name = $editor['name'];
+            }
+        }
+        return $editor_name;
     }
 
     /**

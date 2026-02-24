@@ -311,10 +311,12 @@ class Kealoa_Import {
                 // Use existing puzzle ID
                 $puzzle_id = (int) $existing->id;
             } else {
-                // Create new puzzle
+                // Create new puzzle, auto-populating editor if not provided
                 $create_data = ['publication_date' => $publication_date];
-                if (isset($row['editor_name'])) {
-                    $create_data['editor_name'] = !empty($row['editor_name']) ? $row['editor_name'] : null;
+                if (isset($row['editor_name']) && !empty($row['editor_name'])) {
+                    $create_data['editor_name'] = $row['editor_name'];
+                } else {
+                    $create_data['editor_name'] = Kealoa_DB::get_editor_for_date($publication_date);
                 }
                 $puzzle_id = $this->db->create_puzzle($create_data);
                 
@@ -532,9 +534,11 @@ class Kealoa_Import {
                 // Find or create the puzzle
                 $puzzle = $this->db->get_puzzle_by_date($puzzle_date);
                 if (!$puzzle) {
-                    $new_puzzle_id = $this->db->create_puzzle([
+                    $create_data = [
                         'publication_date' => $puzzle_date,
-                    ]);
+                        'editor_name' => Kealoa_DB::get_editor_for_date($puzzle_date),
+                    ];
+                    $new_puzzle_id = $this->db->create_puzzle($create_data);
                     if (!$new_puzzle_id) {
                         $errors[] = "Line {$line}: Could not create puzzle for date {$puzzle_date}";
                         $skipped++;
