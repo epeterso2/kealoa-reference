@@ -26,8 +26,8 @@
  *   GET /constructors/{id}               - Single constructor with stats & puzzles
  *   GET /editors                         - List editors with stats
  *   GET /editors/{name}                  - Single editor with stats & puzzles
- *   GET /puzzles                         - List puzzles (paginated)
- *   GET /puzzles/{id}                    - Single puzzle with constructors & clues
+ *   GET /puzzles                         - List puzzles (paginated, with URLs)
+ *   GET /puzzles/{id}                    - Single puzzle with clues, player results & rounds
  *   GET /clues/{id}                      - Single clue with guesses
  *   GET /search                          - Full-text search across all entities
  *   GET /leaderboard/scores              - Highest round scores
@@ -653,14 +653,17 @@ class Kealoa_REST_API {
 
         $items = array_map(function ($p) {
             $constructors = $this->db->get_puzzle_constructors((int) $p->id);
+            $day_name = date('l', strtotime($p->publication_date));
             return [
                 'id'               => (int) $p->id,
                 'publication_date' => $p->publication_date,
+                'day_of_week'      => $day_name,
                 'editor_name'      => $p->editor_name ?? '',
                 'constructors'     => array_map(fn($c) => [
                     'id'        => (int) $c->id,
                     'full_name' => $c->full_name,
                 ], $constructors),
+                'url'              => home_url('/kealoa/puzzle/' . $p->publication_date . '/'),
             ];
         }, $puzzles);
 
@@ -675,16 +678,73 @@ class Kealoa_REST_API {
             return new WP_REST_Response(['message' => 'Puzzle not found.'], 404);
         }
 
-        $constructors = $this->db->get_puzzle_constructors($id);
+        $constructors   = $this->db->get_puzzle_constructors($id);
+        $clues          = $this->db->get_puzzle_clues($id);
+        $player_results = $this->db->get_puzzle_player_results($id);
+
+        // Group clues by round
+        $rounds_clues = [];
+        foreach ($clues as $clue) {
+            $rid = (int) $clue->round_id;
+            if (!isset($rounds_clues[$rid])) {
+                $rounds_clues[$rid] = [
+                    'round_id'       => $rid,
+                    'round_date'     => $clue->round_date,
+                    'round_number'   => (int) ($clue->round_number ?? 1),
+                    'episode_number' => (int) ($clue->episode_number ?? 0),
+                    'round_url'      => home_url('/kealoa/round/' . $rid . '/'),
+                    'clues'          => [],
+                ];
+            }
+
+            $clue_guesses = $this->db->get_clue_guesses((int) $clue->id);
+            $rounds_clues[$rid]['clues'][] = [
+                'id'                    => (int) $clue->id,
+                'clue_number'           => (int) $clue->clue_number,
+                'puzzle_clue_number'    => $clue->puzzle_clue_number ? (int) $clue->puzzle_clue_number : null,
+                'puzzle_clue_direction' => $clue->puzzle_clue_direction ?? null,
+                'clue_text'             => $clue->clue_text,
+                'correct_answer'        => $clue->correct_answer,
+                'guesses'               => array_map(fn($g) => [
+                    'guesser_name' => $g->guesser_name,
+                    'guessed_word' => $g->guessed_word,
+                    'is_correct'   => (bool) $g->is_correct,
+                ], $clue_guesses),
+            ];
+        }
+
+        // Get solution words for each round
+        foreach ($rounds_clues as $rid => &$rc) {
+            $solutions = $this->db->get_round_solutions($rid);
+            $rc['solution_words'] = array_map(fn($s) => $s->word, $solutions);
+        }
+        unset($rc);
+
+        $day_name = date('l', strtotime($puzzle->publication_date));
 
         return new WP_REST_Response([
             'id'               => (int) $puzzle->id,
             'publication_date' => $puzzle->publication_date,
+            'day_of_week'      => $day_name,
             'editor_name'      => $puzzle->editor_name ?? '',
             'constructors'     => array_map(fn($c) => [
                 'id'        => (int) $c->id,
                 'full_name' => $c->full_name,
+                'url'       => home_url('/kealoa/constructor/' . urlencode(str_replace(' ', '_', $c->full_name)) . '/'),
             ], $constructors),
+            'rounds'           => array_values($rounds_clues),
+            'player_results'   => array_map(fn($r) => [
+                'person_id'       => (int) $r->person_id,
+                'full_name'       => $r->full_name,
+                'total_guesses'   => (int) $r->total_guesses,
+                'correct_guesses' => (int) $r->correct_guesses,
+                'accuracy'        => $r->total_guesses > 0
+                    ? round(($r->correct_guesses / $r->total_guesses) * 100, 1)
+                    : 0,
+                'url'             => home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $r->full_name)) . '/'),
+            ], $player_results),
+            'xwordinfo_url'    => 'https://www.xwordinfo.com/Crossword?date=' . $puzzle->publication_date,
+            'url'              => home_url('/kealoa/puzzle/' . $puzzle->publication_date . '/'),
         ], 200);
     }
 

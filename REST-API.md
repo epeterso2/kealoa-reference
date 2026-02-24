@@ -661,10 +661,12 @@ Returns a paginated list of puzzles with their constructors.
 {
   "id": 10,
   "publication_date": "2024-01-10",
+  "day_of_week": "Wednesday",
   "editor_name": "Will Shortz",
   "constructors": [
     { "id": 1, "full_name": "Constructor Name" }
-  ]
+  ],
+  "url": "https://example.com/kealoa/puzzle/2024-01-10/"
 }
 ```
 
@@ -676,7 +678,7 @@ Returns a paginated list of puzzles with their constructors.
 GET /puzzles/{id}
 ```
 
-Returns a single puzzle with its constructors.
+Returns a single puzzle with full details including clues grouped by round, player results, and links.
 
 **Parameters:**
 
@@ -690,10 +692,54 @@ Returns a single puzzle with its constructors.
 {
   "id": 10,
   "publication_date": "2024-01-10",
+  "day_of_week": "Wednesday",
   "editor_name": "Will Shortz",
   "constructors": [
-    { "id": 1, "full_name": "Constructor Name" }
-  ]
+    {
+      "id": 1,
+      "full_name": "Constructor Name",
+      "url": "https://example.com/kealoa/constructor/Constructor_Name/"
+    }
+  ],
+  "rounds": [
+    {
+      "round_id": 5,
+      "round_date": "2024-03-15",
+      "round_number": 1,
+      "episode_number": 100,
+      "round_url": "https://example.com/kealoa/round/5/",
+      "solution_words": ["WORD1", "WORD2"],
+      "clues": [
+        {
+          "id": 42,
+          "clue_number": 1,
+          "puzzle_clue_number": 15,
+          "puzzle_clue_direction": "Across",
+          "clue_text": "Clue text here",
+          "correct_answer": "ANSWER",
+          "guesses": [
+            {
+              "guesser_name": "Player Name",
+              "guessed_word": "ANSWER",
+              "is_correct": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "player_results": [
+    {
+      "person_id": 1,
+      "full_name": "Player Name",
+      "total_guesses": 5,
+      "correct_guesses": 4,
+      "accuracy": 80.0,
+      "url": "https://example.com/kealoa/person/Player_Name/"
+    }
+  ],
+  "xwordinfo_url": "https://www.xwordinfo.com/Crossword?date=2024-01-10",
+  "url": "https://example.com/kealoa/puzzle/2024-01-10/"
 }
 ```
 
