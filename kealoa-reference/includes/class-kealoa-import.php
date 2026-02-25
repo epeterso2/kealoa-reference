@@ -329,10 +329,13 @@ class Kealoa_Import {
             
             // Handle constructors if provided - always update
             if (!empty($row['constructors'])) {
-                $constructor_names = array_map('trim', explode(',', $row['constructors']));
+                $constructor_names = array_map('trim', preg_split('/,|\band\b/i', $row['constructors']));
                 $constructor_ids = [];
                 
                 foreach ($constructor_names as $name) {
+                    if (empty($name)) {
+                        continue;
+                    }
                     $constructor = $this->find_or_create_constructor($name);
                     if ($constructor) {
                         $constructor_ids[] = $constructor->id;
@@ -557,7 +560,7 @@ class Kealoa_Import {
                 }
                 
                 if (!empty($constructor_value)) {
-                    $constructor_names = array_map('trim', explode(',', $constructor_value));
+                    $constructor_names = array_map('trim', preg_split('/,|\band\b/i', $constructor_value));
                     $constructor_ids = [];
                     
                     foreach ($constructor_names as $name) {
