@@ -192,7 +192,6 @@ class Kealoa_Shortcodes {
         ob_start();
         ?>
         <div class="kealoa-rounds-table-wrapper">
-            <?php echo $this->render_rounds_stats_html($overview); ?>
 
             <div class="kealoa-tabs">
                 <div class="kealoa-tab-nav">
@@ -201,6 +200,7 @@ class Kealoa_Shortcodes {
                 </div>
 
                 <div class="kealoa-tab-panel" data-tab="stats">
+            <?php echo $this->render_rounds_stats_html($overview); ?>
 
             <?php $yearly_stats = $this->db->get_rounds_stats_by_year(); ?>
             <?php if (!empty($yearly_stats)): ?>
