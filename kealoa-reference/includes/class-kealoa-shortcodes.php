@@ -223,17 +223,17 @@ class Kealoa_Shortcodes {
                     <?php foreach ($yearly_stats as $ys): ?>
                         <tr>
                             <td><?php echo esc_html($ys->year); ?></td>
-                            <td><?php echo esc_html($ys->total_rounds); ?></td>
-                            <td><?php echo esc_html($ys->total_clues); ?></td>
-                            <td><?php echo esc_html($ys->total_guesses); ?></td>
-                            <td><?php echo esc_html($ys->total_correct); ?></td>
-                            <td>
-                                <?php
-                                $pct = (int) $ys->total_guesses > 0
-                                    ? ((int) $ys->total_correct / (int) $ys->total_guesses) * 100
-                                    : 0;
-                                echo Kealoa_Formatter::format_percentage($pct);
-                                ?>
+                            <td><?php echo esc_html(number_format_i18n((int) $ys->total_rounds)); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $ys->total_clues)); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $ys->total_guesses)); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $ys->total_correct)); ?></td>
+                            <?php
+                            $pct = (int) $ys->total_guesses > 0
+                                ? ((int) $ys->total_correct / (int) $ys->total_guesses) * 100
+                                : 0;
+                            ?>
+                            <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                <?php echo Kealoa_Formatter::format_percentage($pct); ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -307,7 +307,23 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-tab-panel active" data-tab="rounds-played">
 
             <h3><?php esc_html_e('All Rounds', 'kealoa-reference'); ?></h3>
-            <table class="kealoa-table kealoa-rounds-table">
+            <div class="kealoa-filter-controls" data-target="kealoa-rounds-table">
+                <div class="kealoa-filter-row">
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-rd-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                        <input type="text" id="kealoa-rd-search" class="kealoa-filter-input" data-filter="search" data-col="1" placeholder="<?php esc_attr_e('Solution words...', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-rd-desc"><?php esc_html_e('Description', 'kealoa-reference'); ?></label>
+                        <input type="text" id="kealoa-rd-desc" class="kealoa-filter-input" data-filter="search" data-col="3" placeholder="<?php esc_attr_e('Description...', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group kealoa-filter-actions">
+                        <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                        <span class="kealoa-filter-count"></span>
+                    </div>
+                </div>
+            </div>
+            <table class="kealoa-table kealoa-rounds-table" id="kealoa-rounds-table">
                 <thead>
                     <tr>
                         <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
@@ -876,15 +892,15 @@ class Kealoa_Shortcodes {
 
                 <div class="kealoa-stats-grid">
                     <div class="kealoa-stat-card">
-                        <span class="kealoa-stat-value"><?php echo esc_html($stats->rounds_played); ?></span>
+                        <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->rounds_played)); ?></span>
                         <span class="kealoa-stat-label"><?php esc_html_e('Rounds Played', 'kealoa-reference'); ?></span>
                     </div>
                     <div class="kealoa-stat-card">
-                        <span class="kealoa-stat-value"><?php echo esc_html($stats->total_clues_answered); ?></span>
+                        <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->total_clues_answered)); ?></span>
                         <span class="kealoa-stat-label"><?php esc_html_e('Clues Answered', 'kealoa-reference'); ?></span>
                     </div>
                     <div class="kealoa-stat-card">
-                        <span class="kealoa-stat-value"><?php echo esc_html($stats->total_correct); ?></span>
+                        <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->total_correct)); ?></span>
                         <span class="kealoa-stat-label"><?php esc_html_e('Correct Answers', 'kealoa-reference'); ?></span>
                     </div>
                     <div class="kealoa-stat-card">
@@ -1144,7 +1160,7 @@ class Kealoa_Shortcodes {
                             <tr>
                                 <th data-sort="number"><?php esc_html_e('Year', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Best Score', 'kealoa-reference'); ?></th>
@@ -1165,13 +1181,13 @@ class Kealoa_Shortcodes {
                                     <td><?php echo esc_html($result->rounds_played); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php
-                                        $pct = $result->total_answered > 0
-                                            ? ($result->correct_count / $result->total_answered) * 100
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
+                                    <?php
+                                    $pct = $result->total_answered > 0
+                                        ? ($result->correct_count / $result->total_answered) * 100
+                                        : 0;
+                                    ?>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
                                     </td>
                                     <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($yr_best_score_ids); ?>"><?php echo esc_html((int) $result->best_score); ?></a></td>
                                     <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($yr_best_streak_ids); ?>"><?php echo esc_html($yr_best_streak_val); ?></a></td>
@@ -1190,7 +1206,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="number"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -1202,13 +1218,13 @@ class Kealoa_Shortcodes {
                                     <td><?php echo esc_html($cn); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php
-                                        $pct = $result->total_answered > 0
-                                            ? ($result->correct_count / $result->total_answered) * 100
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
+                                    <?php
+                                    $pct = $result->total_answered > 0
+                                        ? ($result->correct_count / $result->total_answered) * 100
+                                        : 0;
+                                    ?>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -1225,7 +1241,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="number"><?php esc_html_e('Length', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -1236,13 +1252,13 @@ class Kealoa_Shortcodes {
                                     <td><?php echo esc_html($result->answer_length); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php
-                                        $pct = $result->total_answered > 0
-                                            ? ($result->correct_count / $result->total_answered) * 100
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
+                                    <?php
+                                    $pct = $result->total_answered > 0
+                                        ? ($result->correct_count / $result->total_answered) * 100
+                                        : 0;
+                                    ?>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -1411,7 +1427,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -1422,13 +1438,13 @@ class Kealoa_Shortcodes {
                                     <td><?php echo esc_html(Kealoa_Formatter::get_day_name((int) $result->day_of_week)); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php
-                                        $pct = $result->total_answered > 0
-                                            ? ($result->correct_count / $result->total_answered) * 100
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
+                                    <?php
+                                    $pct = $result->total_answered > 0
+                                        ? ($result->correct_count / $result->total_answered) * 100
+                                        : 0;
+                                    ?>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -1445,7 +1461,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="number"><?php esc_html_e('Decade', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -1456,13 +1472,13 @@ class Kealoa_Shortcodes {
                                     <td><?php echo esc_html($result->decade . 's'); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php
-                                        $pct = $result->total_answered > 0
-                                            ? ($result->correct_count / $result->total_answered) * 100
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
+                                    <?php
+                                    $pct = $result->total_answered > 0
+                                        ? ($result->correct_count / $result->total_answered) * 100
+                                        : 0;
+                                    ?>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -1479,7 +1495,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="text"><?php esc_html_e('Direction', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -1498,13 +1514,13 @@ class Kealoa_Shortcodes {
                                     ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php
-                                        $pct = $result->total_answered > 0
-                                            ? ($result->correct_count / $result->total_answered) * 100
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
+                                    <?php
+                                    $pct = $result->total_answered > 0
+                                        ? ($result->correct_count / $result->total_answered) * 100
+                                        : 0;
+                                    ?>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -1528,8 +1544,8 @@ class Kealoa_Shortcodes {
                                 <input type="text" id="kealoa-constructor-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Constructor name...', 'kealoa-reference'); ?>">
                             </div>
                             <div class="kealoa-filter-group">
-                                <label for="kealoa-constructor-min-answered"><?php esc_html_e('Min. Answered', 'kealoa-reference'); ?></label>
-                                <input type="number" id="kealoa-constructor-min-answered" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                                <label for="kealoa-constructor-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
+                                <input type="number" id="kealoa-constructor-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
                             </div>
                             <div class="kealoa-filter-group">
                                 <label for="kealoa-constructor-acc-min"><?php esc_html_e('Accuracy Range', 'kealoa-reference'); ?></label>
@@ -1579,7 +1595,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -1590,13 +1606,13 @@ class Kealoa_Shortcodes {
                                     <td><?php echo Kealoa_Formatter::format_constructor_link((int) $result->constructor_id, $result->full_name); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php
-                                        $pct = $result->total_answered > 0
-                                            ? ($result->correct_count / $result->total_answered) * 100
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
+                                    <?php
+                                    $pct = $result->total_answered > 0
+                                        ? ($result->correct_count / $result->total_answered) * 100
+                                        : 0;
+                                    ?>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -1613,11 +1629,28 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-editor-stats">
                     <h2><?php esc_html_e('Results by Editor', 'kealoa-reference'); ?></h2>
 
-                    <table class="kealoa-table kealoa-editor-table">
+                    <div class="kealoa-filter-controls" data-target="kealoa-person-editor-table">
+                        <div class="kealoa-filter-row">
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-pe-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                                <input type="text" id="kealoa-pe-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Editor name...', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-pe-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
+                                <input type="number" id="kealoa-pe-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group kealoa-filter-actions">
+                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                <span class="kealoa-filter-count"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="kealoa-table kealoa-editor-table" id="kealoa-person-editor-table">
                         <thead>
                             <tr>
                                 <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -1628,13 +1661,13 @@ class Kealoa_Shortcodes {
                                     <td><?php echo Kealoa_Formatter::format_editor_link($result->editor_name); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php
-                                        $pct = $result->total_answered > 0
-                                            ? ($result->correct_count / $result->total_answered) * 100
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
+                                    <?php
+                                    $pct = $result->total_answered > 0
+                                        ? ($result->correct_count / $result->total_answered) * 100
+                                        : 0;
+                                    ?>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -1809,7 +1842,36 @@ class Kealoa_Shortcodes {
         ob_start();
         ?>
         <div class="kealoa-persons-table-wrapper">
-            <table class="kealoa-table kealoa-persons-table">
+            <div class="kealoa-filter-controls" data-target="kealoa-persons-table">
+                <div class="kealoa-filter-row">
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ps-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                        <input type="text" id="kealoa-ps-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ps-min-rounds"><?php esc_html_e('Min. Rounds', 'kealoa-reference'); ?></label>
+                        <input type="number" id="kealoa-ps-min-rounds" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 3', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ps-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
+                        <input type="number" id="kealoa-ps-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="2" min="1" placeholder="<?php esc_attr_e('e.g. 10', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ps-acc-min"><?php esc_html_e('Accuracy Range', 'kealoa-reference'); ?></label>
+                        <div class="kealoa-filter-range">
+                            <input type="number" id="kealoa-ps-acc-min" class="kealoa-filter-input" data-filter="range-min" data-col="4" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
+                            <span class="kealoa-filter-range-sep">&ndash;</span>
+                            <input type="number" id="kealoa-ps-acc-max" class="kealoa-filter-input" data-filter="range-max" data-col="4" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
+                        </div>
+                    </div>
+                    <div class="kealoa-filter-group kealoa-filter-actions">
+                        <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                        <span class="kealoa-filter-count"></span>
+                    </div>
+                </div>
+            </div>
+
+            <table class="kealoa-table kealoa-persons-table" id="kealoa-persons-table">
                 <thead>
                     <tr>
                         <th data-sort="text"><?php esc_html_e('Player', 'kealoa-reference'); ?></th>
@@ -1828,16 +1890,16 @@ class Kealoa_Shortcodes {
                             <td>
                                 <?php echo Kealoa_Formatter::format_person_link($pid, $person->full_name); ?>
                             </td>
-                            <td><?php echo esc_html($person->rounds_played); ?></td>
-                            <td><?php echo esc_html($person->clues_guessed); ?></td>
-                            <td><?php echo esc_html($person->correct_guesses); ?></td>
-                            <td>
-                                <?php
-                                $accuracy = $person->clues_guessed > 0
-                                    ? ($person->correct_guesses / $person->clues_guessed) * 100
-                                    : 0;
-                                echo Kealoa_Formatter::format_percentage((float) $accuracy);
-                                ?>
+                            <td><?php echo esc_html(number_format_i18n((int) $person->rounds_played)); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $person->clues_guessed)); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $person->correct_guesses)); ?></td>
+                            <?php
+                            $accuracy = $person->clues_guessed > 0
+                                ? ($person->correct_guesses / $person->clues_guessed) * 100
+                                : 0;
+                            ?>
+                            <td data-value="<?php echo esc_attr(number_format((float) $accuracy, 2, '.', '')); ?>">
+                                <?php echo Kealoa_Formatter::format_percentage((float) $accuracy); ?>
                             </td>
                             <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($best_score_round_ids[$pid] ?? [], $pid); ?>"><?php echo esc_html($highest_scores[$pid] ?? 0); ?></a></td>
                             <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($best_streak_round_ids[$pid] ?? [], $pid); ?>"><?php echo esc_html($longest_streaks[$pid] ?? 0); ?></a></td>
@@ -2000,12 +2062,12 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-constructor-info">
                     <?php if (!empty($con_image_url)): ?>
                         <div class="kealoa-constructor-image">
-                            <?php if ($con_image_source === 'xwordinfo'): ?>
-                                <?php echo Kealoa_Formatter::format_xwordinfo_image($con_image_url, $constructor->full_name); ?>
-                            <?php else: ?>
+                            <?php if ($con_image_source === 'media'): ?>
                                 <img src="<?php echo esc_url($con_image_url); ?>"
                                      alt="<?php echo esc_attr($constructor->full_name); ?>"
                                      class="kealoa-entity-image" />
+                            <?php else: ?>
+                                <?php echo Kealoa_Formatter::format_xwordinfo_image($con_image_url, $constructor->full_name); ?>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
@@ -2036,7 +2098,7 @@ class Kealoa_Shortcodes {
                         <?php endif; ?>
 
                         <?php if ($matching_person && !empty($matching_person->home_page_url)): ?>
-                            <p class="kealoa-constructor-xwordinfo">
+                            <p class="kealoa-constructor-homepage">
                                 <?php echo Kealoa_Formatter::format_home_page_link($matching_person->home_page_url); ?>
                             </p>
                         <?php endif; ?>
@@ -2044,44 +2106,49 @@ class Kealoa_Shortcodes {
                 </div>
             </div>
 
-            <?php if ($stats): ?>
-            <div class="kealoa-stats-grid">
-                <div class="kealoa-stat-card">
-                    <span class="kealoa-stat-value"><?php echo esc_html($stats->puzzle_count); ?></span>
-                    <span class="kealoa-stat-label"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></span>
-                </div>
-                <div class="kealoa-stat-card">
-                    <span class="kealoa-stat-value"><?php echo esc_html($stats->clue_count); ?></span>
-                    <span class="kealoa-stat-label"><?php esc_html_e('Clues', 'kealoa-reference'); ?></span>
-                </div>
-                <div class="kealoa-stat-card">
-                    <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n($stats->total_guesses)); ?></span>
-                    <span class="kealoa-stat-label"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></span>
-                </div>
-                <div class="kealoa-stat-card">
-                    <span class="kealoa-stat-value"><?php echo esc_html($stats->correct_guesses); ?></span>
-                    <span class="kealoa-stat-label"><?php esc_html_e('Correct', 'kealoa-reference'); ?></span>
-                </div>
-                <div class="kealoa-stat-card">
-                    <span class="kealoa-stat-value"><?php
-                        $accuracy = (int) $stats->total_guesses > 0
-                            ? ((int) $stats->correct_guesses / (int) $stats->total_guesses) * 100
-                            : 0;
-                        echo Kealoa_Formatter::format_percentage($accuracy);
-                    ?></span>
-                    <span class="kealoa-stat-label"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></span>
-                </div>
-            </div>
-            <?php endif; ?>
-
             <div class="kealoa-tabs">
                 <div class="kealoa-tab-nav">
-                    <button class="kealoa-tab-button active" data-tab="puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="by-player"><?php esc_html_e('Players', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="by-editor"><?php esc_html_e('Editors', 'kealoa-reference'); ?></button>
+                    <?php if ($stats): ?>
+                    <button class="kealoa-tab-button active" data-tab="stats"><?php esc_html_e('Stats', 'kealoa-reference'); ?></button>
+                    <?php endif; ?>
+                    <button class="kealoa-tab-button<?php echo empty($stats) ? ' active' : ''; ?>" data-tab="puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="player"><?php esc_html_e('Players', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="editor"><?php esc_html_e('Editors', 'kealoa-reference'); ?></button>
                 </div>
 
-                <div class="kealoa-tab-panel active" data-tab="puzzles">
+                <?php if ($stats): ?>
+                <div class="kealoa-tab-panel active" data-tab="stats">
+                    <div class="kealoa-stats-grid">
+                        <div class="kealoa-stat-card">
+                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->puzzle_count)); ?></span>
+                            <span class="kealoa-stat-label"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></span>
+                        </div>
+                        <div class="kealoa-stat-card">
+                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->clue_count)); ?></span>
+                            <span class="kealoa-stat-label"><?php esc_html_e('Clues', 'kealoa-reference'); ?></span>
+                        </div>
+                        <div class="kealoa-stat-card">
+                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->total_guesses)); ?></span>
+                            <span class="kealoa-stat-label"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></span>
+                        </div>
+                        <div class="kealoa-stat-card">
+                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->correct_guesses)); ?></span>
+                            <span class="kealoa-stat-label"><?php esc_html_e('Correct', 'kealoa-reference'); ?></span>
+                        </div>
+                        <div class="kealoa-stat-card">
+                            <span class="kealoa-stat-value"><?php
+                                $accuracy = (int) $stats->total_guesses > 0
+                                    ? ((int) $stats->correct_guesses / (int) $stats->total_guesses) * 100
+                                    : 0;
+                                echo Kealoa_Formatter::format_percentage($accuracy);
+                            ?></span>
+                            <span class="kealoa-stat-label"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></span>
+                        </div>
+                    </div>
+                </div><!-- end Stats tab -->
+                <?php endif; ?>
+
+                <div class="kealoa-tab-panel<?php echo empty($stats) ? ' active' : ''; ?>" data-tab="puzzles">
 
             <?php if (!empty($puzzles)): ?>
                 <?php
@@ -2098,8 +2165,34 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-constructor-puzzles">
                     <h2><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></h2>
 
+                    <div class="kealoa-filter-controls" data-target="kealoa-constructor-puzzles-table">
+                        <div class="kealoa-filter-row">
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-cp-day"><?php esc_html_e('Day', 'kealoa-reference'); ?></label>
+                                <select id="kealoa-cp-day" class="kealoa-filter-select" data-filter="exact" data-col="0">
+                                    <option value=""><?php esc_html_e('All Days', 'kealoa-reference'); ?></option>
+                                    <option value="Mon"><?php esc_html_e('Monday', 'kealoa-reference'); ?></option>
+                                    <option value="Tue"><?php esc_html_e('Tuesday', 'kealoa-reference'); ?></option>
+                                    <option value="Wed"><?php esc_html_e('Wednesday', 'kealoa-reference'); ?></option>
+                                    <option value="Thu"><?php esc_html_e('Thursday', 'kealoa-reference'); ?></option>
+                                    <option value="Fri"><?php esc_html_e('Friday', 'kealoa-reference'); ?></option>
+                                    <option value="Sat"><?php esc_html_e('Saturday', 'kealoa-reference'); ?></option>
+                                    <option value="Sun"><?php esc_html_e('Sunday', 'kealoa-reference'); ?></option>
+                                </select>
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-cp-editor"><?php esc_html_e('Editor', 'kealoa-reference'); ?></label>
+                                <input type="text" id="kealoa-cp-editor" class="kealoa-filter-input" data-filter="search" data-col="<?php echo $has_co_constructors ? '3' : '2'; ?>" placeholder="<?php esc_attr_e('Editor name...', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group kealoa-filter-actions">
+                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                <span class="kealoa-filter-count"></span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="kealoa-table-scroll">
-                    <table class="kealoa-table kealoa-constructor-puzzles-table">
+                    <table class="kealoa-table kealoa-constructor-puzzles-table" id="kealoa-constructor-puzzles-table">
                         <thead>
                             <tr>
                                 <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
@@ -2194,17 +2287,34 @@ class Kealoa_Shortcodes {
 
                 </div><!-- end Puzzles tab -->
 
-                <div class="kealoa-tab-panel" data-tab="by-player">
+                <div class="kealoa-tab-panel" data-tab="player">
 
             <?php if (!empty($player_results)): ?>
                 <div class="kealoa-constructor-player-stats">
                     <h2><?php esc_html_e('Results by Player', 'kealoa-reference'); ?></h2>
 
-                    <table class="kealoa-table kealoa-constructor-player-table">
+                    <div class="kealoa-filter-controls" data-target="kealoa-constructor-player-table">
+                        <div class="kealoa-filter-row">
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-cpl-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                                <input type="text" id="kealoa-cpl-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-cpl-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
+                                <input type="number" id="kealoa-cpl-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group kealoa-filter-actions">
+                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                <span class="kealoa-filter-count"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="kealoa-table kealoa-constructor-player-table" id="kealoa-constructor-player-table">
                         <thead>
                             <tr>
                                 <th data-sort="text"><?php esc_html_e('Player', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -2215,13 +2325,13 @@ class Kealoa_Shortcodes {
                                     <td><?php echo Kealoa_Formatter::format_person_link((int) $result->person_id, $result->full_name); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php
-                                        $pct = $result->total_answered > 0
-                                            ? ($result->correct_count / $result->total_answered) * 100
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
+                                    <?php
+                                    $pct = $result->total_answered > 0
+                                        ? ($result->correct_count / $result->total_answered) * 100
+                                        : 0;
+                                    ?>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -2230,15 +2340,32 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
 
-                </div><!-- end By Player tab -->
+                </div><!-- end Player tab -->
 
-                <div class="kealoa-tab-panel" data-tab="by-editor">
+                <div class="kealoa-tab-panel" data-tab="editor">
 
             <?php if (!empty($editor_results)): ?>
                 <div class="kealoa-constructor-editor-stats">
                     <h2><?php esc_html_e('Results by Editor', 'kealoa-reference'); ?></h2>
 
-                    <table class="kealoa-table kealoa-constructor-editor-table">
+                    <div class="kealoa-filter-controls" data-target="kealoa-constructor-editor-table">
+                        <div class="kealoa-filter-row">
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-ced-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                                <input type="text" id="kealoa-ced-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Editor name...', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-ced-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
+                                <input type="number" id="kealoa-ced-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="3" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group kealoa-filter-actions">
+                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                <span class="kealoa-filter-count"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="kealoa-table kealoa-constructor-editor-table" id="kealoa-constructor-editor-table">
                         <thead>
                             <tr>
                                 <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
@@ -2257,13 +2384,13 @@ class Kealoa_Shortcodes {
                                     <td><?php echo esc_html($result->clue_count); ?></td>
                                     <td><?php echo esc_html($result->total_guesses); ?></td>
                                     <td><?php echo esc_html($result->correct_guesses); ?></td>
-                                    <td>
-                                        <?php
-                                        $pct = $result->total_guesses > 0
-                                            ? ($result->correct_guesses / $result->total_guesses) * 100
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
+                                    <?php
+                                    $pct = $result->total_guesses > 0
+                                        ? ($result->correct_guesses / $result->total_guesses) * 100
+                                        : 0;
+                                    ?>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -2272,7 +2399,7 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
 
-                </div><!-- end By Editor tab -->
+                </div><!-- end Editor tab -->
             </div><!-- end kealoa-tabs -->
         </div>
         <?php
@@ -2713,7 +2840,7 @@ class Kealoa_Shortcodes {
             <div class="kealoa-tabs">
                 <div class="kealoa-tab-nav">
                     <button class="kealoa-tab-button active" data-tab="clues"><?php esc_html_e('Clues', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="by-player"><?php esc_html_e('Players', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="player"><?php esc_html_e('Players', 'kealoa-reference'); ?></button>
                 </div>
 
                 <div class="kealoa-tab-panel active" data-tab="clues">
@@ -2747,7 +2874,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="number"><?php esc_html_e('#', 'kealoa-reference'); ?></th>
-                                <th data-sort="text"><?php esc_html_e('Clue Ref', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Clue Text', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Answer', 'kealoa-reference'); ?></th>
                                 <?php
@@ -2784,9 +2911,7 @@ class Kealoa_Shortcodes {
                                                 }
                                             }
                                             if ($guess) {
-                                                $is_correct = (bool) $guess->is_correct;
-                                                $css_class = $is_correct ? 'kealoa-guess-correct' : 'kealoa-guess-incorrect';
-                                                echo '<span class="' . $css_class . '">' . esc_html($guess->guess_text) . '</span>';
+                                                echo Kealoa_Formatter::format_guess_display($guess->guess_text, (bool) $guess->is_correct);
                                             } else {
                                                 echo '—';
                                             }
@@ -2803,7 +2928,7 @@ class Kealoa_Shortcodes {
 
                 </div><!-- end Clues tab -->
 
-                <div class="kealoa-tab-panel" data-tab="by-player">
+                <div class="kealoa-tab-panel" data-tab="player">
 
             <?php if (!empty($player_results)): ?>
                 <div class="kealoa-puzzle-player-stats">
@@ -2824,13 +2949,13 @@ class Kealoa_Shortcodes {
                                     <td><?php echo Kealoa_Formatter::format_person_link((int) $result->person_id, $result->full_name); ?></td>
                                     <td><?php echo esc_html($result->total_guesses); ?></td>
                                     <td><?php echo esc_html($result->correct_guesses); ?></td>
-                                    <td>
-                                        <?php
-                                        $pct = $result->total_guesses > 0
-                                            ? ($result->correct_guesses / $result->total_guesses) * 100
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
+                                    <?php
+                                    $pct = $result->total_guesses > 0
+                                        ? ($result->correct_guesses / $result->total_guesses) * 100
+                                        : 0;
+                                    ?>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -2839,7 +2964,7 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
 
-                </div><!-- end By Player tab -->
+                </div><!-- end Player tab -->
             </div><!-- end kealoa-tabs -->
             <?php endif; ?>
         </div>
@@ -2900,12 +3025,12 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-editor-info">
                     <?php if (!empty($editor_image_url)): ?>
                         <div class="kealoa-editor-image">
-                            <?php if ($editor_image_source === 'xwordinfo'): ?>
-                                <?php echo Kealoa_Formatter::format_xwordinfo_image($editor_image_url, $editor_name); ?>
-                            <?php else: ?>
+                            <?php if ($editor_image_source === 'media'): ?>
                                 <img src="<?php echo esc_url($editor_image_url); ?>"
                                      alt="<?php echo esc_attr($editor_name); ?>"
                                      class="kealoa-entity-image" />
+                            <?php else: ?>
+                                <?php echo Kealoa_Formatter::format_xwordinfo_image($editor_image_url, $editor_name); ?>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
@@ -2928,48 +3053,72 @@ class Kealoa_Shortcodes {
                                 </a>
                             </p>
                         <?php endif; ?>
+
+                        <?php
+                        // XWordInfo profile link: prefer constructor profile name, fall back to editor name
+                        $editor_xwordinfo_name = ($matching_editor_constructor && !empty($matching_editor_constructor->xwordinfo_profile_name))
+                            ? $matching_editor_constructor->xwordinfo_profile_name
+                            : $editor_name;
+                        $show_editor_xwordinfo = empty($matching_editor_person) || empty($matching_editor_person->hide_xwordinfo);
+                        ?>
+                        <?php if ($show_editor_xwordinfo && !empty($editor_xwordinfo_name)): ?>
+                            <p class="kealoa-editor-xwordinfo">
+                                <?php echo Kealoa_Formatter::format_xwordinfo_link($editor_xwordinfo_name, 'XWordInfo Profile'); ?>
+                            </p>
+                        <?php endif; ?>
+
+                        <?php if ($matching_editor_person && !empty($matching_editor_person->home_page_url)): ?>
+                            <p class="kealoa-editor-homepage">
+                                <?php echo Kealoa_Formatter::format_home_page_link($matching_editor_person->home_page_url); ?>
+                            </p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
 
-            <?php if ($stats): ?>
-            <div class="kealoa-stats-grid">
-                <div class="kealoa-stat-card">
-                    <span class="kealoa-stat-value"><?php echo esc_html($stats->puzzle_count); ?></span>
-                    <span class="kealoa-stat-label"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></span>
-                </div>
-                <div class="kealoa-stat-card">
-                    <span class="kealoa-stat-value"><?php echo esc_html($stats->clue_count); ?></span>
-                    <span class="kealoa-stat-label"><?php esc_html_e('Clues', 'kealoa-reference'); ?></span>
-                </div>
-                <div class="kealoa-stat-card">
-                    <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n($stats->total_guesses)); ?></span>
-                    <span class="kealoa-stat-label"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></span>
-                </div>
-                <div class="kealoa-stat-card">
-                    <span class="kealoa-stat-value"><?php echo esc_html($stats->correct_guesses); ?></span>
-                    <span class="kealoa-stat-label"><?php esc_html_e('Correct', 'kealoa-reference'); ?></span>
-                </div>
-                <div class="kealoa-stat-card">
-                    <span class="kealoa-stat-value"><?php
-                        $accuracy = (int) $stats->total_guesses > 0
-                            ? ((int) $stats->correct_guesses / (int) $stats->total_guesses) * 100
-                            : 0;
-                        echo Kealoa_Formatter::format_percentage($accuracy);
-                    ?></span>
-                    <span class="kealoa-stat-label"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></span>
-                </div>
-            </div>
-            <?php endif; ?>
-
             <div class="kealoa-tabs">
                 <div class="kealoa-tab-nav">
-                    <button class="kealoa-tab-button active" data-tab="puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="by-player"><?php esc_html_e('Players', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="by-constructor"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></button>
+                    <?php if ($stats): ?>
+                    <button class="kealoa-tab-button active" data-tab="stats"><?php esc_html_e('Stats', 'kealoa-reference'); ?></button>
+                    <?php endif; ?>
+                    <button class="kealoa-tab-button<?php echo empty($stats) ? ' active' : ''; ?>" data-tab="puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="player"><?php esc_html_e('Players', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="constructor"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></button>
                 </div>
 
-                <div class="kealoa-tab-panel active" data-tab="puzzles">
+                <?php if ($stats): ?>
+                <div class="kealoa-tab-panel active" data-tab="stats">
+                    <div class="kealoa-stats-grid">
+                        <div class="kealoa-stat-card">
+                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->puzzle_count)); ?></span>
+                            <span class="kealoa-stat-label"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></span>
+                        </div>
+                        <div class="kealoa-stat-card">
+                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->clue_count)); ?></span>
+                            <span class="kealoa-stat-label"><?php esc_html_e('Clues', 'kealoa-reference'); ?></span>
+                        </div>
+                        <div class="kealoa-stat-card">
+                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->total_guesses)); ?></span>
+                            <span class="kealoa-stat-label"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></span>
+                        </div>
+                        <div class="kealoa-stat-card">
+                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->correct_guesses)); ?></span>
+                            <span class="kealoa-stat-label"><?php esc_html_e('Correct', 'kealoa-reference'); ?></span>
+                        </div>
+                        <div class="kealoa-stat-card">
+                            <span class="kealoa-stat-value"><?php
+                                $accuracy = (int) $stats->total_guesses > 0
+                                    ? ((int) $stats->correct_guesses / (int) $stats->total_guesses) * 100
+                                    : 0;
+                                echo Kealoa_Formatter::format_percentage($accuracy);
+                            ?></span>
+                            <span class="kealoa-stat-label"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></span>
+                        </div>
+                    </div>
+                </div><!-- end Stats tab -->
+                <?php endif; ?>
+
+                <div class="kealoa-tab-panel<?php echo empty($stats) ? ' active' : ''; ?>" data-tab="puzzles">
 
             <?php if (!empty($puzzles)): ?>
                 <div class="kealoa-editor-puzzles">
@@ -3101,17 +3250,34 @@ class Kealoa_Shortcodes {
 
                 </div><!-- end Puzzles tab -->
 
-                <div class="kealoa-tab-panel" data-tab="by-player">
+                <div class="kealoa-tab-panel" data-tab="player">
 
             <?php if (!empty($player_results)): ?>
                 <div class="kealoa-editor-player-stats">
                     <h2><?php esc_html_e('Results by Player', 'kealoa-reference'); ?></h2>
 
-                    <table class="kealoa-table kealoa-editor-player-table">
+                    <div class="kealoa-filter-controls" data-target="kealoa-editor-player-table">
+                        <div class="kealoa-filter-row">
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-epl-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                                <input type="text" id="kealoa-epl-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group">
+                                <label for="kealoa-epl-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
+                                <input type="number" id="kealoa-epl-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                            </div>
+                            <div class="kealoa-filter-group kealoa-filter-actions">
+                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                <span class="kealoa-filter-count"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="kealoa-table kealoa-editor-player-table" id="kealoa-editor-player-table">
                         <thead>
                             <tr>
                                 <th data-sort="text"><?php esc_html_e('Player', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Answered', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
@@ -3122,13 +3288,13 @@ class Kealoa_Shortcodes {
                                     <td><?php echo Kealoa_Formatter::format_person_link((int) $result->person_id, $result->full_name); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <td>
-                                        <?php
-                                        $pct = $result->total_answered > 0
-                                            ? ($result->correct_count / $result->total_answered) * 100
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
+                                    <?php
+                                    $pct = $result->total_answered > 0
+                                        ? ($result->correct_count / $result->total_answered) * 100
+                                        : 0;
+                                    ?>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -3137,9 +3303,9 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
 
-                </div><!-- end By Player tab -->
+                </div><!-- end Player tab -->
 
-                <div class="kealoa-tab-panel" data-tab="by-constructor">
+                <div class="kealoa-tab-panel" data-tab="constructor">
 
             <?php if (!empty($constructor_results)): ?>
                 <div class="kealoa-editor-constructor-stats">
@@ -3189,13 +3355,13 @@ class Kealoa_Shortcodes {
                                     <td><?php echo esc_html($result->clue_count); ?></td>
                                     <td><?php echo esc_html($result->total_guesses); ?></td>
                                     <td><?php echo esc_html($result->correct_guesses); ?></td>
-                                    <td>
-                                        <?php
-                                        $pct = $result->total_guesses > 0
-                                            ? ($result->correct_guesses / $result->total_guesses) * 100
-                                            : 0;
-                                        echo Kealoa_Formatter::format_percentage($pct);
-                                        ?>
+                                    <?php
+                                    $pct = $result->total_guesses > 0
+                                        ? ($result->correct_guesses / $result->total_guesses) * 100
+                                        : 0;
+                                    ?>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -3204,7 +3370,7 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
 
-                </div><!-- end By Constructor tab -->
+                </div><!-- end Constructor tab -->
             </div><!-- end kealoa-tabs -->
         </div>
         <?php

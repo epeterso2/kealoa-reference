@@ -626,12 +626,18 @@
     font-size: 14px;
 }
 
-.kealoa-constructor-xwordinfo {
+.kealoa-constructor-xwordinfo,
+.kealoa-constructor-homepage,
+.kealoa-editor-xwordinfo,
+.kealoa-editor-homepage {
     margin: 0 0 8px 0;
     font-size: 14px;
 }
 
-.kealoa-constructor-xwordinfo strong {
+.kealoa-constructor-xwordinfo strong,
+.kealoa-constructor-homepage strong,
+.kealoa-editor-xwordinfo strong,
+.kealoa-editor-homepage strong {
     display: inline-block;
     min-width: 100px;
 }
@@ -881,14 +887,20 @@
     /* Word-break long URLs */
     .kealoa-person-xwordinfo,
     .kealoa-person-homepage,
-    .kealoa-constructor-xwordinfo {
+    .kealoa-constructor-xwordinfo,
+    .kealoa-constructor-homepage,
+    .kealoa-editor-xwordinfo,
+    .kealoa-editor-homepage {
         overflow-wrap: break-word;
         word-break: break-all;
     }
 
     .kealoa-person-xwordinfo strong,
     .kealoa-person-homepage strong,
-    .kealoa-constructor-xwordinfo strong {
+    .kealoa-constructor-xwordinfo strong,
+    .kealoa-constructor-homepage strong,
+    .kealoa-editor-xwordinfo strong,
+    .kealoa-editor-homepage strong {
         display: block;
         min-width: auto;
     }
