@@ -1,4 +1,7 @@
 /**
+ * @copyright 2026 Eric Peterson (eric@puzzlehead.org)
+ * @license   CC BY-NC-SA 4.0 <https://creativecommons.org/licenses/by-nc-sa/4.0/>
+ *
  * KEALOA Reference - Gutenberg Blocks Editor Script
  *
  * Registers all KEALOA blocks for the WordPress block editor.

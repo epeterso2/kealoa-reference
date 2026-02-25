@@ -1,5 +1,8 @@
 <?php
 /**
+ * @copyright 2026 Eric Peterson (eric@puzzlehead.org)
+ * @license   CC BY-NC-SA 4.0 <https://creativecommons.org/licenses/by-nc-sa/4.0/>
+ *
  * Plugin Activator
  *
  * Creates database tables and initializes plugin settings on activation.

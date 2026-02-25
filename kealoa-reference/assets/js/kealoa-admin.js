@@ -1,4 +1,7 @@
 /**
+ * @copyright 2026 Eric Peterson (eric@puzzlehead.org)
+ * @license   CC BY-NC-SA 4.0 <https://creativecommons.org/licenses/by-nc-sa/4.0/>
+ *
  * KEALOA Reference - Admin JavaScript
  *
  * Handles admin interface functionality.

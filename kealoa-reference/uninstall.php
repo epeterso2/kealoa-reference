@@ -1,5 +1,8 @@
 <?php
 /**
+ * @copyright 2026 Eric Peterson (eric@puzzlehead.org)
+ * @license   CC BY-NC-SA 4.0 <https://creativecommons.org/licenses/by-nc-sa/4.0/>
+ *
  * Uninstall KEALOA Reference
  *
  * This file is executed when the plugin is deleted via the WordPress admin.
