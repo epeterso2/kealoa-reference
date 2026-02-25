@@ -2911,7 +2911,7 @@ class Kealoa_Shortcodes {
                                                 }
                                             }
                                             if ($guess) {
-                                                echo Kealoa_Formatter::format_guess_display($guess->guess_text, (bool) $guess->is_correct);
+                                                echo Kealoa_Formatter::format_guess_display($guess->guessed_word, (bool) $guess->is_correct);
                                             } else {
                                                 echo '—';
                                             }
