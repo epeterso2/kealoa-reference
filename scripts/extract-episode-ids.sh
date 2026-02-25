@@ -1,7 +1,10 @@
 #!/bin/bash
 #
 # extract-episode-ids.sh
-# 
+#
+# @copyright 2026 Eric Peterson (eric@puzzlehead.org)
+# @license   CC BY-NC-SA 4.0 <https://creativecommons.org/licenses/by-nc-sa/4.0/>
+#
 # Takes a CSV file with a URL column and extracts episode IDs from each URL's content.
 # Adds a new column "episode_id" with the extracted ID.
 #
