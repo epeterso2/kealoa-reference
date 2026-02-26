@@ -2016,6 +2016,29 @@ class Kealoa_DB {
         return $this->wpdb->get_results($sql);
     }
 
+    /**
+     * Get all persons who are clue givers, with aggregate stats
+     */
+    public function get_persons_who_are_clue_givers(): array {
+        $sql = "SELECT
+                p.id,
+                p.full_name as clue_giver_name,
+                COUNT(DISTINCT r.id) as round_count,
+                COUNT(DISTINCT c.id) as clue_count,
+                COUNT(DISTINCT rg.person_id) as guesser_count,
+                COUNT(g.id) as total_guesses,
+                COALESCE(SUM(g.is_correct), 0) as correct_guesses
+            FROM {$this->persons_table} p
+            INNER JOIN {$this->rounds_table} r ON r.clue_giver_id = p.id
+            LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
+            LEFT JOIN {$this->round_guessers_table} rg ON rg.round_id = r.id
+            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+            GROUP BY p.id, p.full_name
+            ORDER BY p.full_name ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
     // =========================================================================
     // CLUE GIVER STATS
     // =========================================================================

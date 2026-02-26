@@ -69,6 +69,10 @@ class Kealoa_Blocks {
             register_block_type(KEALOA_PLUGIN_DIR . 'blocks/editors-table');
         }
 
+        if (file_exists(KEALOA_PLUGIN_DIR . 'blocks/clue-givers-table/block.json')) {
+            register_block_type(KEALOA_PLUGIN_DIR . 'blocks/clue-givers-table');
+        }
+
         if (file_exists(KEALOA_PLUGIN_DIR . 'blocks/editor-view/block.json')) {
             register_block_type(KEALOA_PLUGIN_DIR . 'blocks/editor-view');
         }

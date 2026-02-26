@@ -42,6 +42,7 @@ class Kealoa_Shortcodes {
         add_shortcode('kealoa_persons_table', [$this, 'render_persons_table']);
         add_shortcode('kealoa_constructors_table', [$this, 'render_constructors_table']);
         add_shortcode('kealoa_editors_table', [$this, 'render_editors_table']);
+        add_shortcode('kealoa_clue_givers_table', [$this, 'render_clue_givers_table']);
         add_shortcode('kealoa_puzzles_table', [$this, 'render_puzzles_table']);
         add_shortcode('kealoa_puzzle', [$this, 'render_puzzle']);
         add_shortcode('kealoa_version', [$this, 'render_version']);
@@ -2924,6 +2925,78 @@ class Kealoa_Shortcodes {
                             <?php
                             $accuracy = $ed->total_guesses > 0
                                 ? ($ed->correct_guesses / $ed->total_guesses) * 100
+                                : 0;
+                            ?>
+                            <td data-value="<?php echo esc_attr(number_format((float) $accuracy, 2, '.', '')); ?>">
+                                <?php echo Kealoa_Formatter::format_percentage((float) $accuracy); ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+        return ob_get_clean();
+
+        }); // end get_cached_or_render
+    }
+
+    /**
+     * Render clue givers table shortcode
+     *
+     * [kealoa_clue_givers_table]
+     */
+    public function render_clue_givers_table(array $atts = []): string {
+        return $this->get_cached_or_render('clue_givers_table', function () {
+
+        $clue_givers = $this->db->get_persons_who_are_clue_givers();
+
+        if (empty($clue_givers)) {
+            return '<p class="kealoa-no-data">' . esc_html__('No clue givers found.', 'kealoa-reference') . '</p>';
+        }
+
+        ob_start();
+        ?>
+        <div class="kealoa-clue-givers-table-wrapper">
+            <div class="kealoa-filter-controls" data-target="kealoa-clue-givers-table">
+                <div class="kealoa-filter-row">
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-cg-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                        <input type="text" id="kealoa-cg-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Clue giver name...', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group kealoa-filter-actions">
+                        <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                        <span class="kealoa-filter-count"></span>
+                    </div>
+                </div>
+            </div>
+
+            <table class="kealoa-table kealoa-clue-givers-table" id="kealoa-clue-givers-table">
+                <thead>
+                    <tr>
+                        <th data-sort="text"><?php esc_html_e('Clue Giver', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Guessers', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($clue_givers as $cg): ?>
+                        <tr>
+                            <td>
+                                <?php echo Kealoa_Formatter::format_person_link((int) $cg->id, $cg->clue_giver_name, 'as-clue-giver'); ?>
+                            </td>
+                            <td><?php echo esc_html(number_format_i18n((int) $cg->round_count)); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $cg->clue_count)); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $cg->guesser_count)); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $cg->total_guesses)); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $cg->correct_guesses)); ?></td>
+                            <?php
+                            $accuracy = $cg->total_guesses > 0
+                                ? ($cg->correct_guesses / $cg->total_guesses) * 100
                                 : 0;
                             ?>
                             <td data-value="<?php echo esc_attr(number_format((float) $accuracy, 2, '.', '')); ?>">
