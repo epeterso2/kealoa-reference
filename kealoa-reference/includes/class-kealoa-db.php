@@ -705,7 +705,7 @@ class Kealoa_DB {
         );
 
         $total_constructors = (int) $this->wpdb->get_var(
-            "SELECT COUNT(DISTINCT pc.constructor_id)
+            "SELECT COUNT(DISTINCT pc.person_id)
              FROM {$this->puzzle_constructors_table} pc
              INNER JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id"
         );
