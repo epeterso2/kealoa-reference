@@ -1807,6 +1807,7 @@ class Kealoa_DB {
             "SELECT
                 COUNT(DISTINCT pc.puzzle_id) as puzzle_count,
                 COUNT(DISTINCT c.id) as clue_count,
+                COUNT(DISTINCT g.guesser_person_id) as player_count,
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses,
                 COUNT(g.id) as total_guesses
             FROM {$this->puzzle_constructors_table} pc
@@ -1975,6 +1976,7 @@ class Kealoa_DB {
             "SELECT
                 COUNT(DISTINCT p.id) as puzzle_count,
                 COUNT(DISTINCT c.id) as clue_count,
+                COUNT(DISTINCT g.guesser_person_id) as player_count,
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses,
                 COUNT(g.id) as total_guesses
             FROM {$this->puzzles_table} p
