@@ -3007,23 +3007,15 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-puzzle-round-clues">
                     <h3>
                         <?php
-                        $round_date_link = Kealoa_Formatter::format_round_date_link((int) $rc['round_id'], $rc['round_date']);
+                        $round_url = home_url('/kealoa/round/' . (int) $rc['round_id'] . '/');
                         $solutions = $this->db->get_round_solutions((int) $rc['round_id']);
                         $solution_words = Kealoa_Formatter::format_solution_words($solutions);
-
-                        // Check if multiple rounds share the same date
-                        $same_date_count = 0;
-                        foreach ($rounds_clues as $other_rc) {
-                            if ($other_rc['round_date'] === $rc['round_date']) {
-                                $same_date_count++;
-                            }
-                        }
-
-                        if ($same_date_count > 1) {
-                            echo $round_date_link . ' (#' . esc_html($rc['round_number']) . ') — ' . esc_html($solution_words);
-                        } else {
-                            echo $round_date_link . ' — ' . esc_html($solution_words);
-                        }
+                        $round_label = sprintf(
+                            '<a href="%s">KEALOA #%d</a>',
+                            esc_url($round_url),
+                            (int) $rc['round_id']
+                        );
+                        echo $round_label . ' — ' . esc_html($solution_words);
                         ?>
                     </h3>
 
