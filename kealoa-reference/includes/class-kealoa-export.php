@@ -154,7 +154,7 @@ class Kealoa_Export {
      * Write persons CSV
      */
     private function write_persons($output): void {
-        fputcsv($output, ['full_name', 'home_page_url', 'image_url', 'hide_xwordinfo', 'xwordinfo_profile_name', 'xwordinfo_image_url']);
+        fputcsv($output, ['full_name', 'home_page_url', 'image_url', 'hide_xwordinfo', 'xwordinfo_profile_name', 'xwordinfo_image_url', 'media_id']);
 
         $persons = $this->db->get_persons(['limit' => 999999, 'orderby' => 'full_name', 'order' => 'ASC']);
 
@@ -166,6 +166,7 @@ class Kealoa_Export {
                 $person->hide_xwordinfo ?? 0,
                 $person->xwordinfo_profile_name ?? '',
                 $person->xwordinfo_image_url ?? '',
+                $person->media_id ?? '',
             ]);
         }
     }
