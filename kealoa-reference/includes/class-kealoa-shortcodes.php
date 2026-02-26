@@ -728,7 +728,11 @@ class Kealoa_Shortcodes {
         $clue_giver_rounds = $is_clue_giver ? $this->db->get_clue_giver_rounds($person_id) : [];
         $clue_giver_streaks = $is_clue_giver ? $this->db->get_clue_giver_streaks($person_id) : null;
 
-        $person_puzzles = $is_player ? $this->db->get_person_puzzles($person_id) : [];
+        // True only when the person has actually guessed in at least one round.
+        // Distinct from $is_player, which is also true for clue givers who have never guessed.
+        $has_played = (int) $stats->rounds_played > 0;
+
+        $person_puzzles = $has_played ? $this->db->get_person_puzzles($person_id) : [];
         $clue_number_results = $this->db->get_person_results_by_clue_number($person_id);
         $answer_length_results = $this->db->get_person_results_by_answer_length($person_id);
         $direction_results = $this->db->get_person_results_by_direction($person_id);
@@ -841,7 +845,7 @@ class Kealoa_Shortcodes {
         }
 
         ob_start();
-        $default_tab = $is_player ? 'player' : ($is_clue_giver ? 'as-clue-giver' : ($is_constructor ? 'as-constructor' : 'as-editor'));
+        $default_tab = $has_played ? 'player' : ($is_clue_giver ? 'as-clue-giver' : ($is_constructor ? 'as-constructor' : 'as-editor'));
         $tab_active = function(string $tab) use ($default_tab): string {
             return $tab === $default_tab ? ' active' : '';
         };
@@ -897,7 +901,7 @@ class Kealoa_Shortcodes {
 
             <div class="kealoa-tabs">
                 <div class="kealoa-tab-nav">
-                    <?php if ($is_player): ?>
+                    <?php if ($has_played): ?>
                     <button class="kealoa-tab-button<?php echo $tab_active('player'); ?>" data-tab="player"><?php esc_html_e('Overall Stats', 'kealoa-reference'); ?></button>
                     <button class="kealoa-tab-button" data-tab="puzzle"><?php esc_html_e('Puzzle Stats', 'kealoa-reference'); ?></button>
                     <button class="kealoa-tab-button" data-tab="round"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></button>
@@ -916,7 +920,7 @@ class Kealoa_Shortcodes {
                     <?php endif; ?>
                 </div>
 
-                <?php if ($is_player): ?>
+                <?php if ($has_played): ?>
                 <div class="kealoa-tab-panel<?php echo $tab_active('player'); ?>" data-tab="player">
 
             <div class="kealoa-person-stats">
@@ -1798,7 +1802,7 @@ class Kealoa_Shortcodes {
             <?php endif; ?>
 
                 </div><!-- end Round tab -->
-                <?php endif; ?><!-- end $is_player -->
+                <?php endif; ?><!-- end $has_played -->
 
                 <?php if ($is_clue_giver): ?>
                 <div class="kealoa-tab-panel<?php echo $tab_active('as-clue-giver'); ?>" data-tab="as-clue-giver">
