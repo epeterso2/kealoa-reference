@@ -1,8 +1,8 @@
-round_date,round_number,clue_number,guesser,guessed_word
-"2024-01-20",1,1,"Bob Williams","WORD1"
-"2024-01-20",1,1,"Charlie Brown","WRONG"
-"2024-01-20",1,2,"Bob Williams","WORD2"
-"2024-01-20",1,2,"Charlie Brown","WORD2"
-"2024-01-20",1,3,"Bob Williams","WORD3"
-"2024-01-20",1,3,"Charlie Brown","WORD3"
-"2024-01-20",2,1,"Alice Johnson","APPLE"
+round_date,round_number,clue_number,guesser,guessed_word,is_correct
+"2024-01-20",1,1,"Bob Williams","WORD1",1
+"2024-01-20",1,1,"Charlie Brown","WRONG",0
+"2024-01-20",1,2,"Bob Williams","WORD2",1
+"2024-01-20",1,2,"Charlie Brown","WORD2",1
+"2024-01-20",1,3,"Bob Williams","WORD3",1
+"2024-01-20",1,3,"Charlie Brown","WORD3",1
+"2024-01-20",2,1,"Alice Johnson","APPLE",1
