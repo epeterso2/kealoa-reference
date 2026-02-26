@@ -21,11 +21,11 @@ if (!defined('ABSPATH')) {
  * Class Kealoa_DB
  *
  * Handles all database operations for the KEALOA Reference plugin.
+ * Uses a unified persons table for players, constructors, and editors.
  */
 class Kealoa_DB {
 
     private \wpdb $wpdb;
-    private string $constructors_table;
     private string $persons_table;
     private string $puzzles_table;
     private string $puzzle_constructors_table;
@@ -42,7 +42,6 @@ class Kealoa_DB {
         global $wpdb;
         $this->wpdb = $wpdb;
 
-        $this->constructors_table = $wpdb->prefix . 'kealoa_constructors';
         $this->persons_table = $wpdb->prefix . 'kealoa_persons';
         $this->puzzles_table = $wpdb->prefix . 'kealoa_puzzles';
         $this->puzzle_constructors_table = $wpdb->prefix . 'kealoa_puzzle_constructors';
@@ -54,179 +53,7 @@ class Kealoa_DB {
     }
 
     // =========================================================================
-    // CONSTRUCTORS CRUD
-    // =========================================================================
-
-    /**
-     * Get a constructor by ID
-     */
-    public function get_constructor(int $id): ?object {
-        $sql = $this->wpdb->prepare(
-            "SELECT * FROM {$this->constructors_table} WHERE id = %d",
-            $id
-        );
-        $result = $this->wpdb->get_row($sql);
-        return $result ?: null;
-    }
-
-    /**
-     * Get a constructor by name (case-insensitive, underscores match spaces)
-     */
-    public function get_constructor_by_name(string $name): ?object {
-        $name = str_replace('_', ' ', $name);
-        $sql = $this->wpdb->prepare(
-            "SELECT * FROM {$this->constructors_table} WHERE full_name = %s",
-            $name
-        );
-        $result = $this->wpdb->get_row($sql);
-        return $result ?: null;
-    }
-
-    /**
-     * Get all constructors
-     */
-    public function get_constructors(array $args = []): array {
-        $defaults = [
-            'orderby' => 'full_name',
-            'order' => 'ASC',
-            'limit' => 100,
-            'offset' => 0,
-            'search' => '',
-        ];
-        $args = wp_parse_args($args, $defaults);
-
-        $sql = "SELECT * FROM {$this->constructors_table}";
-        $where = [];
-        $values = [];
-
-        if (!empty($args['search'])) {
-            $where[] = "full_name LIKE %s";
-            $values[] = '%' . $this->wpdb->esc_like($args['search']) . '%';
-        }
-
-        if (!empty($where)) {
-            $sql .= " WHERE " . implode(' AND ', $where);
-        }
-
-        $allowed_orderby = ['id', 'full_name', 'created_at'];
-        $orderby = in_array($args['orderby'], $allowed_orderby) ? $args['orderby'] : 'full_name';
-        $order = strtoupper($args['order']) === 'DESC' ? 'DESC' : 'ASC';
-
-        $sql .= " ORDER BY {$orderby} {$order}";
-        $sql .= " LIMIT %d OFFSET %d";
-        $values[] = $args['limit'];
-        $values[] = $args['offset'];
-
-        if (!empty($values)) {
-            $sql = $this->wpdb->prepare($sql, ...$values);
-        }
-
-        return $this->wpdb->get_results($sql);
-    }
-
-    /**
-     * Count total constructors
-     */
-    public function count_constructors(string $search = ''): int {
-        $sql = "SELECT COUNT(*) FROM {$this->constructors_table}";
-
-        if (!empty($search)) {
-            $sql .= $this->wpdb->prepare(
-                " WHERE full_name LIKE %s",
-                '%' . $this->wpdb->esc_like($search) . '%'
-            );
-        }
-
-        return (int) $this->wpdb->get_var($sql);
-    }
-
-    /**
-     * Create a constructor
-     */
-    public function create_constructor(array $data): int|false {
-        $insert_data = [
-            'full_name' => sanitize_text_field($data['full_name']),
-            'xwordinfo_profile_name' => isset($data['xwordinfo_profile_name'])
-                ? sanitize_text_field($data['xwordinfo_profile_name'])
-                : null,
-            'xwordinfo_image_url' => isset($data['xwordinfo_image_url'])
-                ? esc_url_raw($data['xwordinfo_image_url'])
-                : null,
-        ];
-        $format = ['%s', '%s', '%s'];
-
-        if (array_key_exists('media_id', $data)) {
-            $insert_data['media_id'] = $data['media_id'] ? (int) $data['media_id'] : null;
-            $format[] = '%d';
-        }
-
-        $result = $this->wpdb->insert(
-            $this->constructors_table,
-            $insert_data,
-            $format
-        );
-
-        return $result ? $this->wpdb->insert_id : false;
-    }
-
-    /**
-     * Update a constructor
-     */
-    public function update_constructor(int $id, array $data): bool {
-        $update_data = [];
-        $format = [];
-
-        if (isset($data['full_name'])) {
-            $update_data['full_name'] = sanitize_text_field($data['full_name']);
-            $format[] = '%s';
-        }
-        if (array_key_exists('xwordinfo_profile_name', $data)) {
-            $update_data['xwordinfo_profile_name'] = $data['xwordinfo_profile_name']
-                ? sanitize_text_field($data['xwordinfo_profile_name'])
-                : null;
-            $format[] = '%s';
-        }
-        if (array_key_exists('xwordinfo_image_url', $data)) {
-            $update_data['xwordinfo_image_url'] = $data['xwordinfo_image_url']
-                ? esc_url_raw($data['xwordinfo_image_url'])
-                : null;
-            $format[] = '%s';
-        }
-        if (array_key_exists('media_id', $data)) {
-            $update_data['media_id'] = $data['media_id'] ? (int) $data['media_id'] : null;
-            $format[] = '%d';
-        }
-
-        if (empty($update_data)) {
-            return false;
-        }
-
-        $result = $this->wpdb->update(
-            $this->constructors_table,
-            $update_data,
-            ['id' => $id],
-            $format,
-            ['%d']
-        );
-
-        return $result !== false;
-    }
-
-    /**
-     * Delete a constructor
-     */
-    public function delete_constructor(int $id): bool {
-        $result = $this->wpdb->delete(
-            $this->constructors_table,
-            ['id' => $id],
-            ['%d']
-        );
-
-        return $result !== false;
-    }
-
-    // =========================================================================
-    // PERSONS CRUD
+    // PERSONS CRUD (unified: players, constructors, editors)
     // =========================================================================
 
     /**
@@ -325,8 +152,14 @@ class Kealoa_DB {
                 ? esc_url_raw($data['image_url'])
                 : null,
             'hide_xwordinfo' => !empty($data['hide_xwordinfo']) ? 1 : 0,
+            'xwordinfo_profile_name' => isset($data['xwordinfo_profile_name'])
+                ? sanitize_text_field($data['xwordinfo_profile_name'])
+                : null,
+            'xwordinfo_image_url' => isset($data['xwordinfo_image_url'])
+                ? esc_url_raw($data['xwordinfo_image_url'])
+                : null,
         ];
-        $format = ['%s', '%s', '%s', '%d'];
+        $format = ['%s', '%s', '%s', '%d', '%s', '%s'];
 
         if (array_key_exists('media_id', $data)) {
             $insert_data['media_id'] = $data['media_id'] ? (int) $data['media_id'] : null;
@@ -372,6 +205,18 @@ class Kealoa_DB {
         if (array_key_exists('hide_xwordinfo', $data)) {
             $update_data['hide_xwordinfo'] = !empty($data['hide_xwordinfo']) ? 1 : 0;
             $format[] = '%d';
+        }
+        if (array_key_exists('xwordinfo_profile_name', $data)) {
+            $update_data['xwordinfo_profile_name'] = $data['xwordinfo_profile_name']
+                ? sanitize_text_field($data['xwordinfo_profile_name'])
+                : null;
+            $format[] = '%s';
+        }
+        if (array_key_exists('xwordinfo_image_url', $data)) {
+            $update_data['xwordinfo_image_url'] = $data['xwordinfo_image_url']
+                ? esc_url_raw($data['xwordinfo_image_url'])
+                : null;
+            $format[] = '%s';
         }
 
         if (empty($update_data)) {
@@ -449,10 +294,11 @@ class Kealoa_DB {
 
         if (!empty($args['constructor_search'])) {
             $sql = $this->wpdb->prepare(
-                "SELECT DISTINCT p.* FROM {$this->puzzles_table} p
+                "SELECT DISTINCT p.*, ed.full_name as editor_name FROM {$this->puzzles_table} p
                 INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.puzzle_id
-                INNER JOIN {$this->constructors_table} c ON pc.constructor_id = c.id
-                WHERE c.full_name LIKE %s
+                INNER JOIN {$this->persons_table} per ON pc.person_id = per.id
+                LEFT JOIN {$this->persons_table} ed ON p.editor_id = ed.id
+                WHERE per.full_name LIKE %s
                 ORDER BY p.{$orderby} {$order} LIMIT %d OFFSET %d",
                 '%' . $this->wpdb->esc_like($args['constructor_search']) . '%',
                 $args['limit'],
@@ -460,7 +306,9 @@ class Kealoa_DB {
             );
         } else {
             $sql = $this->wpdb->prepare(
-                "SELECT * FROM {$this->puzzles_table} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d",
+                "SELECT p.*, ed.full_name as editor_name FROM {$this->puzzles_table} p
+                LEFT JOIN {$this->persons_table} ed ON p.editor_id = ed.id
+                ORDER BY p.{$orderby} {$order} LIMIT %d OFFSET %d",
                 $args['limit'],
                 $args['offset']
             );
@@ -477,8 +325,8 @@ class Kealoa_DB {
             $sql = $this->wpdb->prepare(
                 "SELECT COUNT(DISTINCT p.id) FROM {$this->puzzles_table} p
                 INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.puzzle_id
-                INNER JOIN {$this->constructors_table} c ON pc.constructor_id = c.id
-                WHERE c.full_name LIKE %s",
+                INNER JOIN {$this->persons_table} per ON pc.person_id = per.id
+                WHERE per.full_name LIKE %s",
                 '%' . $this->wpdb->esc_like($constructor_search) . '%'
             );
             return (int) $this->wpdb->get_var($sql);
@@ -495,11 +343,9 @@ class Kealoa_DB {
         ];
         $format = ['%s'];
 
-        if (array_key_exists('editor_name', $data)) {
-            $insert_data['editor_name'] = $data['editor_name'] !== null && $data['editor_name'] !== ''
-                ? sanitize_text_field($data['editor_name'])
-                : null;
-            $format[] = '%s';
+        if (array_key_exists('editor_id', $data)) {
+            $insert_data['editor_id'] = $data['editor_id'] ? (int) $data['editor_id'] : null;
+            $format[] = '%d';
         }
 
         $result = $this->wpdb->insert(
@@ -524,11 +370,9 @@ class Kealoa_DB {
         ];
         $format = ['%s'];
 
-        if (array_key_exists('editor_name', $data)) {
-            $update_data['editor_name'] = $data['editor_name'] !== null && $data['editor_name'] !== ''
-                ? sanitize_text_field($data['editor_name'])
-                : null;
-            $format[] = '%s';
+        if (array_key_exists('editor_id', $data)) {
+            $update_data['editor_id'] = $data['editor_id'] ? (int) $data['editor_id'] : null;
+            $format[] = '%d';
         }
 
         $result = $this->wpdb->update(
@@ -559,19 +403,33 @@ class Kealoa_DB {
     }
 
     /**
-     * Auto-populate editor names for all puzzles based on historical date ranges.
+     * Auto-populate editor IDs for all puzzles based on historical date ranges.
+     *
+     * Finds or creates person records for each editor name, then updates
+     * puzzles.editor_id for the corresponding date ranges.
      *
      * @return int Number of puzzles updated
      */
-    public function auto_populate_editor_names(): int {
+    public function auto_populate_editor_ids(): int {
         $updated = 0;
         foreach (self::get_editor_date_ranges() as $editor) {
+            // Find or create person for this editor
+            $person = $this->get_person_by_name($editor['name']);
+            if (!$person) {
+                $person_id = $this->create_person(['full_name' => $editor['name']]);
+                if (!$person_id) {
+                    continue;
+                }
+            } else {
+                $person_id = (int) $person->id;
+            }
+
             $result = $this->wpdb->query(
                 $this->wpdb->prepare(
                     "UPDATE {$this->puzzles_table}
-                     SET editor_name = %s
+                     SET editor_id = %d
                      WHERE publication_date >= %s AND publication_date <= %s",
-                    $editor['name'],
+                    $person_id,
                     $editor['start'],
                     $editor['end']
                 )
@@ -662,12 +520,12 @@ class Kealoa_DB {
     }
 
     /**
-     * Get constructors for a puzzle
+     * Get constructors (persons) for a puzzle
      */
     public function get_puzzle_constructors(int $puzzle_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT c.* FROM {$this->constructors_table} c
-            INNER JOIN {$this->puzzle_constructors_table} pc ON c.id = pc.constructor_id
+            "SELECT p.* FROM {$this->persons_table} p
+            INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.person_id
             WHERE pc.puzzle_id = %d
             ORDER BY pc.constructor_order ASC",
             $puzzle_id
@@ -677,20 +535,20 @@ class Kealoa_DB {
     }
 
     /**
-     * Set constructors for a puzzle
+     * Set constructors (persons) for a puzzle
      */
-    public function set_puzzle_constructors(int $puzzle_id, array $constructor_ids): bool {
+    public function set_puzzle_constructors(int $puzzle_id, array $person_ids): bool {
         // Delete existing constructors
         $this->wpdb->delete($this->puzzle_constructors_table, ['puzzle_id' => $puzzle_id], ['%d']);
 
         // Insert new constructors
         $order = 1;
-        foreach ($constructor_ids as $constructor_id) {
+        foreach ($person_ids as $person_id) {
             $this->wpdb->insert(
                 $this->puzzle_constructors_table,
                 [
                     'puzzle_id' => $puzzle_id,
-                    'constructor_id' => (int) $constructor_id,
+                    'person_id' => (int) $person_id,
                     'constructor_order' => $order++,
                 ],
                 ['%d', '%d', '%d']
@@ -1139,9 +997,10 @@ class Kealoa_DB {
      */
     public function get_clue(int $id): ?object {
         $sql = $this->wpdb->prepare(
-            "SELECT c.*, pz.publication_date as puzzle_date
+            "SELECT c.*, pz.publication_date as puzzle_date, pz.editor_id, ed.full_name as editor_name
             FROM {$this->clues_table} c
             LEFT JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
+            LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             WHERE c.id = %d",
             $id
         );
@@ -1154,9 +1013,10 @@ class Kealoa_DB {
      */
     public function get_round_clues(int $round_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT c.*, pz.publication_date as puzzle_date, pz.editor_name as editor_name
+            "SELECT c.*, pz.publication_date as puzzle_date, pz.editor_id, ed.full_name as editor_name
             FROM {$this->clues_table} c
             LEFT JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
+            LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             WHERE c.round_id = %d
             ORDER BY c.clue_number ASC",
             $round_id
@@ -1699,7 +1559,7 @@ class Kealoa_DB {
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->puzzle_constructors_table} pc ON c.puzzle_id = pc.puzzle_id
-            INNER JOIN {$this->constructors_table} con ON pc.constructor_id = con.id
+            INNER JOIN {$this->persons_table} con ON pc.person_id = con.id
             WHERE g.guesser_person_id = %d
             GROUP BY con.id, con.full_name, con.xwordinfo_profile_name
             ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC",
@@ -1715,15 +1575,17 @@ class Kealoa_DB {
     public function get_person_results_by_editor(int $person_id): array {
         $sql = $this->wpdb->prepare(
             "SELECT
-                COALESCE(p.editor_name, 'Unknown') as editor_name,
+                ed.id as editor_id,
+                COALESCE(ed.full_name, 'Unknown') as editor_name,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->puzzles_table} p ON c.puzzle_id = p.id
+            LEFT JOIN {$this->persons_table} ed ON p.editor_id = ed.id
             WHERE g.guesser_person_id = %d
-            GROUP BY editor_name
+            GROUP BY ed.id, ed.full_name
             ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC",
             $person_id
         );
@@ -1866,7 +1728,8 @@ class Kealoa_DB {
             "SELECT
                 pz.id as puzzle_id,
                 pz.publication_date,
-                COALESCE(pz.editor_name, '') as editor_name,
+                pz.editor_id,
+                COALESCE(ed.full_name, '') as editor_name,
                 GROUP_CONCAT(DISTINCT con.full_name ORDER BY pc.constructor_order ASC SEPARATOR ', ') as constructor_names,
                 GROUP_CONCAT(DISTINCT con.id ORDER BY pc.constructor_order ASC) as constructor_ids,
                 GROUP_CONCAT(DISTINCT r.id ORDER BY r.round_date ASC, r.round_number ASC) as round_ids,
@@ -1877,9 +1740,10 @@ class Kealoa_DB {
             INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
             INNER JOIN {$this->round_guessers_table} rg ON r.id = rg.round_id
             LEFT JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
-            LEFT JOIN {$this->constructors_table} con ON pc.constructor_id = con.id
+            LEFT JOIN {$this->persons_table} con ON pc.person_id = con.id
+            LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             WHERE rg.person_id = %d
-            GROUP BY pz.id, pz.publication_date, pz.editor_name
+            GROUP BY pz.id, pz.publication_date, ed.full_name
             ORDER BY pz.publication_date DESC",
             $person_id
         );
@@ -1888,7 +1752,7 @@ class Kealoa_DB {
     }
 
     // =========================================================================
-    // CONSTRUCTOR STATISTICS
+    // ROLE-BASED STATISTICS (Constructor & Editor roles on persons)
     // =========================================================================
 
     /**
@@ -1913,32 +1777,32 @@ class Kealoa_DB {
     }
 
     /**
-     * Get constructors that have puzzles, with puzzle and clue counts
+     * Get persons who are constructors, with puzzle and clue counts
      */
-    public function get_constructors_with_stats(): array {
+    public function get_persons_who_are_constructors(): array {
         $sql = "SELECT
-                con.id,
-                con.full_name,
-                con.xwordinfo_profile_name,
-                con.xwordinfo_image_url,
+                p.id,
+                p.full_name,
+                p.xwordinfo_profile_name,
+                p.xwordinfo_image_url,
                 COUNT(DISTINCT pc.puzzle_id) as puzzle_count,
                 COUNT(DISTINCT c.id) as clue_count,
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses,
                 COUNT(g.id) as total_guesses
-            FROM {$this->constructors_table} con
-            INNER JOIN {$this->puzzle_constructors_table} pc ON con.id = pc.constructor_id
+            FROM {$this->persons_table} p
+            INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.person_id
             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
-            GROUP BY con.id, con.full_name, con.xwordinfo_profile_name, con.xwordinfo_image_url
-            ORDER BY con.full_name ASC";
+            GROUP BY p.id, p.full_name, p.xwordinfo_profile_name, p.xwordinfo_image_url
+            ORDER BY p.full_name ASC";
 
         return $this->wpdb->get_results($sql);
     }
 
     /**
-     * Get aggregate stats for a single constructor
+     * Get aggregate stats for a person's constructor role
      */
-    public function get_constructor_stats(int $constructor_id): ?object {
+    public function get_person_constructor_stats(int $person_id): ?object {
         $sql = $this->wpdb->prepare(
             "SELECT
                 COUNT(DISTINCT pc.puzzle_id) as puzzle_count,
@@ -1948,42 +1812,44 @@ class Kealoa_DB {
             FROM {$this->puzzle_constructors_table} pc
             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
-            WHERE pc.constructor_id = %d",
-            $constructor_id
+            WHERE pc.person_id = %d",
+            $person_id
         );
 
         return $this->wpdb->get_row($sql);
     }
 
     /**
-     * Get puzzles for a constructor with round info
+     * Get puzzles for a person's constructor role with round info
      */
-    public function get_constructor_puzzles(int $constructor_id): array {
+    public function get_person_constructor_puzzles(int $person_id): array {
         $sql = $this->wpdb->prepare(
             "SELECT
                 pz.id as puzzle_id,
                 pz.publication_date,
-                pz.editor_name,
+                pz.editor_id,
+                COALESCE(ed.full_name, '') as editor_name,
                 GROUP_CONCAT(DISTINCT r.id ORDER BY r.round_date ASC, r.round_number ASC) as round_ids,
                 GROUP_CONCAT(DISTINCT r.round_date ORDER BY r.round_date ASC, r.round_number ASC) as round_dates,
                 GROUP_CONCAT(DISTINCT r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers
             FROM {$this->puzzles_table} pz
             INNER JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
+            LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
             LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
-            WHERE pc.constructor_id = %d
-            GROUP BY pz.id, pz.publication_date, pz.editor_name
+            WHERE pc.person_id = %d
+            GROUP BY pz.id, pz.publication_date, ed.full_name
             ORDER BY pz.publication_date DESC",
-            $constructor_id
+            $person_id
         );
 
         return $this->wpdb->get_results($sql);
     }
 
     /**
-     * Get player results for all clues by a constructor
+     * Get player results for all clues by a person's constructor role
      */
-    public function get_constructor_player_results(int $constructor_id): array {
+    public function get_person_constructor_player_results(int $person_id): array {
         $sql = $this->wpdb->prepare(
             "SELECT
                 p.id as person_id,
@@ -1995,63 +1861,66 @@ class Kealoa_DB {
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->puzzle_constructors_table} pc ON c.puzzle_id = pc.puzzle_id
             INNER JOIN {$this->persons_table} p ON g.guesser_person_id = p.id
-            WHERE pc.constructor_id = %d
+            WHERE pc.person_id = %d
             GROUP BY p.id, p.full_name
             ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC",
-            $constructor_id
+            $person_id
         );
 
         return $this->wpdb->get_results($sql);
     }
 
     /**
-     * Get editor results for a constructor's puzzles
+     * Get editor results for a person's constructor puzzles
      */
-    public function get_constructor_editor_results(int $constructor_id): array {
+    public function get_person_constructor_editor_results(int $person_id): array {
         $sql = $this->wpdb->prepare(
             "SELECT
-                COALESCE(pz.editor_name, 'Unknown') as editor_name,
+                ed.id as editor_id,
+                COALESCE(ed.full_name, 'Unknown') as editor_name,
                 COUNT(DISTINCT pz.id) as puzzle_count,
                 COUNT(DISTINCT c.id) as clue_count,
                 COUNT(g.id) as total_guesses,
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses
             FROM {$this->puzzle_constructors_table} pc
             INNER JOIN {$this->puzzles_table} pz ON pc.puzzle_id = pz.id
+            LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
-            WHERE pc.constructor_id = %d
-            GROUP BY editor_name
-            ORDER BY puzzle_count DESC, editor_name ASC",
-            $constructor_id
+            WHERE pc.person_id = %d
+            GROUP BY ed.id, ed.full_name
+            ORDER BY puzzle_count DESC, ed.full_name ASC",
+            $person_id
         );
 
         return $this->wpdb->get_results($sql);
     }
 
     /**
-     * Get all editors with aggregate guess stats
+     * Get persons who are editors, with aggregate guess stats
      */
-    public function get_editors_with_stats(): array {
+    public function get_persons_who_are_editors(): array {
         $sql = "SELECT
-                COALESCE(p.editor_name, 'Unknown') as editor_name,
+                ed.id,
+                ed.full_name as editor_name,
                 COUNT(DISTINCT p.id) as puzzle_count,
                 COUNT(DISTINCT c.id) as clue_count,
                 COUNT(DISTINCT g.id) as total_guesses,
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses
-            FROM {$this->puzzles_table} p
+            FROM {$this->persons_table} ed
+            INNER JOIN {$this->puzzles_table} p ON p.editor_id = ed.id
             INNER JOIN {$this->clues_table} c ON c.puzzle_id = p.id
             INNER JOIN {$this->guesses_table} g ON g.clue_id = c.id
-            WHERE p.editor_name IS NOT NULL AND p.editor_name != ''
-            GROUP BY p.editor_name
-            ORDER BY p.editor_name ASC";
+            GROUP BY ed.id, ed.full_name
+            ORDER BY ed.full_name ASC";
 
         return $this->wpdb->get_results($sql);
     }
 
     /**
-     * Get player results for all clues edited by an editor
+     * Get player results for all clues under a person's editor role
      */
-    public function get_editor_player_results(string $editor_name): array {
+    public function get_person_editor_player_results(int $person_id): array {
         $sql = $this->wpdb->prepare(
             "SELECT
                 p.id as person_id,
@@ -2063,19 +1932,19 @@ class Kealoa_DB {
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
             INNER JOIN {$this->persons_table} p ON g.guesser_person_id = p.id
-            WHERE pz.editor_name = %s
+            WHERE pz.editor_id = %d
             GROUP BY p.id, p.full_name
             ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC",
-            $editor_name
+            $person_id
         );
 
         return $this->wpdb->get_results($sql);
     }
 
     /**
-     * Get constructor results for all puzzles edited by an editor
+     * Get constructor results for all puzzles under a person's editor role
      */
-    public function get_editor_constructor_results(string $editor_name): array {
+    public function get_person_editor_constructor_results(int $person_id): array {
         $sql = $this->wpdb->prepare(
             "SELECT
                 con.id as constructor_id,
@@ -2086,36 +1955,22 @@ class Kealoa_DB {
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses
             FROM {$this->puzzles_table} pz
             INNER JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
-            INNER JOIN {$this->constructors_table} con ON pc.constructor_id = con.id
+            INNER JOIN {$this->persons_table} con ON pc.person_id = con.id
             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
-            WHERE pz.editor_name = %s
+            WHERE pz.editor_id = %d
             GROUP BY con.id, con.full_name
             ORDER BY puzzle_count DESC, con.full_name ASC",
-            $editor_name
+            $person_id
         );
 
         return $this->wpdb->get_results($sql);
     }
 
     /**
-     * Check if an editor name exists in the puzzles table.
-     *
-     * @param string $name The editor name to check
-     * @return bool True if the editor name exists
+     * Get aggregate stats for a person's editor role
      */
-    public function editor_name_exists(string $name): bool {
-        $sql = $this->wpdb->prepare(
-            "SELECT 1 FROM {$this->puzzles_table} WHERE editor_name = %s LIMIT 1",
-            $name
-        );
-        return (bool) $this->wpdb->get_var($sql);
-    }
-
-    /**
-     * Get aggregate stats for a single editor
-     */
-    public function get_editor_stats(string $editor_name): ?object {
+    public function get_person_editor_stats(int $person_id): ?object {
         $sql = $this->wpdb->prepare(
             "SELECT
                 COUNT(DISTINCT p.id) as puzzle_count,
@@ -2125,17 +1980,17 @@ class Kealoa_DB {
             FROM {$this->puzzles_table} p
             INNER JOIN {$this->clues_table} c ON c.puzzle_id = p.id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
-            WHERE p.editor_name = %s",
-            $editor_name
+            WHERE p.editor_id = %d",
+            $person_id
         );
 
         return $this->wpdb->get_row($sql);
     }
 
     /**
-     * Get puzzles edited by a specific editor, with constructor and round info
+     * Get puzzles for a person's editor role, with constructor and round info
      */
-    public function get_editor_puzzles(string $editor_name): array {
+    public function get_person_editor_puzzles(int $person_id): array {
         $sql = $this->wpdb->prepare(
             "SELECT
                 pz.id as puzzle_id,
@@ -2147,16 +2002,76 @@ class Kealoa_DB {
                 GROUP_CONCAT(DISTINCT r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers
             FROM {$this->puzzles_table} pz
             LEFT JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
-            LEFT JOIN {$this->constructors_table} con ON pc.constructor_id = con.id
+            LEFT JOIN {$this->persons_table} con ON pc.person_id = con.id
             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
             LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
-            WHERE pz.editor_name = %s
+            WHERE pz.editor_id = %d
             GROUP BY pz.id, pz.publication_date
             ORDER BY pz.publication_date DESC",
-            $editor_name
+            $person_id
         );
 
         return $this->wpdb->get_results($sql);
+    }
+
+    // =========================================================================
+    // ROLE INFERENCE
+    // =========================================================================
+
+    /**
+     * Check if a person has the player role (is a guesser or clue giver)
+     */
+    public function is_player(int $person_id): bool {
+        $sql = $this->wpdb->prepare(
+            "SELECT 1 FROM {$this->round_guessers_table} WHERE person_id = %d
+             UNION
+             SELECT 1 FROM {$this->rounds_table} WHERE clue_giver_id = %d
+             LIMIT 1",
+            $person_id,
+            $person_id
+        );
+        return (bool) $this->wpdb->get_var($sql);
+    }
+
+    /**
+     * Check if a person has the constructor role
+     */
+    public function is_constructor(int $person_id): bool {
+        $sql = $this->wpdb->prepare(
+            "SELECT 1 FROM {$this->puzzle_constructors_table} WHERE person_id = %d LIMIT 1",
+            $person_id
+        );
+        return (bool) $this->wpdb->get_var($sql);
+    }
+
+    /**
+     * Check if a person has the editor role
+     */
+    public function is_editor(int $person_id): bool {
+        $sql = $this->wpdb->prepare(
+            "SELECT 1 FROM {$this->puzzles_table} WHERE editor_id = %d LIMIT 1",
+            $person_id
+        );
+        return (bool) $this->wpdb->get_var($sql);
+    }
+
+    /**
+     * Get all active roles for a person
+     *
+     * @return string[] Array of role names: 'player', 'constructor', 'editor'
+     */
+    public function get_person_roles(int $person_id): array {
+        $roles = [];
+        if ($this->is_player($person_id)) {
+            $roles[] = 'player';
+        }
+        if ($this->is_constructor($person_id)) {
+            $roles[] = 'constructor';
+        }
+        if ($this->is_editor($person_id)) {
+            $roles[] = 'editor';
+        }
+        return $roles;
     }
 
     /**
@@ -2166,18 +2081,20 @@ class Kealoa_DB {
         $sql = "SELECT
                 pz.id as puzzle_id,
                 pz.publication_date,
-                COALESCE(pz.editor_name, 'Unknown') as editor_name,
+                COALESCE(ed.full_name, '') as editor_name,
+                ed.id as editor_id,
                 GROUP_CONCAT(DISTINCT con.full_name ORDER BY pc.constructor_order ASC SEPARATOR ', ') as constructor_names,
                 GROUP_CONCAT(DISTINCT con.id ORDER BY pc.constructor_order ASC) as constructor_ids,
                 GROUP_CONCAT(DISTINCT r.id ORDER BY r.round_date ASC, r.round_number ASC) as round_ids,
                 GROUP_CONCAT(DISTINCT r.round_date ORDER BY r.round_date ASC, r.round_number ASC) as round_dates,
                 GROUP_CONCAT(DISTINCT r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers
             FROM {$this->puzzles_table} pz
+            LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             LEFT JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
-            LEFT JOIN {$this->constructors_table} con ON pc.constructor_id = con.id
+            LEFT JOIN {$this->persons_table} con ON pc.person_id = con.id
             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
             LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
-            GROUP BY pz.id, pz.publication_date, pz.editor_name
+            GROUP BY pz.id, pz.publication_date, ed.full_name, ed.id
             ORDER BY pz.publication_date DESC";
 
         return $this->wpdb->get_results($sql);
@@ -2186,15 +2103,15 @@ class Kealoa_DB {
     /**
      * Get co-constructors for a constructor's puzzles
      */
-    public function get_puzzle_co_constructors(int $puzzle_id, int $exclude_constructor_id): array {
+    public function get_puzzle_co_constructors(int $puzzle_id, int $exclude_person_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT con.id, con.full_name, con.xwordinfo_profile_name
-            FROM {$this->constructors_table} con
-            INNER JOIN {$this->puzzle_constructors_table} pc ON con.id = pc.constructor_id
-            WHERE pc.puzzle_id = %d AND con.id != %d
+            "SELECT p.id, p.full_name, p.xwordinfo_profile_name
+            FROM {$this->persons_table} p
+            INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.person_id
+            WHERE pc.puzzle_id = %d AND p.id != %d
             ORDER BY pc.constructor_order ASC",
             $puzzle_id,
-            $exclude_constructor_id
+            $exclude_person_id
         );
 
         return $this->wpdb->get_results($sql);
@@ -2423,36 +2340,8 @@ class Kealoa_DB {
         return $map;
     }
 
-    // =========================================================================
-    // EDITOR MEDIA
-    // =========================================================================
-
     /**
-     * Get the media attachment ID for an editor
-     */
-    public function get_editor_media_id(string $editor_name): int {
-        $key = 'kealoa_editor_media_' . sanitize_title($editor_name);
-        return (int) get_option($key, 0);
-    }
-
-    /**
-     * Set the media attachment ID for an editor
-     */
-    public function set_editor_media_id(string $editor_name, int $media_id): bool {
-        $key = 'kealoa_editor_media_' . sanitize_title($editor_name);
-        return update_option($key, $media_id, false);
-    }
-
-    /**
-     * Remove the media attachment ID for an editor
-     */
-    public function delete_editor_media_id(string $editor_name): bool {
-        $key = 'kealoa_editor_media_' . sanitize_title($editor_name);
-        return delete_option($key);
-    }
-
-    /**
-     * Search across persons, constructors, editors, and round solution words
+     * Search across persons, puzzles, rounds, and round solution words
      *
      * @param string $search_term The search term
      * @return array Array of results with type, name, and url
@@ -2461,7 +2350,7 @@ class Kealoa_DB {
         $results = [];
         $like = '%' . $this->wpdb->esc_like($search_term) . '%';
 
-        // Search persons
+        // Search persons (unified: players, constructors, editors)
         $persons = $this->wpdb->get_results(
             $this->wpdb->prepare(
                 "SELECT id, full_name FROM {$this->persons_table} WHERE full_name LIKE %s ORDER BY full_name ASC",
@@ -2469,41 +2358,13 @@ class Kealoa_DB {
             )
         );
         foreach ($persons as $p) {
+            $roles = $this->get_person_roles((int) $p->id);
+            $role_label = !empty($roles) ? implode(', ', $roles) : 'person';
             $slug = str_replace(' ', '_', $p->full_name);
             $results[] = (object) [
-                'type' => 'player',
-                'name' => $p->full_name,
+                'type' => 'person',
+                'name' => $p->full_name . ' (' . $role_label . ')',
                 'url' => home_url('/kealoa/person/' . urlencode($slug) . '/'),
-            ];
-        }
-
-        // Search constructors
-        $constructors = $this->wpdb->get_results(
-            $this->wpdb->prepare(
-                "SELECT id, full_name FROM {$this->constructors_table} WHERE full_name LIKE %s ORDER BY full_name ASC",
-                $like
-            )
-        );
-        foreach ($constructors as $c) {
-            $results[] = (object) [
-                'type' => 'constructor',
-                'name' => $c->full_name,
-                'url' => home_url('/kealoa/constructor/' . urlencode(str_replace(' ', '_', $c->full_name)) . '/'),
-            ];
-        }
-
-        // Search editors (distinct names from puzzles table)
-        $editors = $this->wpdb->get_results(
-            $this->wpdb->prepare(
-                "SELECT DISTINCT editor_name FROM {$this->puzzles_table} WHERE editor_name IS NOT NULL AND editor_name != '' AND editor_name LIKE %s ORDER BY editor_name ASC",
-                $like
-            )
-        );
-        foreach ($editors as $e) {
-            $results[] = (object) [
-                'type' => 'editor',
-                'name' => $e->editor_name,
-                'url' => home_url('/kealoa/editor/' . urlencode($e->editor_name) . '/'),
             ];
         }
 
@@ -2528,8 +2389,11 @@ class Kealoa_DB {
             if (!empty($con_names)) {
                 $label .= ' — ' . implode(' & ', $con_names);
             }
-            if (!empty($puzzle->editor_name)) {
-                $label .= ' (ed. ' . $puzzle->editor_name . ')';
+            if (!empty($puzzle->editor_id)) {
+                $editor = $this->get_person((int) $puzzle->editor_id);
+                if ($editor) {
+                    $label .= ' (ed. ' . $editor->full_name . ')';
+                }
             }
             $results[] = (object) [
                 'type' => 'puzzle',
@@ -2541,7 +2405,7 @@ class Kealoa_DB {
         // Search puzzles by publication date
         $date_puzzles = $this->wpdb->get_results(
             $this->wpdb->prepare(
-                "SELECT id as puzzle_id, publication_date, COALESCE(editor_name, '') as editor_name
+                "SELECT id as puzzle_id, publication_date, editor_id
                 FROM {$this->puzzles_table}
                 WHERE publication_date LIKE %s
                 ORDER BY publication_date DESC",
@@ -2552,13 +2416,13 @@ class Kealoa_DB {
             $add_puzzle_result($pz);
         }
 
-        // Search puzzles by constructor name
+        // Search puzzles by constructor name (via persons)
         $con_puzzles = $this->wpdb->get_results(
             $this->wpdb->prepare(
-                "SELECT DISTINCT pz.id as puzzle_id, pz.publication_date, COALESCE(pz.editor_name, '') as editor_name
+                "SELECT DISTINCT pz.id as puzzle_id, pz.publication_date, pz.editor_id
                 FROM {$this->puzzles_table} pz
                 INNER JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
-                INNER JOIN {$this->constructors_table} con ON pc.constructor_id = con.id
+                INNER JOIN {$this->persons_table} con ON pc.person_id = con.id
                 WHERE con.full_name LIKE %s
                 ORDER BY pz.publication_date DESC",
                 $like
@@ -2568,13 +2432,14 @@ class Kealoa_DB {
             $add_puzzle_result($pz);
         }
 
-        // Search puzzles by editor name
+        // Search puzzles by editor name (via persons)
         $ed_puzzles = $this->wpdb->get_results(
             $this->wpdb->prepare(
-                "SELECT id as puzzle_id, publication_date, COALESCE(editor_name, '') as editor_name
-                FROM {$this->puzzles_table}
-                WHERE editor_name LIKE %s
-                ORDER BY publication_date DESC",
+                "SELECT DISTINCT pz.id as puzzle_id, pz.publication_date, pz.editor_id
+                FROM {$this->puzzles_table} pz
+                INNER JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
+                WHERE ed.full_name LIKE %s
+                ORDER BY pz.publication_date DESC",
                 $like
             )
         );
@@ -2585,7 +2450,7 @@ class Kealoa_DB {
         // Search puzzles by clue text and correct answers
         $clue_puzzles = $this->wpdb->get_results(
             $this->wpdb->prepare(
-                "SELECT DISTINCT pz.id as puzzle_id, pz.publication_date, COALESCE(pz.editor_name, '') as editor_name
+                "SELECT DISTINCT pz.id as puzzle_id, pz.publication_date, pz.editor_id
                 FROM {$this->clues_table} c
                 INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
                 WHERE c.clue_text LIKE %s OR c.correct_answer LIKE %s
@@ -2643,30 +2508,28 @@ class Kealoa_DB {
             $add_round_result((int) $rd->id);
         }
 
-        // Include rounds from matching constructors
-        if (!empty($constructors)) {
-            $constructor_ids = array_map(fn($c) => (int) $c->id, $constructors);
-            $placeholders = implode(',', array_fill(0, count($constructor_ids), '%d'));
+        // Include rounds from matching persons (as constructor, player, or editor)
+        if (!empty($persons)) {
+            $person_ids = array_map(fn($p) => (int) $p->id, $persons);
+            $placeholders = implode(',', array_fill(0, count($person_ids), '%d'));
+
+            // Rounds where person is constructor
             $constructor_rounds = $this->wpdb->get_results(
                 $this->wpdb->prepare(
                     "SELECT DISTINCT cl.round_id
                     FROM {$this->puzzle_constructors_table} pc
                     INNER JOIN {$this->clues_table} cl ON cl.puzzle_id = pc.puzzle_id
                     INNER JOIN {$this->rounds_table} r ON cl.round_id = r.id
-                    WHERE pc.constructor_id IN ($placeholders)
+                    WHERE pc.person_id IN ($placeholders)
                     ORDER BY r.round_date DESC, r.round_number ASC",
-                    ...$constructor_ids
+                    ...$person_ids
                 )
             );
             foreach ($constructor_rounds as $rd) {
                 $add_round_result((int) $rd->round_id);
             }
-        }
 
-        // Include rounds from matching players (as guesser or clue giver)
-        if (!empty($persons)) {
-            $person_ids = array_map(fn($p) => (int) $p->id, $persons);
-            $placeholders = implode(',', array_fill(0, count($person_ids), '%d'));
+            // Rounds where person is player (guesser or clue giver)
             $player_rounds = $this->wpdb->get_results(
                 $this->wpdb->prepare(
                     "SELECT DISTINCT r.id AS round_id
@@ -2681,21 +2544,17 @@ class Kealoa_DB {
             foreach ($player_rounds as $rd) {
                 $add_round_result((int) $rd->round_id);
             }
-        }
 
-        // Include rounds from matching editors
-        if (!empty($editors)) {
-            $editor_names = array_map(fn($e) => $e->editor_name, $editors);
-            $placeholders = implode(',', array_fill(0, count($editor_names), '%s'));
+            // Rounds where person is editor
             $editor_rounds = $this->wpdb->get_results(
                 $this->wpdb->prepare(
                     "SELECT DISTINCT cl.round_id
                     FROM {$this->puzzles_table} pz
                     INNER JOIN {$this->clues_table} cl ON cl.puzzle_id = pz.id
                     INNER JOIN {$this->rounds_table} r ON cl.round_id = r.id
-                    WHERE pz.editor_name IN ($placeholders)
+                    WHERE pz.editor_id IN ($placeholders)
                     ORDER BY r.round_date DESC, r.round_number ASC",
-                    ...$editor_names
+                    ...$person_ids
                 )
             );
             foreach ($editor_rounds as $rd) {
@@ -2721,7 +2580,7 @@ class Kealoa_DB {
 
         // 1. Orphan puzzles — not referenced by any clue
         $orphan_puzzles = $this->wpdb->get_results(
-            "SELECT p.id, p.publication_date, p.editor_name
+            "SELECT p.id, p.publication_date, p.editor_id
              FROM {$this->puzzles_table} p
              LEFT JOIN {$this->clues_table} c ON c.puzzle_id = p.id
              WHERE c.id IS NULL
@@ -2731,19 +2590,7 @@ class Kealoa_DB {
             $issues['orphan_puzzles'] = $orphan_puzzles;
         }
 
-        // 2. Orphan constructors — not associated with any puzzle
-        $orphan_constructors = $this->wpdb->get_results(
-            "SELECT c.id, c.full_name
-             FROM {$this->constructors_table} c
-             LEFT JOIN {$this->puzzle_constructors_table} pc ON pc.constructor_id = c.id
-             WHERE pc.id IS NULL
-             ORDER BY c.full_name"
-        );
-        if ($orphan_constructors) {
-            $issues['orphan_constructors'] = $orphan_constructors;
-        }
-
-        // 3. Rounds with no clues
+        // 2. Rounds with no clues
         $rounds_no_clues = $this->wpdb->get_results(
             "SELECT r.id, r.round_date, r.round_number, r.description
              FROM {$this->rounds_table} r
@@ -2781,7 +2628,7 @@ class Kealoa_DB {
 
         // 6. Puzzle-constructor links referencing non-existent puzzles
         $orphan_pc_puzzles = $this->wpdb->get_results(
-            "SELECT pc.id, pc.puzzle_id, pc.constructor_id
+            "SELECT pc.id, pc.puzzle_id, pc.person_id
              FROM {$this->puzzle_constructors_table} pc
              LEFT JOIN {$this->puzzles_table} p ON p.id = pc.puzzle_id
              WHERE p.id IS NULL"
@@ -2790,15 +2637,15 @@ class Kealoa_DB {
             $issues['orphan_puzzle_constructor_puzzles'] = $orphan_pc_puzzles;
         }
 
-        // 7. Puzzle-constructor links referencing non-existent constructors
-        $orphan_pc_constructors = $this->wpdb->get_results(
-            "SELECT pc.id, pc.puzzle_id, pc.constructor_id
+        // 7. Puzzle-constructor links referencing non-existent persons
+        $orphan_pc_persons = $this->wpdb->get_results(
+            "SELECT pc.id, pc.puzzle_id, pc.person_id
              FROM {$this->puzzle_constructors_table} pc
-             LEFT JOIN {$this->constructors_table} c ON c.id = pc.constructor_id
-             WHERE c.id IS NULL"
+             LEFT JOIN {$this->persons_table} p ON p.id = pc.person_id
+             WHERE p.id IS NULL"
         );
-        if ($orphan_pc_constructors) {
-            $issues['orphan_puzzle_constructor_constructors'] = $orphan_pc_constructors;
+        if ($orphan_pc_persons) {
+            $issues['orphan_puzzle_constructor_persons'] = $orphan_pc_persons;
         }
 
         // 8. Clues referencing non-existent rounds
@@ -2887,6 +2734,37 @@ class Kealoa_DB {
         );
         if ($orphan_clue_givers) {
             $issues['orphan_round_clue_givers'] = $orphan_clue_givers;
+        }
+
+        // 16. Puzzles referencing non-existent editor (person)
+        $orphan_puzzle_editors = $this->wpdb->get_results(
+            "SELECT pz.id, pz.publication_date, pz.editor_id
+             FROM {$this->puzzles_table} pz
+             LEFT JOIN {$this->persons_table} p ON p.id = pz.editor_id
+             WHERE pz.editor_id IS NOT NULL AND p.id IS NULL"
+        );
+        if ($orphan_puzzle_editors) {
+            $issues['orphan_puzzle_editors'] = $orphan_puzzle_editors;
+        }
+
+        // 17. Orphan persons — not referenced by any role
+        $orphan_persons = $this->wpdb->get_results(
+            "SELECT p.id, p.full_name
+             FROM {$this->persons_table} p
+             LEFT JOIN {$this->round_guessers_table} rg ON rg.person_id = p.id
+             LEFT JOIN {$this->rounds_table} r_giver ON r_giver.clue_giver_id = p.id
+             LEFT JOIN {$this->guesses_table} g ON g.guesser_person_id = p.id
+             LEFT JOIN {$this->puzzle_constructors_table} pc ON pc.person_id = p.id
+             LEFT JOIN {$this->puzzles_table} pz ON pz.editor_id = p.id
+             WHERE rg.id IS NULL
+               AND r_giver.id IS NULL
+               AND g.id IS NULL
+               AND pc.id IS NULL
+               AND pz.id IS NULL
+             ORDER BY p.full_name"
+        );
+        if ($orphan_persons) {
+            $issues['orphan_persons'] = $orphan_persons;
         }
 
         return $issues;

@@ -13,14 +13,15 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$constructor_id = $attributes['constructorId'] ?? 0;
+// Legacy block — constructorId maps to person_id after v2.0.0 migration
+$person_id = $attributes['constructorId'] ?? 0;
 
-if (!$constructor_id) {
-    echo '<p class="kealoa-block-placeholder">' . 
-        esc_html__('Please select a constructor from the block settings.', 'kealoa-reference') . 
+if (!$person_id) {
+    echo '<p class="kealoa-block-placeholder">' .
+        esc_html__('Please select a person from the block settings.', 'kealoa-reference') .
         '</p>';
     return;
 }
 
 $shortcodes = new Kealoa_Shortcodes();
-echo $shortcodes->render_constructor(['id' => $constructor_id]);
+echo $shortcodes->render_person(['id' => $person_id]);

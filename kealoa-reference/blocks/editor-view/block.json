@@ -6,7 +6,7 @@
     "title": "KEALOA Editor View",
     "category": "widgets",
     "icon": "edit",
-    "description": "Displays an editor's puzzle history.",
+    "description": "Deprecated: Use Person View instead. Displays a person's KEALOA statistics and history.",
     "keywords": ["kealoa", "editor", "puzzles"],
     "supports": {
         "html": false,

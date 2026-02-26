@@ -6,7 +6,7 @@
     "title": "KEALOA Puzzles Table",
     "category": "widgets",
     "icon": "grid-view",
-    "description": "Displays a table of all puzzles with publication date, constructors, editor, and round details.",
+    "description": "Displays a table of all puzzles with publication date, persons, editor, and round details.",
     "keywords": ["kealoa", "puzzles", "table", "crossword"],
     "supports": {
         "html": false,

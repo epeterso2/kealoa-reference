@@ -40,10 +40,6 @@ class Kealoa_Shortcodes {
         add_shortcode('kealoa_round', [$this, 'render_round']);
         add_shortcode('kealoa_person', [$this, 'render_person']);
         add_shortcode('kealoa_persons_table', [$this, 'render_persons_table']);
-        add_shortcode('kealoa_constructors_table', [$this, 'render_constructors_table']);
-        add_shortcode('kealoa_constructor', [$this, 'render_constructor']);
-        add_shortcode('kealoa_editors_table', [$this, 'render_editors_table']);
-        add_shortcode('kealoa_editor', [$this, 'render_editor']);
         add_shortcode('kealoa_puzzles_table', [$this, 'render_puzzles_table']);
         add_shortcode('kealoa_puzzle', [$this, 'render_puzzle']);
         add_shortcode('kealoa_version', [$this, 'render_version']);
@@ -592,8 +588,8 @@ class Kealoa_Shortcodes {
                                     </td>
                                     <td class="kealoa-editor">
                                         <?php
-                                        if (!empty($clue->editor_name)) {
-                                            echo Kealoa_Formatter::format_editor_link($clue->editor_name);
+                                        if (!empty($clue->editor_id)) {
+                                            echo Kealoa_Formatter::format_editor_link((int) $clue->editor_id, $clue->editor_name);
                                         } else {
                                             echo '—';
                                         }
@@ -706,13 +702,23 @@ class Kealoa_Shortcodes {
 
         $stats = $this->db->get_person_stats($person_id);
 
-        // Check if this person is also a constructor
-        $matching_constructor = $this->db->get_constructor_by_name($person->full_name);
+        // Check roles via unified persons schema
+        $roles = $this->db->get_person_roles($person_id);
+        $is_player = in_array('player', $roles, true);
+        $is_constructor = in_array('constructor', $roles, true);
+        $is_editor = in_array('editor', $roles, true);
 
-        // Check if this person is also an editor
-        $is_editor = $this->db->editor_name_exists($person->full_name);
+        // Constructor/editor role data (loaded lazily)
+        $constructor_stats = $is_constructor ? $this->db->get_person_constructor_stats($person_id) : null;
+        $constructor_puzzles = $is_constructor ? $this->db->get_person_constructor_puzzles($person_id) : [];
+        $constructor_player_results = $is_constructor ? $this->db->get_person_constructor_player_results($person_id) : [];
+        $constructor_editor_results = $is_constructor ? $this->db->get_person_constructor_editor_results($person_id) : [];
+        $editor_stats = $is_editor ? $this->db->get_person_editor_stats($person_id) : null;
+        $editor_puzzles = $is_editor ? $this->db->get_person_editor_puzzles($person_id) : [];
+        $editor_player_results = $is_editor ? $this->db->get_person_editor_player_results($person_id) : [];
+        $editor_constructor_results = $is_editor ? $this->db->get_person_editor_constructor_results($person_id) : [];
 
-        $person_puzzles = $this->db->get_person_puzzles($person_id);
+        $person_puzzles = $is_player ? $this->db->get_person_puzzles($person_id) : [];
         $clue_number_results = $this->db->get_person_results_by_clue_number($person_id);
         $answer_length_results = $this->db->get_person_results_by_answer_length($person_id);
         $direction_results = $this->db->get_person_results_by_direction($person_id);
@@ -825,6 +831,10 @@ class Kealoa_Shortcodes {
         }
 
         ob_start();
+        $default_tab = $is_player ? 'player' : ($is_constructor ? 'as-constructor' : 'as-editor');
+        $tab_active = function(string $tab) use ($default_tab): string {
+            return $tab === $default_tab ? ' active' : '';
+        };
         ?>
         <div class="kealoa-person-view">
             <div class="kealoa-person-header">
@@ -844,19 +854,11 @@ class Kealoa_Shortcodes {
                     <div class="kealoa-person-details">
                         <h2 class="kealoa-person-name"><?php echo esc_html($person->full_name); ?></h2>
 
-                        <?php if ($matching_constructor): ?>
-                            <p class="kealoa-cross-link-text">
-                                <a href="<?php echo esc_url(home_url('/kealoa/constructor/' . urlencode(str_replace(' ', '_', $matching_constructor->full_name)) . '/')); ?>">
-                                    <?php esc_html_e('View as Constructor', 'kealoa-reference'); ?>
-                                </a>
-                            </p>
-                        <?php endif; ?>
-
-                        <?php if ($is_editor): ?>
-                            <p class="kealoa-cross-link-text">
-                                <a href="<?php echo esc_url(home_url('/kealoa/editor/' . urlencode($person->full_name) . '/')); ?>">
-                                    <?php esc_html_e('View as Editor', 'kealoa-reference'); ?>
-                                </a>
+                        <?php if (!empty($roles)): ?>
+                            <p class="kealoa-person-roles">
+                                <?php foreach ($roles as $role): ?>
+                                    <span class="kealoa-role-badge kealoa-role-<?php echo esc_attr($role); ?>"><?php echo esc_html(ucfirst($role)); ?></span>
+                                <?php endforeach; ?>
                             </p>
                         <?php endif; ?>
 
@@ -877,15 +879,24 @@ class Kealoa_Shortcodes {
 
             <div class="kealoa-tabs">
                 <div class="kealoa-tab-nav">
-                    <button class="kealoa-tab-button active" data-tab="player"><?php esc_html_e('Overall Stats', 'kealoa-reference'); ?></button>
+                    <?php if ($is_player): ?>
+                    <button class="kealoa-tab-button<?php echo $tab_active('player'); ?>" data-tab="player"><?php esc_html_e('Overall Stats', 'kealoa-reference'); ?></button>
                     <button class="kealoa-tab-button" data-tab="puzzle"><?php esc_html_e('Puzzle Stats', 'kealoa-reference'); ?></button>
                     <button class="kealoa-tab-button" data-tab="round"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></button>
                     <button class="kealoa-tab-button" data-tab="puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="constructor"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="editor"><?php esc_html_e('Editors', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="by-constructor"><?php esc_html_e('By Constructor', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="by-editor"><?php esc_html_e('By Editor', 'kealoa-reference'); ?></button>
+                    <?php endif; ?>
+                    <?php if ($is_constructor): ?>
+                    <button class="kealoa-tab-button<?php echo $tab_active('as-constructor'); ?>" data-tab="as-constructor"><?php esc_html_e('As Constructor', 'kealoa-reference'); ?></button>
+                    <?php endif; ?>
+                    <?php if ($is_editor): ?>
+                    <button class="kealoa-tab-button<?php echo $tab_active('as-editor'); ?>" data-tab="as-editor"><?php esc_html_e('As Editor', 'kealoa-reference'); ?></button>
+                    <?php endif; ?>
                 </div>
 
-                <div class="kealoa-tab-panel active" data-tab="player">
+                <?php if ($is_player): ?>
+                <div class="kealoa-tab-panel<?php echo $tab_active('player'); ?>" data-tab="player">
 
             <div class="kealoa-person-stats">
                 <h2><?php esc_html_e('KEALOA Statistics', 'kealoa-reference'); ?></h2>
@@ -1364,8 +1375,8 @@ class Kealoa_Shortcodes {
                                     </td>
                                     <td>
                                         <?php
-                                        if (!empty($puzzle->editor_name)) {
-                                            echo Kealoa_Formatter::format_editor_link($puzzle->editor_name);
+                                        if (!empty($puzzle->editor_id)) {
+                                            echo Kealoa_Formatter::format_editor_link((int) $puzzle->editor_id, $puzzle->editor_name);
                                         } else {
                                             echo '&#x2014;';
                                         }
@@ -1531,7 +1542,7 @@ class Kealoa_Shortcodes {
 
                 </div><!-- end Puzzle tab -->
 
-                <div class="kealoa-tab-panel" data-tab="constructor">
+                <div class="kealoa-tab-panel" data-tab="by-constructor">
 
             <?php if (!empty($constructor_results)): ?>
                 <div class="kealoa-constructor-stats">
@@ -1621,9 +1632,9 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
 
-                </div><!-- end Constructor tab -->
+                </div><!-- end By Constructor tab -->
 
-                <div class="kealoa-tab-panel" data-tab="editor">
+                <div class="kealoa-tab-panel" data-tab="by-editor">
 
             <?php if (!empty($editor_results)): ?>
                 <div class="kealoa-editor-stats">
@@ -1658,7 +1669,7 @@ class Kealoa_Shortcodes {
                         <tbody>
                             <?php foreach ($editor_results as $result): ?>
                                 <tr>
-                                    <td><?php echo Kealoa_Formatter::format_editor_link($result->editor_name); ?></td>
+                                    <td><?php echo Kealoa_Formatter::format_editor_link((int) $result->editor_id, $result->editor_name); ?></td>
                                     <td><?php echo esc_html($result->total_answered); ?></td>
                                     <td><?php echo esc_html($result->correct_count); ?></td>
                                     <?php
@@ -1676,7 +1687,7 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
 
-                </div><!-- end Editor tab -->
+                </div><!-- end By Editor tab -->
 
                 <div class="kealoa-tab-panel" data-tab="round">
 
@@ -1766,6 +1777,565 @@ class Kealoa_Shortcodes {
             <?php endif; ?>
 
                 </div><!-- end Round tab -->
+                <?php endif; ?><!-- end $is_player -->
+
+                <?php if ($is_constructor): ?>
+                <div class="kealoa-tab-panel<?php echo $tab_active('as-constructor'); ?>" data-tab="as-constructor">
+
+                    <?php if ($constructor_stats): ?>
+                    <div class="kealoa-person-constructor-overview">
+                        <h2><?php esc_html_e('Constructor Statistics', 'kealoa-reference'); ?></h2>
+                        <div class="kealoa-stats-grid">
+                            <div class="kealoa-stat-card">
+                                <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $constructor_stats->puzzle_count)); ?></span>
+                                <span class="kealoa-stat-label"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></span>
+                            </div>
+                            <div class="kealoa-stat-card">
+                                <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $constructor_stats->clue_count)); ?></span>
+                                <span class="kealoa-stat-label"><?php esc_html_e('Clues', 'kealoa-reference'); ?></span>
+                            </div>
+                            <div class="kealoa-stat-card">
+                                <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $constructor_stats->total_guesses)); ?></span>
+                                <span class="kealoa-stat-label"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></span>
+                            </div>
+                            <div class="kealoa-stat-card">
+                                <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $constructor_stats->correct_guesses)); ?></span>
+                                <span class="kealoa-stat-label"><?php esc_html_e('Correct', 'kealoa-reference'); ?></span>
+                            </div>
+                            <div class="kealoa-stat-card">
+                                <span class="kealoa-stat-value"><?php
+                                    $con_accuracy = (int) $constructor_stats->total_guesses > 0
+                                        ? ((int) $constructor_stats->correct_guesses / (int) $constructor_stats->total_guesses) * 100
+                                        : 0;
+                                    echo Kealoa_Formatter::format_percentage($con_accuracy);
+                                ?></span>
+                                <span class="kealoa-stat-label"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($constructor_puzzles)): ?>
+                    <?php
+                    // Check if any puzzle has co-constructors
+                    $has_co_constructors = false;
+                    foreach ($constructor_puzzles as $p_check) {
+                        $co_check = $this->db->get_puzzle_co_constructors((int) $p_check->puzzle_id, $person_id);
+                        if (!empty($co_check)) {
+                            $has_co_constructors = true;
+                            break;
+                        }
+                    }
+                    ?>
+                    <div class="kealoa-constructor-puzzles">
+                        <h2><?php esc_html_e('Puzzles Constructed', 'kealoa-reference'); ?></h2>
+
+                        <div class="kealoa-filter-controls" data-target="kealoa-person-con-puzzles-table">
+                            <div class="kealoa-filter-row">
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-pcon-day"><?php esc_html_e('Day', 'kealoa-reference'); ?></label>
+                                    <select id="kealoa-pcon-day" class="kealoa-filter-select" data-filter="exact" data-col="0">
+                                        <option value=""><?php esc_html_e('All Days', 'kealoa-reference'); ?></option>
+                                        <option value="Mon"><?php esc_html_e('Monday', 'kealoa-reference'); ?></option>
+                                        <option value="Tue"><?php esc_html_e('Tuesday', 'kealoa-reference'); ?></option>
+                                        <option value="Wed"><?php esc_html_e('Wednesday', 'kealoa-reference'); ?></option>
+                                        <option value="Thu"><?php esc_html_e('Thursday', 'kealoa-reference'); ?></option>
+                                        <option value="Fri"><?php esc_html_e('Friday', 'kealoa-reference'); ?></option>
+                                        <option value="Sat"><?php esc_html_e('Saturday', 'kealoa-reference'); ?></option>
+                                        <option value="Sun"><?php esc_html_e('Sunday', 'kealoa-reference'); ?></option>
+                                    </select>
+                                </div>
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-pcon-editor"><?php esc_html_e('Editor', 'kealoa-reference'); ?></label>
+                                    <input type="text" id="kealoa-pcon-editor" class="kealoa-filter-input" data-filter="search" data-col="<?php echo $has_co_constructors ? '3' : '2'; ?>" placeholder="<?php esc_attr_e('Editor name...', 'kealoa-reference'); ?>">
+                                </div>
+                                <div class="kealoa-filter-group kealoa-filter-actions">
+                                    <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                    <span class="kealoa-filter-count"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="kealoa-table-scroll">
+                        <table class="kealoa-table kealoa-constructor-puzzles-table" id="kealoa-person-con-puzzles-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
+                                    <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
+                                    <?php if ($has_co_constructors): ?>
+                                    <th data-sort="text"><?php esc_html_e('Co-Constructors', 'kealoa-reference'); ?></th>
+                                    <?php endif; ?>
+                                    <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
+                                    <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
+                                    <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($constructor_puzzles as $cpuzzle): ?>
+                                    <?php
+                                    $co_constructors = $this->db->get_puzzle_co_constructors((int) $cpuzzle->puzzle_id, $person_id);
+                                    $cp_round_ids = !empty($cpuzzle->round_ids) ? explode(',', $cpuzzle->round_ids) : [];
+                                    $cp_round_dates = !empty($cpuzzle->round_dates) ? explode(',', $cpuzzle->round_dates) : [];
+                                    $cp_round_numbers = !empty($cpuzzle->round_numbers) ? explode(',', $cpuzzle->round_numbers) : [];
+                                    ?>
+                                    <tr>
+                                        <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($cpuzzle->publication_date)); ?></td>
+                                        <td>
+                                            <?php echo Kealoa_Formatter::format_puzzle_date_link($cpuzzle->publication_date); ?>
+                                        </td>
+                                        <?php if ($has_co_constructors): ?>
+                                        <td>
+                                            <?php
+                                            if (!empty($co_constructors)) {
+                                                $co_links = array_map(function($co) {
+                                                    return Kealoa_Formatter::format_constructor_link((int) $co->id, $co->full_name);
+                                                }, $co_constructors);
+                                                echo Kealoa_Formatter::format_list_with_and($co_links);
+                                            } else {
+                                                echo '—';
+                                            }
+                                            ?>
+                                        </td>
+                                        <?php endif; ?>
+                                        <td>
+                                            <?php
+                                            if (!empty($cpuzzle->editor_id)) {
+                                                echo Kealoa_Formatter::format_editor_link((int) $cpuzzle->editor_id, $cpuzzle->editor_name);
+                                            } else {
+                                                echo '—';
+                                            }
+                                            ?>
+                                        </td>
+                                        <td>
+                                            <?php
+                                            if (!empty($cp_round_ids)) {
+                                                $cp_round_links = [];
+                                                for ($i = 0; $i < count($cp_round_ids); $i++) {
+                                                    $rid = (int) $cp_round_ids[$i];
+                                                    $rdate = $cp_round_dates[$i] ?? '';
+                                                    if ($rid && $rdate) {
+                                                        $cp_round_links[] = Kealoa_Formatter::format_round_date_link($rid, $rdate);
+                                                    }
+                                                }
+                                                echo implode('<br>', $cp_round_links);
+                                            } else {
+                                                echo '—';
+                                            }
+                                            ?>
+                                        </td>
+                                        <td class="kealoa-solutions-cell">
+                                            <?php
+                                            if (!empty($cp_round_ids)) {
+                                                $cp_sol_links = [];
+                                                for ($i = 0; $i < count($cp_round_ids); $i++) {
+                                                    $rid = (int) $cp_round_ids[$i];
+                                                    if ($rid) {
+                                                        $solutions = $this->db->get_round_solutions($rid);
+                                                        $cp_sol_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
+                                                    }
+                                                }
+                                                echo implode('<br>', $cp_sol_links);
+                                            } else {
+                                                echo '—';
+                                            }
+                                            ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($constructor_player_results)): ?>
+                    <div class="kealoa-constructor-player-stats">
+                        <h2><?php esc_html_e('Player Results', 'kealoa-reference'); ?></h2>
+
+                        <div class="kealoa-filter-controls" data-target="kealoa-person-con-player-table">
+                            <div class="kealoa-filter-row">
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-pcpl-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                                    <input type="text" id="kealoa-pcpl-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
+                                </div>
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-pcpl-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
+                                    <input type="number" id="kealoa-pcpl-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                                </div>
+                                <div class="kealoa-filter-group kealoa-filter-actions">
+                                    <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                    <span class="kealoa-filter-count"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table class="kealoa-table kealoa-constructor-player-table" id="kealoa-person-con-player-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="text"><?php esc_html_e('Player', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($constructor_player_results as $cpr): ?>
+                                    <tr>
+                                        <td><?php echo Kealoa_Formatter::format_person_link((int) $cpr->person_id, $cpr->full_name); ?></td>
+                                        <td><?php echo esc_html($cpr->total_answered); ?></td>
+                                        <td><?php echo esc_html($cpr->correct_count); ?></td>
+                                        <?php
+                                        $pct = $cpr->total_answered > 0
+                                            ? ($cpr->correct_count / $cpr->total_answered) * 100
+                                            : 0;
+                                        ?>
+                                        <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                            <?php echo Kealoa_Formatter::format_percentage($pct); ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($constructor_editor_results)): ?>
+                    <div class="kealoa-constructor-editor-stats">
+                        <h2><?php esc_html_e('Editor Results', 'kealoa-reference'); ?></h2>
+
+                        <div class="kealoa-filter-controls" data-target="kealoa-person-con-editor-table">
+                            <div class="kealoa-filter-row">
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-pced-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                                    <input type="text" id="kealoa-pced-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Editor name...', 'kealoa-reference'); ?>">
+                                </div>
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-pced-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
+                                    <input type="number" id="kealoa-pced-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="3" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                                </div>
+                                <div class="kealoa-filter-group kealoa-filter-actions">
+                                    <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                    <span class="kealoa-filter-count"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table class="kealoa-table kealoa-constructor-editor-table" id="kealoa-person-con-editor-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($constructor_editor_results as $cer): ?>
+                                    <tr>
+                                        <td><?php echo Kealoa_Formatter::format_editor_link((int) $cer->editor_id, $cer->editor_name); ?></td>
+                                        <td><?php echo esc_html($cer->puzzle_count); ?></td>
+                                        <td><?php echo esc_html($cer->clue_count); ?></td>
+                                        <td><?php echo esc_html($cer->total_guesses); ?></td>
+                                        <td><?php echo esc_html($cer->correct_guesses); ?></td>
+                                        <?php
+                                        $pct = $cer->total_guesses > 0
+                                            ? ($cer->correct_guesses / $cer->total_guesses) * 100
+                                            : 0;
+                                        ?>
+                                        <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                            <?php echo Kealoa_Formatter::format_percentage($pct); ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php endif; ?>
+
+                </div><!-- end As Constructor tab -->
+                <?php endif; ?><!-- end $is_constructor -->
+
+                <?php if ($is_editor): ?>
+                <div class="kealoa-tab-panel<?php echo $tab_active('as-editor'); ?>" data-tab="as-editor">
+
+                    <?php if ($editor_stats): ?>
+                    <div class="kealoa-person-editor-overview">
+                        <h2><?php esc_html_e('Editor Statistics', 'kealoa-reference'); ?></h2>
+                        <div class="kealoa-stats-grid">
+                            <div class="kealoa-stat-card">
+                                <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $editor_stats->puzzle_count)); ?></span>
+                                <span class="kealoa-stat-label"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></span>
+                            </div>
+                            <div class="kealoa-stat-card">
+                                <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $editor_stats->clue_count)); ?></span>
+                                <span class="kealoa-stat-label"><?php esc_html_e('Clues', 'kealoa-reference'); ?></span>
+                            </div>
+                            <div class="kealoa-stat-card">
+                                <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $editor_stats->total_guesses)); ?></span>
+                                <span class="kealoa-stat-label"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></span>
+                            </div>
+                            <div class="kealoa-stat-card">
+                                <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $editor_stats->correct_guesses)); ?></span>
+                                <span class="kealoa-stat-label"><?php esc_html_e('Correct', 'kealoa-reference'); ?></span>
+                            </div>
+                            <div class="kealoa-stat-card">
+                                <span class="kealoa-stat-value"><?php
+                                    $ed_accuracy = (int) $editor_stats->total_guesses > 0
+                                        ? ((int) $editor_stats->correct_guesses / (int) $editor_stats->total_guesses) * 100
+                                        : 0;
+                                    echo Kealoa_Formatter::format_percentage($ed_accuracy);
+                                ?></span>
+                                <span class="kealoa-stat-label"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($editor_puzzles)): ?>
+                    <div class="kealoa-editor-puzzles">
+                        <h2><?php esc_html_e('Puzzles Edited', 'kealoa-reference'); ?></h2>
+
+                        <div class="kealoa-filter-controls" data-target="kealoa-person-ed-puzzles-table">
+                            <div class="kealoa-filter-row">
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-ped-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                                    <input type="text" id="kealoa-ped-search" class="kealoa-filter-input" data-filter="search" data-col="1" placeholder="<?php esc_attr_e('Constructor name...', 'kealoa-reference'); ?>">
+                                </div>
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-ped-day"><?php esc_html_e('Day', 'kealoa-reference'); ?></label>
+                                    <select id="kealoa-ped-day" class="kealoa-filter-select" data-filter="exact" data-col="0">
+                                        <option value=""><?php esc_html_e('All Days', 'kealoa-reference'); ?></option>
+                                        <option value="Mon"><?php esc_html_e('Monday', 'kealoa-reference'); ?></option>
+                                        <option value="Tue"><?php esc_html_e('Tuesday', 'kealoa-reference'); ?></option>
+                                        <option value="Wed"><?php esc_html_e('Wednesday', 'kealoa-reference'); ?></option>
+                                        <option value="Thu"><?php esc_html_e('Thursday', 'kealoa-reference'); ?></option>
+                                        <option value="Fri"><?php esc_html_e('Friday', 'kealoa-reference'); ?></option>
+                                        <option value="Sat"><?php esc_html_e('Saturday', 'kealoa-reference'); ?></option>
+                                        <option value="Sun"><?php esc_html_e('Sunday', 'kealoa-reference'); ?></option>
+                                    </select>
+                                </div>
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-ped-search-words"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></label>
+                                    <input type="text" id="kealoa-ped-search-words" class="kealoa-filter-input" data-filter="search" data-col="3" placeholder="<?php esc_attr_e('e.g. KEALOA', 'kealoa-reference'); ?>">
+                                </div>
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-ped-date-from"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></label>
+                                    <div class="kealoa-filter-range">
+                                        <input type="date" id="kealoa-ped-date-from" class="kealoa-filter-input" data-filter="date-min" data-col="0">
+                                        <span class="kealoa-filter-range-sep">&ndash;</span>
+                                        <input type="date" id="kealoa-ped-date-to" class="kealoa-filter-input" data-filter="date-max" data-col="0">
+                                    </div>
+                                </div>
+                                <div class="kealoa-filter-group kealoa-filter-actions">
+                                    <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                    <span class="kealoa-filter-count"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="kealoa-table-scroll">
+                        <table class="kealoa-table kealoa-editor-puzzles-table" id="kealoa-person-ed-puzzles-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
+                                    <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
+                                    <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
+                                    <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
+                                    <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($editor_puzzles as $epuzzle): ?>
+                                    <?php
+                                    $ep_con_ids = !empty($epuzzle->constructor_ids) ? explode(',', $epuzzle->constructor_ids) : [];
+                                    $ep_con_names = !empty($epuzzle->constructor_names) ? explode(', ', $epuzzle->constructor_names) : [];
+                                    $ep_round_ids = !empty($epuzzle->round_ids) ? explode(',', $epuzzle->round_ids) : [];
+                                    $ep_round_dates = !empty($epuzzle->round_dates) ? explode(',', $epuzzle->round_dates) : [];
+                                    $ep_round_numbers = !empty($epuzzle->round_numbers) ? explode(',', $epuzzle->round_numbers) : [];
+                                    ?>
+                                    <tr>
+                                        <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($epuzzle->publication_date)); ?></td>
+                                        <td>
+                                            <?php echo Kealoa_Formatter::format_puzzle_date_link($epuzzle->publication_date); ?>
+                                        </td>
+                                        <td>
+                                            <?php
+                                            if (!empty($ep_con_ids)) {
+                                                $ep_con_links = [];
+                                                for ($i = 0; $i < count($ep_con_ids); $i++) {
+                                                    $cid = (int) $ep_con_ids[$i];
+                                                    $cname = $ep_con_names[$i] ?? '';
+                                                    if ($cid && $cname) {
+                                                        $ep_con_links[] = Kealoa_Formatter::format_constructor_link($cid, $cname);
+                                                    }
+                                                }
+                                                echo Kealoa_Formatter::format_list_with_and($ep_con_links);
+                                            } else {
+                                                echo '—';
+                                            }
+                                            ?>
+                                        </td>
+                                        <td>
+                                            <?php
+                                            if (!empty($ep_round_ids)) {
+                                                $ep_round_links = [];
+                                                for ($i = 0; $i < count($ep_round_ids); $i++) {
+                                                    $rid = (int) $ep_round_ids[$i];
+                                                    $rdate = $ep_round_dates[$i] ?? '';
+                                                    if ($rid && $rdate) {
+                                                        $ep_round_links[] = Kealoa_Formatter::format_round_date_link($rid, $rdate);
+                                                    }
+                                                }
+                                                echo implode('<br>', $ep_round_links);
+                                            } else {
+                                                echo '—';
+                                            }
+                                            ?>
+                                        </td>
+                                        <td class="kealoa-solutions-cell">
+                                            <?php
+                                            if (!empty($ep_round_ids)) {
+                                                $ep_sol_links = [];
+                                                for ($i = 0; $i < count($ep_round_ids); $i++) {
+                                                    $rid = (int) $ep_round_ids[$i];
+                                                    if ($rid) {
+                                                        $solutions = $this->db->get_round_solutions($rid);
+                                                        $ep_sol_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
+                                                    }
+                                                }
+                                                echo implode('<br>', $ep_sol_links);
+                                            } else {
+                                                echo '—';
+                                            }
+                                            ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($editor_player_results)): ?>
+                    <div class="kealoa-editor-player-stats">
+                        <h2><?php esc_html_e('Player Results', 'kealoa-reference'); ?></h2>
+
+                        <div class="kealoa-filter-controls" data-target="kealoa-person-ed-player-table">
+                            <div class="kealoa-filter-row">
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-pepl-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                                    <input type="text" id="kealoa-pepl-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
+                                </div>
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-pepl-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
+                                    <input type="number" id="kealoa-pepl-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                                </div>
+                                <div class="kealoa-filter-group kealoa-filter-actions">
+                                    <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                    <span class="kealoa-filter-count"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table class="kealoa-table kealoa-editor-player-table" id="kealoa-person-ed-player-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="text"><?php esc_html_e('Player', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($editor_player_results as $epr): ?>
+                                    <tr>
+                                        <td><?php echo Kealoa_Formatter::format_person_link((int) $epr->person_id, $epr->full_name); ?></td>
+                                        <td><?php echo esc_html($epr->total_answered); ?></td>
+                                        <td><?php echo esc_html($epr->correct_count); ?></td>
+                                        <?php
+                                        $pct = $epr->total_answered > 0
+                                            ? ($epr->correct_count / $epr->total_answered) * 100
+                                            : 0;
+                                        ?>
+                                        <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                            <?php echo Kealoa_Formatter::format_percentage($pct); ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($editor_constructor_results)): ?>
+                    <div class="kealoa-editor-constructor-stats">
+                        <h2><?php esc_html_e('Constructor Results', 'kealoa-reference'); ?></h2>
+
+                        <div class="kealoa-filter-controls" data-target="kealoa-person-ed-constructor-table">
+                            <div class="kealoa-filter-row">
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-pec-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                                    <input type="text" id="kealoa-pec-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Constructor name...', 'kealoa-reference'); ?>">
+                                </div>
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-pec-min-clues"><?php esc_html_e('Min. Clues', 'kealoa-reference'); ?></label>
+                                    <input type="number" id="kealoa-pec-min-clues" class="kealoa-filter-input" data-filter="min" data-col="2" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                                </div>
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-pec-acc-min"><?php esc_html_e('Accuracy Range', 'kealoa-reference'); ?></label>
+                                    <div class="kealoa-filter-range">
+                                        <input type="number" id="kealoa-pec-acc-min" class="kealoa-filter-input" data-filter="range-min" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
+                                        <span class="kealoa-filter-range-sep">&ndash;</span>
+                                        <input type="number" id="kealoa-pec-acc-max" class="kealoa-filter-input" data-filter="range-max" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
+                                    </div>
+                                </div>
+                                <div class="kealoa-filter-group kealoa-filter-actions">
+                                    <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                    <span class="kealoa-filter-count"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table class="kealoa-table kealoa-editor-constructor-table" id="kealoa-person-ed-constructor-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($editor_constructor_results as $ecr): ?>
+                                    <tr>
+                                        <td><?php echo Kealoa_Formatter::format_constructor_link((int) $ecr->constructor_id, $ecr->full_name); ?></td>
+                                        <td><?php echo esc_html($ecr->puzzle_count); ?></td>
+                                        <td><?php echo esc_html($ecr->clue_count); ?></td>
+                                        <td><?php echo esc_html($ecr->total_guesses); ?></td>
+                                        <td><?php echo esc_html($ecr->correct_guesses); ?></td>
+                                        <?php
+                                        $pct = $ecr->total_guesses > 0
+                                            ? ($ecr->correct_guesses / $ecr->total_guesses) * 100
+                                            : 0;
+                                        ?>
+                                        <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                            <?php echo Kealoa_Formatter::format_percentage($pct); ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php endif; ?>
+
+                </div><!-- end As Editor tab -->
+                <?php endif; ?><!-- end $is_editor -->
+
             </div><!-- end kealoa-tabs -->
         </div>
         <?php
@@ -1914,589 +2484,6 @@ class Kealoa_Shortcodes {
         }); // end get_cached_or_render
     }
 
-    /**
-     * Render constructors table shortcode
-     *
-     * [kealoa_constructors_table]
-     */
-    public function render_constructors_table(array $atts = []): string {
-        return $this->get_cached_or_render('constructors_table', function () {
-
-        $constructors = $this->db->get_constructors_with_stats();
-
-        if (empty($constructors)) {
-            return '<p class="kealoa-no-data">' . esc_html__('No constructors found.', 'kealoa-reference') . '</p>';
-        }
-
-        ob_start();
-        ?>
-        <div class="kealoa-constructors-table-wrapper">
-            <div class="kealoa-filter-controls" data-target="kealoa-constructors-table">
-                <div class="kealoa-filter-row">
-                    <div class="kealoa-filter-group">
-                        <label for="kealoa-con-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
-                        <input type="text" id="kealoa-con-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Constructor name...', 'kealoa-reference'); ?>">
-                    </div>
-                    <div class="kealoa-filter-group">
-                        <label for="kealoa-con-min-puzzles"><?php esc_html_e('Min. Puzzles', 'kealoa-reference'); ?></label>
-                        <input type="number" id="kealoa-con-min-puzzles" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 3', 'kealoa-reference'); ?>">
-                    </div>
-                    <div class="kealoa-filter-group">
-                        <label for="kealoa-con-min-clues"><?php esc_html_e('Min. Clues', 'kealoa-reference'); ?></label>
-                        <input type="number" id="kealoa-con-min-clues" class="kealoa-filter-input" data-filter="min" data-col="2" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
-                    </div>
-                    <div class="kealoa-filter-group">
-                        <label for="kealoa-con-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
-                        <input type="number" id="kealoa-con-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="3" min="1" placeholder="<?php esc_attr_e('e.g. 10', 'kealoa-reference'); ?>">
-                    </div>
-                    <div class="kealoa-filter-group">
-                        <label for="kealoa-con-acc-min"><?php esc_html_e('Accuracy Range', 'kealoa-reference'); ?></label>
-                        <div class="kealoa-filter-range">
-                            <input type="number" id="kealoa-con-acc-min" class="kealoa-filter-input" data-filter="range-min" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
-                            <span class="kealoa-filter-range-sep">&ndash;</span>
-                            <input type="number" id="kealoa-con-acc-max" class="kealoa-filter-input" data-filter="range-max" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
-                        </div>
-                    </div>
-                    <div class="kealoa-filter-group kealoa-filter-actions">
-                        <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
-                        <span class="kealoa-filter-count"></span>
-                    </div>
-                </div>
-            </div>
-
-            <table class="kealoa-table kealoa-constructors-table" id="kealoa-constructors-table">
-                <thead>
-                    <tr>
-                        <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($constructors as $constructor): ?>
-                        <?php
-                        $accuracy = $constructor->total_guesses > 0
-                            ? ($constructor->correct_guesses / $constructor->total_guesses) * 100
-                            : 0;
-                        ?>
-                        <tr>
-                            <td>
-                                <?php echo Kealoa_Formatter::format_constructor_link((int) $constructor->id, $constructor->full_name); ?>
-                            </td>
-                            <td><?php echo esc_html($constructor->puzzle_count); ?></td>
-                            <td><?php echo esc_html($constructor->clue_count); ?></td>
-                            <td><?php echo esc_html(number_format_i18n((int) $constructor->total_guesses)); ?></td>
-                            <td><?php echo esc_html(number_format_i18n((int) $constructor->correct_guesses)); ?></td>
-                            <td data-value="<?php echo esc_attr(number_format((float) $accuracy, 2, '.', '')); ?>">
-                                <?php echo Kealoa_Formatter::format_percentage((float) $accuracy); ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-        <?php
-        return ob_get_clean();
-
-        }); // end get_cached_or_render
-    }
-
-    /**
-     * Render single constructor shortcode
-     *
-     * [kealoa_constructor id="X"]
-     */
-    public function render_constructor(array $atts = []): string {
-        $atts = shortcode_atts([
-            'id' => 0,
-        ], $atts, 'kealoa_constructor');
-
-        $constructor_id = (int) $atts['id'];
-        if (!$constructor_id) {
-            return '<p class="kealoa-error">' . esc_html__('Please specify a constructor ID.', 'kealoa-reference') . '</p>';
-        }
-
-        $constructor = $this->db->get_constructor($constructor_id);
-        if (!$constructor) {
-            return '<p class="kealoa-error">' . esc_html__('Constructor not found.', 'kealoa-reference') . '</p>';
-        }
-
-        return $this->get_cached_or_render('constructor_' . $constructor_id, function () use ($constructor_id, $constructor) {
-
-        $puzzles = $this->db->get_constructor_puzzles($constructor_id);
-        $stats = $this->db->get_constructor_stats($constructor_id);
-        $player_results = $this->db->get_constructor_player_results($constructor_id);
-        $editor_results = $this->db->get_constructor_editor_results($constructor_id);
-
-        // Check if this constructor is also a player (person)
-        $matching_person = $this->db->get_person_by_name($constructor->full_name);
-
-        // Check if this constructor is also an editor
-        $is_constructor_editor = $this->db->editor_name_exists($constructor->full_name);
-
-        // Determine image: media library > XWordInfo
-        $con_media_id = (int) ($constructor->media_id ?? 0);
-        $con_image_url = '';
-        $con_image_source = ''; // 'media', 'xwordinfo', or ''
-
-        if ($con_media_id > 0) {
-            $media_src = wp_get_attachment_image_src($con_media_id, 'medium');
-            if ($media_src) {
-                $con_image_url = $media_src[0];
-                $con_image_source = 'media';
-            }
-        }
-
-        if (empty($con_image_source)) {
-            $con_image_url = Kealoa_Formatter::xwordinfo_image_url_from_name($constructor->full_name);
-            $con_image_source = 'xwordinfo';
-        }
-
-        ob_start();
-        ?>
-        <div class="kealoa-constructor-view">
-            <div class="kealoa-constructor-header">
-                <div class="kealoa-constructor-info">
-                    <?php if (!empty($con_image_url)): ?>
-                        <div class="kealoa-constructor-image">
-                            <?php if ($con_image_source === 'media'): ?>
-                                <img src="<?php echo esc_url($con_image_url); ?>"
-                                     alt="<?php echo esc_attr($constructor->full_name); ?>"
-                                     class="kealoa-entity-image" />
-                            <?php else: ?>
-                                <?php echo Kealoa_Formatter::format_xwordinfo_image($con_image_url, $constructor->full_name); ?>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <div class="kealoa-constructor-details">
-                        <h2 class="kealoa-constructor-name"><?php echo esc_html($constructor->full_name); ?></h2>
-
-                        <?php if ($matching_person): ?>
-                            <p class="kealoa-cross-link-text">
-                                <a href="<?php echo esc_url(home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $matching_person->full_name)) . '/')); ?>">
-                                    <?php esc_html_e('View as Player', 'kealoa-reference'); ?>
-                                </a>
-                            </p>
-                        <?php endif; ?>
-
-                        <?php if ($is_constructor_editor): ?>
-                            <p class="kealoa-cross-link-text">
-                                <a href="<?php echo esc_url(home_url('/kealoa/editor/' . urlencode($constructor->full_name) . '/')); ?>">
-                                    <?php esc_html_e('View as Editor', 'kealoa-reference'); ?>
-                                </a>
-                            </p>
-                        <?php endif; ?>
-
-                        <?php if (!empty($constructor->xwordinfo_profile_name)): ?>
-                            <p class="kealoa-constructor-xwordinfo">
-                                <?php echo Kealoa_Formatter::format_xwordinfo_link($constructor->xwordinfo_profile_name, 'XWordInfo Profile'); ?>
-                            </p>
-                        <?php endif; ?>
-
-                        <?php if ($matching_person && !empty($matching_person->home_page_url)): ?>
-                            <p class="kealoa-constructor-homepage">
-                                <?php echo Kealoa_Formatter::format_home_page_link($matching_person->home_page_url); ?>
-                            </p>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="kealoa-tabs">
-                <div class="kealoa-tab-nav">
-                    <?php if ($stats): ?>
-                    <button class="kealoa-tab-button active" data-tab="stats"><?php esc_html_e('Stats', 'kealoa-reference'); ?></button>
-                    <?php endif; ?>
-                    <button class="kealoa-tab-button<?php echo empty($stats) ? ' active' : ''; ?>" data-tab="puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="player"><?php esc_html_e('Players', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="editor"><?php esc_html_e('Editors', 'kealoa-reference'); ?></button>
-                </div>
-
-                <?php if ($stats): ?>
-                <div class="kealoa-tab-panel active" data-tab="stats">
-                    <div class="kealoa-stats-grid">
-                        <div class="kealoa-stat-card">
-                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->puzzle_count)); ?></span>
-                            <span class="kealoa-stat-label"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></span>
-                        </div>
-                        <div class="kealoa-stat-card">
-                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->clue_count)); ?></span>
-                            <span class="kealoa-stat-label"><?php esc_html_e('Clues', 'kealoa-reference'); ?></span>
-                        </div>
-                        <div class="kealoa-stat-card">
-                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->total_guesses)); ?></span>
-                            <span class="kealoa-stat-label"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></span>
-                        </div>
-                        <div class="kealoa-stat-card">
-                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->correct_guesses)); ?></span>
-                            <span class="kealoa-stat-label"><?php esc_html_e('Correct', 'kealoa-reference'); ?></span>
-                        </div>
-                        <div class="kealoa-stat-card">
-                            <span class="kealoa-stat-value"><?php
-                                $accuracy = (int) $stats->total_guesses > 0
-                                    ? ((int) $stats->correct_guesses / (int) $stats->total_guesses) * 100
-                                    : 0;
-                                echo Kealoa_Formatter::format_percentage($accuracy);
-                            ?></span>
-                            <span class="kealoa-stat-label"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></span>
-                        </div>
-                    </div>
-                </div><!-- end Stats tab -->
-                <?php endif; ?>
-
-                <div class="kealoa-tab-panel<?php echo empty($stats) ? ' active' : ''; ?>" data-tab="puzzles">
-
-            <?php if (!empty($puzzles)): ?>
-                <?php
-                // Check if any puzzle has co-constructors
-                $has_co_constructors = false;
-                foreach ($puzzles as $p_check) {
-                    $co_check = $this->db->get_puzzle_co_constructors((int) $p_check->puzzle_id, $constructor_id);
-                    if (!empty($co_check)) {
-                        $has_co_constructors = true;
-                        break;
-                    }
-                }
-                ?>
-                <div class="kealoa-constructor-puzzles">
-                    <h2><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></h2>
-
-                    <div class="kealoa-filter-controls" data-target="kealoa-constructor-puzzles-table">
-                        <div class="kealoa-filter-row">
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-cp-day"><?php esc_html_e('Day', 'kealoa-reference'); ?></label>
-                                <select id="kealoa-cp-day" class="kealoa-filter-select" data-filter="exact" data-col="0">
-                                    <option value=""><?php esc_html_e('All Days', 'kealoa-reference'); ?></option>
-                                    <option value="Mon"><?php esc_html_e('Monday', 'kealoa-reference'); ?></option>
-                                    <option value="Tue"><?php esc_html_e('Tuesday', 'kealoa-reference'); ?></option>
-                                    <option value="Wed"><?php esc_html_e('Wednesday', 'kealoa-reference'); ?></option>
-                                    <option value="Thu"><?php esc_html_e('Thursday', 'kealoa-reference'); ?></option>
-                                    <option value="Fri"><?php esc_html_e('Friday', 'kealoa-reference'); ?></option>
-                                    <option value="Sat"><?php esc_html_e('Saturday', 'kealoa-reference'); ?></option>
-                                    <option value="Sun"><?php esc_html_e('Sunday', 'kealoa-reference'); ?></option>
-                                </select>
-                            </div>
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-cp-editor"><?php esc_html_e('Editor', 'kealoa-reference'); ?></label>
-                                <input type="text" id="kealoa-cp-editor" class="kealoa-filter-input" data-filter="search" data-col="<?php echo $has_co_constructors ? '3' : '2'; ?>" placeholder="<?php esc_attr_e('Editor name...', 'kealoa-reference'); ?>">
-                            </div>
-                            <div class="kealoa-filter-group kealoa-filter-actions">
-                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
-                                <span class="kealoa-filter-count"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="kealoa-table-scroll">
-                    <table class="kealoa-table kealoa-constructor-puzzles-table" id="kealoa-constructor-puzzles-table">
-                        <thead>
-                            <tr>
-                                <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
-                                <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
-                                <?php if ($has_co_constructors): ?>
-                                <th data-sort="text"><?php esc_html_e('Co-Constructors', 'kealoa-reference'); ?></th>
-                                <?php endif; ?>
-                                <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
-                                <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
-                                <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($puzzles as $puzzle): ?>
-                                <?php
-                                $co_constructors = $this->db->get_puzzle_co_constructors((int) $puzzle->puzzle_id, $constructor_id);
-                                $round_ids = !empty($puzzle->round_ids) ? explode(',', $puzzle->round_ids) : [];
-                                $round_dates = !empty($puzzle->round_dates) ? explode(',', $puzzle->round_dates) : [];
-                                $round_numbers = !empty($puzzle->round_numbers) ? explode(',', $puzzle->round_numbers) : [];
-                                ?>
-                                <tr>
-                                    <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($puzzle->publication_date)); ?></td>
-                                    <td>
-                                        <?php echo Kealoa_Formatter::format_puzzle_date_link($puzzle->publication_date); ?>
-                                    </td>
-                                    <?php if ($has_co_constructors): ?>
-                                    <td>
-                                        <?php
-                                        if (!empty($co_constructors)) {
-                                            $co_links = array_map(function($co) {
-                                                return Kealoa_Formatter::format_constructor_link((int) $co->id, $co->full_name);
-                                            }, $co_constructors);
-                                            echo Kealoa_Formatter::format_list_with_and($co_links);
-                                        } else {
-                                            echo '—';
-                                        }
-                                        ?>
-                                    </td>
-                                    <?php endif; ?>
-                                    <td>
-                                        <?php
-                                        if (!empty($puzzle->editor_name)) {
-                                            echo Kealoa_Formatter::format_editor_link($puzzle->editor_name);
-                                        } else {
-                                            echo '—';
-                                        }
-                                        ?>
-                                    </td>
-                                    <td>
-                                        <?php
-                                        if (!empty($round_ids)) {
-                                            $round_links = [];
-                                            for ($i = 0; $i < count($round_ids); $i++) {
-                                                $rid = (int) $round_ids[$i];
-                                                $rdate = $round_dates[$i] ?? '';
-                                                if ($rid && $rdate) {
-                                                    $round_links[] = Kealoa_Formatter::format_round_date_link($rid, $rdate);
-                                                }
-                                            }
-                                            echo implode('<br>', $round_links);
-                                        } else {
-                                            echo '—';
-                                        }
-                                        ?>
-                                    </td>
-                                    <td class="kealoa-solutions-cell">
-                                        <?php
-                                        if (!empty($round_ids)) {
-                                            $solution_links = [];
-                                            for ($i = 0; $i < count($round_ids); $i++) {
-                                                $rid = (int) $round_ids[$i];
-                                                if ($rid) {
-                                                    $solutions = $this->db->get_round_solutions($rid);
-                                                    $solution_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
-                                                }
-                                            }
-                                            echo implode('<br>', $solution_links);
-                                        } else {
-                                            echo '—';
-                                        }
-                                        ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                    </div>
-                </div>
-            <?php else: ?>
-                <p class="kealoa-no-data"><?php esc_html_e('No puzzles found for this constructor.', 'kealoa-reference'); ?></p>
-            <?php endif; ?>
-
-                </div><!-- end Puzzles tab -->
-
-                <div class="kealoa-tab-panel" data-tab="player">
-
-            <?php if (!empty($player_results)): ?>
-                <div class="kealoa-constructor-player-stats">
-                    <h2><?php esc_html_e('Results by Player', 'kealoa-reference'); ?></h2>
-
-                    <div class="kealoa-filter-controls" data-target="kealoa-constructor-player-table">
-                        <div class="kealoa-filter-row">
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-cpl-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
-                                <input type="text" id="kealoa-cpl-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
-                            </div>
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-cpl-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
-                                <input type="number" id="kealoa-cpl-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
-                            </div>
-                            <div class="kealoa-filter-group kealoa-filter-actions">
-                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
-                                <span class="kealoa-filter-count"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <table class="kealoa-table kealoa-constructor-player-table" id="kealoa-constructor-player-table">
-                        <thead>
-                            <tr>
-                                <th data-sort="text"><?php esc_html_e('Player', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($player_results as $result): ?>
-                                <tr>
-                                    <td><?php echo Kealoa_Formatter::format_person_link((int) $result->person_id, $result->full_name); ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <?php
-                                    $pct = $result->total_answered > 0
-                                        ? ($result->correct_count / $result->total_answered) * 100
-                                        : 0;
-                                    ?>
-                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
-                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-
-                </div><!-- end Player tab -->
-
-                <div class="kealoa-tab-panel" data-tab="editor">
-
-            <?php if (!empty($editor_results)): ?>
-                <div class="kealoa-constructor-editor-stats">
-                    <h2><?php esc_html_e('Results by Editor', 'kealoa-reference'); ?></h2>
-
-                    <div class="kealoa-filter-controls" data-target="kealoa-constructor-editor-table">
-                        <div class="kealoa-filter-row">
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-ced-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
-                                <input type="text" id="kealoa-ced-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Editor name...', 'kealoa-reference'); ?>">
-                            </div>
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-ced-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
-                                <input type="number" id="kealoa-ced-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="3" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
-                            </div>
-                            <div class="kealoa-filter-group kealoa-filter-actions">
-                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
-                                <span class="kealoa-filter-count"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <table class="kealoa-table kealoa-constructor-editor-table" id="kealoa-constructor-editor-table">
-                        <thead>
-                            <tr>
-                                <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($editor_results as $result): ?>
-                                <tr>
-                                    <td><?php echo Kealoa_Formatter::format_editor_link($result->editor_name); ?></td>
-                                    <td><?php echo esc_html($result->puzzle_count); ?></td>
-                                    <td><?php echo esc_html($result->clue_count); ?></td>
-                                    <td><?php echo esc_html($result->total_guesses); ?></td>
-                                    <td><?php echo esc_html($result->correct_guesses); ?></td>
-                                    <?php
-                                    $pct = $result->total_guesses > 0
-                                        ? ($result->correct_guesses / $result->total_guesses) * 100
-                                        : 0;
-                                    ?>
-                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
-                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-
-                </div><!-- end Editor tab -->
-            </div><!-- end kealoa-tabs -->
-        </div>
-        <?php
-        return ob_get_clean();
-
-        }); // end get_cached_or_render
-    }
-
-    /**
-     * Render editors table shortcode
-     *
-     * [kealoa_editors_table]
-     */
-    public function render_editors_table(array $atts = []): string {
-        return $this->get_cached_or_render('editors_table', function () {
-
-        $editors = $this->db->get_editors_with_stats();
-
-        if (empty($editors)) {
-            return '<p class="kealoa-no-data">' . esc_html__('No editors found.', 'kealoa-reference') . '</p>';
-        }
-
-        ob_start();
-        ?>
-        <div class="kealoa-editors-table-wrapper">
-            <div class="kealoa-filter-controls" data-target="kealoa-editors-table">
-                <div class="kealoa-filter-row">
-                    <div class="kealoa-filter-group">
-                        <label for="kealoa-ed-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
-                        <input type="text" id="kealoa-ed-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Editor name...', 'kealoa-reference'); ?>">
-                    </div>
-                    <div class="kealoa-filter-group">
-                        <label for="kealoa-ed-min-puzzles"><?php esc_html_e('Min. Puzzles', 'kealoa-reference'); ?></label>
-                        <input type="number" id="kealoa-ed-min-puzzles" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 3', 'kealoa-reference'); ?>">
-                    </div>
-                    <div class="kealoa-filter-group">
-                        <label for="kealoa-ed-min-clues"><?php esc_html_e('Min. Clues', 'kealoa-reference'); ?></label>
-                        <input type="number" id="kealoa-ed-min-clues" class="kealoa-filter-input" data-filter="min" data-col="2" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
-                    </div>
-                    <div class="kealoa-filter-group">
-                        <label for="kealoa-ed-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
-                        <input type="number" id="kealoa-ed-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="3" min="1" placeholder="<?php esc_attr_e('e.g. 10', 'kealoa-reference'); ?>">
-                    </div>
-                    <div class="kealoa-filter-group">
-                        <label for="kealoa-ed-acc-min"><?php esc_html_e('Accuracy Range', 'kealoa-reference'); ?></label>
-                        <div class="kealoa-filter-range">
-                            <input type="number" id="kealoa-ed-acc-min" class="kealoa-filter-input" data-filter="range-min" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
-                            <span class="kealoa-filter-range-sep">&ndash;</span>
-                            <input type="number" id="kealoa-ed-acc-max" class="kealoa-filter-input" data-filter="range-max" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
-                        </div>
-                    </div>
-                    <div class="kealoa-filter-group kealoa-filter-actions">
-                        <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
-                        <span class="kealoa-filter-count"></span>
-                    </div>
-                </div>
-            </div>
-
-            <table class="kealoa-table kealoa-editors-table" id="kealoa-editors-table">
-                <thead>
-                    <tr>
-                        <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($editors as $editor): ?>
-                        <?php
-                        $accuracy = $editor->total_guesses > 0
-                            ? ($editor->correct_guesses / $editor->total_guesses) * 100
-                            : 0;
-                        ?>
-                        <tr>
-                            <td>
-                                <?php echo Kealoa_Formatter::format_editor_link($editor->editor_name); ?>
-                            </td>
-                            <td><?php echo esc_html($editor->puzzle_count); ?></td>
-                            <td><?php echo esc_html($editor->clue_count); ?></td>
-                            <td><?php echo esc_html(number_format_i18n((int) $editor->total_guesses)); ?></td>
-                            <td><?php echo esc_html(number_format_i18n((int) $editor->correct_guesses)); ?></td>
-                            <td data-value="<?php echo esc_attr(number_format((float) $accuracy, 2, '.', '')); ?>">
-                                <?php echo Kealoa_Formatter::format_percentage((float) $accuracy); ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-        <?php
-        return ob_get_clean();
-
-        }); // end get_cached_or_render
-    }
 
     /**
      * Render puzzles table shortcode
@@ -2601,7 +2588,13 @@ class Kealoa_Shortcodes {
                                 ?>
                             </td>
                             <td>
-                                <?php echo Kealoa_Formatter::format_editor_link($puzzle->editor_name); ?>
+                                <?php
+                                if (!empty($puzzle->editor_id)) {
+                                    echo Kealoa_Formatter::format_editor_link((int) $puzzle->editor_id, $puzzle->editor_name);
+                                } else {
+                                    echo '—';
+                                }
+                                ?>
                             </td>
                             <td>
                                 <?php
@@ -2677,11 +2670,19 @@ class Kealoa_Shortcodes {
         $clues = $this->db->get_puzzle_clues($puzzle_id);
         $player_results = $this->db->get_puzzle_player_results($puzzle_id);
 
+        // Look up editor person record
+        $editor_person = null;
+        $editor_name = '';
+        if (!empty($puzzle->editor_id)) {
+            $editor_person = $this->db->get_person((int) $puzzle->editor_id);
+            $editor_name = $editor_person ? $editor_person->full_name : '';
+        }
+
         // Determine editor image: media library > XWordInfo
         $editor_image_url = '';
         $editor_image_source = '';
-        if (!empty($puzzle->editor_name)) {
-            $editor_media_id = $this->db->get_editor_media_id($puzzle->editor_name);
+        if ($editor_person) {
+            $editor_media_id = (int) ($editor_person->media_id ?? 0);
             if ($editor_media_id > 0) {
                 $media_src = wp_get_attachment_image_src($editor_media_id, 'medium');
                 if ($media_src) {
@@ -2689,8 +2690,8 @@ class Kealoa_Shortcodes {
                     $editor_image_source = 'media';
                 }
             }
-            if (empty($editor_image_source)) {
-                $editor_image_url = Kealoa_Formatter::xwordinfo_image_url_from_name($puzzle->editor_name);
+            if (empty($editor_image_source) && empty($editor_person->hide_xwordinfo)) {
+                $editor_image_url = Kealoa_Formatter::xwordinfo_image_url_from_name($editor_name);
                 $editor_image_source = 'xwordinfo';
             }
         }
@@ -2734,10 +2735,10 @@ class Kealoa_Shortcodes {
                             </span>
                         </p>
 
-                        <?php if (!empty($puzzle->editor_name)): ?>
+                        <?php if (!empty($editor_name)): ?>
                         <p>
                             <strong class="kealoa-meta-label"><?php esc_html_e('Editor', 'kealoa-reference'); ?></strong>
-                            <span><?php echo Kealoa_Formatter::format_editor_link($puzzle->editor_name); ?></span>
+                            <span><?php echo Kealoa_Formatter::format_editor_link((int) $puzzle->editor_id, $editor_name); ?></span>
                         </p>
                         <?php endif; ?>
 
@@ -2801,7 +2802,7 @@ class Kealoa_Shortcodes {
                         }
 
                         $con_slug = str_replace(' ', '_', $con->full_name);
-                        $con_url = home_url('/kealoa/constructor/' . urlencode($con_slug) . '/');
+                        $con_url = home_url('/kealoa/person/' . urlencode($con_slug) . '/');
                         ?>
                         <div class="kealoa-puzzle-constructor">
                             <a href="<?php echo esc_url($con_url); ?>">
@@ -2817,19 +2818,22 @@ class Kealoa_Shortcodes {
                         </div>
                     <?php endforeach; ?>
 
-                    <?php if (!empty($editor_image_url)): ?>
-                        <?php $editor_url = home_url('/kealoa/editor/' . urlencode($puzzle->editor_name) . '/'); ?>
+                    <?php if (!empty($editor_image_url) && !empty($editor_name)): ?>
+                        <?php
+                        $editor_slug = str_replace(' ', '_', $editor_name);
+                        $editor_url = home_url('/kealoa/person/' . urlencode($editor_slug) . '/');
+                        ?>
                         <div class="kealoa-puzzle-constructor">
                             <a href="<?php echo esc_url($editor_url); ?>">
                                 <?php if ($editor_image_source === 'media'): ?>
                                     <img src="<?php echo esc_url($editor_image_url); ?>"
-                                         alt="<?php echo esc_attr($puzzle->editor_name); ?>"
+                                         alt="<?php echo esc_attr($editor_name); ?>"
                                          class="kealoa-entity-image" />
                                 <?php else: ?>
-                                    <?php echo Kealoa_Formatter::format_xwordinfo_image($editor_image_url, $puzzle->editor_name); ?>
+                                    <?php echo Kealoa_Formatter::format_xwordinfo_image($editor_image_url, $editor_name); ?>
                                 <?php endif; ?>
                             </a>
-                            <span class="kealoa-puzzle-constructor-name"><?php echo esc_html($puzzle->editor_name); ?></span>
+                            <span class="kealoa-puzzle-constructor-name"><?php echo esc_html($editor_name); ?></span>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -2974,410 +2978,6 @@ class Kealoa_Shortcodes {
         }); // end get_cached_or_render
     }
 
-    /**
-     * Render single editor view shortcode
-     *
-     * [kealoa_editor name="Editor Name"]
-     */
-    public function render_editor(array $atts = []): string {
-        $atts = shortcode_atts([
-            'name' => '',
-        ], $atts, 'kealoa_editor');
-
-        $editor_name = sanitize_text_field($atts['name']);
-        if (empty($editor_name)) {
-            return '<p class="kealoa-error">' . esc_html__('Please specify an editor name.', 'kealoa-reference') . '</p>';
-        }
-
-        return $this->get_cached_or_render('editor_' . md5($editor_name), function () use ($editor_name) {
-
-        $puzzles = $this->db->get_editor_puzzles($editor_name);
-        $stats = $this->db->get_editor_stats($editor_name);
-        $player_results = $this->db->get_editor_player_results($editor_name);
-        $constructor_results = $this->db->get_editor_constructor_results($editor_name);
-
-        // Check if this editor is also a player or constructor
-        $matching_editor_person = $this->db->get_person_by_name($editor_name);
-        $matching_editor_constructor = $this->db->get_constructor_by_name($editor_name);
-
-        // Determine editor image: media library > XWordInfo
-        $editor_media_id = $this->db->get_editor_media_id($editor_name);
-        $editor_image_url = '';
-        $editor_image_source = ''; // 'media', 'xwordinfo', or ''
-
-        if ($editor_media_id > 0) {
-            $media_src = wp_get_attachment_image_src($editor_media_id, 'medium');
-            if ($media_src) {
-                $editor_image_url = $media_src[0];
-                $editor_image_source = 'media';
-            }
-        }
-
-        if (empty($editor_image_source)) {
-            $editor_image_url = Kealoa_Formatter::xwordinfo_image_url_from_name($editor_name);
-            $editor_image_source = 'xwordinfo';
-        }
-
-        ob_start();
-        ?>
-        <div class="kealoa-editor-view">
-            <div class="kealoa-editor-header">
-                <div class="kealoa-editor-info">
-                    <?php if (!empty($editor_image_url)): ?>
-                        <div class="kealoa-editor-image">
-                            <?php if ($editor_image_source === 'media'): ?>
-                                <img src="<?php echo esc_url($editor_image_url); ?>"
-                                     alt="<?php echo esc_attr($editor_name); ?>"
-                                     class="kealoa-entity-image" />
-                            <?php else: ?>
-                                <?php echo Kealoa_Formatter::format_xwordinfo_image($editor_image_url, $editor_name); ?>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <div class="kealoa-editor-details">
-                        <h2 class="kealoa-editor-name"><?php echo esc_html($editor_name); ?></h2>
-
-                        <?php if ($matching_editor_person): ?>
-                            <p class="kealoa-cross-link-text">
-                                <a href="<?php echo esc_url(home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $matching_editor_person->full_name)) . '/')); ?>">
-                                    <?php esc_html_e('View as Player', 'kealoa-reference'); ?>
-                                </a>
-                            </p>
-                        <?php endif; ?>
-
-                        <?php if ($matching_editor_constructor): ?>
-                            <p class="kealoa-cross-link-text">
-                                <a href="<?php echo esc_url(home_url('/kealoa/constructor/' . urlencode(str_replace(' ', '_', $matching_editor_constructor->full_name)) . '/')); ?>">
-                                    <?php esc_html_e('View as Constructor', 'kealoa-reference'); ?>
-                                </a>
-                            </p>
-                        <?php endif; ?>
-
-                        <?php
-                        // XWordInfo profile link: prefer constructor profile name, fall back to editor name
-                        $editor_xwordinfo_name = ($matching_editor_constructor && !empty($matching_editor_constructor->xwordinfo_profile_name))
-                            ? $matching_editor_constructor->xwordinfo_profile_name
-                            : $editor_name;
-                        $show_editor_xwordinfo = empty($matching_editor_person) || empty($matching_editor_person->hide_xwordinfo);
-                        ?>
-                        <?php if ($show_editor_xwordinfo && !empty($editor_xwordinfo_name)): ?>
-                            <p class="kealoa-editor-xwordinfo">
-                                <?php echo Kealoa_Formatter::format_xwordinfo_link($editor_xwordinfo_name, 'XWordInfo Profile'); ?>
-                            </p>
-                        <?php endif; ?>
-
-                        <?php if ($matching_editor_person && !empty($matching_editor_person->home_page_url)): ?>
-                            <p class="kealoa-editor-homepage">
-                                <?php echo Kealoa_Formatter::format_home_page_link($matching_editor_person->home_page_url); ?>
-                            </p>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="kealoa-tabs">
-                <div class="kealoa-tab-nav">
-                    <?php if ($stats): ?>
-                    <button class="kealoa-tab-button active" data-tab="stats"><?php esc_html_e('Stats', 'kealoa-reference'); ?></button>
-                    <?php endif; ?>
-                    <button class="kealoa-tab-button<?php echo empty($stats) ? ' active' : ''; ?>" data-tab="puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="player"><?php esc_html_e('Players', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="constructor"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></button>
-                </div>
-
-                <?php if ($stats): ?>
-                <div class="kealoa-tab-panel active" data-tab="stats">
-                    <div class="kealoa-stats-grid">
-                        <div class="kealoa-stat-card">
-                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->puzzle_count)); ?></span>
-                            <span class="kealoa-stat-label"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></span>
-                        </div>
-                        <div class="kealoa-stat-card">
-                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->clue_count)); ?></span>
-                            <span class="kealoa-stat-label"><?php esc_html_e('Clues', 'kealoa-reference'); ?></span>
-                        </div>
-                        <div class="kealoa-stat-card">
-                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->total_guesses)); ?></span>
-                            <span class="kealoa-stat-label"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></span>
-                        </div>
-                        <div class="kealoa-stat-card">
-                            <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $stats->correct_guesses)); ?></span>
-                            <span class="kealoa-stat-label"><?php esc_html_e('Correct', 'kealoa-reference'); ?></span>
-                        </div>
-                        <div class="kealoa-stat-card">
-                            <span class="kealoa-stat-value"><?php
-                                $accuracy = (int) $stats->total_guesses > 0
-                                    ? ((int) $stats->correct_guesses / (int) $stats->total_guesses) * 100
-                                    : 0;
-                                echo Kealoa_Formatter::format_percentage($accuracy);
-                            ?></span>
-                            <span class="kealoa-stat-label"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></span>
-                        </div>
-                    </div>
-                </div><!-- end Stats tab -->
-                <?php endif; ?>
-
-                <div class="kealoa-tab-panel<?php echo empty($stats) ? ' active' : ''; ?>" data-tab="puzzles">
-
-            <?php if (!empty($puzzles)): ?>
-                <div class="kealoa-editor-puzzles">
-                    <h2><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></h2>
-
-                    <div class="kealoa-filter-controls" data-target="kealoa-editor-puzzles-table">
-                        <div class="kealoa-filter-row">
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-ep-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
-                                <input type="text" id="kealoa-ep-search" class="kealoa-filter-input" data-filter="search" data-col="2" placeholder="<?php esc_attr_e('Constructor name...', 'kealoa-reference'); ?>">
-                            </div>
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-ep-day"><?php esc_html_e('Day', 'kealoa-reference'); ?></label>
-                                <select id="kealoa-ep-day" class="kealoa-filter-select" data-filter="exact" data-col="0">
-                                    <option value=""><?php esc_html_e('All Days', 'kealoa-reference'); ?></option>
-                                    <option value="Mon"><?php esc_html_e('Monday', 'kealoa-reference'); ?></option>
-                                    <option value="Tue"><?php esc_html_e('Tuesday', 'kealoa-reference'); ?></option>
-                                    <option value="Wed"><?php esc_html_e('Wednesday', 'kealoa-reference'); ?></option>
-                                    <option value="Thu"><?php esc_html_e('Thursday', 'kealoa-reference'); ?></option>
-                                    <option value="Fri"><?php esc_html_e('Friday', 'kealoa-reference'); ?></option>
-                                    <option value="Sat"><?php esc_html_e('Saturday', 'kealoa-reference'); ?></option>
-                                    <option value="Sun"><?php esc_html_e('Sunday', 'kealoa-reference'); ?></option>
-                                </select>
-                            </div>
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-ep-search-words"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></label>
-                                <input type="text" id="kealoa-ep-search-words" class="kealoa-filter-input" data-filter="search" data-col="4" placeholder="<?php esc_attr_e('e.g. KEALOA', 'kealoa-reference'); ?>">
-                            </div>
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-ep-date-from"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></label>
-                                <div class="kealoa-filter-range">
-                                    <input type="date" id="kealoa-ep-date-from" class="kealoa-filter-input" data-filter="date-min" data-col="1">
-                                    <span class="kealoa-filter-range-sep">&ndash;</span>
-                                    <input type="date" id="kealoa-ep-date-to" class="kealoa-filter-input" data-filter="date-max" data-col="1">
-                                </div>
-                            </div>
-                            <div class="kealoa-filter-group kealoa-filter-actions">
-                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
-                                <span class="kealoa-filter-count"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="kealoa-table-scroll">
-                    <table class="kealoa-table kealoa-editor-puzzles-table" id="kealoa-editor-puzzles-table">
-                        <thead>
-                            <tr>
-                                <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
-                                <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
-                                <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
-                                <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
-                                <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($puzzles as $puzzle): ?>
-                                <?php
-                                $constructor_ids = !empty($puzzle->constructor_ids) ? explode(',', $puzzle->constructor_ids) : [];
-                                $constructor_names = !empty($puzzle->constructor_names) ? explode(', ', $puzzle->constructor_names) : [];
-                                $round_ids = !empty($puzzle->round_ids) ? explode(',', $puzzle->round_ids) : [];
-                                $round_dates = !empty($puzzle->round_dates) ? explode(',', $puzzle->round_dates) : [];
-                                $round_numbers = !empty($puzzle->round_numbers) ? explode(',', $puzzle->round_numbers) : [];
-                                ?>
-                                <tr>
-                                    <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($puzzle->publication_date)); ?></td>
-                                    <td>
-                                        <?php echo Kealoa_Formatter::format_puzzle_date_link($puzzle->publication_date); ?>
-                                    </td>
-                                    <td>
-                                        <?php
-                                        if (!empty($constructor_ids)) {
-                                            $links = [];
-                                            for ($i = 0; $i < count($constructor_ids); $i++) {
-                                                $cid = (int) $constructor_ids[$i];
-                                                $cname = $constructor_names[$i] ?? '';
-                                                if ($cid && $cname) {
-                                                    $links[] = Kealoa_Formatter::format_constructor_link($cid, $cname);
-                                                }
-                                            }
-                                            echo Kealoa_Formatter::format_list_with_and($links);
-                                        } else {
-                                            echo '—';
-                                        }
-                                        ?>
-                                    </td>
-                                    <td>
-                                        <?php
-                                        if (!empty($round_ids)) {
-                                            $round_links = [];
-                                            for ($i = 0; $i < count($round_ids); $i++) {
-                                                $rid = (int) $round_ids[$i];
-                                                $rdate = $round_dates[$i] ?? '';
-                                                if ($rid && $rdate) {
-                                                    $round_links[] = Kealoa_Formatter::format_round_date_link($rid, $rdate);
-                                                }
-                                            }
-                                            echo implode('<br>', $round_links);
-                                        } else {
-                                            echo '—';
-                                        }
-                                        ?>
-                                    </td>
-                                    <td class="kealoa-solutions-cell">
-                                        <?php
-                                        if (!empty($round_ids)) {
-                                            $solution_links = [];
-                                            for ($i = 0; $i < count($round_ids); $i++) {
-                                                $rid = (int) $round_ids[$i];
-                                                if ($rid) {
-                                                    $solutions = $this->db->get_round_solutions($rid);
-                                                    $solution_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
-                                                }
-                                            }
-                                            echo implode('<br>', $solution_links);
-                                        } else {
-                                            echo '—';
-                                        }
-                                        ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                    </div>
-                </div>
-            <?php else: ?>
-                <p class="kealoa-no-data"><?php esc_html_e('No puzzles found for this editor.', 'kealoa-reference'); ?></p>
-            <?php endif; ?>
-
-                </div><!-- end Puzzles tab -->
-
-                <div class="kealoa-tab-panel" data-tab="player">
-
-            <?php if (!empty($player_results)): ?>
-                <div class="kealoa-editor-player-stats">
-                    <h2><?php esc_html_e('Results by Player', 'kealoa-reference'); ?></h2>
-
-                    <div class="kealoa-filter-controls" data-target="kealoa-editor-player-table">
-                        <div class="kealoa-filter-row">
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-epl-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
-                                <input type="text" id="kealoa-epl-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
-                            </div>
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-epl-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
-                                <input type="number" id="kealoa-epl-min-guesses" class="kealoa-filter-input" data-filter="min" data-col="1" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
-                            </div>
-                            <div class="kealoa-filter-group kealoa-filter-actions">
-                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
-                                <span class="kealoa-filter-count"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <table class="kealoa-table kealoa-editor-player-table" id="kealoa-editor-player-table">
-                        <thead>
-                            <tr>
-                                <th data-sort="text"><?php esc_html_e('Player', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($player_results as $result): ?>
-                                <tr>
-                                    <td><?php echo Kealoa_Formatter::format_person_link((int) $result->person_id, $result->full_name); ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
-                                    <?php
-                                    $pct = $result->total_answered > 0
-                                        ? ($result->correct_count / $result->total_answered) * 100
-                                        : 0;
-                                    ?>
-                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
-                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-
-                </div><!-- end Player tab -->
-
-                <div class="kealoa-tab-panel" data-tab="constructor">
-
-            <?php if (!empty($constructor_results)): ?>
-                <div class="kealoa-editor-constructor-stats">
-                    <h2><?php esc_html_e('Results by Constructor', 'kealoa-reference'); ?></h2>
-
-                    <div class="kealoa-filter-controls" data-target="kealoa-editor-constructor-table">
-                        <div class="kealoa-filter-row">
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-ec-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
-                                <input type="text" id="kealoa-ec-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Constructor name...', 'kealoa-reference'); ?>">
-                            </div>
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-ec-min-clues"><?php esc_html_e('Min. Clues', 'kealoa-reference'); ?></label>
-                                <input type="number" id="kealoa-ec-min-clues" class="kealoa-filter-input" data-filter="min" data-col="2" min="1" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
-                            </div>
-                            <div class="kealoa-filter-group">
-                                <label for="kealoa-ec-acc-min"><?php esc_html_e('Accuracy Range', 'kealoa-reference'); ?></label>
-                                <div class="kealoa-filter-range">
-                                    <input type="number" id="kealoa-ec-acc-min" class="kealoa-filter-input" data-filter="range-min" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
-                                    <span class="kealoa-filter-range-sep">&ndash;</span>
-                                    <input type="number" id="kealoa-ec-acc-max" class="kealoa-filter-input" data-filter="range-max" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
-                                </div>
-                            </div>
-                            <div class="kealoa-filter-group kealoa-filter-actions">
-                                <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
-                                <span class="kealoa-filter-count"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <table class="kealoa-table kealoa-editor-constructor-table" id="kealoa-editor-constructor-table">
-                        <thead>
-                            <tr>
-                                <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
-                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($constructor_results as $result): ?>
-                                <tr>
-                                    <td><?php echo Kealoa_Formatter::format_constructor_link((int) $result->constructor_id, $result->full_name); ?></td>
-                                    <td><?php echo esc_html($result->puzzle_count); ?></td>
-                                    <td><?php echo esc_html($result->clue_count); ?></td>
-                                    <td><?php echo esc_html($result->total_guesses); ?></td>
-                                    <td><?php echo esc_html($result->correct_guesses); ?></td>
-                                    <?php
-                                    $pct = $result->total_guesses > 0
-                                        ? ($result->correct_guesses / $result->total_guesses) * 100
-                                        : 0;
-                                    ?>
-                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
-                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-
-                </div><!-- end Constructor tab -->
-            </div><!-- end kealoa-tabs -->
-        </div>
-        <?php
-        return ob_get_clean();
-
-        }); // end get_cached_or_render
-    }
 
     /**
      * Render version info shortcode

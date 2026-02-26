@@ -30,7 +30,7 @@
             if (type === 'round') {
                 confirmMessage += ' This will also delete all associated clues and guesses.';
             } else if (type === 'puzzle') {
-                confirmMessage += ' This will also remove all constructor associations.';
+                confirmMessage += ' This will also remove all person associations.';
             }
 
             if (!confirm(confirmMessage)) {
@@ -146,7 +146,7 @@
             if ($imageField.length && fullName) {
                 if (!$imageField.val()) {
                     var imageName = fullName.replace(/ /g, '');
-                    var imageUrl = 'https://www.xwordinfo.com/images/cons/' + imageName + '.jpg';
+                    var imageUrl = 'https://www.xwordinfo.com/images/cons/' + encodeURIComponent(imageName) + '.jpg';
                     $imageField.val(imageUrl);
                     $imageField.trigger('change');
                 }
@@ -192,7 +192,7 @@
                 if (!$('#xwordinfo-image-preview').length) {
                     $(this).closest('td').find('.description').first().after(
                         '<p id="xwordinfo-image-preview" style="margin-top: 10px;">' +
-                        '<img src="' + imageUrl + '" alt="Constructor photo" style="max-width: 150px;" />' +
+                        '<img src="' + imageUrl + '" alt="Person photo" style="max-width: 150px;" />' +
                         '</p>'
                     );
                 } else {
@@ -258,29 +258,29 @@
         }
 
         /**
-         * Refresh constructors list when returning from Add Constructor page
-         * Track when the Add Constructor link is clicked and refresh on window focus
+         * Refresh persons list when returning from Add Person page
+         * Track when the Add Person link is clicked and refresh on window focus
          */
-        var waitingForConstructorRefresh = false;
-        var constructorSelects = $('#puzzle_constructors, #new_puzzle_constructors, #constructors');
+        var waitingForPersonRefresh = false;
+        var personSelects = $('#puzzle_constructors, #new_puzzle_constructors, #constructors');
         
-        // When the Add new constructor link is clicked, set flag
-        $(document).on('click', 'a[href*="page=kealoa-constructors&action=add"]', function () {
-            waitingForConstructorRefresh = true;
+        // When the Add new person link is clicked, set flag
+        $(document).on('click', 'a[href*="page=kealoa-persons&action=add"]', function () {
+            waitingForPersonRefresh = true;
         });
         
-        // On window focus, check if we need to refresh the constructors list
+        // On window focus, check if we need to refresh the persons list
         $(window).on('focus', function () {
-            if (waitingForConstructorRefresh && constructorSelects.length > 0) {
-                waitingForConstructorRefresh = false;
-                refreshConstructorsDropdown();
+            if (waitingForPersonRefresh && personSelects.length > 0) {
+                waitingForPersonRefresh = false;
+                refreshPersonsDropdown();
             }
         });
         
         /**
-         * Fetch updated constructors list via AJAX and update dropdowns
+         * Fetch updated persons list via AJAX and update dropdowns
          */
-        function refreshConstructorsDropdown() {
+        function refreshPersonsDropdown() {
             if (typeof kealoaAdmin === 'undefined') {
                 return;
             }
@@ -289,34 +289,34 @@
                 url: kealoaAdmin.ajaxUrl,
                 type: 'POST',
                 data: {
-                    action: 'kealoa_get_constructors',
+                    action: 'kealoa_get_persons',
                     nonce: kealoaAdmin.nonce
                 },
                 success: function (response) {
                     if (response.success && response.data) {
-                        updateConstructorSelects(response.data);
+                        updatePersonSelects(response.data);
                     }
                 }
             });
         }
         
         /**
-         * Update all constructor select elements with new constructors data
+         * Update all person select elements with new persons data
          */
-        function updateConstructorSelects(constructors) {
-            constructorSelects.each(function () {
+        function updatePersonSelects(persons) {
+            personSelects.each(function () {
                 var $select = $(this);
                 var selectedValues = $select.val() || [];
                 
                 // Clear and rebuild options
                 $select.empty();
                 
-                constructors.forEach(function (constructor) {
-                    var isSelected = selectedValues.indexOf(String(constructor.id)) !== -1;
+                persons.forEach(function (person) {
+                    var isSelected = selectedValues.indexOf(String(person.id)) !== -1;
                     $select.append(
                         $('<option>', {
-                            value: constructor.id,
-                            text: constructor.full_name,
+                            value: person.id,
+                            text: person.full_name,
                             selected: isSelected
                         })
                     );

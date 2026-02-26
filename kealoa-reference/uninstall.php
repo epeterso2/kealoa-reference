@@ -23,7 +23,7 @@ if (!current_user_can('activate_plugins')) {
 
 global $wpdb;
 
-// Drop all custom tables
+// Drop all custom tables (including legacy constructors table if still present)
 $tables = [
     $wpdb->prefix . 'kealoa_guesses',
     $wpdb->prefix . 'kealoa_clues',
@@ -33,6 +33,7 @@ $tables = [
     $wpdb->prefix . 'kealoa_puzzle_constructors',
     $wpdb->prefix . 'kealoa_puzzles',
     $wpdb->prefix . 'kealoa_persons',
+    $wpdb->prefix . 'kealoa_constructors',
 ];
 
 foreach ($tables as $table) {
@@ -56,6 +57,11 @@ $wpdb->query(
     "DELETE FROM {$wpdb->options} 
     WHERE option_name LIKE '_transient_kealoa_%' 
     OR option_name LIKE '_transient_timeout_kealoa_%'"
+);
+
+// Delete any legacy editor media options
+$wpdb->query(
+    "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'kealoa_editor_media_%'"
 );
 
 // Flush rewrite rules

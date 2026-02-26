@@ -6,7 +6,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://github.com/epeterso2/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 1.3.13
+ * Version: 2.0.0
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -26,11 +26,11 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '1.3.13');
+define('KEALOA_VERSION', '2.0.0');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
-define('KEALOA_DB_VERSION', '1.4.0');
+define('KEALOA_DB_VERSION', '2.0.0');
 
 /**
  * Check whether KEALOA debug mode is enabled.
@@ -372,6 +372,7 @@ function kealoa_register_rewrite_rules(): void {
         'top'
     );
 
+    // Legacy constructor/editor routes — kept as rewrite rules for 301 redirects
     add_rewrite_rule(
         '^kealoa/constructor/([^/]+)/?$',
         'index.php?kealoa_constructor_name=$matches[1]',
@@ -427,7 +428,10 @@ function kealoa_template_redirect(): void {
             wp_die(__('Person not found.', 'kealoa-reference'), '', ['response' => 404]);
         }
         $shortcodes = new Kealoa_Shortcodes();
-        $title = sprintf(__('%s - Player', 'kealoa-reference'), $person->full_name);
+        // Build title with role labels
+        $roles = $db->get_person_roles((int) $person->id);
+        $role_label = !empty($roles) ? implode(' / ', array_map('ucfirst', $roles)) : 'Person';
+        $title = sprintf(__('%s - %s', 'kealoa-reference'), $person->full_name, $role_label);
         $content = $shortcodes->render_person(['id' => $person->id]);
         $is_kealoa = true;
         // Store object info for admin bar
@@ -449,24 +453,17 @@ function kealoa_template_redirect(): void {
         $GLOBALS['kealoa_object_type'] = 'round';
         $GLOBALS['kealoa_object_id'] = (int) $round_id;
     } elseif ($constructor_name) {
-        $db = new Kealoa_DB();
-        $constructor = $db->get_constructor_by_name(urldecode($constructor_name));
-        if (!$constructor) {
-            wp_die(__('Constructor not found.', 'kealoa-reference'), '', ['response' => 404]);
-        }
-        $shortcodes = new Kealoa_Shortcodes();
-        $title = sprintf(__('%s - Constructor', 'kealoa-reference'), $constructor->full_name);
-        $content = $shortcodes->render_constructor(['id' => (int) $constructor->id]);
-        $is_kealoa = true;
-        // Store object info for admin bar
-        $GLOBALS['kealoa_object_type'] = 'constructor';
-        $GLOBALS['kealoa_object_id'] = $constructor->id;
+        // 301 redirect legacy constructor URL to unified person URL
+        $decoded = urldecode($constructor_name);
+        $person_slug = str_replace(' ', '_', $decoded);
+        wp_redirect(home_url('/kealoa/person/' . urlencode($person_slug) . '/'), 301);
+        exit;
     } elseif ($editor_name) {
+        // 301 redirect legacy editor URL to unified person URL
         $decoded = urldecode($editor_name);
-        $shortcodes = new Kealoa_Shortcodes();
-        $title = sprintf(__('%s - Editor', 'kealoa-reference'), $decoded);
-        $content = $shortcodes->render_editor(['name' => $decoded]);
-        $is_kealoa = true;
+        $person_slug = str_replace(' ', '_', $decoded);
+        wp_redirect(home_url('/kealoa/person/' . urlencode($person_slug) . '/'), 301);
+        exit;
     } elseif ($puzzle_date) {
         $db = new Kealoa_DB();
         $puzzle = $db->get_puzzle_by_date($puzzle_date);
@@ -632,10 +629,9 @@ function kealoa_inject_search_placeholder(array $posts, WP_Query $query): array 
  */
 function kealoa_build_search_results_html(array $results): string {
     $type_labels = [
-        'player' => __('Player', 'kealoa-reference'),
-        'constructor' => __('Constructor', 'kealoa-reference'),
-        'editor' => __('Editor', 'kealoa-reference'),
+        'person' => __('Person', 'kealoa-reference'),
         'round' => __('Round', 'kealoa-reference'),
+        'puzzle' => __('Puzzle', 'kealoa-reference'),
     ];
 
     $html = '<div class="kealoa-search-results">';

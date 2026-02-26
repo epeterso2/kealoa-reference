@@ -136,7 +136,7 @@ class Kealoa_Import {
     }
 
     /**
-     * Import constructors from CSV
+     * Import constructors from CSV (legacy — imports as persons)
      */
     public function import_constructors(string $file_path, bool $overwrite = true): array {
         $rows = $this->parse_csv($file_path);
@@ -145,7 +145,7 @@ class Kealoa_Import {
         $errors = [];
         
         foreach ($rows as $index => $row) {
-            $line = $index + 2; // Account for header row
+            $line = $index + 2;
             
             if (empty($row['full_name'])) {
                 $errors[] = "Line {$line}: Missing full_name";
@@ -153,34 +153,20 @@ class Kealoa_Import {
                 continue;
             }
             
-            // Check if constructor already exists
-            $existing = $this->db->get_constructors([
-                'search' => $row['full_name'],
-                'limit' => 1
-            ]);
+            $existing = $this->find_person_by_name($row['full_name']);
             
-            $found = null;
-            foreach ($existing as $c) {
-                if (strtolower($c->full_name) === strtolower($row['full_name'])) {
-                    $found = $c;
-                    break;
-                }
-            }
-            
-            if ($found) {
+            if ($existing) {
                 if (!$overwrite) {
                     $skipped++;
                     continue;
                 }
-                // Update existing constructor
-                $result = $this->db->update_constructor((int) $found->id, [
+                $result = $this->db->update_person((int) $existing->id, [
                     'full_name' => $row['full_name'],
-                    'xwordinfo_profile_name' => $row['xwordinfo_profile_name'] ?? null,
-                    'xwordinfo_image_url' => $row['xwordinfo_image_url'] ?? null,
+                    'xwordinfo_profile_name' => $row['xwordinfo_profile_name'] ?? $existing->xwordinfo_profile_name ?? null,
+                    'xwordinfo_image_url' => $row['xwordinfo_image_url'] ?? $existing->xwordinfo_image_url ?? null,
                 ]);
             } else {
-                // Create new constructor
-                $result = $this->db->create_constructor([
+                $result = $this->db->create_person([
                     'full_name' => $row['full_name'],
                     'xwordinfo_profile_name' => $row['xwordinfo_profile_name'] ?? null,
                     'xwordinfo_image_url' => $row['xwordinfo_image_url'] ?? null,
@@ -190,7 +176,7 @@ class Kealoa_Import {
             if ($result) {
                 $imported++;
             } else {
-                $errors[] = "Line {$line}: Failed to insert constructor";
+                $errors[] = "Line {$line}: Failed to import person (constructor)";
                 $skipped++;
             }
         }
@@ -245,6 +231,8 @@ class Kealoa_Import {
                     'home_page_url' => $row['home_page_url'] ?? null,
                     'image_url' => $row['image_url'] ?? null,
                     'hide_xwordinfo' => !empty($row['hide_xwordinfo']),
+                    'xwordinfo_profile_name' => $row['xwordinfo_profile_name'] ?? $found->xwordinfo_profile_name ?? null,
+                    'xwordinfo_image_url' => $row['xwordinfo_image_url'] ?? $found->xwordinfo_image_url ?? null,
                 ]);
             } else {
                 // Create new person
@@ -253,6 +241,8 @@ class Kealoa_Import {
                     'home_page_url' => $row['home_page_url'] ?? null,
                     'image_url' => $row['image_url'] ?? null,
                     'hide_xwordinfo' => !empty($row['hide_xwordinfo']),
+                    'xwordinfo_profile_name' => $row['xwordinfo_profile_name'] ?? null,
+                    'xwordinfo_image_url' => $row['xwordinfo_image_url'] ?? null,
                 ]);
             }
             
@@ -305,21 +295,29 @@ class Kealoa_Import {
                     $skipped++;
                     continue;
                 }
-                // Update existing puzzle with editor_name if provided
+                // Update existing puzzle with editor_id if provided
                 $update_data = ['publication_date' => $publication_date];
-                if (isset($row['editor_name'])) {
-                    $update_data['editor_name'] = !empty($row['editor_name']) ? $row['editor_name'] : null;
+                $editor_name = $row['editor_name'] ?? $row['editor'] ?? '';
+                if (!empty($editor_name)) {
+                    $editor_person = $this->find_or_create_person($editor_name);
+                    if ($editor_person) {
+                        $update_data['editor_id'] = (int) $editor_person->id;
+                    }
                 }
                 $this->db->update_puzzle((int) $existing->id, $update_data);
-                // Use existing puzzle ID
                 $puzzle_id = (int) $existing->id;
             } else {
-                // Create new puzzle, auto-populating editor if not provided
+                // Determine editor
+                $editor_name = $row['editor_name'] ?? $row['editor'] ?? '';
+                if (empty($editor_name)) {
+                    $editor_name = Kealoa_DB::get_editor_for_date($publication_date);
+                }
                 $create_data = ['publication_date' => $publication_date];
-                if (isset($row['editor_name']) && !empty($row['editor_name'])) {
-                    $create_data['editor_name'] = $row['editor_name'];
-                } else {
-                    $create_data['editor_name'] = Kealoa_DB::get_editor_for_date($publication_date);
+                if (!empty($editor_name)) {
+                    $editor_person = $this->find_or_create_person($editor_name);
+                    if ($editor_person) {
+                        $create_data['editor_id'] = (int) $editor_person->id;
+                    }
                 }
                 $puzzle_id = $this->db->create_puzzle($create_data);
                 
@@ -333,20 +331,20 @@ class Kealoa_Import {
             // Handle constructors if provided - always update
             if (!empty($row['constructors'])) {
                 $constructor_names = array_map('trim', preg_split('/,|\band\b/i', $row['constructors']));
-                $constructor_ids = [];
+                $person_ids = [];
                 
                 foreach ($constructor_names as $name) {
                     if (empty($name)) {
                         continue;
                     }
-                    $constructor = $this->find_or_create_constructor($name);
-                    if ($constructor) {
-                        $constructor_ids[] = $constructor->id;
+                    $person = $this->find_or_create_person_as_constructor($name);
+                    if ($person) {
+                        $person_ids[] = (int) $person->id;
                     }
                 }
                 
-                if (!empty($constructor_ids)) {
-                    $this->db->set_puzzle_constructors($puzzle_id, $constructor_ids);
+                if (!empty($person_ids)) {
+                    $this->db->set_puzzle_constructors($puzzle_id, $person_ids);
                 }
             }
             
@@ -540,10 +538,15 @@ class Kealoa_Import {
                 // Find or create the puzzle
                 $puzzle = $this->db->get_puzzle_by_date($puzzle_date);
                 if (!$puzzle) {
-                    $create_data = [
-                        'publication_date' => $puzzle_date,
-                        'editor_name' => Kealoa_DB::get_editor_for_date($puzzle_date),
-                    ];
+                    // Determine editor for new puzzle
+                    $editor_name = Kealoa_DB::get_editor_for_date($puzzle_date);
+                    $create_data = ['publication_date' => $puzzle_date];
+                    if (!empty($editor_name)) {
+                        $editor_person = $this->find_or_create_person($editor_name);
+                        if ($editor_person) {
+                            $create_data['editor_id'] = (int) $editor_person->id;
+                        }
+                    }
                     $new_puzzle_id = $this->db->create_puzzle($create_data);
                     if (!$new_puzzle_id) {
                         $errors[] = "Line {$line}: Could not create puzzle for date {$puzzle_date}";
@@ -564,20 +567,20 @@ class Kealoa_Import {
                 
                 if (!empty($constructor_value)) {
                     $constructor_names = array_map('trim', preg_split('/,|\band\b/i', $constructor_value));
-                    $constructor_ids = [];
+                    $person_ids = [];
                     
                     foreach ($constructor_names as $name) {
                         if (empty($name)) {
                             continue;
                         }
-                        $constructor = $this->find_or_create_constructor($name);
-                        if ($constructor) {
-                            $constructor_ids[] = $constructor->id;
+                        $person = $this->find_or_create_person_as_constructor($name);
+                        if ($person) {
+                            $person_ids[] = (int) $person->id;
                         }
                     }
                     
-                    if (!empty($constructor_ids)) {
-                        $this->db->set_puzzle_constructors((int) $puzzle->id, $constructor_ids);
+                    if (!empty($person_ids)) {
+                        $this->db->set_puzzle_constructors((int) $puzzle->id, $person_ids);
                     }
                 }
                 
@@ -768,29 +771,26 @@ class Kealoa_Import {
     }
 
     /**
-     * Find a constructor by name or create one
+     * Find a person by name or create one with constructor XWordInfo defaults
      */
-    private function find_or_create_constructor(string $name): ?object {
-        $constructors = $this->db->get_constructors(['limit' => 1000]);
-        
-        foreach ($constructors as $c) {
-            if (strtolower($c->full_name) === strtolower($name)) {
-                return $c;
-            }
+    private function find_or_create_person_as_constructor(string $name): ?object {
+        $person = $this->find_person_by_name($name);
+        if ($person) {
+            return $person;
         }
         
-        // Auto-generate XWordInfo fields
+        // Auto-generate XWordInfo fields for new constructor persons
         $profile_name = str_replace(' ', '_', $name);
         $image_name = preg_replace('/[^A-Za-z0-9]/', '', $name);
         $image_url = 'https://www.xwordinfo.com/images/cons/' . $image_name . '.jpg';
         
-        $id = $this->db->create_constructor([
+        $id = $this->db->create_person([
             'full_name' => $name,
             'xwordinfo_profile_name' => $profile_name,
             'xwordinfo_image_url' => $image_url,
         ]);
         
-        return $id ? $this->db->get_constructor($id) : null;
+        return $id ? $this->db->get_person($id) : null;
     }
 
     /**
@@ -865,7 +865,6 @@ class Kealoa_Import {
 
         // Import in dependency order
         $import_order = [
-            'constructors' => 'Constructors',
             'persons' => 'Persons',
             'puzzles' => 'Puzzles',
             'rounds' => 'Rounds',
@@ -936,7 +935,6 @@ class Kealoa_Import {
         $templates = [];
         
         $files = [
-            'constructors' => 'Constructors',
             'persons' => 'Persons',
             'puzzles' => 'Puzzles',
             'rounds' => 'Rounds',

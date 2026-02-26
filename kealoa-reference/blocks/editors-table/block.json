@@ -6,7 +6,7 @@
     "title": "KEALOA Editors Table",
     "category": "widgets",
     "icon": "edit",
-    "description": "Displays a table of all editors with clues guessed and accuracy.",
+    "description": "Deprecated: Use Players Table instead. Displays a table of all persons.",
     "keywords": ["kealoa", "editors", "table"],
     "supports": {
         "html": false,

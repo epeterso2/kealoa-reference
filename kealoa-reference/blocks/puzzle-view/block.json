@@ -6,8 +6,8 @@
     "title": "KEALOA Puzzle View",
     "category": "widgets",
     "icon": "grid-view",
-    "description": "Displays a single puzzle with constructor images, clue details, and round information.",
-    "keywords": ["kealoa", "puzzle", "constructors", "crossword"],
+    "description": "Displays a single puzzle with person images, clue details, and round information.",
+    "keywords": ["kealoa", "puzzle", "persons", "crossword"],
     "supports": {
         "html": false,
         "align": ["wide", "full"]

@@ -13,23 +13,19 @@
  *   GET /rounds                          - List rounds (paginated)
  *   GET /rounds/{id}                     - Single round with full details
  *   GET /rounds/stats                    - Overview stats and per-year breakdown
- *   GET /persons                         - List players (paginated)
- *   GET /persons/{id}                    - Single player with stats
- *   GET /persons/{id}/rounds             - Player round history
- *   GET /persons/{id}/puzzles            - Puzzles from rounds the player has played
- *   GET /persons/{id}/stats/by-year      - Player stats by year
- *   GET /persons/{id}/stats/by-day       - Player stats by day of week
- *   GET /persons/{id}/stats/by-constructor - Player stats by constructor
- *   GET /persons/{id}/stats/by-editor    - Player stats by editor
- *   GET /persons/{id}/stats/by-direction - Player stats by clue direction
- *   GET /persons/{id}/stats/by-length    - Player stats by answer length
- *   GET /persons/{id}/stats/by-decade    - Player stats by puzzle decade
- *   GET /persons/{id}/stats/by-clue-number - Player stats by clue number
- *   GET /persons/{id}/stats/streaks      - Player best streaks by year
- *   GET /constructors                    - List constructors (paginated)
- *   GET /constructors/{id}               - Single constructor with stats & puzzles
- *   GET /editors                         - List editors with stats
- *   GET /editors/{name}                  - Single editor with stats & puzzles
+ *   GET /persons                         - List persons (paginated, optional role filter)
+ *   GET /persons/{id}                    - Single person with stats and roles
+ *   GET /persons/{id}/rounds             - Person round history
+ *   GET /persons/{id}/puzzles            - Puzzles from rounds the person has played
+ *   GET /persons/{id}/stats/by-year      - Person stats by year
+ *   GET /persons/{id}/stats/by-day       - Person stats by day of week
+ *   GET /persons/{id}/stats/by-constructor - Person stats by constructor
+ *   GET /persons/{id}/stats/by-editor    - Person stats by editor
+ *   GET /persons/{id}/stats/by-direction - Person stats by clue direction
+ *   GET /persons/{id}/stats/by-length    - Person stats by answer length
+ *   GET /persons/{id}/stats/by-decade    - Person stats by puzzle decade
+ *   GET /persons/{id}/stats/by-clue-number - Person stats by clue number
+ *   GET /persons/{id}/stats/streaks      - Person best streaks by year
  *   GET /puzzles                         - List puzzles (paginated, with URLs)
  *   GET /puzzles/{id}                    - Single puzzle with clues, player results & rounds
  *   GET /clues/{id}                      - Single clue with guesses
@@ -95,7 +91,7 @@ class Kealoa_REST_API {
         ]);
 
         // =====================================================================
-        // Persons (Players)
+        // Persons
         // =====================================================================
 
         register_rest_route(self::NAMESPACE, '/persons', [
@@ -106,6 +102,13 @@ class Kealoa_REST_API {
                 'search' => [
                     'default'           => '',
                     'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'role' => [
+                    'default'           => '',
+                    'sanitize_callback' => 'sanitize_text_field',
+                    'validate_callback' => function ($v) {
+                        return empty($v) || in_array($v, ['player', 'constructor', 'editor'], true);
+                    },
                 ],
             ]),
         ]);
@@ -152,51 +155,6 @@ class Kealoa_REST_API {
                 'args'                => $this->id_arg(),
             ]);
         }
-
-        // =====================================================================
-        // Constructors
-        // =====================================================================
-
-        register_rest_route(self::NAMESPACE, '/constructors', [
-            'methods'             => 'GET',
-            'callback'            => [$this, 'get_constructors'],
-            'permission_callback' => '__return_true',
-            'args'                => $this->pagination_args([
-                'search' => [
-                    'default'           => '',
-                    'sanitize_callback' => 'sanitize_text_field',
-                ],
-            ]),
-        ]);
-
-        register_rest_route(self::NAMESPACE, '/constructors/(?P<id>\d+)', [
-            'methods'             => 'GET',
-            'callback'            => [$this, 'get_constructor'],
-            'permission_callback' => '__return_true',
-            'args'                => $this->id_arg(),
-        ]);
-
-        // =====================================================================
-        // Editors
-        // =====================================================================
-
-        register_rest_route(self::NAMESPACE, '/editors', [
-            'methods'             => 'GET',
-            'callback'            => [$this, 'get_editors'],
-            'permission_callback' => '__return_true',
-        ]);
-
-        register_rest_route(self::NAMESPACE, '/editors/(?P<name>[^/]+)', [
-            'methods'             => 'GET',
-            'callback'            => [$this, 'get_editor'],
-            'permission_callback' => '__return_true',
-            'args'                => [
-                'name' => [
-                    'required'          => true,
-                    'sanitize_callback' => function ($v) { return sanitize_text_field(urldecode($v)); },
-                ],
-            ],
-        ]);
 
         // =====================================================================
         // Puzzles
@@ -386,20 +344,49 @@ class Kealoa_REST_API {
     }
 
     // =========================================================================
-    // PERSONS (PLAYERS)
+    // PERSONS
     // =========================================================================
 
     public function get_persons(WP_REST_Request $request): WP_REST_Response {
         $limit  = (int) $request->get_param('per_page');
         $offset = ((int) $request->get_param('page') - 1) * $limit;
         $search = $request->get_param('search') ?: '';
+        $role   = $request->get_param('role') ?: '';
 
-        $persons = $this->db->get_persons([
-            'limit'  => $limit,
-            'offset' => $offset,
-            'search' => $search,
-        ]);
-        $total = $this->db->count_persons($search);
+        // If a role filter is specified, get persons by role
+        if ($role === 'constructor') {
+            $all = $this->db->get_persons_who_are_constructors();
+        } elseif ($role === 'editor') {
+            $all = $this->db->get_persons_who_are_editors();
+        } else {
+            // Default: paginated list
+            $persons = $this->db->get_persons([
+                'limit'  => $limit,
+                'offset' => $offset,
+                'search' => $search,
+            ]);
+            $total = $this->db->count_persons($search);
+
+            $items = array_map(function ($p) {
+                return [
+                    'id'        => (int) $p->id,
+                    'full_name' => $p->full_name,
+                    'roles'     => $this->db->get_person_roles((int) $p->id),
+                    'url'       => home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $p->full_name)) . '/'),
+                ];
+            }, $persons);
+
+            return $this->paginated_response($items, $total, $limit, (int) $request->get_param('page'));
+        }
+
+        // Role-filtered results (not paginated, typically small)
+        if (!empty($search)) {
+            $search_lower = strtolower($search);
+            $all = array_filter($all, fn($p) => str_contains(strtolower($p->full_name), $search_lower));
+        }
+
+        $total = count($all);
+        $sliced = array_slice($all, $offset, $limit);
 
         $items = array_map(function ($p) {
             return [
@@ -407,9 +394,9 @@ class Kealoa_REST_API {
                 'full_name' => $p->full_name,
                 'url'       => home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $p->full_name)) . '/'),
             ];
-        }, $persons);
+        }, $sliced);
 
-        return $this->paginated_response($items, $total, $limit, (int) $request->get_param('page'));
+        return $this->paginated_response(array_values($items), $total, $limit, (int) $request->get_param('page'));
     }
 
     public function get_person(WP_REST_Request $request): WP_REST_Response {
@@ -420,15 +407,31 @@ class Kealoa_REST_API {
             return new WP_REST_Response(['message' => 'Person not found.'], 404);
         }
 
+        $roles = $this->db->get_person_roles($id);
         $stats = $this->db->get_person_stats($id);
 
-        return new WP_REST_Response([
-            'id'            => (int) $person->id,
-            'full_name'     => $person->full_name,
-            'home_page_url' => $person->home_page_url ?? '',
-            'stats'         => $stats,
-            'url'           => home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $person->full_name)) . '/'),
-        ], 200);
+        $data = [
+            'id'                     => (int) $person->id,
+            'full_name'              => $person->full_name,
+            'home_page_url'          => $person->home_page_url ?? '',
+            'xwordinfo_profile_name' => $person->xwordinfo_profile_name ?? '',
+            'xwordinfo_image_url'    => $person->xwordinfo_image_url ?? '',
+            'roles'                  => $roles,
+            'stats'                  => $stats,
+            'url'                    => home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $person->full_name)) . '/'),
+        ];
+
+        // Include constructor stats if applicable
+        if (in_array('constructor', $roles, true)) {
+            $data['constructor_stats'] = $this->db->get_person_constructor_stats($id);
+        }
+
+        // Include editor stats if applicable
+        if (in_array('editor', $roles, true)) {
+            $data['editor_stats'] = $this->db->get_person_editor_stats($id);
+        }
+
+        return new WP_REST_Response($data, 200);
     }
 
     public function get_person_rounds(WP_REST_Request $request): WP_REST_Response {
@@ -466,9 +469,12 @@ class Kealoa_REST_API {
 
             $constructors = [];
             for ($i = 0; $i < count($constructor_ids); $i++) {
+                $cid = (int) $constructor_ids[$i];
+                $cname = $constructor_names[$i] ?? '';
                 $constructors[] = [
-                    'id'        => (int) $constructor_ids[$i],
-                    'full_name' => $constructor_names[$i] ?? '',
+                    'id'        => $cid,
+                    'full_name' => $cname,
+                    'url'       => home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $cname)) . '/'),
                 ];
             }
 
@@ -478,6 +484,7 @@ class Kealoa_REST_API {
                 'puzzle_id'        => (int) $p->puzzle_id,
                 'publication_date' => $p->publication_date,
                 'day_of_week'      => $day_name,
+                'editor_id'        => $p->editor_id ? (int) $p->editor_id : null,
                 'editor_name'      => $p->editor_name ?? '',
                 'constructors'     => $constructors,
                 'round_ids'        => array_map('intval', $round_ids),
@@ -567,137 +574,6 @@ class Kealoa_REST_API {
     }
 
     // =========================================================================
-    // CONSTRUCTORS
-    // =========================================================================
-
-    public function get_constructors(WP_REST_Request $request): WP_REST_Response {
-        $limit  = (int) $request->get_param('per_page');
-        $offset = ((int) $request->get_param('page') - 1) * $limit;
-        $search = $request->get_param('search') ?: '';
-
-        $constructors = $this->db->get_constructors([
-            'limit'  => $limit,
-            'offset' => $offset,
-            'search' => $search,
-        ]);
-        $total = $this->db->count_constructors($search);
-
-        $items = array_map(function ($c) {
-            return [
-                'id'                     => (int) $c->id,
-                'full_name'              => $c->full_name,
-                'xwordinfo_profile_name' => $c->xwordinfo_profile_name ?? '',
-                'url'                    => home_url('/kealoa/constructor/' . urlencode(str_replace(' ', '_', $c->full_name)) . '/'),
-            ];
-        }, $constructors);
-
-        return $this->paginated_response($items, $total, $limit, (int) $request->get_param('page'));
-    }
-
-    public function get_constructor(WP_REST_Request $request): WP_REST_Response {
-        $id          = (int) $request->get_param('id');
-        $constructor = $this->db->get_constructor($id);
-
-        if (!$constructor) {
-            return new WP_REST_Response(['message' => 'Constructor not found.'], 404);
-        }
-
-        $stats   = $this->db->get_constructor_stats($id);
-        $puzzles = $this->db->get_constructor_puzzles($id);
-
-        $puzzle_items = array_map(function ($p) use ($id) {
-            $co = $this->db->get_puzzle_co_constructors((int) $p->puzzle_id, $id);
-            $round_ids   = !empty($p->round_ids) ? explode(',', $p->round_ids) : [];
-            $round_dates = !empty($p->round_dates) ? explode(',', $p->round_dates) : [];
-            return [
-                'puzzle_id'        => (int) $p->puzzle_id,
-                'publication_date' => $p->publication_date,
-                'editor_name'      => $p->editor_name ?? '',
-                'co_constructors'  => array_map(fn($c) => [
-                    'id'        => (int) $c->id,
-                    'full_name' => $c->full_name,
-                ], $co),
-                'round_ids'   => array_map('intval', $round_ids),
-                'round_dates' => $round_dates,
-            ];
-        }, $puzzles);
-
-        return new WP_REST_Response([
-            'id'                     => (int) $constructor->id,
-            'full_name'              => $constructor->full_name,
-            'xwordinfo_profile_name' => $constructor->xwordinfo_profile_name ?? '',
-            'stats'                  => $stats,
-            'puzzles'                => $puzzle_items,
-            'url'                    => home_url('/kealoa/constructor/' . urlencode(str_replace(' ', '_', $constructor->full_name)) . '/'),
-        ], 200);
-    }
-
-    // =========================================================================
-    // EDITORS
-    // =========================================================================
-
-    public function get_editors(WP_REST_Request $request): WP_REST_Response {
-        $editors = $this->db->get_editors_with_stats();
-
-        $items = array_map(function ($e) {
-            $total   = (int) $e->total_guesses;
-            $correct = (int) $e->correct_guesses;
-            return [
-                'editor_name'     => $e->editor_name,
-                'puzzle_count'    => (int) $e->puzzle_count,
-                'clue_count'      => (int) $e->clue_count,
-                'total_guesses'   => $total,
-                'correct_guesses' => $correct,
-                'accuracy'        => $total > 0 ? round(($correct / $total) * 100, 1) : 0,
-                'url'             => home_url('/kealoa/editor/' . urlencode($e->editor_name) . '/'),
-            ];
-        }, $editors);
-
-        return new WP_REST_Response($items, 200);
-    }
-
-    public function get_editor(WP_REST_Request $request): WP_REST_Response {
-        $name = $request->get_param('name');
-
-        if (!$this->db->editor_name_exists($name)) {
-            return new WP_REST_Response(['message' => 'Editor not found.'], 404);
-        }
-
-        $stats   = $this->db->get_editor_stats($name);
-        $puzzles = $this->db->get_editor_puzzles($name);
-
-        $puzzle_items = array_map(function ($p) {
-            $constructor_ids   = !empty($p->constructor_ids) ? explode(',', $p->constructor_ids) : [];
-            $constructor_names = !empty($p->constructor_names) ? explode(', ', $p->constructor_names) : [];
-            $round_ids         = !empty($p->round_ids) ? explode(',', $p->round_ids) : [];
-            $round_dates       = !empty($p->round_dates) ? explode(',', $p->round_dates) : [];
-
-            $constructors = [];
-            for ($i = 0; $i < count($constructor_ids); $i++) {
-                $constructors[] = [
-                    'id'        => (int) $constructor_ids[$i],
-                    'full_name' => $constructor_names[$i] ?? '',
-                ];
-            }
-
-            return [
-                'puzzle_id'        => (int) $p->puzzle_id,
-                'publication_date' => $p->publication_date,
-                'constructors'     => $constructors,
-                'round_ids'        => array_map('intval', $round_ids),
-                'round_dates'      => $round_dates,
-            ];
-        }, $puzzles);
-
-        return new WP_REST_Response([
-            'editor_name' => $name,
-            'stats'        => $stats,
-            'puzzles'      => $puzzle_items,
-            'url'          => home_url('/kealoa/editor/' . urlencode($name) . '/'),
-        ], 200);
-    }
-
-    // =========================================================================
     // PUZZLES
     // =========================================================================
 
@@ -720,10 +596,12 @@ class Kealoa_REST_API {
                 'id'               => (int) $p->id,
                 'publication_date' => $p->publication_date,
                 'day_of_week'      => $day_name,
+                'editor_id'        => $p->editor_id ? (int) $p->editor_id : null,
                 'editor_name'      => $p->editor_name ?? '',
                 'constructors'     => array_map(fn($c) => [
                     'id'        => (int) $c->id,
                     'full_name' => $c->full_name,
+                    'url'       => home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $c->full_name)) . '/'),
                 ], $constructors),
                 'url'              => home_url('/kealoa/puzzle/' . $p->publication_date . '/'),
             ];
@@ -782,17 +660,29 @@ class Kealoa_REST_API {
         }
         unset($rc);
 
+        // Look up editor person
+        $editor_name = '';
+        $editor_id = null;
+        if (!empty($puzzle->editor_id)) {
+            $editor = $this->db->get_person((int) $puzzle->editor_id);
+            if ($editor) {
+                $editor_name = $editor->full_name;
+                $editor_id = (int) $editor->id;
+            }
+        }
+
         $day_name = date('l', strtotime($puzzle->publication_date));
 
         return new WP_REST_Response([
             'id'               => (int) $puzzle->id,
             'publication_date' => $puzzle->publication_date,
             'day_of_week'      => $day_name,
-            'editor_name'      => $puzzle->editor_name ?? '',
+            'editor_id'        => $editor_id,
+            'editor_name'      => $editor_name,
             'constructors'     => array_map(fn($c) => [
                 'id'        => (int) $c->id,
                 'full_name' => $c->full_name,
-                'url'       => home_url('/kealoa/constructor/' . urlencode(str_replace(' ', '_', $c->full_name)) . '/'),
+                'url'       => home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $c->full_name)) . '/'),
             ], $constructors),
             'rounds'           => array_values($rounds_clues),
             'player_results'   => array_map(fn($r) => [

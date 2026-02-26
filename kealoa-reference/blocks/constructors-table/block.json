@@ -6,7 +6,7 @@
     "title": "KEALOA Constructors Table",
     "category": "widgets",
     "icon": "hammer",
-    "description": "Displays a table of constructors with puzzle and clue counts.",
+    "description": "Deprecated: Use Players Table instead. Displays a table of all persons.",
     "keywords": ["kealoa", "constructors", "table", "crossword"],
     "supports": {
         "html": false,

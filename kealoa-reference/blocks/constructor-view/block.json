@@ -6,7 +6,7 @@
     "title": "KEALOA Constructor View",
     "category": "widgets",
     "icon": "hammer",
-    "description": "Displays a constructor's puzzle history and XWordInfo profile.",
+    "description": "Deprecated: Use Person View instead. Displays a person's KEALOA statistics and history.",
     "keywords": ["kealoa", "constructor", "puzzles", "crossword"],
     "supports": {
         "html": false,

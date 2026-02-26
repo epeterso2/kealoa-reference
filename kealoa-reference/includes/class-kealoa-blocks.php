@@ -151,8 +151,6 @@ class Kealoa_Blocks {
         $db = new Kealoa_DB();
         $rounds = $db->get_rounds(['limit' => 100]);
         $persons = $db->get_persons(['limit' => 100]);
-        $constructors = $db->get_constructors(['limit' => 1000]);
-        $editors = $db->get_editors_with_stats();
 
         wp_localize_script('kealoa-blocks-editor', 'kealoaBlocksData', [
             'rounds' => array_map(function($round) {
@@ -168,17 +166,6 @@ class Kealoa_Blocks {
                     'name' => $person->full_name,
                 ];
             }, $persons),
-            'constructors' => array_map(function($constructor) {
-                return [
-                    'id' => (int) $constructor->id,
-                    'name' => $constructor->full_name,
-                ];
-            }, $constructors),
-            'editors' => array_map(function($editor) {
-                return [
-                    'name' => $editor->editor_name,
-                ];
-            }, $editors),
         ]);
 
         wp_enqueue_style(

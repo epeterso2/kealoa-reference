@@ -51,7 +51,7 @@ class Kealoa_Export {
         }
 
         $type = sanitize_text_field($_GET['kealoa_export']);
-        $allowed_types = ['constructors', 'persons', 'puzzles', 'rounds', 'clues', 'guesses', 'all'];
+        $allowed_types = ['persons', 'puzzles', 'rounds', 'clues', 'guesses', 'all'];
 
         if (!in_array($type, $allowed_types)) {
             wp_die(__('Invalid export type.', 'kealoa-reference'));
@@ -90,7 +90,7 @@ class Kealoa_Export {
      * Export all data types as a ZIP archive
      */
     private function export_all_as_zip(): void {
-        $types = ['constructors', 'persons', 'puzzles', 'rounds', 'clues', 'guesses'];
+        $types = ['persons', 'puzzles', 'rounds', 'clues', 'guesses'];
         $date = gmdate('Y-m-d');
         $zip_filename = 'kealoa-export-' . $date . '.zip';
 
@@ -141,37 +141,20 @@ class Kealoa_Export {
      */
     private function write_csv_data($output, string $type): void {
         match ($type) {
-            'constructors' => $this->write_constructors($output),
             'persons' => $this->write_persons($output),
             'puzzles' => $this->write_puzzles($output),
             'rounds' => $this->write_rounds($output),
             'clues' => $this->write_clues($output),
             'guesses' => $this->write_guesses($output),
+            default => null,
         };
-    }
-
-    /**
-     * Write constructors CSV
-     */
-    private function write_constructors($output): void {
-        fputcsv($output, ['full_name', 'xwordinfo_profile_name', 'xwordinfo_image_url']);
-
-        $constructors = $this->db->get_constructors(['limit' => 999999, 'orderby' => 'full_name', 'order' => 'ASC']);
-
-        foreach ($constructors as $constructor) {
-            fputcsv($output, [
-                $constructor->full_name,
-                $constructor->xwordinfo_profile_name ?? '',
-                $constructor->xwordinfo_image_url ?? '',
-            ]);
-        }
     }
 
     /**
      * Write persons CSV
      */
     private function write_persons($output): void {
-        fputcsv($output, ['full_name', 'home_page_url', 'image_url']);
+        fputcsv($output, ['full_name', 'home_page_url', 'image_url', 'hide_xwordinfo', 'xwordinfo_profile_name', 'xwordinfo_image_url']);
 
         $persons = $this->db->get_persons(['limit' => 999999, 'orderby' => 'full_name', 'order' => 'ASC']);
 
@@ -180,6 +163,9 @@ class Kealoa_Export {
                 $person->full_name,
                 $person->home_page_url ?? '',
                 $person->image_url ?? '',
+                $person->hide_xwordinfo ?? 0,
+                $person->xwordinfo_profile_name ?? '',
+                $person->xwordinfo_image_url ?? '',
             ]);
         }
     }
@@ -196,9 +182,18 @@ class Kealoa_Export {
             $constructors = $this->db->get_puzzle_constructors((int) $puzzle->id);
             $constructor_names = array_map(fn($c) => $c->full_name, $constructors);
 
+            // Look up editor name from person
+            $editor_name = '';
+            if (!empty($puzzle->editor_id)) {
+                $editor = $this->db->get_person((int) $puzzle->editor_id);
+                if ($editor) {
+                    $editor_name = $editor->full_name;
+                }
+            }
+
             fputcsv($output, [
                 $puzzle->publication_date,
-                $puzzle->editor_name ?? '',
+                $editor_name,
                 implode(', ', $constructor_names),
             ]);
         }

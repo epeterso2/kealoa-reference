@@ -113,35 +113,25 @@ class Kealoa_Formatter {
     }
 
     /**
-     * Format a constructor name as a link to the in-app constructor page
+     * Format a constructor name as a link to the person page
      *
-     * @param int $constructor_id The constructor's ID
+     * @param int $person_id The person's ID (constructor)
      * @param string $full_name The constructor's full name
-     * @return string HTML link to constructor view
+     * @return string HTML link to person view
      */
-    public static function format_constructor_link(int $constructor_id, string $full_name): string {
-        $slug = str_replace(' ', '_', $full_name);
-        $url = home_url('/kealoa/constructor/' . urlencode($slug) . '/');
-        return sprintf(
-            '<a href="%s" class="kealoa-constructor-link">%s</a>',
-            esc_url($url),
-            esc_html($full_name)
-        );
+    public static function format_constructor_link(int $person_id, string $full_name): string {
+        return self::format_person_link($person_id, $full_name);
     }
 
     /**
-     * Format an editor name as a link to the editor view
+     * Format an editor name as a link to the person page
      *
-     * @param string $editor_name The editor's name
-     * @return string HTML link to editor view
+     * @param int $person_id The person's ID (editor)
+     * @param string $full_name The editor's full name
+     * @return string HTML link to person view
      */
-    public static function format_editor_link(string $editor_name): string {
-        $url = home_url('/kealoa/editor/' . urlencode($editor_name) . '/');
-        return sprintf(
-            '<a href="%s" class="kealoa-editor-link">%s</a>',
-            esc_url($url),
-            esc_html($editor_name)
-        );
+    public static function format_editor_link(int $person_id, string $full_name): string {
+        return self::format_person_link($person_id, $full_name);
     }
 
     /**

@@ -39,11 +39,9 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
      */
     public function get_object_subtypes() {
         return [
-            'rounds'       => (object) ['name' => 'rounds',       'label' => 'KEALOA Rounds'],
-            'players'      => (object) ['name' => 'players',      'label' => 'KEALOA Players'],
-            'constructors' => (object) ['name' => 'constructors', 'label' => 'KEALOA Constructors'],
-            'editors'      => (object) ['name' => 'editors',      'label' => 'KEALOA Editors'],
-            'puzzles'      => (object) ['name' => 'puzzles',      'label' => 'KEALOA Puzzles'],
+            'rounds'  => (object) ['name' => 'rounds',  'label' => 'KEALOA Rounds'],
+            'persons' => (object) ['name' => 'persons', 'label' => 'KEALOA Persons'],
+            'puzzles' => (object) ['name' => 'puzzles', 'label' => 'KEALOA Puzzles'],
         ];
     }
 
@@ -61,12 +59,10 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
         $offset = ($page_num - 1) * $max;
 
         return match ($object_subtype) {
-            'rounds'       => $this->get_round_urls($max, $offset),
-            'players'      => $this->get_player_urls($max, $offset),
-            'constructors' => $this->get_constructor_urls($max, $offset),
-            'editors'      => $this->get_editor_urls($max, $offset),
-            'puzzles'      => $this->get_puzzle_urls($max, $offset),
-            default        => [],
+            'rounds'  => $this->get_round_urls($max, $offset),
+            'persons' => $this->get_person_urls($max, $offset),
+            'puzzles' => $this->get_puzzle_urls($max, $offset),
+            default   => [],
         };
     }
 
@@ -80,12 +76,10 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
         $object_subtype = (string) $object_subtype;
         $max = wp_sitemaps_get_max_urls($this->object_type);
         $total = match ($object_subtype) {
-            'rounds'       => $this->db->count_rounds(),
-            'players'      => $this->db->count_persons(),
-            'constructors' => $this->db->count_constructors(),
-            'editors'      => $this->count_editors(),
-            'puzzles'      => $this->db->count_puzzles(),
-            default        => 0,
+            'rounds'  => $this->db->count_rounds(),
+            'persons' => $this->db->count_persons(),
+            'puzzles' => $this->db->count_puzzles(),
+            default   => 0,
         };
 
         return (int) ceil($total / $max);
@@ -118,7 +112,7 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
     /**
      * @return array<int, array{loc: string}>
      */
-    private function get_player_urls(int $limit, int $offset): array {
+    private function get_person_urls(int $limit, int $offset): array {
         $persons = $this->db->get_persons([
             'limit'  => $limit,
             'offset' => $offset,
@@ -129,40 +123,6 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
             $slug = str_replace(' ', '_', $person->full_name);
             $urls[] = [
                 'loc' => home_url('/kealoa/person/' . urlencode($slug) . '/'),
-            ];
-        }
-        return $urls;
-    }
-
-    /**
-     * @return array<int, array{loc: string}>
-     */
-    private function get_constructor_urls(int $limit, int $offset): array {
-        $constructors = $this->db->get_constructors([
-            'limit'  => $limit,
-            'offset' => $offset,
-        ]);
-
-        $urls = [];
-        foreach ($constructors as $constructor) {
-            $slug = str_replace(' ', '_', $constructor->full_name);
-            $urls[] = [
-                'loc' => home_url('/kealoa/constructor/' . urlencode($slug) . '/'),
-            ];
-        }
-        return $urls;
-    }
-
-    /**
-     * @return array<int, array{loc: string}>
-     */
-    private function get_editor_urls(int $limit, int $offset): array {
-        $editors = $this->get_editor_names($limit, $offset);
-
-        $urls = [];
-        foreach ($editors as $name) {
-            $urls[] = [
-                'loc' => home_url('/kealoa/editor/' . urlencode($name) . '/'),
             ];
         }
         return $urls;
@@ -189,44 +149,6 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
     }
 
     // =========================================================================
-    // EDITOR HELPERS (editors are not a first-class entity with an id)
-    // =========================================================================
-
-    /**
-     * Count distinct editor names.
-     */
-    private function count_editors(): int {
-        global $wpdb;
-        $table = $wpdb->prefix . 'kealoa_puzzles';
-        return (int) $wpdb->get_var(
-            "SELECT COUNT(DISTINCT editor_name)
-             FROM {$table}
-             WHERE editor_name IS NOT NULL AND editor_name != ''"
-        );
-    }
-
-    /**
-     * Get a paginated list of editor names.
-     *
-     * @return string[]
-     */
-    private function get_editor_names(int $limit, int $offset): array {
-        global $wpdb;
-        $table = $wpdb->prefix . 'kealoa_puzzles';
-        return $wpdb->get_col(
-            $wpdb->prepare(
-                "SELECT DISTINCT editor_name
-                 FROM {$table}
-                 WHERE editor_name IS NOT NULL AND editor_name != ''
-                 ORDER BY editor_name ASC
-                 LIMIT %d OFFSET %d",
-                $limit,
-                $offset
-            )
-        );
-    }
-
-    // =========================================================================
     // ALL URLS (flat list — used by Yoast integration)
     // =========================================================================
 
@@ -241,14 +163,8 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
         foreach ($this->get_round_urls(50000, 0) as $u) {
             $urls[] = array_merge($u, ['subtype' => 'rounds']);
         }
-        foreach ($this->get_player_urls(50000, 0) as $u) {
-            $urls[] = array_merge($u, ['subtype' => 'players']);
-        }
-        foreach ($this->get_constructor_urls(50000, 0) as $u) {
-            $urls[] = array_merge($u, ['subtype' => 'constructors']);
-        }
-        foreach ($this->get_editor_urls(50000, 0) as $u) {
-            $urls[] = array_merge($u, ['subtype' => 'editors']);
+        foreach ($this->get_person_urls(50000, 0) as $u) {
+            $urls[] = array_merge($u, ['subtype' => 'persons']);
         }
         foreach ($this->get_puzzle_urls(50000, 0) as $u) {
             $urls[] = array_merge($u, ['subtype' => 'puzzles']);

@@ -110,8 +110,6 @@
 /* Responsive table wrapper */
 .kealoa-rounds-table-wrapper,
 .kealoa-persons-table-wrapper,
-.kealoa-constructors-table-wrapper,
-.kealoa-editors-table-wrapper,
 .kealoa-table-scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -146,8 +144,7 @@
 .kealoa-round-link,
 .kealoa-episode-link,
 .kealoa-xwordinfo-link,
-.kealoa-homepage-link,
-.kealoa-constructor-link {
+.kealoa-homepage-link {
     color: var(--tropical-teal);
     text-decoration: underline;
     transition: color 0.2s ease;
@@ -157,8 +154,7 @@
 .kealoa-round-link:hover,
 .kealoa-episode-link:hover,
 .kealoa-xwordinfo-link:hover,
-.kealoa-homepage-link:hover,
-.kealoa-constructor-link:hover {
+.kealoa-homepage-link:hover {
     color: var(--volcanic-ember);
     text-decoration: underline;
 }
@@ -403,9 +399,7 @@
     flex-wrap: wrap;
 }
 
-.kealoa-person-image,
-.kealoa-constructor-image,
-.kealoa-editor-image {
+.kealoa-person-image {
     flex-shrink: 0;
 }
 
@@ -566,129 +560,6 @@
 }
 
 /* ==========================================================================
-   Constructor Views
-   ========================================================================== */
-
-/* Constructors Table */
-
-.kealoa-constructors-table-wrapper .kealoa-table {
-    width: auto;
-}
-
-.kealoa-constructors-table-wrapper .kealoa-table th,
-.kealoa-constructors-table-wrapper .kealoa-table td {
-    white-space: nowrap;
-}
-
-/* Constructor View */
-
-.kealoa-constructor-view .kealoa-table {
-    width: auto;
-}
-
-.kealoa-constructor-view .kealoa-table th,
-.kealoa-constructor-view .kealoa-table td {
-    white-space: nowrap;
-}
-
-.kealoa-constructor-view {
-    margin: 20px 0;
-}
-
-.kealoa-constructor-header {
-    background: linear-gradient(135deg, var(--cloud-white) 0%, var(--pale-sand) 100%);
-    padding: 30px;
-    border-radius: 8px;
-    margin-bottom: 30px;
-}
-
-.kealoa-constructor-info {
-    display: flex;
-    align-items: flex-start;
-    gap: 30px;
-    flex-wrap: wrap;
-}
-
-.kealoa-constructor-details {
-    flex: 1;
-    min-width: 250px;
-    overflow: hidden;
-}
-
-.kealoa-constructor-name {
-    margin: 0 0 15px 0;
-    font-size: 28px;
-    color: var(--driftwood-dark);
-}
-
-.kealoa-cross-link-text {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-}
-
-.kealoa-constructor-xwordinfo,
-.kealoa-constructor-homepage,
-.kealoa-editor-xwordinfo,
-.kealoa-editor-homepage {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-}
-
-.kealoa-constructor-xwordinfo strong,
-.kealoa-constructor-homepage strong,
-.kealoa-editor-xwordinfo strong,
-.kealoa-editor-homepage strong {
-    display: inline-block;
-    min-width: 100px;
-}
-
-/* ==========================================================================
-   Editor View
-   ========================================================================== */
-
-.kealoa-editors-table-wrapper .kealoa-table,
-.kealoa-editor-view .kealoa-table {
-    width: auto;
-}
-
-.kealoa-editors-table-wrapper .kealoa-table th,
-.kealoa-editors-table-wrapper .kealoa-table td,
-.kealoa-editor-view .kealoa-table th,
-.kealoa-editor-view .kealoa-table td {
-    white-space: nowrap;
-}
-
-.kealoa-editor-view {
-    margin: 20px 0;
-}
-
-.kealoa-editor-header {
-    background: linear-gradient(135deg, var(--cloud-white) 0%, var(--pale-sand) 100%);
-    padding: 30px;
-    border-radius: 8px;
-    margin-bottom: 30px;
-}
-
-.kealoa-editor-info {
-    display: flex;
-    align-items: flex-start;
-    gap: 30px;
-    flex-wrap: wrap;
-}
-
-.kealoa-editor-details {
-    flex: 1;
-    min-width: 250px;
-    overflow: hidden;
-}
-
-.kealoa-editor-name {
-    margin: 0 0 15px 0;
-    font-size: 28px;
-    color: var(--driftwood-dark);
-}
-
-/* ==========================================================================
    Puzzle View
    ========================================================================== */
 
@@ -814,10 +685,8 @@
         padding: 8px 10px;
     }
 
-    /* Person/constructor/editor/puzzle info: stack vertically */
+    /* Person/puzzle info: stack vertically */
     .kealoa-person-info,
-    .kealoa-constructor-info,
-    .kealoa-editor-info,
     .kealoa-puzzle-info {
         flex-direction: column;
         align-items: center;
@@ -825,8 +694,6 @@
     }
 
     .kealoa-person-details,
-    .kealoa-constructor-details,
-    .kealoa-editor-details,
     .kealoa-puzzle-details {
         min-width: 0;
         width: 100%;
@@ -886,21 +753,13 @@
 
     /* Word-break long URLs */
     .kealoa-person-xwordinfo,
-    .kealoa-person-homepage,
-    .kealoa-constructor-xwordinfo,
-    .kealoa-constructor-homepage,
-    .kealoa-editor-xwordinfo,
-    .kealoa-editor-homepage {
+    .kealoa-person-homepage {
         overflow-wrap: break-word;
         word-break: break-all;
     }
 
     .kealoa-person-xwordinfo strong,
-    .kealoa-person-homepage strong,
-    .kealoa-constructor-xwordinfo strong,
-    .kealoa-constructor-homepage strong,
-    .kealoa-editor-xwordinfo strong,
-    .kealoa-editor-homepage strong {
+    .kealoa-person-homepage strong {
         display: block;
         min-width: auto;
     }
@@ -908,16 +767,12 @@
     /* Reduce header padding */
     .kealoa-round-header,
     .kealoa-person-header,
-    .kealoa-constructor-header,
-    .kealoa-editor-header,
     .kealoa-puzzle-header {
         padding: 15px;
     }
 
     /* Reduce entity name size */
     .kealoa-person-name,
-    .kealoa-constructor-name,
-    .kealoa-editor-name,
     .kealoa-puzzle-title {
         font-size: 22px;
     }
@@ -999,19 +854,11 @@
 
     /* Listing tables: allow wrapping */
     .kealoa-persons-table-wrapper .kealoa-table th,
-    .kealoa-persons-table-wrapper .kealoa-table td,
-    .kealoa-constructors-table-wrapper .kealoa-table th,
-    .kealoa-constructors-table-wrapper .kealoa-table td,
-    .kealoa-editors-table-wrapper .kealoa-table th,
-    .kealoa-editors-table-wrapper .kealoa-table td {
+    .kealoa-persons-table-wrapper .kealoa-table td {
         white-space: normal;
     }
 
-    /* Constructor/editor puzzle tables: allow wrapping */
-    .kealoa-constructor-view .kealoa-table th,
-    .kealoa-constructor-view .kealoa-table td,
-    .kealoa-editor-view .kealoa-table th,
-    .kealoa-editor-view .kealoa-table td,
+    /* Puzzle tables: allow wrapping */
     .kealoa-puzzle-view .kealoa-table th,
     .kealoa-puzzle-view .kealoa-table td {
         white-space: normal;
@@ -1057,8 +904,6 @@
     /* Headers: compact */
     .kealoa-round-header,
     .kealoa-person-header,
-    .kealoa-constructor-header,
-    .kealoa-editor-header,
     .kealoa-puzzle-header {
         padding: 12px;
     }
@@ -1068,8 +913,6 @@
     }
 
     .kealoa-person-name,
-    .kealoa-constructor-name,
-    .kealoa-editor-name,
     .kealoa-puzzle-title {
         font-size: 20px;
     }
@@ -1096,8 +939,6 @@
 
     /* Person details: allow narrower */
     .kealoa-person-details,
-    .kealoa-constructor-details,
-    .kealoa-editor-details,
     .kealoa-puzzle-details {
         min-width: 0;
     }
@@ -1177,8 +1018,7 @@
 
     .kealoa-person-link,
     .kealoa-round-link,
-    .kealoa-episode-link,
-    .kealoa-constructor-link {
+    .kealoa-episode-link {
         color: #000;
         text-decoration: underline;
     }

@@ -15,7 +15,7 @@ All endpoints are public (no authentication required). All responses are JSON.
   - [List Rounds](#list-rounds)
   - [Get Round](#get-round)
   - [Rounds Stats](#rounds-stats)
-- [Persons (Players)](#persons-players)
+- [Persons](#persons)
   - [List Persons](#list-persons)
   - [Get Person](#get-person)
   - [Person Rounds](#person-rounds)
@@ -29,12 +29,6 @@ All endpoints are public (no authentication required). All responses are JSON.
   - [Person Stats by Decade](#person-stats-by-decade)
   - [Person Stats by Clue Number](#person-stats-by-clue-number)
   - [Person Streaks](#person-streaks)
-- [Constructors](#constructors)
-  - [List Constructors](#list-constructors)
-  - [Get Constructor](#get-constructor)
-- [Editors](#editors)
-  - [List Editors](#list-editors)
-  - [Get Editor](#get-editor)
 - [Puzzles](#puzzles)
   - [List Puzzles](#list-puzzles)
   - [Get Puzzle](#get-puzzle)
@@ -200,7 +194,7 @@ Returns overview statistics and per-year breakdown for all rounds.
 
 ---
 
-## Persons (Players)
+## Persons
 
 ### List Persons
 
@@ -208,15 +202,16 @@ Returns overview statistics and per-year breakdown for all rounds.
 GET /persons
 ```
 
-Returns a paginated list of persons (players).
+Returns a paginated list of persons. Can be filtered by role.
 
 **Parameters:**
 
-| Parameter  | Type    | Default | Description                        |
-|------------|---------|---------|------------------------------------|
-| `page`     | integer | `1`     | Page number.                       |
-| `per_page` | integer | `50`    | Items per page (1–500).            |
-| `search`   | string  | `""`    | Filter by name (partial match).    |
+| Parameter  | Type    | Default | Description                                                       |
+|------------|---------|---------|-------------------------------------------------------------------|
+| `page`     | integer | `1`     | Page number.                                                      |
+| `per_page` | integer | `50`    | Items per page (1–500).                                           |
+| `search`   | string  | `""`    | Filter by name (partial match).                                   |
+| `role`     | string  | `""`    | Filter by role: `player`, `constructor`, or `editor`. Empty = all.|
 
 **Response item:**
 
@@ -251,10 +246,17 @@ Returns a single person with their stats.
   "id": 1,
   "full_name": "Jane Smith",
   "home_page_url": "https://...",
+  "roles": ["player", "constructor"],
+  "xwordinfo_profile_name": "Jane_Smith",
+  "xwordinfo_image_url": "https://www.xwordinfo.com/images/cons/JaneSmith.jpg",
   "stats": { ... },
+  "constructor_stats": { ... },
+  "editor_stats": { ... },
   "url": "https://example.com/kealoa/person/Jane_Smith/"
 }
 ```
+
+> `constructor_stats` and `editor_stats` are included only when the person has those roles.
 
 **Errors:**
 
@@ -537,152 +539,6 @@ Returns the person's best correct-answer streaks by year.
 | Status | Description       |
 |--------|-------------------|
 | 404    | Person not found. |
-
----
-
-## Constructors
-
-### List Constructors
-
-```
-GET /constructors
-```
-
-Returns a paginated list of crossword constructors.
-
-**Parameters:**
-
-| Parameter  | Type    | Default | Description                        |
-|------------|---------|---------|------------------------------------|
-| `page`     | integer | `1`     | Page number.                       |
-| `per_page` | integer | `50`    | Items per page (1–500).            |
-| `search`   | string  | `""`    | Filter by name (partial match).    |
-
-**Response item:**
-
-```json
-{
-  "id": 1,
-  "full_name": "Constructor Name",
-  "xwordinfo_profile_name": "ConstructorName",
-  "url": "https://example.com/kealoa/constructor/Constructor_Name/"
-}
-```
-
----
-
-### Get Constructor
-
-```
-GET /constructors/{id}
-```
-
-Returns a single constructor with stats and puzzle list.
-
-**Parameters:**
-
-| Parameter | Type    | Required | Description      |
-|-----------|---------|----------|------------------|
-| `id`      | integer | Yes      | Constructor ID.  |
-
-**Response:**
-
-```json
-{
-  "id": 1,
-  "full_name": "Constructor Name",
-  "xwordinfo_profile_name": "ConstructorName",
-  "stats": { ... },
-  "puzzles": [
-    {
-      "puzzle_id": 10,
-      "publication_date": "2024-01-10",
-      "editor_name": "Will Shortz",
-      "co_constructors": [
-        { "id": 2, "full_name": "Co-Constructor Name" }
-      ],
-      "round_ids": [1, 5],
-      "round_dates": ["2024-02-01", "2024-03-15"]
-    }
-  ],
-  "url": "https://example.com/kealoa/constructor/Constructor_Name/"
-}
-```
-
-**Errors:**
-
-| Status | Description            |
-|--------|------------------------|
-| 404    | Constructor not found. |
-
----
-
-## Editors
-
-### List Editors
-
-```
-GET /editors
-```
-
-Returns all editors with puzzle, clue, and guess stats. Not paginated.
-
-**Response item:**
-
-```json
-{
-  "editor_name": "Will Shortz",
-  "puzzle_count": 50,
-  "clue_count": 200,
-  "total_guesses": 800,
-  "correct_guesses": 600,
-  "accuracy": 75.0,
-  "url": "https://example.com/kealoa/editor/Will%20Shortz/"
-}
-```
-
----
-
-### Get Editor
-
-```
-GET /editors/{name}
-```
-
-Returns a single editor with stats and puzzle list.
-
-**Parameters:**
-
-| Parameter | Type   | Required | Description                      |
-|-----------|--------|----------|----------------------------------|
-| `name`    | string | Yes      | Editor name (URL-encoded).       |
-
-**Response:**
-
-```json
-{
-  "editor_name": "Will Shortz",
-  "stats": { ... },
-  "puzzles": [
-    {
-      "puzzle_id": 10,
-      "publication_date": "2024-01-10",
-      "constructors": [
-        { "id": 1, "full_name": "Constructor Name" }
-      ],
-      "round_ids": [1, 5],
-      "round_dates": ["2024-02-01", "2024-03-15"]
-    }
-  ],
-  "url": "https://example.com/kealoa/editor/Will%20Shortz/"
-}
-```
-
-**Errors:**
-
-| Status | Description        |
-|--------|--------------------|
-| 404    | Editor not found.  |
 
 ---
 

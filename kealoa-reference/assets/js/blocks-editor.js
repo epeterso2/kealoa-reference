@@ -18,7 +18,7 @@
     const { serverSideRender: ServerSideRender } = wp;
 
     // Get data passed from PHP
-    const kealoaData = window.kealoaBlocksData || { rounds: [], persons: [], constructors: [], editors: [] };
+    const kealoaData = window.kealoaBlocksData || { rounds: [], persons: [] };
 
     /**
      * KEALOA Rounds Table Block
@@ -275,35 +275,14 @@
         }
     });
 
-    /**
-     * KEALOA Constructors Table Block
-     */
-    registerBlockType('kealoa/constructors-table', {
-        title: __('KEALOA Constructors Table', 'kealoa-reference'),
-        description: __('Displays a table of constructors with puzzle and clue counts.', 'kealoa-reference'),
-        icon: 'hammer',
-        category: 'widgets',
-        keywords: [__('kealoa', 'kealoa-reference'), __('constructors', 'kealoa-reference'), __('table', 'kealoa-reference')],
-        attributes: {},
 
-        edit: function (props) {
-            return createElement(ServerSideRender, {
-                block: 'kealoa/constructors-table',
-                attributes: props.attributes
-            });
-        },
-
-        save: function () {
-            return null;
-        }
-    });
 
     /**
-     * KEALOA Players Table Block
+     * KEALOA Persons Table Block
      */
     registerBlockType('kealoa/persons-table', {
-        title: __('KEALOA Players Table', 'kealoa-reference'),
-        description: __('Displays a table of all players with rounds played, clues guessed, and accuracy.', 'kealoa-reference'),
+        title: __('KEALOA Persons Table', 'kealoa-reference'),
+        description: __('Displays a table of all persons with their roles, rounds played, and puzzle stats.', 'kealoa-reference'),
         icon: 'groups',
         category: 'widgets',
         keywords: [__('kealoa', 'kealoa-reference'), __('players', 'kealoa-reference'), __('persons', 'kealoa-reference'), __('table', 'kealoa-reference')],
@@ -321,216 +300,7 @@
         }
     });
 
-    /**
-     * KEALOA Constructor View Block
-     */
-    registerBlockType('kealoa/constructor-view', {
-        title: __('KEALOA Constructor View', 'kealoa-reference'),
-        description: __('Displays a constructor\'s puzzle history and XWordInfo profile.', 'kealoa-reference'),
-        icon: 'hammer',
-        category: 'widgets',
-        keywords: [__('kealoa', 'kealoa-reference'), __('constructor', 'kealoa-reference'), __('puzzles', 'kealoa-reference')],
-        attributes: {
-            constructorId: {
-                type: 'number',
-                default: 0
-            }
-        },
 
-        edit: function (props) {
-            const { attributes, setAttributes } = props;
-            const { constructorId } = attributes;
-
-            const constructorOptions = [
-                { label: __('— Select a Constructor —', 'kealoa-reference'), value: 0 }
-            ];
-
-            kealoaData.constructors.forEach(function (constructor) {
-                constructorOptions.push({
-                    label: constructor.name,
-                    value: constructor.id
-                });
-            });
-
-            if (!constructorId) {
-                return createElement(
-                    Fragment,
-                    null,
-                    createElement(
-                        InspectorControls,
-                        null,
-                        createElement(
-                            PanelBody,
-                            { title: __('Constructor Selection', 'kealoa-reference'), initialOpen: true },
-                            createElement(SelectControl, {
-                                label: __('Select Constructor', 'kealoa-reference'),
-                                value: constructorId,
-                                options: constructorOptions,
-                                onChange: function (value) { setAttributes({ constructorId: parseInt(value, 10) }); }
-                            })
-                        )
-                    ),
-                    createElement(
-                        Placeholder,
-                        {
-                            icon: 'hammer',
-                            label: __('KEALOA Constructor View', 'kealoa-reference'),
-                            instructions: __('Select a constructor from the block settings in the sidebar.', 'kealoa-reference')
-                        },
-                        createElement(SelectControl, {
-                            value: constructorId,
-                            options: constructorOptions,
-                            onChange: function (value) { setAttributes({ constructorId: parseInt(value, 10) }); }
-                        })
-                    )
-                );
-            }
-
-            return createElement(
-                Fragment,
-                null,
-                createElement(
-                    InspectorControls,
-                    null,
-                    createElement(
-                        PanelBody,
-                        { title: __('Constructor Selection', 'kealoa-reference'), initialOpen: true },
-                        createElement(SelectControl, {
-                            label: __('Select Constructor', 'kealoa-reference'),
-                            value: constructorId,
-                            options: constructorOptions,
-                            onChange: function (value) { setAttributes({ constructorId: parseInt(value, 10) }); }
-                        })
-                    )
-                ),
-                createElement(ServerSideRender, {
-                    block: 'kealoa/constructor-view',
-                    attributes: attributes
-                })
-            );
-        },
-
-        save: function () {
-            return null;
-        }
-    });
-
-    /**
-     * KEALOA Editors Table Block
-     */
-    registerBlockType('kealoa/editors-table', {
-        title: __('KEALOA Editors Table', 'kealoa-reference'),
-        description: __('Displays a table of all editors with clues guessed and accuracy.', 'kealoa-reference'),
-        icon: 'edit',
-        category: 'widgets',
-        keywords: [__('kealoa', 'kealoa-reference'), __('editors', 'kealoa-reference'), __('table', 'kealoa-reference')],
-        attributes: {},
-
-        edit: function (props) {
-            return createElement(ServerSideRender, {
-                block: 'kealoa/editors-table',
-                attributes: props.attributes
-            });
-        },
-
-        save: function () {
-            return null;
-        }
-    });
-
-    /**
-     * KEALOA Editor View Block
-     */
-    registerBlockType('kealoa/editor-view', {
-        title: __('KEALOA Editor View', 'kealoa-reference'),
-        description: __('Displays an editor\'s puzzle history.', 'kealoa-reference'),
-        icon: 'edit',
-        category: 'widgets',
-        keywords: [__('kealoa', 'kealoa-reference'), __('editor', 'kealoa-reference'), __('puzzles', 'kealoa-reference')],
-        attributes: {
-            editorName: {
-                type: 'string',
-                default: ''
-            }
-        },
-
-        edit: function (props) {
-            const { attributes, setAttributes } = props;
-            const { editorName } = attributes;
-
-            const editorOptions = [
-                { label: __('— Select an Editor —', 'kealoa-reference'), value: '' }
-            ];
-
-            kealoaData.editors.forEach(function (editor) {
-                editorOptions.push({
-                    label: editor.name,
-                    value: editor.name
-                });
-            });
-
-            if (!editorName) {
-                return createElement(
-                    Fragment,
-                    null,
-                    createElement(
-                        InspectorControls,
-                        null,
-                        createElement(
-                            PanelBody,
-                            { title: __('Editor Selection', 'kealoa-reference'), initialOpen: true },
-                            createElement(SelectControl, {
-                                label: __('Select Editor', 'kealoa-reference'),
-                                value: editorName,
-                                options: editorOptions,
-                                onChange: function (value) { setAttributes({ editorName: value }); }
-                            })
-                        )
-                    ),
-                    createElement(
-                        Placeholder,
-                        {
-                            icon: 'edit',
-                            label: __('KEALOA Editor View', 'kealoa-reference'),
-                            instructions: __('Select an editor from the block settings in the sidebar.', 'kealoa-reference')
-                        },
-                        createElement(SelectControl, {
-                            value: editorName,
-                            options: editorOptions,
-                            onChange: function (value) { setAttributes({ editorName: value }); }
-                        })
-                    )
-                );
-            }
-
-            return createElement(
-                Fragment,
-                null,
-                createElement(
-                    InspectorControls,
-                    null,
-                    createElement(
-                        PanelBody,
-                        { title: __('Editor Selection', 'kealoa-reference'), initialOpen: true },
-                        createElement(SelectControl, {
-                            label: __('Select Editor', 'kealoa-reference'),
-                            value: editorName,
-                            options: editorOptions,
-                            onChange: function (value) { setAttributes({ editorName: value }); }
-                        })
-                    )
-                ),
-                createElement(ServerSideRender, {
-                    block: 'kealoa/editor-view',
-                    attributes: attributes
-                })
-            );
-        },
-
-        save: function () {
-            return null;
-        }
-    });
 
     /**
      * KEALOA Version Info Block
@@ -607,7 +377,7 @@
      */
     registerBlockType('kealoa/puzzles-table', {
         title: __('KEALOA Puzzles Table', 'kealoa-reference'),
-        description: __('Displays a table of all puzzles with publication date, constructors, editor, and round details.', 'kealoa-reference'),
+        description: __('Displays a table of all puzzles with publication date, persons, and round details.', 'kealoa-reference'),
         icon: 'grid-view',
         category: 'widgets',
         keywords: [__('kealoa', 'kealoa-reference'), __('puzzles', 'kealoa-reference'), __('table', 'kealoa-reference'), __('crossword', 'kealoa-reference')],
@@ -630,10 +400,10 @@
      */
     registerBlockType('kealoa/puzzle-view', {
         title: __('KEALOA Puzzle View', 'kealoa-reference'),
-        description: __('Displays a single puzzle with constructor images, clue details, and round information.', 'kealoa-reference'),
+        description: __('Displays a single puzzle with person images, clue details, and round information.', 'kealoa-reference'),
         icon: 'grid-view',
         category: 'widgets',
-        keywords: [__('kealoa', 'kealoa-reference'), __('puzzle', 'kealoa-reference'), __('constructors', 'kealoa-reference'), __('crossword', 'kealoa-reference')],
+        keywords: [__('kealoa', 'kealoa-reference'), __('puzzle', 'kealoa-reference'), __('persons', 'kealoa-reference'), __('crossword', 'kealoa-reference')],
         attributes: {
             puzzleDate: {
                 type: 'string',
