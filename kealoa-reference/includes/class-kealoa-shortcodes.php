@@ -43,6 +43,7 @@ class Kealoa_Shortcodes {
         add_shortcode('kealoa_constructors_table', [$this, 'render_constructors_table']);
         add_shortcode('kealoa_editors_table', [$this, 'render_editors_table']);
         add_shortcode('kealoa_clue_givers_table', [$this, 'render_clue_givers_table']);
+        add_shortcode('kealoa_hosts_table', [$this, 'render_hosts_table']);
         add_shortcode('kealoa_puzzles_table', [$this, 'render_puzzles_table']);
         add_shortcode('kealoa_puzzle', [$this, 'render_puzzle']);
         add_shortcode('kealoa_version', [$this, 'render_version']);
@@ -3011,6 +3012,15 @@ class Kealoa_Shortcodes {
         return ob_get_clean();
 
         }); // end get_cached_or_render
+    }
+
+    /**
+     * Render hosts table shortcode (alias for clue givers table)
+     *
+     * [kealoa_hosts_table]
+     */
+    public function render_hosts_table(array $atts = []): string {
+        return $this->render_clue_givers_table($atts);
     }
 
     /**
