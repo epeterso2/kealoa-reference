@@ -13,7 +13,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Legacy block — delegates to persons table after v2.0.0 migration
 $shortcodes = new Kealoa_Shortcodes();
 
-echo $shortcodes->render_persons_table([]);
+echo $shortcodes->render_editors_table([]);

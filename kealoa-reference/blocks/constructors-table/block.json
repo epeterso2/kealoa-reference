@@ -6,7 +6,7 @@
     "title": "KEALOA Constructors Table",
     "category": "widgets",
     "icon": "hammer",
-    "description": "Deprecated: Use Players Table instead. Displays a table of all persons.",
+    "description": "Displays a table of all crossword puzzle constructors with statistics.",
     "keywords": ["kealoa", "constructors", "table", "crossword"],
     "supports": {
         "html": false,

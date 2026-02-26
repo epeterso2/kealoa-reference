@@ -6,7 +6,7 @@
     "title": "KEALOA Editors Table",
     "category": "widgets",
     "icon": "edit",
-    "description": "Deprecated: Use Players Table instead. Displays a table of all persons.",
+    "description": "Displays a table of all crossword puzzle editors with statistics.",
     "keywords": ["kealoa", "editors", "table"],
     "supports": {
         "html": false,
