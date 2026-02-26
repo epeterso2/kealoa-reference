@@ -476,4 +476,50 @@
         }
     });
 
+    /**
+     * KEALOA Clue Givers Table Block
+     */
+    registerBlockType('kealoa/clue-givers-table', {
+        title: __('KEALOA Clue Givers Table', 'kealoa-reference'),
+        description: __('Displays a table of all clue givers with rounds, clues, players, and accuracy statistics.', 'kealoa-reference'),
+        icon: 'microphone',
+        category: 'widgets',
+        keywords: [__('kealoa', 'kealoa-reference'), __('clue givers', 'kealoa-reference'), __('hosts', 'kealoa-reference'), __('table', 'kealoa-reference')],
+        attributes: {},
+
+        edit: function (props) {
+            return createElement(ServerSideRender, {
+                block: 'kealoa/clue-givers-table',
+                attributes: props.attributes
+            });
+        },
+
+        save: function () {
+            return null;
+        }
+    });
+
+    /**
+     * KEALOA Hosts Table Block
+     */
+    registerBlockType('kealoa/hosts-table', {
+        title: __('KEALOA Hosts Table', 'kealoa-reference'),
+        description: __('Displays a table of all hosts with rounds, clues, players, and accuracy statistics.', 'kealoa-reference'),
+        icon: 'microphone',
+        category: 'widgets',
+        keywords: [__('kealoa', 'kealoa-reference'), __('hosts', 'kealoa-reference'), __('table', 'kealoa-reference')],
+        attributes: {},
+
+        edit: function (props) {
+            return createElement(ServerSideRender, {
+                block: 'kealoa/hosts-table',
+                attributes: props.attributes
+            });
+        },
+
+        save: function () {
+            return null;
+        }
+    });
+
 })(window.wp);
