@@ -2014,7 +2014,7 @@ class Kealoa_Shortcodes {
                                 </div>
                                 <div class="kealoa-filter-group">
                                     <label for="kealoa-pcgr-guesser"><?php esc_html_e('Player', 'kealoa-reference'); ?></label>
-                                    <input type="text" id="kealoa-pcgr-guesser" class="kealoa-filter-input" data-filter="search" data-col="4" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
+                                    <input type="text" id="kealoa-pcgr-guesser" class="kealoa-filter-input" data-filter="search" data-col="2" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
                                 </div>
                                 <div class="kealoa-filter-group kealoa-filter-actions">
                                     <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
@@ -2028,10 +2028,9 @@ class Kealoa_Shortcodes {
                             <thead>
                                 <tr>
                                     <th data-sort="date"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
-                                    <th data-sort="number"><?php esc_html_e('Round #', 'kealoa-reference'); ?></th>
-                                    <th data-sort="number"><?php esc_html_e('Episode #', 'kealoa-reference'); ?></th>
                                     <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                                     <th data-sort="text"><?php esc_html_e('Players', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
@@ -2047,11 +2046,18 @@ class Kealoa_Shortcodes {
                                     $cgr_solutions = $this->db->get_round_solutions($cgr_id);
                                     $cgr_guesser_ids = !empty($cgr->guesser_ids) ? array_map('intval', explode(',', $cgr->guesser_ids)) : [];
                                     $cgr_guesser_names = !empty($cgr->guesser_names) ? explode(', ', $cgr->guesser_names) : [];
+                                    $cgr_rounds_on_date = $this->db->get_rounds_by_date($cgr->round_date);
+                                    $cgr_round_num = (int) ($cgr->round_number ?? 1);
                                     ?>
                                     <tr>
-                                        <td><?php echo Kealoa_Formatter::format_round_date_link($cgr_id, $cgr->round_date); ?></td>
-                                        <td><?php echo esc_html($cgr->round_number ?? '—'); ?></td>
-                                        <td><?php echo esc_html($cgr->episode_number ?? '—'); ?></td>
+                                        <td data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($cgr->round_date)) * 100 + $cgr_round_num); ?>">
+                                            <?php
+                                            echo Kealoa_Formatter::format_round_date_link($cgr_id, $cgr->round_date);
+                                            if (count($cgr_rounds_on_date) > 1) {
+                                                echo ' <span class="kealoa-round-number">(#' . esc_html($cgr_round_num) . ')</span>';
+                                            }
+                                            ?>
+                                        </td>
                                         <td class="kealoa-solutions-cell"><?php echo Kealoa_Formatter::format_solution_words_link($cgr_id, $cgr_solutions); ?></td>
                                         <td><?php
                                             if (!empty($cgr_guesser_ids)) {
@@ -2068,6 +2074,7 @@ class Kealoa_Shortcodes {
                                                 echo '—';
                                             }
                                         ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cgr->total_guesses)); ?></td>
                                         <td><?php echo esc_html($cgr->clue_count); ?></td>
                                         <td><?php echo esc_html($cgr->correct_guesses); ?></td>
                                         <td data-value="<?php echo esc_attr(number_format((float) $cgr_pct, 2, '.', '')); ?>">
