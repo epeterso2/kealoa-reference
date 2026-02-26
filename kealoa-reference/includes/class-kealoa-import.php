@@ -937,6 +937,297 @@ class Kealoa_Import {
     }
 
     /**
+     * Import a human-friendly round CSV file.
+     *
+     * Columns: round_date, round_number, clue_number_in_round, puzzle_date,
+     *          constructor_name, clue_number, clue_direction, correct_answer,
+     *          player_name, guessed_answer
+     *
+     * Required: round_date, round_number, clue_number_in_round, correct_answer,
+     *           player_name, guessed_answer
+     * Optional (blank = absent): puzzle_date, constructor_name, clue_number,
+     *           clue_direction
+     *
+     * Round must exist; puzzle and persons are created if not found.
+     *
+     * @param string $file_path Absolute path to the CSV file.
+     * @param bool   $overwrite When true, update existing clues and guesses.
+     * @return array{imported: int, skipped: int, errors: string[]}
+     */
+    public function import_round_data(string $file_path, bool $overwrite = false): array {
+        $imported = 0;
+        $skipped  = 0;
+        $errors   = [];
+
+        $rows = $this->parse_csv($file_path);
+        if (empty($rows)) {
+            return ['imported' => 0, 'skipped' => 0, 'errors' => ['CSV file is empty or could not be parsed.']];
+        }
+
+        // Cache of round guessers per round_id to avoid repeated DB reads within the same import.
+        $round_guesser_cache = [];
+
+        foreach ($rows as $index => $row) {
+            $line = $index + 2; // 1-based, row 1 is headers
+
+            // --- Required field validation ---
+            $round_date_raw       = trim($row['round_date'] ?? '');
+            $round_number_raw     = trim($row['round_number'] ?? '');
+            $clue_number_in_round = trim($row['clue_number_in_round'] ?? '');
+            $correct_answer_raw   = trim($row['correct_answer'] ?? '');
+            $player_name          = trim($row['player_name'] ?? '');
+            $guessed_answer_raw   = trim($row['guessed_answer'] ?? '');
+
+            if (empty($round_date_raw)) {
+                $errors[] = "Line {$line}: round_date is required.";
+                $skipped++;
+                continue;
+            }
+            if (empty($round_number_raw)) {
+                $errors[] = "Line {$line}: round_number is required.";
+                $skipped++;
+                continue;
+            }
+            if (empty($clue_number_in_round)) {
+                $errors[] = "Line {$line}: clue_number_in_round is required.";
+                $skipped++;
+                continue;
+            }
+            if (empty($correct_answer_raw)) {
+                $errors[] = "Line {$line}: correct_answer is required.";
+                $skipped++;
+                continue;
+            }
+            if (empty($player_name)) {
+                $errors[] = "Line {$line}: player_name is required.";
+                $skipped++;
+                continue;
+            }
+            if (empty($guessed_answer_raw)) {
+                $errors[] = "Line {$line}: guessed_answer is required.";
+                $skipped++;
+                continue;
+            }
+
+            // --- Normalize and validate dates ---
+            $round_date = $this->normalize_date($round_date_raw);
+            if (!$round_date) {
+                $errors[] = "Line {$line}: Invalid round_date '{$round_date_raw}'.";
+                $skipped++;
+                continue;
+            }
+
+            // --- Validate integers ---
+            if (!ctype_digit($round_number_raw) || (int) $round_number_raw < 1) {
+                $errors[] = "Line {$line}: round_number must be a positive integer.";
+                $skipped++;
+                continue;
+            }
+            $round_number = (int) $round_number_raw;
+
+            if (!ctype_digit($clue_number_in_round) || (int) $clue_number_in_round < 1) {
+                $errors[] = "Line {$line}: clue_number_in_round must be a positive integer.";
+                $skipped++;
+                continue;
+            }
+            $clue_number_in_round = (int) $clue_number_in_round;
+
+            // --- Optional fields ---
+            $puzzle_date_raw      = trim($row['puzzle_date'] ?? '');
+            $constructor_name_raw = trim($row['constructor_name'] ?? '');
+            $puzzle_clue_number   = trim($row['clue_number'] ?? '');
+            $clue_direction_raw   = trim($row['clue_direction'] ?? '');
+
+            // Normalize optional puzzle date
+            $puzzle_date = null;
+            if ($puzzle_date_raw !== '') {
+                $puzzle_date = $this->normalize_date($puzzle_date_raw);
+                if (!$puzzle_date) {
+                    $errors[] = "Line {$line}: Invalid puzzle_date '{$puzzle_date_raw}'.";
+                    $skipped++;
+                    continue;
+                }
+            }
+
+            // Normalize optional clue direction
+            $clue_direction = null;
+            if ($clue_direction_raw !== '') {
+                $normalized = strtoupper(substr(trim($clue_direction_raw), 0, 1));
+                $full        = strtolower(trim($clue_direction_raw));
+                if ($normalized === 'A' || $full === 'across') {
+                    $clue_direction = 'A';
+                } elseif ($normalized === 'D' || $full === 'down') {
+                    $clue_direction = 'D';
+                } else {
+                    $errors[] = "Line {$line}: clue_direction must be A, D, Across, or Down.";
+                    $skipped++;
+                    continue;
+                }
+            }
+
+            // Validate optional puzzle clue number
+            $puzzle_clue_number_int = null;
+            if ($puzzle_clue_number !== '') {
+                if (!ctype_digit($puzzle_clue_number) || (int) $puzzle_clue_number < 1) {
+                    $errors[] = "Line {$line}: clue_number must be a positive integer when provided.";
+                    $skipped++;
+                    continue;
+                }
+                $puzzle_clue_number_int = (int) $puzzle_clue_number;
+            }
+
+            // --- Round lookup (required) ---
+            $round = $this->db->get_round_by_date_and_number($round_date, $round_number);
+            if (!$round) {
+                $errors[] = "Line {$line}: No round found for date {$round_date} number {$round_number}.";
+                $skipped++;
+                continue;
+            }
+            $round_id = (int) $round->id;
+
+            // --- Puzzle find-or-create (only if puzzle_date provided) ---
+            $puzzle_id    = null;
+            $puzzle_is_new = false;
+            if ($puzzle_date !== null) {
+                $puzzle = $this->db->get_puzzle_by_date($puzzle_date);
+                if (!$puzzle) {
+                    // Determine editor from historical date ranges
+                    $editor_name   = Kealoa_DB::get_editor_for_date($puzzle_date);
+                    $create_data   = ['publication_date' => $puzzle_date];
+                    if (!empty($editor_name)) {
+                        $editor_person = $this->find_or_create_person($editor_name);
+                        if ($editor_person) {
+                            $create_data['editor_id'] = (int) $editor_person->id;
+                        }
+                    }
+                    $new_puzzle_id = $this->db->create_puzzle($create_data);
+                    if (!$new_puzzle_id) {
+                        $errors[] = "Line {$line}: Could not create puzzle for date {$puzzle_date}.";
+                        $skipped++;
+                        continue;
+                    }
+                    $puzzle       = $this->db->get_puzzle($new_puzzle_id);
+                    $puzzle_is_new = true;
+                } elseif ($overwrite && empty($puzzle->editor_id)) {
+                    // Populate missing editor on existing puzzle
+                    $editor_name = Kealoa_DB::get_editor_for_date($puzzle_date);
+                    if (!empty($editor_name)) {
+                        $editor_person = $this->find_or_create_person($editor_name);
+                        if ($editor_person) {
+                            $this->db->update_puzzle((int) $puzzle->id, ['editor_id' => (int) $editor_person->id]);
+                            $puzzle->editor_id = $editor_person->id;
+                        }
+                    }
+                }
+                $puzzle_id = (int) $puzzle->id;
+
+                // --- Constructors (only if constructor_name provided) ---
+                if ($constructor_name_raw !== '') {
+                    if ($puzzle_is_new || $overwrite) {
+                        // Split on commas or the word "and"; Unicode flag for diacritical safety
+                        $constructor_names = preg_split('/,|\band\b/iu', $constructor_name_raw);
+                        $constructor_ids   = [];
+                        foreach ($constructor_names as $cname) {
+                            $cname = trim($cname);
+                            if ($cname === '') {
+                                continue;
+                            }
+                            $constructor = $this->find_or_create_person_as_constructor($cname);
+                            if ($constructor) {
+                                $constructor_ids[] = (int) $constructor->id;
+                            }
+                        }
+                        if (!empty($constructor_ids)) {
+                            $this->db->set_puzzle_constructors($puzzle_id, $constructor_ids);
+                        }
+                    }
+                }
+            }
+
+            // --- Player find-or-create, add to round guessers ---
+            $player = $this->find_or_create_person($player_name);
+            if (!$player) {
+                $errors[] = "Line {$line}: Could not find or create player '{$player_name}'.";
+                $skipped++;
+                continue;
+            }
+            $player_id = (int) $player->id;
+
+            // Maintain round guesser cache to avoid repeated set_round_guessers calls
+            if (!isset($round_guesser_cache[$round_id])) {
+                $existing_guessers = $this->db->get_round_guessers($round_id);
+                $round_guesser_cache[$round_id] = array_map(fn($g) => (int) $g->id, $existing_guessers);
+            }
+            if (!in_array($player_id, $round_guesser_cache[$round_id], true)) {
+                $round_guesser_cache[$round_id][] = $player_id;
+                $this->db->set_round_guessers($round_id, $round_guesser_cache[$round_id]);
+            }
+
+            // --- Clue find-or-create ---
+            $clue_id      = null;
+            $existing_clue = null;
+            $round_clues  = $this->db->get_round_clues($round_id);
+            foreach ($round_clues as $rc) {
+                if ((int) $rc->clue_number === $clue_number_in_round) {
+                    $existing_clue = $rc;
+                    break;
+                }
+            }
+
+            $clue_data = [
+                'correct_answer' => strtoupper($correct_answer_raw),
+            ];
+            if ($puzzle_id !== null) {
+                $clue_data['puzzle_id'] = $puzzle_id;
+            }
+            if ($puzzle_clue_number_int !== null) {
+                $clue_data['puzzle_clue_number'] = $puzzle_clue_number_int;
+            }
+            if ($clue_direction !== null) {
+                $clue_data['puzzle_clue_direction'] = $clue_direction;
+            }
+
+            if (!$existing_clue) {
+                $clue_data['round_id']    = $round_id;
+                $clue_data['clue_number'] = $clue_number_in_round;
+                $clue_data['clue_text']   = '';
+                $new_clue_id = $this->db->create_clue($clue_data);
+                if (!$new_clue_id) {
+                    $errors[] = "Line {$line}: Could not create clue {$clue_number_in_round} for round {$round_id}.";
+                    $skipped++;
+                    continue;
+                }
+                $clue_id = $new_clue_id;
+            } else {
+                $clue_id = (int) $existing_clue->id;
+                if ($overwrite) {
+                    $this->db->update_clue($clue_id, $clue_data);
+                }
+            }
+
+            // --- Guess set ---
+            $existing_guesses = $this->db->get_clue_guesses($clue_id);
+            $guess_exists     = false;
+            foreach ($existing_guesses as $g) {
+                if ((int) $g->guesser_person_id === $player_id) {
+                    $guess_exists = true;
+                    break;
+                }
+            }
+
+            if ($guess_exists && !$overwrite) {
+                $skipped++;
+                continue;
+            }
+
+            $this->db->set_guess($clue_id, $player_id, strtoupper($guessed_answer_raw));
+            $imported++;
+        }
+
+        return ['imported' => $imported, 'skipped' => $skipped, 'errors' => $errors];
+    }
+
+    /**
      * Get available template files
      */
     public static function get_templates(): array {
@@ -944,11 +1235,12 @@ class Kealoa_Import {
         $templates = [];
         
         $files = [
-            'persons' => 'Persons',
-            'puzzles' => 'Puzzles',
-            'rounds' => 'Rounds',
-            'clues' => 'Clues',
-            'guesses' => 'Guesses',
+            'persons'      => 'Persons',
+            'puzzles'      => 'Puzzles',
+            'rounds'       => 'Rounds',
+            'clues'        => 'Clues',
+            'guesses'      => 'Guesses',
+            'round_data'   => 'Round Data',
         ];
         
         foreach ($files as $file => $label) {

@@ -1,0 +1,3 @@
+round_date,round_number,clue_number_in_round,puzzle_date,constructor_name,clue_number,clue_direction,correct_answer,player_name,guessed_answer
+"2024-01-20",1,1,"2024-01-15","John Smith and Jane Doe",23,"A","ANSWER","Alice Johnson","ANSWER"
+"2024-01-20",1,1,"","",,"","ANSWER","Bob Williams","GUESS"

@@ -581,6 +581,7 @@ class Kealoa_Admin {
                                     <option value="rounds"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></option>
                                     <option value="clues"><?php esc_html_e('Clues', 'kealoa-reference'); ?></option>
                                     <option value="guesses"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></option>
+                                    <option value="round_data"><?php esc_html_e('Round Data', 'kealoa-reference'); ?></option>
                                 </select>
                             </td>
                         </tr>
@@ -729,6 +730,17 @@ class Kealoa_Admin {
                                 <?php endif; ?>
                             </td>
                         </tr>
+                        <tr>
+                            <td><strong><?php esc_html_e('Round Data', 'kealoa-reference'); ?></strong></td>
+                            <td><?php esc_html_e('Human-friendly format for importing complete round data (one row per guess). Puzzle date, constructor name, clue number, and clue direction may be left blank.', 'kealoa-reference'); ?></td>
+                            <td>
+                                <?php if (isset($templates['round_data'])): ?>
+                                    <a href="<?php echo esc_url($templates['round_data']['url']); ?>" class="button button-small" download>
+                                        <?php esc_html_e('Download', 'kealoa-reference'); ?>
+                                    </a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -794,7 +806,7 @@ class Kealoa_Admin {
         }
 
         $import_type = sanitize_text_field($_POST['import_type'] ?? '');
-        $allowed_types = ['constructors', 'persons', 'puzzles', 'rounds', 'clues', 'guesses'];
+        $allowed_types = ['constructors', 'persons', 'puzzles', 'rounds', 'clues', 'guesses', 'round_data'];
 
         if (!in_array($import_type, $allowed_types)) {
             return [
