@@ -154,7 +154,7 @@ class Kealoa_Export {
      * Write constructors CSV
      */
     private function write_constructors($output): void {
-        fputcsv($output, ['full_name', 'xwordinfo_profile_name', 'xwordinfo_image_url']);
+        fputcsv($output, ['full_name', 'xwordinfo_profile_name', 'xwordinfo_image_url', 'media_id']);
 
         $constructors = $this->db->get_constructors(['limit' => 999999, 'orderby' => 'full_name', 'order' => 'ASC']);
 
@@ -163,6 +163,7 @@ class Kealoa_Export {
                 $constructor->full_name,
                 $constructor->xwordinfo_profile_name ?? '',
                 $constructor->xwordinfo_image_url ?? '',
+                $constructor->media_id ?? '',
             ]);
         }
     }
@@ -171,7 +172,7 @@ class Kealoa_Export {
      * Write persons CSV
      */
     private function write_persons($output): void {
-        fputcsv($output, ['full_name', 'home_page_url', 'image_url']);
+        fputcsv($output, ['full_name', 'home_page_url', 'image_url', 'hide_xwordinfo', 'media_id']);
 
         $persons = $this->db->get_persons(['limit' => 999999, 'orderby' => 'full_name', 'order' => 'ASC']);
 
@@ -180,6 +181,8 @@ class Kealoa_Export {
                 $person->full_name,
                 $person->home_page_url ?? '',
                 $person->image_url ?? '',
+                $person->hide_xwordinfo ?? 0,
+                $person->media_id ?? '',
             ]);
         }
     }

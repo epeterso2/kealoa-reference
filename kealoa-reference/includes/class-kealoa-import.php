@@ -167,24 +167,41 @@ class Kealoa_Import {
                 }
             }
             
+            // Validate media_id: only use if it references a valid attachment
+            $media_id = null;
+            if (!empty($row['media_id'])) {
+                $attachment_id = (int) $row['media_id'];
+                if ($attachment_id > 0 && get_post_type($attachment_id) === 'attachment') {
+                    $media_id = $attachment_id;
+                }
+            }
+
             if ($found) {
                 if (!$overwrite) {
                     $skipped++;
                     continue;
                 }
                 // Update existing constructor
-                $result = $this->db->update_constructor((int) $found->id, [
+                $update_data = [
                     'full_name' => $row['full_name'],
                     'xwordinfo_profile_name' => $row['xwordinfo_profile_name'] ?? null,
                     'xwordinfo_image_url' => $row['xwordinfo_image_url'] ?? null,
-                ]);
+                ];
+                if (array_key_exists('media_id', $row)) {
+                    $update_data['media_id'] = $media_id;
+                }
+                $result = $this->db->update_constructor((int) $found->id, $update_data);
             } else {
                 // Create new constructor
-                $result = $this->db->create_constructor([
+                $create_data = [
                     'full_name' => $row['full_name'],
                     'xwordinfo_profile_name' => $row['xwordinfo_profile_name'] ?? null,
                     'xwordinfo_image_url' => $row['xwordinfo_image_url'] ?? null,
-                ]);
+                ];
+                if (array_key_exists('media_id', $row)) {
+                    $create_data['media_id'] = $media_id;
+                }
+                $result = $this->db->create_constructor($create_data);
             }
             
             if ($result) {
@@ -234,26 +251,43 @@ class Kealoa_Import {
                 }
             }
             
+            // Validate media_id: only use if it references a valid attachment
+            $media_id = null;
+            if (!empty($row['media_id'])) {
+                $attachment_id = (int) $row['media_id'];
+                if ($attachment_id > 0 && get_post_type($attachment_id) === 'attachment') {
+                    $media_id = $attachment_id;
+                }
+            }
+
             if ($found) {
                 if (!$overwrite) {
                     $skipped++;
                     continue;
                 }
                 // Update existing person
-                $result = $this->db->update_person((int) $found->id, [
+                $update_data = [
                     'full_name' => $row['full_name'],
                     'home_page_url' => $row['home_page_url'] ?? null,
                     'image_url' => $row['image_url'] ?? null,
                     'hide_xwordinfo' => !empty($row['hide_xwordinfo']),
-                ]);
+                ];
+                if (array_key_exists('media_id', $row)) {
+                    $update_data['media_id'] = $media_id;
+                }
+                $result = $this->db->update_person((int) $found->id, $update_data);
             } else {
                 // Create new person
-                $result = $this->db->create_person([
+                $create_data = [
                     'full_name' => $row['full_name'],
                     'home_page_url' => $row['home_page_url'] ?? null,
                     'image_url' => $row['image_url'] ?? null,
                     'hide_xwordinfo' => !empty($row['hide_xwordinfo']),
-                ]);
+                ];
+                if (array_key_exists('media_id', $row)) {
+                    $create_data['media_id'] = $media_id;
+                }
+                $result = $this->db->create_person($create_data);
             }
             
             if ($result) {
@@ -771,12 +805,9 @@ class Kealoa_Import {
      * Find a constructor by name or create one
      */
     private function find_or_create_constructor(string $name): ?object {
-        $constructors = $this->db->get_constructors(['limit' => 1000]);
-        
-        foreach ($constructors as $c) {
-            if (strtolower($c->full_name) === strtolower($name)) {
-                return $c;
-            }
+        $existing = $this->db->get_constructor_by_name($name);
+        if ($existing) {
+            return $existing;
         }
         
         // Auto-generate XWordInfo fields
@@ -813,15 +844,7 @@ class Kealoa_Import {
      * Find a person by name (exact match, case-insensitive)
      */
     private function find_person_by_name(string $name): ?object {
-        $persons = $this->db->get_persons(['limit' => 1000]);
-        
-        foreach ($persons as $p) {
-            if (strtolower($p->full_name) === strtolower($name)) {
-                return $p;
-            }
-        }
-        
-        return null;
+        return $this->db->get_person_by_name($name);
     }
 
     /**
