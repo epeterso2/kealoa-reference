@@ -2544,7 +2544,7 @@ class Kealoa_Shortcodes {
                     <?php foreach ($constructors as $con): ?>
                         <tr>
                             <td>
-                                <?php echo Kealoa_Formatter::format_constructor_link((int) $con->id, $con->full_name); ?>
+                                <?php echo Kealoa_Formatter::format_constructor_link((int) $con->id, $con->full_name, 'as-constructor'); ?>
                             </td>
                             <td><?php echo esc_html(number_format_i18n((int) $con->puzzle_count)); ?></td>
                             <td><?php echo esc_html(number_format_i18n((int) $con->clue_count)); ?></td>
@@ -2614,7 +2614,7 @@ class Kealoa_Shortcodes {
                     <?php foreach ($editors as $ed): ?>
                         <tr>
                             <td>
-                                <?php echo Kealoa_Formatter::format_editor_link((int) $ed->id, $ed->editor_name); ?>
+                                <?php echo Kealoa_Formatter::format_editor_link((int) $ed->id, $ed->editor_name, 'as-editor'); ?>
                             </td>
                             <td><?php echo esc_html(number_format_i18n((int) $ed->puzzle_count)); ?></td>
                             <td><?php echo esc_html(number_format_i18n((int) $ed->clue_count)); ?></td>

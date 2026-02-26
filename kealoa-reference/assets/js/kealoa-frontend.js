@@ -389,6 +389,19 @@
                 });
             });
         });
+
+        // If the URL hash requests a specific tab (e.g. #kealoa-tab=as-editor),
+        // activate that tab in the first container that has a matching button.
+        var hashMatch = window.location.hash.match(/^#kealoa-tab=(.+)$/);
+        if (hashMatch) {
+            var requestedTab = decodeURIComponent(hashMatch[1]);
+            tabContainers.forEach(function(container) {
+                var targetBtn = container.querySelector('.kealoa-tab-button[data-tab="' + requestedTab + '"]');
+                if (targetBtn) {
+                    targetBtn.click();
+                }
+            });
+        }
     }
 
     if (document.readyState === 'loading') {

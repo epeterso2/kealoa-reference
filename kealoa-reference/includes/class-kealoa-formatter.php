@@ -98,13 +98,17 @@ class Kealoa_Formatter {
     /**
      * Format a person's name as a link to their player view
      *
-     * @param int $person_id The person's ID
+     * @param int    $person_id The person's ID
      * @param string $full_name The person's full name
+     * @param string $tab       Optional tab slug to activate on the person page (appended as #kealoa-tab=…)
      * @return string HTML link to person view
      */
-    public static function format_person_link(int $person_id, string $full_name): string {
+    public static function format_person_link(int $person_id, string $full_name, string $tab = ''): string {
         $slug = str_replace(' ', '_', $full_name);
         $url = home_url('/kealoa/person/' . urlencode($slug) . '/');
+        if ($tab !== '') {
+            $url .= '#kealoa-tab=' . rawurlencode($tab);
+        }
         return sprintf(
             '<a href="%s" class="kealoa-person-link">%s</a>',
             esc_url($url),
@@ -115,23 +119,25 @@ class Kealoa_Formatter {
     /**
      * Format a constructor name as a link to the person page
      *
-     * @param int $person_id The person's ID (constructor)
+     * @param int    $person_id The person's ID (constructor)
      * @param string $full_name The constructor's full name
+     * @param string $tab       Optional tab slug to activate on the person page
      * @return string HTML link to person view
      */
-    public static function format_constructor_link(int $person_id, string $full_name): string {
-        return self::format_person_link($person_id, $full_name);
+    public static function format_constructor_link(int $person_id, string $full_name, string $tab = ''): string {
+        return self::format_person_link($person_id, $full_name, $tab);
     }
 
     /**
      * Format an editor name as a link to the person page
      *
-     * @param int $person_id The person's ID (editor)
+     * @param int    $person_id The person's ID (editor)
      * @param string $full_name The editor's full name
+     * @param string $tab       Optional tab slug to activate on the person page
      * @return string HTML link to person view
      */
-    public static function format_editor_link(int $person_id, string $full_name): string {
-        return self::format_person_link($person_id, $full_name);
+    public static function format_editor_link(int $person_id, string $full_name, string $tab = ''): string {
+        return self::format_person_link($person_id, $full_name, $tab);
     }
 
     /**
