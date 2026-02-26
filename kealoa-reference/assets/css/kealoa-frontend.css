@@ -110,6 +110,7 @@
 /* Responsive table wrapper */
 .kealoa-rounds-table-wrapper,
 .kealoa-persons-table-wrapper,
+.kealoa-clue-givers-table-wrapper,
 .kealoa-table-scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -367,12 +368,15 @@
    ========================================================================== */
 
 .kealoa-persons-table-wrapper .kealoa-table,
+.kealoa-clue-givers-table-wrapper .kealoa-table,
 .kealoa-person-view .kealoa-table {
     width: auto;
 }
 
 .kealoa-persons-table-wrapper .kealoa-table th,
 .kealoa-persons-table-wrapper .kealoa-table td,
+.kealoa-clue-givers-table-wrapper .kealoa-table th,
+.kealoa-clue-givers-table-wrapper .kealoa-table td,
 .kealoa-person-view .kealoa-table th,
 .kealoa-person-view .kealoa-table td {
     white-space: nowrap;
@@ -894,7 +898,9 @@
 
     /* Listing tables: allow wrapping */
     .kealoa-persons-table-wrapper .kealoa-table th,
-    .kealoa-persons-table-wrapper .kealoa-table td {
+    .kealoa-persons-table-wrapper .kealoa-table td,
+    .kealoa-clue-givers-table-wrapper .kealoa-table th,
+    .kealoa-clue-givers-table-wrapper .kealoa-table td {
         white-space: normal;
     }
 
