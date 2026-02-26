@@ -390,6 +390,7 @@ Notes:
 - `stats` contains aggregate player stats; fields depend on data present.
 - `constructor_stats` is only included when the person has the `constructor` role.
 - `editor_stats` is only included when the person has the `editor` role.
+- `clue_giver_stats` is only included when the person has the `clue_giver` role. Contains `round_count`, `clue_count`, `guesser_count`, `total_guesses`, and `correct_guesses`.
 
 **Response: 404 Not Found**
 

@@ -431,6 +431,11 @@ class Kealoa_REST_API {
             $data['editor_stats'] = $this->db->get_person_editor_stats($id);
         }
 
+        // Include clue giver stats if applicable
+        if (in_array('clue_giver', $roles, true)) {
+            $data['clue_giver_stats'] = $this->db->get_clue_giver_stats($id);
+        }
+
         return new WP_REST_Response($data, 200);
     }
 

@@ -2017,6 +2017,186 @@ class Kealoa_DB {
     }
 
     // =========================================================================
+    // CLUE GIVER STATS
+    // =========================================================================
+
+    /**
+     * Get overall stats for a person's clue giver role
+     */
+    public function get_clue_giver_stats(int $person_id): ?object {
+        $sql = $this->wpdb->prepare(
+            "SELECT
+                COUNT(DISTINCT r.id) as round_count,
+                COUNT(DISTINCT c.id) as clue_count,
+                COUNT(DISTINCT rg.person_id) as guesser_count,
+                COUNT(g.id) as total_guesses,
+                COALESCE(SUM(g.is_correct), 0) as correct_guesses
+            FROM {$this->rounds_table} r
+            LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
+            LEFT JOIN {$this->round_guessers_table} rg ON rg.round_id = r.id
+            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+            WHERE r.clue_giver_id = %d",
+            $person_id
+        );
+
+        return $this->wpdb->get_row($sql);
+    }
+
+    /**
+     * Get clue giver stats grouped by year
+     */
+    public function get_clue_giver_stats_by_year(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT
+                YEAR(r.round_date) as year,
+                COUNT(DISTINCT r.id) as round_count,
+                COUNT(DISTINCT c.id) as clue_count,
+                COUNT(g.id) as total_guesses,
+                COALESCE(SUM(g.is_correct), 0) as correct_guesses
+            FROM {$this->rounds_table} r
+            LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
+            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+            WHERE r.clue_giver_id = %d
+            GROUP BY YEAR(r.round_date)
+            ORDER BY year DESC",
+            $person_id
+        );
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get clue giver stats grouped by day of week (of the round date)
+     */
+    public function get_clue_giver_stats_by_day(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT
+                DAYOFWEEK(r.round_date) as day_of_week,
+                COUNT(DISTINCT r.id) as round_count,
+                COUNT(DISTINCT c.id) as clue_count,
+                COUNT(g.id) as total_guesses,
+                COALESCE(SUM(g.is_correct), 0) as correct_guesses
+            FROM {$this->rounds_table} r
+            LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
+            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+            WHERE r.clue_giver_id = %d
+            GROUP BY DAYOFWEEK(r.round_date)
+            ORDER BY MOD(DAYOFWEEK(r.round_date) + 5, 7) ASC",
+            $person_id
+        );
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get clue giver stats broken down per guesser
+     */
+    public function get_clue_giver_stats_by_guesser(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT
+                p.id as person_id,
+                p.full_name,
+                COUNT(g.id) as total_guesses,
+                COALESCE(SUM(g.is_correct), 0) as correct_guesses
+            FROM {$this->rounds_table} r
+            INNER JOIN {$this->clues_table} c ON c.round_id = r.id
+            INNER JOIN {$this->guesses_table} g ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = r.id AND rg.person_id = g.guesser_person_id
+            INNER JOIN {$this->persons_table} p ON p.id = g.guesser_person_id
+            WHERE r.clue_giver_id = %d
+            GROUP BY p.id, p.full_name
+            ORDER BY (COALESCE(SUM(g.is_correct), 0) / COUNT(g.id)) DESC, COUNT(g.id) DESC",
+            $person_id
+        );
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get rounds for a person's clue giver role with aggregate stats
+     */
+    public function get_clue_giver_rounds(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT
+                r.id as round_id,
+                r.round_date,
+                r.round_number,
+                r.episode_number,
+                r.episode_id,
+                r.episode_url,
+                COUNT(DISTINCT c.id) as clue_count,
+                COUNT(DISTINCT rg.person_id) as guesser_count,
+                COUNT(g.id) as total_guesses,
+                COALESCE(SUM(g.is_correct), 0) as correct_guesses,
+                GROUP_CONCAT(DISTINCT p.full_name ORDER BY p.full_name ASC SEPARATOR ', ') as guesser_names,
+                GROUP_CONCAT(DISTINCT p.id ORDER BY p.full_name ASC) as guesser_ids
+            FROM {$this->rounds_table} r
+            LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
+            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+            LEFT JOIN {$this->round_guessers_table} rg ON rg.round_id = r.id
+            LEFT JOIN {$this->persons_table} p ON p.id = rg.person_id
+            WHERE r.clue_giver_id = %d
+            GROUP BY r.id, r.round_date, r.round_number, r.episode_number, r.episode_id, r.episode_url
+            ORDER BY r.round_date DESC, r.round_number DESC",
+            $person_id
+        );
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get longest correct and incorrect clue-giving streaks for a person
+     *
+     * A clue is considered "correct" if at least one guesser answered it correctly.
+     * Clues are ordered chronologically by round date, round number, and clue number.
+     */
+    public function get_clue_giver_streaks(int $person_id): object {
+        $sql = $this->wpdb->prepare(
+            "SELECT
+                c.id,
+                c.round_id,
+                c.clue_number,
+                COALESCE(SUM(g.is_correct), 0) as correct_count,
+                COUNT(g.id) as guess_count
+            FROM {$this->rounds_table} r
+            INNER JOIN {$this->clues_table} c ON c.round_id = r.id
+            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+            WHERE r.clue_giver_id = %d
+            GROUP BY c.id, c.round_id, c.clue_number, r.round_date, r.round_number
+            ORDER BY r.round_date ASC, r.round_number ASC, c.clue_number ASC",
+            $person_id
+        );
+
+        $rows = $this->wpdb->get_results($sql);
+
+        $best_correct   = 0;
+        $best_incorrect = 0;
+        $correct_streak   = 0;
+        $incorrect_streak = 0;
+
+        foreach ($rows as $row) {
+            if ((int) $row->correct_count > 0) {
+                $correct_streak++;
+                $incorrect_streak = 0;
+                if ($correct_streak > $best_correct) {
+                    $best_correct = $correct_streak;
+                }
+            } else {
+                $incorrect_streak++;
+                $correct_streak = 0;
+                if ($incorrect_streak > $best_incorrect) {
+                    $best_incorrect = $incorrect_streak;
+                }
+            }
+        }
+
+        return (object) [
+            'best_correct_streak'   => $best_correct,
+            'best_incorrect_streak' => $best_incorrect,
+        ];
+    }
+
+    // =========================================================================
     // ROLE INFERENCE
     // =========================================================================
 
@@ -2058,9 +2238,20 @@ class Kealoa_DB {
     }
 
     /**
+     * Check if a person has the clue giver role (gave clues in one or more rounds)
+     */
+    public function is_clue_giver(int $person_id): bool {
+        $sql = $this->wpdb->prepare(
+            "SELECT 1 FROM {$this->rounds_table} WHERE clue_giver_id = %d LIMIT 1",
+            $person_id
+        );
+        return (bool) $this->wpdb->get_var($sql);
+    }
+
+    /**
      * Get all active roles for a person
      *
-     * @return string[] Array of role names: 'player', 'constructor', 'editor'
+     * @return string[] Array of role names: 'player', 'constructor', 'editor', 'clue_giver'
      */
     public function get_person_roles(int $person_id): array {
         $roles = [];
@@ -2072,6 +2263,9 @@ class Kealoa_DB {
         }
         if ($this->is_editor($person_id)) {
             $roles[] = 'editor';
+        }
+        if ($this->is_clue_giver($person_id)) {
+            $roles[] = 'clue_giver';
         }
         return $roles;
     }
