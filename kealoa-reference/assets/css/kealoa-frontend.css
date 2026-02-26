@@ -520,7 +520,13 @@
 .kealoa-constructor-editor-stats h2,
 .kealoa-editor-puzzles h2,
 .kealoa-editor-player-stats h2,
-.kealoa-editor-constructor-stats h2 {
+.kealoa-editor-constructor-stats h2,
+.kealoa-person-clue-giver-overview h2,
+.kealoa-clue-giver-streaks h2,
+.kealoa-clue-giver-by-year h2,
+.kealoa-clue-giver-by-day h2,
+.kealoa-clue-giver-by-guesser h2,
+.kealoa-clue-giver-rounds h2 {
     margin: 30px 0 15px 0;
     padding-bottom: 10px;
     border-bottom: 2px solid var(--deep-lagoon);
@@ -663,6 +669,16 @@
     white-space: normal;
 }
 
+/* Host tab rounds table: allow all columns to wrap */
+#kealoa-person-cg-rounds-table {
+    width: 100%;
+}
+
+#kealoa-person-cg-rounds-table th,
+#kealoa-person-cg-rounds-table td {
+    white-space: normal;
+}
+
 .kealoa-puzzle-player-stats h2 {
     margin: 30px 0 15px 0;
     padding-bottom: 10px;
@@ -726,6 +742,30 @@
     .kealoa-person-view .kealoa-history-table {
         width: 100%;
         max-width: 100%;
+    }
+
+    /* As Host tab: section containers */
+    .kealoa-person-clue-giver-overview,
+    .kealoa-clue-giver-streaks,
+    .kealoa-clue-giver-by-year,
+    .kealoa-clue-giver-by-day,
+    .kealoa-clue-giver-by-guesser,
+    .kealoa-clue-giver-rounds {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    /* As Host tab: stat and rounds tables */
+    #kealoa-person-cg-year-table,
+    #kealoa-person-cg-day-table,
+    #kealoa-person-cg-guesser-table {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .kealoa-clue-giver-rounds .kealoa-table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     /* Stats grid: 2 columns */
