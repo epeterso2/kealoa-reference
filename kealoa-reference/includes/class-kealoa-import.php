@@ -170,11 +170,7 @@ class Kealoa_Import {
                     'full_name' => $row['full_name'],
                     'xwordinfo_profile_name' => $row['xwordinfo_profile_name'] ?? null,
                     'xwordinfo_image_url' => $row['xwordinfo_image_url'] ?? null,
-                ];
-                if (array_key_exists('media_id', $row)) {
-                    $create_data['media_id'] = $media_id;
-                }
-                $result = $this->db->create_constructor($create_data);
+                ]);
             }
             
             if ($result) {
