@@ -1,154 +1,285 @@
 # KEALOA Reference REST API
 
-Read-only REST API for accessing all KEALOA Reference data.
+Read-only REST API for KEALOA Reference data.
 
 **Base URL:** `/wp-json/kealoa/v1`
+**Version:** 2.0.11
 
-All endpoints are public (no authentication required). All responses are JSON.
+All endpoints use the `GET` method and are publicly accessible (`permission_callback: __return_true`). All responses are JSON.
 
 ---
 
 ## Table of Contents
 
-- [Pagination](#pagination)
-- [Rounds](#rounds)
-  - [List Rounds](#list-rounds)
-  - [Get Round](#get-round)
-  - [Rounds Stats](#rounds-stats)
-- [Persons](#persons)
-  - [List Persons](#list-persons)
-  - [Get Person](#get-person)
-  - [Person Rounds](#person-rounds)
-  - [Person Puzzles](#person-puzzles)
-  - [Person Stats by Year](#person-stats-by-year)
-  - [Person Stats by Day of Week](#person-stats-by-day-of-week)
-  - [Person Stats by Constructor](#person-stats-by-constructor)
-  - [Person Stats by Editor](#person-stats-by-editor)
-  - [Person Stats by Direction](#person-stats-by-direction)
-  - [Person Stats by Answer Length](#person-stats-by-answer-length)
-  - [Person Stats by Decade](#person-stats-by-decade)
-  - [Person Stats by Clue Number](#person-stats-by-clue-number)
-  - [Person Streaks](#person-streaks)
-- [Puzzles](#puzzles)
-  - [List Puzzles](#list-puzzles)
-  - [Get Puzzle](#get-puzzle)
-- [Clues](#clues)
-  - [Get Clue](#get-clue)
-- [Search](#search)
-- [Leaderboards](#leaderboards)
-  - [Leaderboard: Scores](#leaderboard-scores)
-  - [Leaderboard: Streaks](#leaderboard-streaks)
+1. [Common Conventions](#common-conventions)
+   - [Pagination](#pagination)
+   - [ID Parameters](#id-parameters)
+   - [Error Responses](#error-responses)
+2. [Game](#game)
+   - [GET /game-round/{id}](#get-game-roundid)
+3. [Rounds](#rounds)
+   - [GET /rounds](#get-rounds)
+   - [GET /rounds/stats](#get-roundsstats)
+   - [GET /rounds/{id}](#get-roundsid)
+4. [Persons](#persons)
+   - [GET /persons](#get-persons)
+   - [GET /persons/{id}](#get-personsid)
+   - [GET /persons/{id}/rounds](#get-personsidgrounds)
+   - [GET /persons/{id}/puzzles](#get-personsidpuzzles)
+   - [GET /persons/{id}/stats/by-year](#get-personsidstatsby-year)
+   - [GET /persons/{id}/stats/by-day](#get-personsidstatsby-day)
+   - [GET /persons/{id}/stats/by-constructor](#get-personsidstatsby-constructor)
+   - [GET /persons/{id}/stats/by-editor](#get-personsidstatsby-editor)
+   - [GET /persons/{id}/stats/by-direction](#get-personsidstatsby-direction)
+   - [GET /persons/{id}/stats/by-length](#get-personsidstatsby-length)
+   - [GET /persons/{id}/stats/by-decade](#get-personsidstatsby-decade)
+   - [GET /persons/{id}/stats/by-clue-number](#get-personsidstatsby-clue-number)
+   - [GET /persons/{id}/stats/streaks](#get-personsidstatsstreaks)
+5. [Puzzles](#puzzles)
+   - [GET /puzzles](#get-puzzles)
+   - [GET /puzzles/{id}](#get-puzzlesid)
+6. [Clues](#clues)
+   - [GET /clues/{id}](#get-cluesid)
+7. [Search](#search)
+   - [GET /search](#get-search)
+8. [Leaderboards](#leaderboards)
+   - [GET /leaderboard/scores](#get-leaderboardscores)
+   - [GET /leaderboard/streaks](#get-leaderboardstreaks)
 
 ---
 
-## Pagination
+## Common Conventions
 
-Paginated endpoints accept these query parameters:
+### Pagination
 
-| Parameter  | Type    | Default | Description                        |
-|------------|---------|---------|------------------------------------|
-| `page`     | integer | `1`     | Page number (1-based).             |
-| `per_page` | integer | `50`    | Items per page (1–500).            |
+The following endpoints return paginated results: `/rounds`, `/persons`, `/puzzles`.
 
-Paginated responses include:
+**Query parameters:**
+
+| Parameter  | Type    | Default | Min | Max | Description       |
+|---|---|---:|---:|---:|---|
+| `page`     | integer | `1`     | `1` | —   | 1-based page index |
+| `per_page` | integer | `50`    | `1` | `500` | Items per page  |
+
+**Response envelope:**
 
 ```json
 {
-  "total": 123,
+  "total": 120,
   "total_pages": 3,
   "page": 1,
   "per_page": 50,
-  "items": [ ... ]
+  "items": []
 }
 ```
 
-Response headers `X-WP-Total` and `X-WP-TotalPages` are also set.
+**Response headers:**
+
+| Header              | Description                     |
+|---|---|
+| `X-WP-Total`        | Total number of matching items  |
+| `X-WP-TotalPages`   | Total number of pages           |
+
+### ID Parameters
+
+Endpoints that include `{id}` in the path require a positive integer (`>= 1`).
+
+### Error Responses
+
+When an entity with the given ID does not exist, the endpoint returns HTTP `404` with:
+
+```json
+{ "message": "<Entity> not found." }
+```
+
+| Endpoint family  | Message                |
+|---|---|
+| `/rounds/{id}`   | `"Round not found."`   |
+| `/persons/{id}`  | `"Person not found."`  |
+| `/puzzles/{id}`  | `"Puzzle not found."`  |
+| `/clues/{id}`    | `"Clue not found."`    |
+
+---
+
+## Game
+
+### GET /game-round/{id}
+
+Returns the complete payload needed by the **KEALOA Play Game** Gutenberg block to run an interactive game session for the specified round.
+
+**Path parameters:**
+
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Round ID    |
+
+**Response: 200 OK**
+
+```json
+{
+  "round_id": 1,
+  "round_url": "https://example.com/kealoa/round/1/",
+  "description": "Optional description of the round",
+  "description2": "Optional secondary description",
+  "clue_giver": "Alex Smith",
+  "players": [
+    "Jane Doe",
+    "Bob Jones"
+  ],
+  "solution_words": [
+    "PANDA",
+    "PANEL"
+  ],
+  "clues": [
+    {
+      "clue_number": 1,
+      "puzzle_date": "2024-01-10",
+      "constructors": "Amanda Chung & Karl Ni",
+      "editor": "Will Shortz",
+      "puzzle_clue_number": 42,
+      "puzzle_clue_direction": "A",
+      "clue_text": "Bamboo-eating bear",
+      "correct_answer": "PANDA",
+      "guesses": [
+        {
+          "guesser_name": "Jane Doe",
+          "guessed_word": "PANDA",
+          "is_correct": true
+        },
+        {
+          "guesser_name": "Bob Jones",
+          "guessed_word": "PANEL",
+          "is_correct": false
+        }
+      ]
+    }
+  ],
+  "guesser_results": [
+    {
+      "full_name": "Jane Doe",
+      "total_guesses": 3,
+      "correct_guesses": 3
+    },
+    {
+      "full_name": "Bob Jones",
+      "total_guesses": 3,
+      "correct_guesses": 2
+    }
+  ]
+}
+```
+
+**Response: 404 Not Found**
+
+```json
+{ "message": "Round not found." }
+```
 
 ---
 
 ## Rounds
 
-### List Rounds
-
-```
-GET /rounds
-```
+### GET /rounds
 
 Returns a paginated list of rounds.
 
-**Parameters:**
+**Query parameters:**
 
-| Parameter | Type    | Default      | Description                              |
-|-----------|---------|--------------|------------------------------------------|
-| `page`    | integer | `1`          | Page number.                             |
-| `per_page`| integer | `50`         | Items per page (1–500).                  |
-| `orderby` | string  | `round_date` | Field to sort by.                        |
-| `order`   | string  | `DESC`       | Sort direction: `ASC` or `DESC`.         |
+Supports [pagination parameters](#pagination) plus:
 
-**Response item:**
+| Parameter | Type   | Default      | Description                          |
+|---|---|---|---|
+| `orderby` | string | `round_date` | Column to sort by (sanitized text)   |
+| `order`   | string | `DESC`       | Sort direction: `ASC` or `DESC`      |
+
+**Response: 200 OK**
 
 ```json
 {
-  "id": 1,
-  "round_date": "2024-01-15",
-  "round_number": 1,
-  "episode_number": 100,
-  "clue_giver": "John Doe",
-  "solution_words": ["WORD1", "WORD2"],
-  "url": "https://example.com/kealoa/round/1/"
+  "total": 80,
+  "total_pages": 2,
+  "page": 1,
+  "per_page": 50,
+  "items": [
+    {
+      "id": 1,
+      "round_date": "2024-03-15",
+      "round_number": 1,
+      "episode_number": 100,
+      "clue_giver": "Alex Smith",
+      "solution_words": ["PANDA", "PANEL"],
+      "url": "https://example.com/kealoa/round/1/"
+    }
+  ]
 }
 ```
 
 ---
 
-### Get Round
+### GET /rounds/stats
 
+Returns aggregate statistics across all rounds.
+
+**Query parameters:** None
+
+**Response: 200 OK**
+
+```json
+{
+  "overview": {},
+  "by_year": []
+}
 ```
-GET /rounds/{id}
-```
 
-Returns full details for a single round, including players, clues, guesses, and guesser results.
+The `overview` object and `by_year` array contain aggregate fields computed by the database layer. The exact fields depend on the data present.
 
-**Parameters:**
+---
 
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Round ID.     |
+### GET /rounds/{id}
 
-**Response:**
+Returns full detail for a single round, including all clues, all guesses, player results, and navigation to adjacent rounds.
+
+**Path parameters:**
+
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Round ID    |
+
+**Response: 200 OK**
 
 ```json
 {
   "id": 1,
-  "round_date": "2024-01-15",
+  "round_date": "2024-03-15",
   "round_number": 1,
   "episode_number": 100,
   "episode_id": "abc123",
-  "episode_url": "https://...",
-  "episode_start_time": "00:15:30",
-  "description": "...",
-  "description2": "...",
-  "clue_giver": "John Doe",
+  "episode_url": "https://bemoresmarter.libsyn.com/episode/100",
+  "episode_start_time": "00:12:34",
+  "description": "Optional description",
+  "description2": "Optional secondary description",
+  "clue_giver": "Alex Smith",
   "players": [
-    { "id": 2, "full_name": "Jane Smith" }
+    { "id": 2, "full_name": "Jane Doe" },
+    { "id": 3, "full_name": "Bob Jones" }
   ],
-  "solution_words": ["WORD1", "WORD2"],
+  "solution_words": ["PANDA", "PANEL"],
   "clues": [
     {
       "id": 10,
       "clue_number": 1,
       "puzzle_id": 5,
       "puzzle_date": "2024-01-10",
-      "constructors": "Constructor A & Constructor B",
+      "constructors": "Amanda Chung & Karl Ni",
       "editor": "Will Shortz",
       "puzzle_clue_number": 42,
-      "puzzle_clue_direction": "Across",
-      "clue_text": "A hint for the answer",
-      "correct_answer": "ANSWER",
+      "puzzle_clue_direction": "A",
+      "clue_text": "Bamboo-eating bear",
+      "correct_answer": "PANDA",
       "guesses": [
         {
-          "guesser_name": "Jane Smith",
-          "guessed_word": "ANSWER",
+          "guesser_name": "Jane Doe",
+          "guessed_word": "PANDA",
           "is_correct": true
         }
       ]
@@ -156,9 +287,9 @@ Returns full details for a single round, including players, clues, guesses, and 
   ],
   "guesser_results": [
     {
-      "full_name": "Jane Smith",
-      "total_guesses": 5,
-      "correct_guesses": 4
+      "full_name": "Jane Doe",
+      "total_guesses": 3,
+      "correct_guesses": 3
     }
   ],
   "previous_round_id": null,
@@ -167,466 +298,455 @@ Returns full details for a single round, including players, clues, guesses, and 
 }
 ```
 
-**Errors:**
-
-| Status | Description      |
-|--------|------------------|
-| 404    | Round not found. |
-
----
-
-### Rounds Stats
-
-```
-GET /rounds/stats
-```
-
-Returns overview statistics and per-year breakdown for all rounds.
-
-**Response:**
+**Response: 404 Not Found**
 
 ```json
-{
-  "overview": { ... },
-  "by_year": [ ... ]
-}
+{ "message": "Round not found." }
 ```
 
 ---
 
 ## Persons
 
-### List Persons
+### GET /persons
 
-```
-GET /persons
-```
+Returns a paginated list of persons. When `role` is omitted, each item includes the full `roles` array. When `role` is specified, the items omit `roles`.
 
-Returns a paginated list of persons. Can be filtered by role.
+**Query parameters:**
 
-**Parameters:**
+Supports [pagination parameters](#pagination) plus:
 
-| Parameter  | Type    | Default | Description                                                       |
-|------------|---------|---------|-------------------------------------------------------------------|
-| `page`     | integer | `1`     | Page number.                                                      |
-| `per_page` | integer | `50`    | Items per page (1–500).                                           |
-| `search`   | string  | `""`    | Filter by name (partial match).                                   |
-| `role`     | string  | `""`    | Filter by role: `player`, `constructor`, or `editor`. Empty = all.|
+| Parameter | Type   | Default | Description                                               |
+|---|---|---|---|
+| `search`  | string | `""`    | Filter by name substring (case-insensitive)               |
+| `role`    | string | `""`    | Restrict to persons with this role: `player`, `constructor`, or `editor` |
 
-**Response item:**
+**Response (no role filter): 200 OK**
 
 ```json
 {
-  "id": 1,
-  "full_name": "Jane Smith",
-  "url": "https://example.com/kealoa/person/Jane_Smith/"
+  "total": 25,
+  "total_pages": 1,
+  "page": 1,
+  "per_page": 50,
+  "items": [
+    {
+      "id": 1,
+      "full_name": "Jane Doe",
+      "roles": ["player", "constructor"],
+      "url": "https://example.com/kealoa/person/jane_doe/"
+    }
+  ]
+}
+```
+
+**Response (with role filter): 200 OK**
+
+```json
+{
+  "total": 10,
+  "total_pages": 1,
+  "page": 1,
+  "per_page": 50,
+  "items": [
+    {
+      "id": 1,
+      "full_name": "Jane Doe",
+      "url": "https://example.com/kealoa/person/jane_doe/"
+    }
+  ]
 }
 ```
 
 ---
 
-### Get Person
+### GET /persons/{id}
 
-```
-GET /persons/{id}
-```
+Returns the full profile for a single person including role-specific stats.
 
-Returns a single person with their stats.
+**Path parameters:**
 
-**Parameters:**
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Person ID   |
 
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Person ID.    |
-
-**Response:**
+**Response: 200 OK**
 
 ```json
 {
   "id": 1,
-  "full_name": "Jane Smith",
-  "home_page_url": "https://...",
+  "full_name": "Jane Doe",
+  "home_page_url": "https://janedoe.example.com",
+  "xwordinfo_profile_name": "Jane Doe",
+  "xwordinfo_image_url": "https://www.xwordinfo.com/photos/jane_doe.jpg",
   "roles": ["player", "constructor"],
-  "xwordinfo_profile_name": "Jane_Smith",
-  "xwordinfo_image_url": "https://www.xwordinfo.com/images/cons/JaneSmith.jpg",
-  "stats": { ... },
-  "constructor_stats": { ... },
-  "editor_stats": { ... },
-  "url": "https://example.com/kealoa/person/Jane_Smith/"
+  "stats": {},
+  "constructor_stats": {},
+  "url": "https://example.com/kealoa/person/jane_doe/"
 }
 ```
 
-> `constructor_stats` and `editor_stats` are included only when the person has those roles.
+Notes:
+- `stats` contains aggregate player stats; fields depend on data present.
+- `constructor_stats` is only included when the person has the `constructor` role.
+- `editor_stats` is only included when the person has the `editor` role.
 
-**Errors:**
+**Response: 404 Not Found**
 
-| Status | Description       |
-|--------|-------------------|
-| 404    | Person not found. |
+```json
+{ "message": "Person not found." }
+```
 
 ---
 
-### Person Rounds
+### GET /persons/{id}/rounds
 
-```
-GET /persons/{id}/rounds
-```
+Returns all rounds in which the person participated as a guesser.
 
-Returns the complete round history for a person.
+**Path parameters:**
 
-**Parameters:**
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Person ID   |
 
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Person ID.    |
-
-**Response:**
+**Response: 200 OK**
 
 ```json
 {
   "person_id": 1,
-  "full_name": "Jane Smith",
-  "rounds": [ ... ]
+  "full_name": "Jane Doe",
+  "rounds": []
 }
 ```
 
-**Errors:**
+The `rounds` array contains round summary objects. Fields match those returned by `GET /rounds` items.
 
-| Status | Description       |
-|--------|-------------------|
-| 404    | Person not found. |
+**Response: 404 Not Found**
+
+```json
+{ "message": "Person not found." }
+```
 
 ---
 
-### Person Puzzles
+### GET /persons/{id}/puzzles
 
-```
-GET /persons/{id}/puzzles
-```
+Returns all puzzles associated with rounds that the person participated in (as a guesser).
 
-Returns all puzzles from rounds the person has played.
+**Path parameters:**
 
-**Parameters:**
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Person ID   |
 
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Person ID.    |
-
-**Response:**
+**Response: 200 OK**
 
 ```json
 {
   "person_id": 1,
-  "full_name": "Jane Smith",
+  "full_name": "Jane Doe",
   "total": 25,
   "puzzles": [
     {
       "puzzle_id": 10,
       "publication_date": "2024-01-10",
       "day_of_week": "Wednesday",
+      "editor_id": 3,
       "editor_name": "Will Shortz",
       "constructors": [
-        { "id": 1, "full_name": "Constructor Name" }
+        {
+          "id": 5,
+          "full_name": "Amanda Chung",
+          "url": "https://example.com/kealoa/person/amanda_chung/"
+        }
       ],
-      "round_ids": [5, 12],
-      "round_dates": ["2024-03-15", "2024-06-01"],
+      "round_ids": [1, 4],
+      "round_dates": ["2024-03-15", "2024-06-20"],
       "url": "https://example.com/kealoa/puzzle/2024-01-10/"
     }
   ]
 }
 ```
 
-**Errors:**
+**Response: 404 Not Found**
 
-| Status | Description       |
-|--------|-------------------|
-| 404    | Person not found. |
+```json
+{ "message": "Person not found." }
+```
 
 ---
 
-### Person Stats by Year
+### GET /persons/{id}/stats/by-year
 
+Returns the person's guess results grouped by calendar year.
+
+**Path parameters:**
+
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Person ID   |
+
+**Response: 200 OK** — Array of rows from `get_person_results_by_year()`. Each row contains aggregated totals for that year.
+
+**Response: 404 Not Found**
+
+```json
+{ "message": "Person not found." }
 ```
-GET /persons/{id}/stats/by-year
-```
-
-Returns the person's results broken down by year.
-
-**Parameters:**
-
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Person ID.    |
-
-**Errors:**
-
-| Status | Description       |
-|--------|-------------------|
-| 404    | Person not found. |
 
 ---
 
-### Person Stats by Day of Week
+### GET /persons/{id}/stats/by-day
 
+Returns the person's guess results grouped by day of week.
+
+**Path parameters:**
+
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Person ID   |
+
+**Response: 200 OK** — Array of rows from `get_person_results_by_day_of_week()`. Each row covers one day of the week (Monday–Sunday).
+
+**Response: 404 Not Found**
+
+```json
+{ "message": "Person not found." }
 ```
-GET /persons/{id}/stats/by-day
-```
-
-Returns the person's results broken down by day of week.
-
-**Parameters:**
-
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Person ID.    |
-
-**Errors:**
-
-| Status | Description       |
-|--------|-------------------|
-| 404    | Person not found. |
 
 ---
 
-### Person Stats by Constructor
+### GET /persons/{id}/stats/by-constructor
 
+Returns the person's guess results grouped by puzzle constructor.
+
+**Path parameters:**
+
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Person ID   |
+
+**Response: 200 OK** — Array of rows from `get_person_results_by_constructor()`. Each row represents one constructor.
+
+**Response: 404 Not Found**
+
+```json
+{ "message": "Person not found." }
 ```
-GET /persons/{id}/stats/by-constructor
-```
-
-Returns the person's results broken down by puzzle constructor.
-
-**Parameters:**
-
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Person ID.    |
-
-**Errors:**
-
-| Status | Description       |
-|--------|-------------------|
-| 404    | Person not found. |
 
 ---
 
-### Person Stats by Editor
+### GET /persons/{id}/stats/by-editor
 
+Returns the person's guess results grouped by puzzle editor.
+
+**Path parameters:**
+
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Person ID   |
+
+**Response: 200 OK** — Array of rows from `get_person_results_by_editor()`. Each row represents one editor.
+
+**Response: 404 Not Found**
+
+```json
+{ "message": "Person not found." }
 ```
-GET /persons/{id}/stats/by-editor
-```
-
-Returns the person's results broken down by puzzle editor.
-
-**Parameters:**
-
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Person ID.    |
-
-**Errors:**
-
-| Status | Description       |
-|--------|-------------------|
-| 404    | Person not found. |
 
 ---
 
-### Person Stats by Direction
+### GET /persons/{id}/stats/by-direction
 
+Returns the person's guess results grouped by crossword clue direction (Across / Down).
+
+**Path parameters:**
+
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Person ID   |
+
+**Response: 200 OK** — Array of rows from `get_person_results_by_direction()`.
+
+**Response: 404 Not Found**
+
+```json
+{ "message": "Person not found." }
 ```
-GET /persons/{id}/stats/by-direction
-```
-
-Returns the person's results broken down by clue direction (Across/Down).
-
-**Parameters:**
-
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Person ID.    |
-
-**Errors:**
-
-| Status | Description       |
-|--------|-------------------|
-| 404    | Person not found. |
 
 ---
 
-### Person Stats by Answer Length
+### GET /persons/{id}/stats/by-length
 
+Returns the person's guess results grouped by answer length (number of letters).
+
+**Path parameters:**
+
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Person ID   |
+
+**Response: 200 OK** — Array of rows from `get_person_results_by_answer_length()`.
+
+**Response: 404 Not Found**
+
+```json
+{ "message": "Person not found." }
 ```
-GET /persons/{id}/stats/by-length
-```
-
-Returns the person's results broken down by answer word length.
-
-**Parameters:**
-
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Person ID.    |
-
-**Errors:**
-
-| Status | Description       |
-|--------|-------------------|
-| 404    | Person not found. |
 
 ---
 
-### Person Stats by Decade
+### GET /persons/{id}/stats/by-decade
 
+Returns the person's guess results grouped by the puzzle's publication decade.
+
+**Path parameters:**
+
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Person ID   |
+
+**Response: 200 OK** — Array of rows from `get_person_results_by_decade()`.
+
+**Response: 404 Not Found**
+
+```json
+{ "message": "Person not found." }
 ```
-GET /persons/{id}/stats/by-decade
-```
-
-Returns the person's results broken down by puzzle publication decade.
-
-**Parameters:**
-
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Person ID.    |
-
-**Errors:**
-
-| Status | Description       |
-|--------|-------------------|
-| 404    | Person not found. |
 
 ---
 
-### Person Stats by Clue Number
+### GET /persons/{id}/stats/by-clue-number
 
+Returns the person's guess results grouped by clue number within a round (clue 1, clue 2, etc.).
+
+**Path parameters:**
+
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Person ID   |
+
+**Response: 200 OK** — Array of rows from `get_person_results_by_clue_number()`.
+
+**Response: 404 Not Found**
+
+```json
+{ "message": "Person not found." }
 ```
-GET /persons/{id}/stats/by-clue-number
-```
-
-Returns the person's results broken down by clue number within the round.
-
-**Parameters:**
-
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Person ID.    |
-
-**Errors:**
-
-| Status | Description       |
-|--------|-------------------|
-| 404    | Person not found. |
 
 ---
 
-### Person Streaks
+### GET /persons/{id}/stats/streaks
 
+Returns the person's best consecutive correct-guess streaks grouped by year.
+
+**Path parameters:**
+
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Person ID   |
+
+**Response: 200 OK** — Array of rows from `get_person_best_streaks_by_year()`. Each row contains the year and the best streak length for that year.
+
+**Response: 404 Not Found**
+
+```json
+{ "message": "Person not found." }
 ```
-GET /persons/{id}/stats/streaks
-```
-
-Returns the person's best correct-answer streaks by year.
-
-**Parameters:**
-
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Person ID.    |
-
-**Errors:**
-
-| Status | Description       |
-|--------|-------------------|
-| 404    | Person not found. |
 
 ---
 
 ## Puzzles
 
-### List Puzzles
+### GET /puzzles
 
-```
-GET /puzzles
-```
+Returns a paginated list of puzzles.
 
-Returns a paginated list of puzzles with their constructors.
+**Query parameters:**
 
-**Parameters:**
+Supports [pagination parameters](#pagination) plus:
 
-| Parameter  | Type    | Default            | Description                      |
-|------------|---------|--------------------|----------------------------------|
-| `page`     | integer | `1`                | Page number.                     |
-| `per_page` | integer | `50`               | Items per page (1–500).          |
-| `orderby`  | string  | `publication_date` | Field to sort by.                |
-| `order`    | string  | `DESC`             | Sort direction: `ASC` or `DESC`. |
+| Parameter | Type   | Default            | Description                          |
+|---|---|---|---|
+| `orderby` | string | `publication_date` | Column to sort by (sanitized text)   |
+| `order`   | string | `DESC`             | Sort direction: `ASC` or `DESC`      |
 
-**Response item:**
+**Response: 200 OK**
 
 ```json
 {
-  "id": 10,
-  "publication_date": "2024-01-10",
-  "day_of_week": "Wednesday",
-  "editor_name": "Will Shortz",
-  "constructors": [
-    { "id": 1, "full_name": "Constructor Name" }
-  ],
-  "url": "https://example.com/kealoa/puzzle/2024-01-10/"
+  "total": 300,
+  "total_pages": 6,
+  "page": 1,
+  "per_page": 50,
+  "items": [
+    {
+      "id": 10,
+      "publication_date": "2024-01-10",
+      "day_of_week": "Wednesday",
+      "editor_id": 3,
+      "editor_name": "Will Shortz",
+      "constructors": [
+        {
+          "id": 5,
+          "full_name": "Amanda Chung",
+          "url": "https://example.com/kealoa/person/amanda_chung/"
+        }
+      ],
+      "url": "https://example.com/kealoa/puzzle/2024-01-10/"
+    }
+  ]
 }
 ```
 
 ---
 
-### Get Puzzle
+### GET /puzzles/{id}
 
-```
-GET /puzzles/{id}
-```
+Returns full detail for a single puzzle, including all rounds that used clues from it, all clues and guesses per round, and aggregated player results.
 
-Returns a single puzzle with full details including clues grouped by round, player results, and links.
+**Path parameters:**
 
-**Parameters:**
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Puzzle ID   |
 
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Puzzle ID.    |
-
-**Response:**
+**Response: 200 OK**
 
 ```json
 {
   "id": 10,
   "publication_date": "2024-01-10",
   "day_of_week": "Wednesday",
+  "editor_id": 3,
   "editor_name": "Will Shortz",
   "constructors": [
     {
-      "id": 1,
-      "full_name": "Constructor Name",
-      "url": "https://example.com/kealoa/constructor/Constructor_Name/"
+      "id": 5,
+      "full_name": "Amanda Chung",
+      "url": "https://example.com/kealoa/person/amanda_chung/"
     }
   ],
   "rounds": [
     {
-      "round_id": 5,
+      "round_id": 1,
       "round_date": "2024-03-15",
       "round_number": 1,
       "episode_number": 100,
-      "round_url": "https://example.com/kealoa/round/5/",
-      "solution_words": ["WORD1", "WORD2"],
+      "round_url": "https://example.com/kealoa/round/1/",
+      "solution_words": ["PANDA", "PANEL"],
       "clues": [
         {
-          "id": 42,
+          "id": 10,
           "clue_number": 1,
-          "puzzle_clue_number": 15,
-          "puzzle_clue_direction": "Across",
-          "clue_text": "Clue text here",
-          "correct_answer": "ANSWER",
+          "puzzle_clue_number": 42,
+          "puzzle_clue_direction": "A",
+          "clue_text": "Bamboo-eating bear",
+          "correct_answer": "PANDA",
           "guesses": [
             {
-              "guesser_name": "Player Name",
-              "guessed_word": "ANSWER",
+              "guesser_name": "Jane Doe",
+              "guessed_word": "PANDA",
               "is_correct": true
             }
           ]
@@ -636,12 +756,12 @@ Returns a single puzzle with full details including clues grouped by round, play
   ],
   "player_results": [
     {
-      "person_id": 1,
-      "full_name": "Player Name",
-      "total_guesses": 5,
-      "correct_guesses": 4,
-      "accuracy": 80.0,
-      "url": "https://example.com/kealoa/person/Player_Name/"
+      "person_id": 2,
+      "full_name": "Jane Doe",
+      "total_guesses": 3,
+      "correct_guesses": 3,
+      "accuracy": 100.0,
+      "url": "https://example.com/kealoa/person/jane_doe/"
     }
   ],
   "xwordinfo_url": "https://www.xwordinfo.com/Crossword?date=2024-01-10",
@@ -649,31 +769,27 @@ Returns a single puzzle with full details including clues grouped by round, play
 }
 ```
 
-**Errors:**
+**Response: 404 Not Found**
 
-| Status | Description       |
-|--------|-------------------|
-| 404    | Puzzle not found. |
+```json
+{ "message": "Puzzle not found." }
+```
 
 ---
 
 ## Clues
 
-### Get Clue
+### GET /clues/{id}
 
-```
-GET /clues/{id}
-```
+Returns full detail for a single clue, including its puzzle context and all guesses.
 
-Returns a single clue with all guesses.
+**Path parameters:**
 
-**Parameters:**
+| Parameter | Type    | Description |
+|---|---|---|
+| `id`      | integer | Clue ID     |
 
-| Parameter | Type    | Required | Description   |
-|-----------|---------|----------|---------------|
-| `id`      | integer | Yes      | Clue ID.      |
-
-**Response:**
+**Response: 200 OK**
 
 ```json
 {
@@ -682,72 +798,82 @@ Returns a single clue with all guesses.
   "clue_number": 3,
   "puzzle_id": 5,
   "puzzle_date": "2024-01-10",
-  "constructors": "Constructor A & Constructor B",
+  "constructors": "Amanda Chung & Karl Ni",
   "editor": "Will Shortz",
   "puzzle_clue_number": 42,
-  "puzzle_clue_direction": "Across",
-  "clue_text": "A hint for the answer",
-  "correct_answer": "ANSWER",
+  "puzzle_clue_direction": "A",
+  "clue_text": "Bamboo-eating bear",
+  "correct_answer": "PANDA",
   "guesses": [
     {
-      "guesser_name": "Jane Smith",
-      "guessed_word": "ANSWER",
+      "guesser_name": "Jane Doe",
+      "guessed_word": "PANDA",
       "is_correct": true
+    },
+    {
+      "guesser_name": "Bob Jones",
+      "guessed_word": "PANEL",
+      "is_correct": false
     }
   ]
 }
 ```
 
-**Errors:**
+Note: `constructors` and `editor` are plain string values (formatted display strings), not object arrays.
 
-| Status | Description     |
-|--------|-----------------|
-| 404    | Clue not found. |
+**Response: 404 Not Found**
+
+```json
+{ "message": "Clue not found." }
+```
 
 ---
 
 ## Search
 
-```
-GET /search
-```
+### GET /search
 
-Full-text search across all entities (players, constructors, editors, rounds).
+Performs a full-text search across persons, rounds, and puzzles.
 
-**Parameters:**
+**Query parameters:**
 
-| Parameter | Type   | Required | Description                                  |
-|-----------|--------|----------|----------------------------------------------|
-| `q`       | string | Yes      | Search term (minimum 2 characters).          |
+| Parameter | Type   | Required | Validation                                 |
+|---|---|---|---|
+| `q`       | string | Yes      | Minimum trimmed length of 2 characters     |
 
-**Response:**
+**Response: 200 OK**
 
 ```json
 {
   "query": "smith",
   "count": 3,
-  "results": [ ... ]
+  "results": []
 }
 ```
+
+The `results` array contains mixed entity objects matching the query. The structure of each result object depends on the matched entity type.
+
+**Response: 400 Bad Request** — when `q` is missing or shorter than 2 characters after trimming.
 
 ---
 
 ## Leaderboards
 
-### Leaderboard: Scores
+### GET /leaderboard/scores
 
-```
-GET /leaderboard/scores
-```
+Returns all persons ranked by their highest single-round score.
 
-Returns highest round scores across all players. Not paginated.
+**Query parameters:** None
+
+**Response: 200 OK** — Array of entries from `get_all_persons_highest_round_scores()`. Each entry contains person identity fields and score data. Fields depend on the data present.
 
 ---
 
-### Leaderboard: Streaks
+### GET /leaderboard/streaks
 
-```
-GET /leaderboard/streaks
-```
+Returns all persons ranked by their longest correct-guess streak across all rounds.
 
-Returns longest correct-answer streaks across all players. Not paginated.
+**Query parameters:** None
+
+**Response: 200 OK** — Array of entries from `get_all_persons_longest_streaks()`. Each entry contains person identity fields and streak data. Fields depend on the data present.
+

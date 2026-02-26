@@ -2,323 +2,324 @@
 
 A WordPress plugin for managing and displaying KEALOA quiz game data from the [Fill Me In](https://bemoresmarter.libsyn.com) podcast.
 
-**Version:** 1.2.87 &bull; **DB Version:** 1.4.0 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+**Version:** 2.0.11 &bull; **DB Version:** 2.0.0 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-## Description
+---
 
-KEALOA is a quiz game played on the Fill Me In podcast where a clue giver selects words from New York Times crossword puzzles that have similar lengths, spellings, and definitions. Players then try to identify which word matches each clue.
+## Table of Contents
 
-This plugin provides:
+1. [About KEALOA](#about-kealoa)
+2. [Requirements](#requirements)
+3. [Installation](#installation)
+4. [Admin Interface](#admin-interface)
+5. [Shortcodes](#shortcodes)
+6. [Gutenberg Blocks](#gutenberg-blocks)
+7. [Custom URL Routes](#custom-url-routes)
+8. [REST API](#rest-api)
+9. [Database Model](#database-model)
+10. [Data Import and Export](#data-import-and-export)
+11. [Search Integration](#search-integration)
+12. [Sitemap Integration](#sitemap-integration)
+13. [File Structure](#file-structure)
+14. [License](#license)
 
-- **Complete data management** for rounds, clues, puzzles, persons, constructors, editors, and guesses
-- **Admin interface** for entering and managing all KEALOA data with import/export support
-- **Frontend display** via shortcodes and 13 Gutenberg blocks
-- **Interactive game** letting visitors play rounds directly on the site
-- **Statistics tracking** with multiple breakdowns for individual players
-- **Custom URL routing** for person, round, constructor, editor, and puzzle detail pages
-- **Read-only REST API** with 27+ endpoints for all KEALOA data
-- **Sitemap integration** with WordPress core sitemaps and Yoast SEO
-- **WordPress search integration** with results for players, constructors, editors, and rounds
+---
+
+## About KEALOA
+
+KEALOA is a word quiz game played on the Fill Me In podcast. For each round, a clue giver selects a set of words from NYT crossword puzzles that share similar lengths, spellings, and/or definitions. Players guess which word fits the given crossword clue.
+
+This plugin tracks every round played, every clue given, every guess made, and the puzzle metadata behind each clue. It also records each person's role — player, puzzle constructor, or puzzle editor — in a unified data model.
+
+---
 
 ## Requirements
 
-- WordPress 6.9 or higher
-- PHP 8.4 or higher
+| Requirement  | Minimum version |
+|---|---|
+| WordPress    | 6.9             |
+| PHP          | 8.4             |
+
+---
 
 ## Installation
 
-1. Upload the `kealoa-reference` folder to `/wp-content/plugins/`
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Navigate to **KEALOA** in the admin menu to start adding data
+1. Upload the `kealoa-reference/` directory to `/wp-content/plugins/`.
+2. Activate **KEALOA Reference** from the WordPress Plugins admin page.
+3. Open the **KEALOA** menu item in the WordPress admin sidebar.
 
-## Usage
+On first activation the plugin creates all database tables and registers the custom rewrite rules. After activating, go to **Settings → Permalinks** and save to flush rewrite rules so the custom URLs work correctly.
 
-### Admin Interface
+---
 
-The plugin adds a **KEALOA** menu to the WordPress admin with the following sections:
+## Admin Interface
 
-| Page | Description |
-|------|-------------|
-| **Dashboard** | Overview with entity counts and shortcode/block reference |
-| **Rounds** | Create/edit/delete rounds with clues, guesses, solution words, episode links |
-| **Persons** | Manage player profiles (name, home page, image) |
-| **Constructors** | Manage constructor profiles (name, XWordInfo profile/image) |
-| **Puzzles** | Manage puzzles (date, editor, constructors) |
-| **Import** | CSV or ZIP data import with overwrite/skip modes |
-| **Export** | CSV or ZIP data export (all 6 entity types) |
-| **Data Check** | Data consistency checks and repair tools |
-| **Settings** | Plugin settings (debug mode) |
+The plugin adds a **KEALOA** top-level menu to the WordPress admin sidebar with the following pages:
 
-### Shortcodes
+| Page        | Description |
+|---|---|
+| Dashboard   | Summary statistics and quick links |
+| Rounds      | Browse, create, edit, and delete game rounds |
+| Persons     | Manage persons (players, constructors, and editors in a unified list) |
+| Constructors | Filtered view of persons with the constructor role |
+| Puzzles     | Browse crossword puzzles referenced by rounds |
+| Import      | Import data from CSV files or a ZIP archive |
+| Export      | Export data as CSV files or a ZIP archive |
+| Data Check  | Identify missing or inconsistent data |
+| Settings    | Plugin configuration options |
 
-| Shortcode | Description |
-|-----------|-------------|
-| `[kealoa_rounds_table]` | Summary stats, yearly breakdown, and full rounds table with per-player scores |
-| `[kealoa_round id="X"]` | Single round with episode link, audio player, clue giver, player scores, sortable clues table |
-| `[kealoa_persons_table]` | All players with rounds played, clues guessed, accuracy, best score, best streak |
-| `[kealoa_person id="X"]` | Tabbed player profile: stats/charts, puzzle breakdowns, constructor breakdowns, round history |
-| `[kealoa_constructors_table]` | All constructors with puzzle count, clue count, accuracy |
-| `[kealoa_constructor id="X"]` | Constructor profile with stats, XWordInfo link, puzzle table, cross-links |
-| `[kealoa_editors_table]` | All editors with clues guessed, correct, accuracy |
-| `[kealoa_editor name="X"]` | Editor profile with stats, puzzle table, cross-links |
-| `[kealoa_puzzles_table]` | All puzzles with day, date, constructor, editor, round, solution words |
-| `[kealoa_puzzle date="YYYY-MM-DD"]` | Single puzzle view with constructor images, clues by round, player results |
-| `[kealoa_rounds_stats]` | Rounds overview stats and yearly breakdown |
-| `[kealoa_version]` | Plugin and database version numbers |
+---
 
-### Gutenberg Blocks
+## Shortcodes
 
-The plugin provides 13 blocks in the block editor:
+| Shortcode | Attributes | Description |
+|---|---|---|
+| `[kealoa_rounds_table]` | — | Paginated table of all rounds |
+| `[kealoa_round]` | `id` (required) — round ID | Full detail view for a single round |
+| `[kealoa_rounds_stats]` | — | Aggregate round statistics |
+| `[kealoa_persons_table]` | — | Table of all persons |
+| `[kealoa_person]` | `id` (required) — person ID | Full profile for a single person |
+| `[kealoa_constructors_table]` | — | Table of persons with the constructor role |
+| `[kealoa_constructor]` | `id` (required) — person ID | Constructor profile for a single person |
+| `[kealoa_editors_table]` | — | Table of persons with the editor role |
+| `[kealoa_editor]` | `name` (required) — full name | Editor profile looked up by name |
+| `[kealoa_puzzles_table]` | — | Table of all puzzles |
+| `[kealoa_puzzle]` | `date` (required) — `YYYY-MM-DD` | Detail view for a single puzzle |
+| `[kealoa_version]` | — | Outputs the current plugin version string |
 
-| Block | Description |
-|-------|-------------|
-| **KEALOA Rounds Table** | Displays all rounds in a table format |
-| **KEALOA Round View** | Displays a single round with all details |
-| **KEALOA Rounds Stats** | Displays overview stats and yearly breakdown |
-| **KEALOA Players Table** | Displays all players with stats |
-| **KEALOA Person View** | Displays a person's profile and statistics |
-| **KEALOA Constructors Table** | Displays all constructors with stats |
-| **KEALOA Constructor View** | Displays a constructor's profile and puzzle history |
-| **KEALOA Editors Table** | Displays all editors with stats |
-| **KEALOA Editor View** | Displays an editor's profile and puzzle history |
-| **KEALOA Puzzles Table** | Displays all puzzles with filterable table |
-| **KEALOA Puzzle View** | Displays a single puzzle with constructor images, clues, and player results |
-| **KEALOA Play Game** | Interactive game that lets visitors play a round |
-| **KEALOA Version Info** | Displays plugin and database version numbers |
+---
 
-All blocks use server-side rendering via `render.php` templates.
+## Gutenberg Blocks
 
-### Custom URLs
+The plugin registers 13 blocks under the `kealoa` namespace. Each block renders its content server-side via a PHP `render.php` file.
 
-The plugin creates custom URL routes:
+| Block slug | Block name | Description |
+|---|---|---|
+| `rounds-table` | KEALOA Rounds Table | Paginated table of all rounds |
+| `round-view` | KEALOA Round View | Full detail view for a single round (uses current URL context) |
+| `rounds-stats` | KEALOA Rounds Stats | Aggregate round statistics |
+| `persons-table` | KEALOA Persons Table | Table of all persons |
+| `person-view` | KEALOA Person View | Full profile for a single person (uses current URL context) |
+| `constructors-table` | KEALOA Constructors Table | Table of persons with the constructor role |
+| `constructor-view` | KEALOA Constructor View | Constructor profile (uses current URL context) |
+| `editors-table` | KEALOA Editors Table | Table of persons with the editor role |
+| `editor-view` | KEALOA Editor View | Editor profile (uses current URL context) |
+| `puzzles-table` | KEALOA Puzzles Table | Table of all puzzles |
+| `puzzle-view` | KEALOA Puzzle View | Detail view for a single puzzle (uses current URL context) |
+| `play-game` | KEALOA Play Game | Interactive in-browser playback of a round |
+| `version-info` | KEALOA Version Info | Outputs the plugin version |
 
-| URL Pattern | Description |
-|-------------|-------------|
+---
+
+## Custom URL Routes
+
+The plugin registers five custom rewrite rules. Name-based routes use underscores in place of spaces.
+
+| URL pattern | Description |
+|---|---|
 | `/kealoa/round/{id}/` | Round detail page |
-| `/kealoa/person/{name}/` | Person detail page (spaces replaced by underscores) |
-| `/kealoa/constructor/{name}/` | Constructor detail page |
-| `/kealoa/editor/{name}/` | Editor detail page |
-| `/kealoa/puzzle/{YYYY-MM-DD}/` | Puzzle detail page (by publication date) |
+| `/kealoa/person/{name}/` | Person profile page |
+| `/kealoa/constructor/{name}/` | **Redirects (301)** to `/kealoa/person/{name}/` |
+| `/kealoa/editor/{name}/` | **Redirects (301)** to `/kealoa/person/{name}/` |
+| `/kealoa/puzzle/{YYYY-MM-DD}/` | Puzzle detail page |
 
-### WordPress Search Integration
+The constructor and editor URL forms are kept for backward compatibility. All canonical person URLs use the `/kealoa/person/` prefix.
 
-KEALOA data is injected into WordPress search results. Matching players, constructors, editors, and rounds appear in a table at the top of search results. If a search matches exactly one KEALOA result, the user is redirected directly to that page.
-
-## Features
-
-### Interactive Game
-
-The Play Game block provides an interactive KEALOA game where visitors can:
-
-- Play any round with clues revealed one at a time
-- Choose sequential or random clue order
-- Share game links that preserve the round and play mode
-
-### Person View
-
-The person view displays a tabbed interface with four sections:
-
-1. **Overall Stats** — Stat cards (rounds, clues, correct, accuracy, best score, best streak), score distribution bar chart, accuracy-by-round line chart, by-year table, by-clue-number table, by-answer-length table, per-round summary stats (min/mean/median/max)
-2. **By Puzzle** — Results by clue direction, day of week, puzzle decade, and editor
-3. **By Constructor** — Results per constructor
-4. **Rounds Played** — Full round history with streak per round
-
-Cross-links to constructor and editor views when the person has matching entries.
-
-### Constructor View
-
-Constructor profile with XWordInfo link, stats, puzzle table with co-constructors (conditionally hidden when no co-constructors exist), player home page link when the constructor is also a player, and cross-links to player/editor views.
-
-### Editor View
-
-Editor profile with stats, puzzle table, and cross-links to player/constructor views.
-
-### Puzzle View
-
-Puzzle detail page showing publication date, day of week, constructor(s) with linked images, editor, XWordInfo link, associated rounds with solution words. Tabbed interface with a Clues tab (sortable clue table per round with guesser columns) and a By Player tab (aggregated player results with accuracy).
-
-### Formatting Conventions
-
-- **Lists**: Oxford-comma separated with "and" before the last item
-- **Episode links**: Link to Libsyn player with start time
-- **Person/constructor/editor names**: Link to their respective detail pages
-- **Round dates**: Display as M/D/YYYY format, link to round detail page
-- **Puzzle dates**: Link to internal puzzle detail page
-- **XWordInfo links**: External links to xwordinfo.com puzzle/author pages (indicated with ↗ arrow)
-
-### Caching
-
-All shortcode output is cached using WordPress transients with a 24-hour TTL. Cache keys are versioned and automatically flushed when data changes. WP Super Cache and wp object cache are also purged when applicable.
+---
 
 ## REST API
 
-A comprehensive read-only REST API is available under the `kealoa/v1` namespace. All endpoints are public and return JSON.
+The plugin exposes a read-only REST API under the namespace `kealoa/v1`.
 
-See [REST-API.md](REST-API.md) for full documentation.
+**Base URL:** `/wp-json/kealoa/v1`
 
-**Endpoint summary:**
+All endpoints are publicly accessible (no authentication required). See [REST-API.md](REST-API.md) for full documentation including all parameters, response schemas, and error codes.
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /rounds` | List rounds (paginated) |
-| `GET /rounds/{id}` | Single round with full details |
-| `GET /rounds/stats` | Overview stats and per-year breakdown |
-| `GET /persons` | List players (paginated, searchable) |
-| `GET /persons/{id}` | Single player with stats |
-| `GET /persons/{id}/rounds` | Player round history |
-| `GET /persons/{id}/stats/{breakdown}` | Player stats by year, day, constructor, editor, direction, length, decade, clue-number |
-| `GET /persons/{id}/stats/streaks` | Player best streaks by year |
-| `GET /constructors` | List constructors (paginated, searchable) |
-| `GET /constructors/{id}` | Single constructor with stats and puzzles |
-| `GET /editors` | List editors with stats |
-| `GET /editors/{name}` | Single editor with stats and puzzles |
-| `GET /puzzles` | List puzzles (paginated, with URLs) |
-| `GET /puzzles/{id}` | Single puzzle with clues, player results, and rounds |
-| `GET /clues/{id}` | Single clue with guesses |
-| `GET /search?q=` | Full-text search across all entities |
-| `GET /leaderboard/scores` | Highest round scores |
-| `GET /leaderboard/streaks` | Longest streaks |
-| `GET /game-round/{id}` | Game data for a single round |
+### Endpoint Index
 
-## Data Import / Export
+| Method | Path | Description |
+|---|---|---|
+| GET | `/game-round/{id}` | Round data for the interactive play-game block |
+| GET | `/rounds` | Paginated list of rounds |
+| GET | `/rounds/stats` | Aggregate round statistics |
+| GET | `/rounds/{id}` | Full detail for a single round |
+| GET | `/persons` | Paginated list of persons |
+| GET | `/persons/{id}` | Full profile for a single person |
+| GET | `/persons/{id}/rounds` | All rounds a person participated in |
+| GET | `/persons/{id}/puzzles` | All puzzles attributed to a person |
+| GET | `/persons/{id}/stats/by-year` | Person results grouped by year |
+| GET | `/persons/{id}/stats/by-day` | Person results grouped by day of week |
+| GET | `/persons/{id}/stats/by-constructor` | Person results grouped by puzzle constructor |
+| GET | `/persons/{id}/stats/by-editor` | Person results grouped by puzzle editor |
+| GET | `/persons/{id}/stats/by-direction` | Person results grouped by clue direction (Across/Down) |
+| GET | `/persons/{id}/stats/by-length` | Person results grouped by answer length |
+| GET | `/persons/{id}/stats/by-decade` | Person results grouped by puzzle decade |
+| GET | `/persons/{id}/stats/by-clue-number` | Person results grouped by clue number within a round |
+| GET | `/persons/{id}/stats/streaks` | Person best correct-guess streaks by year |
+| GET | `/puzzles` | Paginated list of puzzles |
+| GET | `/puzzles/{id}` | Full detail for a single puzzle |
+| GET | `/clues/{id}` | Full detail for a single clue |
+| GET | `/search` | Full-text search across persons, rounds, and puzzles |
+| GET | `/leaderboard/scores` | All persons ranked by highest round score |
+| GET | `/leaderboard/streaks` | All persons ranked by longest correct-guess streak |
+
+### Pagination
+
+All list endpoints (`/rounds`, `/persons`, `/puzzles`) support pagination via query parameters. The response envelope and headers are the same for all paginated endpoints.
+
+**Pagination query parameters:**
+
+| Parameter | Type | Default | Min | Max | Description |
+|---|---|---|---|---|---|
+| `page` | integer | `1` | `1` | — | Page number |
+| `per_page` | integer | `50` | `1` | `500` | Items per page |
+
+**Paginated response envelope:**
+
+```json
+{
+  "total": 120,
+  "total_pages": 3,
+  "page": 1,
+  "per_page": 50,
+  "items": [ ... ]
+}
+```
+
+**Response headers:**
+
+| Header | Description |
+|---|---|
+| `X-WP-Total` | Total number of matching items |
+| `X-WP-TotalPages` | Total number of pages |
+
+---
+
+## Database Model
+
+The plugin creates eight custom tables. All table names are prefixed with the WordPress table prefix followed by `kealoa_` (e.g., `wp_kealoa_persons`).
+
+| Table | Description |
+|---|---|
+| `persons` | Unified table for all persons — players, puzzle constructors, and editors |
+| `puzzles` | NYT crossword puzzle metadata, with `editor_id` foreign key to `persons` |
+| `puzzle_constructors` | Many-to-many join between `puzzles` and `persons` (constructor role) |
+| `rounds` | Individual KEALOA game rounds |
+| `round_solutions` | The solution words for a round |
+| `round_guessers` | The persons who played as guessers in a round |
+| `clues` | Individual clues used within a round, each linked to a puzzle clue |
+| `guesses` | All guesses made by persons for each clue |
+
+### Key relationships
+
+- A **round** has many **clues**, many **solution words** (`round_solutions`), and many **guessers** (`round_guessers`).
+- A **clue** belongs to both a **round** and a **puzzle** entry, with a reference to the specific crossword clue (number + direction).
+- A **clue** has many **guesses**.
+- A **puzzle** has one **editor** (via `editor_id` → `persons`) and zero or more **constructors** (via `puzzle_constructors`).
+- A **person** may hold any combination of the `player`, `constructor`, and `editor` roles.
+
+### Version history
+
+- **v1** — Separate `constructors` and `editors` tables distinct from the `players` table.
+- **v2** — Unified `persons` table; all roles stored as flags on the same record. Legacy `/kealoa/constructor/` and `/kealoa/editor/` URLs now redirect (301) to `/kealoa/person/`.
+
+---
+
+## Data Import and Export
 
 ### Export
 
-- Individual CSV export for constructors, persons, puzzles, rounds, clues, and guesses
-- **Export All** as a ZIP archive containing all 6 CSVs
-- UTF-8 BOM for Excel compatibility
+The **Export** admin page generates individual CSV files for each entity type, or a ZIP archive containing all CSV files at once. Use the ZIP option for full backups.
 
 ### Import
 
-- CSV import for each data type individually
-- **ZIP import** processes all 6 CSVs in dependency order
-- Supports overwrite (update existing) or skip-existing mode
-- Auto-normalizes date formats (M/D/YYYY, MM/DD/YYYY, YYYY-MM-DD)
-- Auto-creates constructors/persons during import if not found
-- CSV template files available for download
+The **Import** admin page accepts individual CSV files or a ZIP archive. Supported CSV files:
 
-## Sitemaps
+| File | Entity |
+|---|---|
+| `persons.csv` | Persons |
+| `puzzles.csv` | Puzzles |
+| `constructors.csv` | Puzzle constructor assignments |
+| `rounds.csv` | Rounds |
+| `clues.csv` | Clues |
+| `guesses.csv` | Guesses |
 
-The plugin integrates with both WordPress core sitemaps (WP 5.5+) and Yoast SEO to expose all KEALOA pages:
+**Import options:**
 
-- `/kealoa/round/{id}/` for all rounds
-- `/kealoa/person/{name}/` for all players
-- `/kealoa/constructor/{name}/` for all constructors
-- `/kealoa/editor/{name}/` for all editors
-- `/kealoa/puzzle/{YYYY-MM-DD}/` for all puzzles
+- **Overwrite** — existing records with matching IDs are updated.
+- **Skip** — existing records are left unchanged; only new records are inserted.
 
-## Data Model
+**Date normalization:** The importer accepts dates in `YYYY-MM-DD`, `M/D/YYYY`, and `MM/DD/YYYY` formats and normalizes them to `YYYY-MM-DD` on ingestion.
 
-### Database Tables
+---
 
-The plugin creates 9 custom database tables (all prefixed with `{wp_prefix}kealoa_`):
+## Search Integration
 
-| Table | Description |
-|-------|-------------|
-| `constructors` | Crossword puzzle constructors (name, XWordInfo profile, image) |
-| `persons` | People / players (name, home page URL, image) |
-| `puzzles` | Crossword puzzles (publication date, editor name) |
-| `puzzle_constructors` | Junction: puzzles ↔ constructors (with ordering) |
-| `rounds` | Game rounds (date, episode info, clue giver, descriptions) |
-| `round_solutions` | Solution words per round (with ordering) |
-| `round_guessers` | Junction: rounds ↔ players |
-| `clues` | Clues within rounds (puzzle reference, clue text, correct answer) |
-| `guesses` | Player guesses per clue (guessed word, correct/incorrect) |
+The plugin extends WordPress core search to include KEALOA entities. When a visitor performs a search on the site, the results may include matching persons, rounds, and puzzles in addition to standard WordPress posts and pages.
 
-### Entity Relationships
+---
 
-```
-Persons ──┬── Rounds (as clue giver)
-           ├── Round Guessers (as player)
-           └── Guesses (as guesser)
+## Sitemap Integration
 
-Constructors ── Puzzle Constructors ── Puzzles ── Clues ── Guesses
+KEALOA URLs are automatically included in site sitemaps.
 
-Rounds ──┬── Round Solutions
-          ├── Round Guessers
-          └── Clues ── Guesses
+- **WordPress core sitemaps** — a custom sitemap provider registers `/kealoa/person/`, `/kealoa/round/`, and `/kealoa/puzzle/` URLs.
+- **Yoast SEO** — when Yoast is active, KEALOA URLs are injected into the Yoast sitemap index and sitemap content via WordPress action hooks.
 
-Puzzles ── Clues (editor_name on puzzle)
-```
+---
 
-## Development
-
-### File Structure
+## File Structure
 
 ```
 kealoa-reference/
-├── kealoa-reference.php          # Main plugin file, routing, search, REST
-├── uninstall.php                 # Cleanup on plugin deletion
-├── LICENSE
-├── includes/
-│   ├── class-kealoa-activator.php      # Activation / table creation
-│   ├── class-kealoa-deactivator.php    # Deactivation cleanup
-│   ├── class-kealoa-db.php             # Database operations (83 public methods)
-│   ├── class-kealoa-formatter.php      # Display formatting utilities
-│   ├── class-kealoa-shortcodes.php     # Shortcode handlers (~3000 lines)
-│   ├── class-kealoa-blocks.php         # Gutenberg block registration
-│   ├── class-kealoa-rest-api.php       # REST API endpoints
-│   ├── class-kealoa-export.php         # CSV/ZIP data export
-│   ├── class-kealoa-import.php         # CSV/ZIP data import
-│   ├── class-kealoa-sitemap.php        # Sitemap registration
-│   └── class-kealoa-sitemap-provider.php # WP core sitemap provider
+├── kealoa-reference.php          Main plugin file; defines constants, bootstrap, REST game-round route
+├── uninstall.php                 Cleans up all plugin data on uninstall
 ├── admin/
-│   └── class-kealoa-admin.php          # Admin interface
-├── blocks/
-│   ├── rounds-table/                   # block.json + render.php
-│   ├── round-view/
-│   ├── rounds-stats/
-│   ├── persons-table/
-│   ├── person-view/
-│   ├── constructors-table/
-│   ├── constructor-view/
-│   ├── editors-table/
-│   ├── editor-view/
-│   ├── puzzles-table/
-│   ├── puzzle-view/
-│   ├── play-game/
-│   └── version-info/
+│   └── class-kealoa-admin.php    Admin menus, pages, and AJAX handlers
 ├── assets/
 │   ├── css/
-│   │   ├── kealoa-palette.css          # Color palette / design tokens
-│   │   ├── kealoa-frontend.css         # Frontend display styles
-│   │   ├── kealoa-admin.css            # Admin panel styles
-│   │   ├── kealoa-game.css             # Interactive game styles
-│   │   └── blocks-editor.css           # Gutenberg editor styles
+│   │   ├── blocks-editor.css     Styles for block editor view
+│   │   ├── kealoa-admin.css      Admin page styles
+│   │   ├── kealoa-frontend.css   Frontend page styles
+│   │   ├── kealoa-game.css       Play-game interactive styles
+│   │   └── kealoa-palette.css    Color palette definitions
 │   └── js/
-│       ├── kealoa-frontend.js          # Table sorting, tabs, Chart.js charts
-│       ├── kealoa-admin.js             # Admin AJAX and form enhancements
-│       ├── kealoa-game.js              # Interactive game logic
-│       └── blocks-editor.js            # Gutenberg block editor registration
-├── templates/
-│   └── csv/                            # Import template files
-│       ├── constructors.csv
-│       ├── persons.csv
-│       ├── puzzles.csv
-│       ├── rounds.csv
-│       ├── clues.csv
-│       └── guesses.csv
-└── languages/
+│       ├── blocks-editor.js      Block editor JavaScript
+│       ├── kealoa-admin.js       Admin page JavaScript
+│       ├── kealoa-frontend.js    Frontend JavaScript
+│       └── kealoa-game.js        Play-game interactive JavaScript
+├── blocks/
+│   ├── constructor-view/         Block definition and server-side render
+│   ├── constructors-table/
+│   ├── editor-view/
+│   ├── editors-table/
+│   ├── person-view/
+│   ├── persons-table/
+│   ├── play-game/
+│   ├── puzzle-view/
+│   ├── puzzles-table/
+│   ├── round-view/
+│   ├── rounds-stats/
+│   ├── rounds-table/
+│   └── version-info/
+└── includes/
+    ├── class-kealoa-activator.php     Plugin activation (table creation, rewrite rules)
+    ├── class-kealoa-blocks.php        Gutenberg block registration
+    ├── class-kealoa-db.php            All database query methods
+    ├── class-kealoa-deactivator.php   Plugin deactivation (flush rewrite rules)
+    ├── class-kealoa-export.php        CSV/ZIP export logic
+    ├── class-kealoa-formatter.php     Data formatting helpers
+    ├── class-kealoa-import.php        CSV/ZIP import logic
+    ├── class-kealoa-rest-api.php      REST API route registrations and callbacks
+    ├── class-kealoa-shortcodes.php    Shortcode registrations and render callbacks
+    ├── class-kealoa-sitemap-provider.php  WordPress core sitemap provider
+    └── class-kealoa-sitemap.php           Yoast sitemap integration
 ```
 
-### Dependencies
-
-- **Chart.js 4.x** — Score distribution and accuracy charts on person view (loaded from CDN)
-- **jQuery** — Admin panel interactivity (bundled with WordPress)
+---
 
 ## License
 
-Copyright &copy; 2026 Eric Peterson
+Copyright &copy; 2026 Eric Peterson &lt;eric@puzzlehead.org&gt;
 
-This project is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/).
-
-[![CC BY-NC-SA 4.0](https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
-
-You are free to share and adapt this work for non-commercial purposes, as long as you give appropriate credit and distribute any derivative works under the same license.
-
-## Credits
-
-- **Author**: [Eric Peterson](https://epeterso2.com) (eric@puzzlehead.org)
-- **Game concept**: Brian Cimmet
-- **Fill Me In podcast**: [bemoresmarter.libsyn.com](https://bemoresmarter.libsyn.com)
-- **XWordInfo**: [xwordinfo.com](https://www.xwordinfo.com)
+Licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/).
