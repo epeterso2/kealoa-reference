@@ -2201,15 +2201,11 @@ class Kealoa_DB {
     // =========================================================================
 
     /**
-     * Check if a person has the player role (is a guesser or clue giver)
+     * Check if a person has the player role (has made at least one guess in at least one round)
      */
     public function is_player(int $person_id): bool {
         $sql = $this->wpdb->prepare(
-            "SELECT 1 FROM {$this->round_guessers_table} WHERE person_id = %d
-             UNION
-             SELECT 1 FROM {$this->rounds_table} WHERE clue_giver_id = %d
-             LIMIT 1",
-            $person_id,
+            "SELECT 1 FROM {$this->round_guessers_table} WHERE person_id = %d LIMIT 1",
             $person_id
         );
         return (bool) $this->wpdb->get_var($sql);
@@ -2553,9 +2549,17 @@ class Kealoa_DB {
                 $like
             )
         );
+        $role_display_names = [
+            'player'      => 'Player',
+            'constructor' => 'Constructor',
+            'editor'      => 'Editor',
+            'clue_giver'  => 'Clue Giver',
+        ];
         foreach ($persons as $p) {
             $roles = $this->get_person_roles((int) $p->id);
-            $role_label = !empty($roles) ? implode(', ', $roles) : 'person';
+            $role_label = !empty($roles)
+                ? implode(', ', array_map(fn($r) => $role_display_names[$r] ?? ucfirst($r), $roles))
+                : 'Person';
             $slug = str_replace(' ', '_', $p->full_name);
             $results[] = (object) [
                 'type' => 'person',
