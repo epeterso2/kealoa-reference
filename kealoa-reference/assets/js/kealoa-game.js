@@ -222,7 +222,7 @@
                 detailItems.push(el('p', { className: 'kealoa-game__round-players', innerHTML: '<strong>Players:</strong> ' + roundData.players.map(escapeHtml).join(', ') }));
             }
             if (roundData.clue_giver) {
-                detailItems.push(el('p', { className: 'kealoa-game__round-clue-giver', innerHTML: '<strong>Clue Giver:</strong> ' + escapeHtml(roundData.clue_giver) }));
+                detailItems.push(el('p', { className: 'kealoa-game__round-clue-giver', innerHTML: '<strong>Host:</strong> ' + escapeHtml(roundData.clue_giver) }));
             }
             if (detailItems.length) {
                 roundDetails = el('div', { className: 'kealoa-game__round-details' }, detailItems);

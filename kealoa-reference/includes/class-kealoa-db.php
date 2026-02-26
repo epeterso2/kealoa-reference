@@ -2576,7 +2576,7 @@ class Kealoa_DB {
             'player'      => 'Player',
             'constructor' => 'Constructor',
             'editor'      => 'Editor',
-            'clue_giver'  => 'Clue Giver',
+            'clue_giver'  => 'Host',
         ];
         foreach ($persons as $p) {
             $roles = $this->get_person_roles((int) $p->id);

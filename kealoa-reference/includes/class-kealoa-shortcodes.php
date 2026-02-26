@@ -445,7 +445,7 @@ class Kealoa_Shortcodes {
                         ?></span>
                     </p>
                     <p>
-                        <strong class="kealoa-meta-label"><?php esc_html_e('Clue Giver', 'kealoa-reference'); ?></strong>
+                        <strong class="kealoa-meta-label"><?php esc_html_e('Host', 'kealoa-reference'); ?></strong>
                         <span><?php
                         if ($clue_giver) {
                             echo Kealoa_Formatter::format_person_link((int) $clue_giver->id, $clue_giver->full_name);
@@ -872,7 +872,7 @@ class Kealoa_Shortcodes {
                                     'player'      => __('Player', 'kealoa-reference'),
                                     'constructor' => __('Constructor', 'kealoa-reference'),
                                     'editor'      => __('Editor', 'kealoa-reference'),
-                                    'clue_giver'  => __('Clue Giver', 'kealoa-reference'),
+                                    'clue_giver'  => __('Host', 'kealoa-reference'),
                                 ];
                                 ?>
                                 <?php foreach ($roles as $role): ?>
@@ -907,7 +907,7 @@ class Kealoa_Shortcodes {
                     <button class="kealoa-tab-button" data-tab="by-editor"><?php esc_html_e('By Editor', 'kealoa-reference'); ?></button>
                     <?php endif; ?>
                     <?php if ($is_clue_giver): ?>
-                    <button class="kealoa-tab-button<?php echo $tab_active('as-clue-giver'); ?>" data-tab="as-clue-giver"><?php esc_html_e('As Clue Giver', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button<?php echo $tab_active('as-clue-giver'); ?>" data-tab="as-clue-giver"><?php esc_html_e('As Host', 'kealoa-reference'); ?></button>
                     <?php endif; ?>
                     <?php if ($is_constructor): ?>
                     <button class="kealoa-tab-button<?php echo $tab_active('as-constructor'); ?>" data-tab="as-constructor"><?php esc_html_e('As Constructor', 'kealoa-reference'); ?></button>
@@ -1806,7 +1806,7 @@ class Kealoa_Shortcodes {
 
                     <?php if ($clue_giver_stats): ?>
                     <div class="kealoa-person-clue-giver-overview">
-                        <h2><?php esc_html_e('Clue Giver Statistics', 'kealoa-reference'); ?></h2>
+                        <h2><?php esc_html_e('Host Statistics', 'kealoa-reference'); ?></h2>
                         <div class="kealoa-stats-grid">
                             <div class="kealoa-stat-card">
                                 <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $clue_giver_stats->round_count)); ?></span>
@@ -2952,7 +2952,7 @@ class Kealoa_Shortcodes {
         $clue_givers = $this->db->get_persons_who_are_clue_givers();
 
         if (empty($clue_givers)) {
-            return '<p class="kealoa-no-data">' . esc_html__('No clue givers found.', 'kealoa-reference') . '</p>';
+            return '<p class="kealoa-no-data">' . esc_html__('No hosts found.', 'kealoa-reference') . '</p>';
         }
 
         ob_start();
@@ -2962,7 +2962,7 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-filter-row">
                     <div class="kealoa-filter-group">
                         <label for="kealoa-cg-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
-                        <input type="text" id="kealoa-cg-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Clue giver name...', 'kealoa-reference'); ?>">
+                        <input type="text" id="kealoa-cg-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Host name...', 'kealoa-reference'); ?>">
                     </div>
                     <div class="kealoa-filter-group kealoa-filter-actions">
                         <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
@@ -2974,7 +2974,7 @@ class Kealoa_Shortcodes {
             <table class="kealoa-table kealoa-clue-givers-table" id="kealoa-clue-givers-table">
                 <thead>
                     <tr>
-                        <th data-sort="text"><?php esc_html_e('Clue Giver', 'kealoa-reference'); ?></th>
+                        <th data-sort="text"><?php esc_html_e('Host', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Guessers', 'kealoa-reference'); ?></th>
