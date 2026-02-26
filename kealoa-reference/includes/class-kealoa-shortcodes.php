@@ -1818,7 +1818,7 @@ class Kealoa_Shortcodes {
                             </div>
                             <div class="kealoa-stat-card">
                                 <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $clue_giver_stats->guesser_count)); ?></span>
-                                <span class="kealoa-stat-label"><?php esc_html_e('Guessers', 'kealoa-reference'); ?></span>
+                                <span class="kealoa-stat-label"><?php esc_html_e('Players', 'kealoa-reference'); ?></span>
                             </div>
                             <div class="kealoa-stat-card">
                                 <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $clue_giver_stats->total_guesses)); ?></span>
@@ -1948,13 +1948,13 @@ class Kealoa_Shortcodes {
 
                     <?php if (!empty($clue_giver_stats_by_guesser)): ?>
                     <div class="kealoa-clue-giver-by-guesser">
-                        <h2><?php esc_html_e('By Guesser', 'kealoa-reference'); ?></h2>
+                        <h2><?php esc_html_e('By Player', 'kealoa-reference'); ?></h2>
 
                         <div class="kealoa-filter-controls" data-target="kealoa-person-cg-guesser-table">
                             <div class="kealoa-filter-row">
                                 <div class="kealoa-filter-group">
                                     <label for="kealoa-pcgg-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
-                                    <input type="text" id="kealoa-pcgg-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Guesser name...', 'kealoa-reference'); ?>">
+                                    <input type="text" id="kealoa-pcgg-search" class="kealoa-filter-input" data-filter="search" data-col="0" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
                                 </div>
                                 <div class="kealoa-filter-group">
                                     <label for="kealoa-pcgg-min-guesses"><?php esc_html_e('Min. Guesses', 'kealoa-reference'); ?></label>
@@ -1970,7 +1970,7 @@ class Kealoa_Shortcodes {
                         <table class="kealoa-table" id="kealoa-person-cg-guesser-table">
                             <thead>
                                 <tr>
-                                    <th data-sort="text"><?php esc_html_e('Guesser', 'kealoa-reference'); ?></th>
+                                    <th data-sort="text"><?php esc_html_e('Player', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
@@ -2012,8 +2012,8 @@ class Kealoa_Shortcodes {
                                     </div>
                                 </div>
                                 <div class="kealoa-filter-group">
-                                    <label for="kealoa-pcgr-guesser"><?php esc_html_e('Guesser', 'kealoa-reference'); ?></label>
-                                    <input type="text" id="kealoa-pcgr-guesser" class="kealoa-filter-input" data-filter="search" data-col="4" placeholder="<?php esc_attr_e('Guesser name...', 'kealoa-reference'); ?>">
+                                    <label for="kealoa-pcgr-guesser"><?php esc_html_e('Player', 'kealoa-reference'); ?></label>
+                                    <input type="text" id="kealoa-pcgr-guesser" class="kealoa-filter-input" data-filter="search" data-col="4" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
                                 </div>
                                 <div class="kealoa-filter-group kealoa-filter-actions">
                                     <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
@@ -2030,7 +2030,7 @@ class Kealoa_Shortcodes {
                                     <th data-sort="number"><?php esc_html_e('Round #', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Episode #', 'kealoa-reference'); ?></th>
                                     <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
-                                    <th data-sort="text"><?php esc_html_e('Guessers', 'kealoa-reference'); ?></th>
+                                    <th data-sort="text"><?php esc_html_e('Players', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
@@ -2977,7 +2977,7 @@ class Kealoa_Shortcodes {
                         <th data-sort="text"><?php esc_html_e('Host', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Guessers', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Players', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
