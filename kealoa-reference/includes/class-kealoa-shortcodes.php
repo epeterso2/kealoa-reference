@@ -1722,6 +1722,21 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-tab-panel" data-tab="round">
 
             <?php if (!empty($round_history)): ?>
+                <?php
+                // Pre-compute co-players for each round to determine if "Played With" column is needed
+                $round_co_players = [];
+                $has_co_players = false;
+                foreach ($round_history as $rh_check) {
+                    $rh_guessers = $this->db->get_round_guessers((int) $rh_check->round_id);
+                    $co_players = array_filter($rh_guessers, function($g) use ($person_id) {
+                        return (int) $g->id !== $person_id;
+                    });
+                    $round_co_players[(int) $rh_check->round_id] = $co_players;
+                    if (!empty($co_players)) {
+                        $has_co_players = true;
+                    }
+                }
+                ?>
                 <div class="kealoa-round-history">
                     <h2><?php esc_html_e('Round History', 'kealoa-reference'); ?></h2>
 
@@ -1748,17 +1763,17 @@ class Kealoa_Shortcodes {
                             </div>
                             <div class="kealoa-filter-group">
                                 <label for="kealoa-rh-min-correct"><?php esc_html_e('Min. Correct', 'kealoa-reference'); ?></label>
-                                <input type="number" id="kealoa-rh-min-correct" class="kealoa-filter-input" data-filter="min" data-col="2" min="0" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
+                                <input type="number" id="kealoa-rh-min-correct" class="kealoa-filter-input" data-filter="min" data-col="<?php echo $has_co_players ? '3' : '2'; ?>" min="0" placeholder="<?php esc_attr_e('e.g. 5', 'kealoa-reference'); ?>">
                             </div>
                         </div>
                         <div class="kealoa-filter-row">
                             <div class="kealoa-filter-group">
                                 <label for="kealoa-rh-min-streak"><?php esc_html_e('Min. Streak', 'kealoa-reference'); ?></label>
-                                <input type="number" id="kealoa-rh-min-streak" class="kealoa-filter-input" data-filter="min" data-col="3" min="0" placeholder="<?php esc_attr_e('e.g. 3', 'kealoa-reference'); ?>">
+                                <input type="number" id="kealoa-rh-min-streak" class="kealoa-filter-input" data-filter="min" data-col="<?php echo $has_co_players ? '4' : '3'; ?>" min="0" placeholder="<?php esc_attr_e('e.g. 3', 'kealoa-reference'); ?>">
                             </div>
                             <div class="kealoa-filter-group">
                                 <label for="kealoa-rh-perfect"><?php esc_html_e('Score', 'kealoa-reference'); ?></label>
-                                <select id="kealoa-rh-perfect" class="kealoa-filter-select" data-filter="perfect" data-col="2">
+                                <select id="kealoa-rh-perfect" class="kealoa-filter-select" data-filter="perfect" data-col="<?php echo $has_co_players ? '3' : '2'; ?>">
                                     <option value=""><?php esc_html_e('All Scores', 'kealoa-reference'); ?></option>
                                     <option value="perfect"><?php esc_html_e('Perfect Only', 'kealoa-reference'); ?></option>
                                     <option value="imperfect"><?php esc_html_e('Not Perfect', 'kealoa-reference'); ?></option>
@@ -1776,6 +1791,9 @@ class Kealoa_Shortcodes {
                             <tr>
                                 <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                                <?php if ($has_co_players): ?>
+                                <th data-sort="text"><?php esc_html_e('Played With', 'kealoa-reference'); ?></th>
+                                <?php endif; ?>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Streak', 'kealoa-reference'); ?></th>
                             </tr>
@@ -1797,6 +1815,19 @@ class Kealoa_Shortcodes {
                                         ?>
                                     </td>
                                     <td><?php echo Kealoa_Formatter::format_solution_words_link((int) $history->round_id, $solutions); ?></td>
+                                    <?php if ($has_co_players): ?>
+                                    <td><?php
+                                        $co = $round_co_players[(int) $history->round_id] ?? [];
+                                        if (!empty($co)) {
+                                            $co_links = array_map(function($p) {
+                                                return Kealoa_Formatter::format_person_link((int) $p->id, $p->full_name);
+                                            }, $co);
+                                            echo implode(', ', $co_links);
+                                        } else {
+                                            echo '—';
+                                        }
+                                    ?></td>
+                                    <?php endif; ?>
                                     <td data-total="<?php echo esc_attr((int) $history->total_clues); ?>"><?php echo esc_html($history->correct_count); ?></td>
                                     <td><?php echo esc_html($this->db->get_person_round_streak((int) $history->round_id, $person_id)); ?></td>
                                 </tr>
