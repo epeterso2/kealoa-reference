@@ -2070,8 +2070,8 @@ class Kealoa_Shortcodes {
                                     <th data-sort="date"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
                                     <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                                     <th data-sort="text"><?php esc_html_e('Players', 'kealoa-reference'); ?></th>
-                                    <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                                 </tr>
@@ -2114,8 +2114,8 @@ class Kealoa_Shortcodes {
                                                 echo '—';
                                             }
                                         ?></td>
-                                        <td><?php echo esc_html(number_format_i18n((int) $cgr->total_guesses)); ?></td>
                                         <td><?php echo esc_html($cgr->clue_count); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cgr->total_guesses)); ?></td>
                                         <td><?php echo esc_html($cgr->correct_guesses); ?></td>
                                         <td data-value="<?php echo esc_attr(number_format((float) $cgr_pct, 2, '.', '')); ?>">
                                             <?php echo Kealoa_Formatter::format_percentage($cgr_pct); ?>

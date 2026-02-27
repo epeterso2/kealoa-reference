@@ -2160,19 +2160,34 @@ class Kealoa_DB {
                 r.episode_number,
                 r.episode_id,
                 r.episode_url,
-                COUNT(DISTINCT c.id) as clue_count,
-                COUNT(DISTINCT rg.person_id) as guesser_count,
-                COUNT(g.id) as total_guesses,
-                COALESCE(SUM(g.is_correct), 0) as correct_guesses,
-                GROUP_CONCAT(DISTINCT p.full_name ORDER BY p.full_name ASC SEPARATOR ', ') as guesser_names,
-                GROUP_CONCAT(DISTINCT p.id ORDER BY p.full_name ASC) as guesser_ids
+                COALESCE(cs.clue_count, 0) as clue_count,
+                COALESCE(cs.total_guesses, 0) as total_guesses,
+                COALESCE(cs.correct_guesses, 0) as correct_guesses,
+                COALESCE(gi.guesser_count, 0) as guesser_count,
+                gi.guesser_names,
+                gi.guesser_ids
             FROM {$this->rounds_table} r
-            LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
-            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
-            LEFT JOIN {$this->round_guessers_table} rg ON rg.round_id = r.id
-            LEFT JOIN {$this->persons_table} p ON p.id = rg.person_id
+            LEFT JOIN (
+                SELECT
+                    c.round_id,
+                    COUNT(DISTINCT c.id) as clue_count,
+                    COUNT(g.id) as total_guesses,
+                    COALESCE(SUM(g.is_correct), 0) as correct_guesses
+                FROM {$this->clues_table} c
+                LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+                GROUP BY c.round_id
+            ) cs ON cs.round_id = r.id
+            LEFT JOIN (
+                SELECT
+                    rg.round_id,
+                    COUNT(DISTINCT rg.person_id) as guesser_count,
+                    GROUP_CONCAT(DISTINCT p.full_name ORDER BY p.full_name ASC SEPARATOR ', ') as guesser_names,
+                    GROUP_CONCAT(DISTINCT p.id ORDER BY p.full_name ASC) as guesser_ids
+                FROM {$this->round_guessers_table} rg
+                LEFT JOIN {$this->persons_table} p ON p.id = rg.person_id
+                GROUP BY rg.round_id
+            ) gi ON gi.round_id = r.id
             WHERE r.clue_giver_id = %d
-            GROUP BY r.id, r.round_date, r.round_number, r.episode_number, r.episode_id, r.episode_url
             ORDER BY r.round_date DESC, r.round_number DESC",
             $person_id
         );
