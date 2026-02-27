@@ -389,6 +389,16 @@
     -webkit-overflow-scrolling: touch;
 }
 
+.kealoa-person-view .kealoa-tab-button {
+    color: var(--tropical-teal);
+}
+
+.kealoa-person-view .kealoa-tab-button:hover,
+.kealoa-person-view .kealoa-tab-button.active {
+    background-color: var(--tropical-teal);
+    border-bottom-color: var(--tropical-teal);
+}
+
 .kealoa-person-header {
     background: linear-gradient(135deg, var(--cloud-white) 0%, var(--pale-sand) 100%);
     padding: 30px;
