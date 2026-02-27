@@ -3291,6 +3291,7 @@ class Kealoa_Shortcodes {
         if (empty($puzzles)): ?>
             <p class="kealoa-no-data"><?php esc_html_e('No puzzles have been used in more than one round yet.', 'kealoa-reference'); ?></p>
         <?php return; endif; ?>
+        <h2><?php esc_html_e('Puzzles Used in Multiple Rounds', 'kealoa-reference'); ?></h2>
         <div class="kealoa-puzzles-table-wrapper">
             <div class="kealoa-table-scroll">
                 <table class="kealoa-table kealoa-puzzles-table" id="kealoa-puzzles-curiosities-table">
