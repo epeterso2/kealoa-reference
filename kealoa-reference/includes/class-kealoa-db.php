@@ -99,8 +99,10 @@ class Kealoa_DB {
         $values = [];
 
         if (!empty($args['search'])) {
-            $where[] = "full_name LIKE %s";
-            $values[] = '%' . $this->wpdb->esc_like($args['search']) . '%';
+            $where[] = "(full_name LIKE %s OR nicknames LIKE %s)";
+            $like = '%' . $this->wpdb->esc_like($args['search']) . '%';
+            $values[] = $like;
+            $values[] = $like;
         }
 
         if (!empty($where)) {
@@ -130,9 +132,11 @@ class Kealoa_DB {
         $sql = "SELECT COUNT(*) FROM {$this->persons_table}";
 
         if (!empty($search)) {
+            $like = '%' . $this->wpdb->esc_like($search) . '%';
             $sql .= $this->wpdb->prepare(
-                " WHERE full_name LIKE %s",
-                '%' . $this->wpdb->esc_like($search) . '%'
+                " WHERE (full_name LIKE %s OR nicknames LIKE %s)",
+                $like,
+                $like
             );
         }
 
@@ -2577,7 +2581,8 @@ class Kealoa_DB {
         // Search persons (unified: players, constructors, editors)
         $persons = $this->wpdb->get_results(
             $this->wpdb->prepare(
-                "SELECT id, full_name FROM {$this->persons_table} WHERE full_name LIKE %s ORDER BY full_name ASC",
+                "SELECT id, full_name FROM {$this->persons_table} WHERE full_name LIKE %s OR nicknames LIKE %s ORDER BY full_name ASC",
+                $like,
                 $like
             )
         );
@@ -2655,8 +2660,9 @@ class Kealoa_DB {
                 FROM {$this->puzzles_table} pz
                 INNER JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
                 INNER JOIN {$this->persons_table} con ON pc.person_id = con.id
-                WHERE con.full_name LIKE %s
+                WHERE (con.full_name LIKE %s OR con.nicknames LIKE %s)
                 ORDER BY pz.publication_date DESC",
+                $like,
                 $like
             )
         );
@@ -2670,8 +2676,9 @@ class Kealoa_DB {
                 "SELECT DISTINCT pz.id as puzzle_id, pz.publication_date, pz.editor_id
                 FROM {$this->puzzles_table} pz
                 INNER JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
-                WHERE ed.full_name LIKE %s
+                WHERE (ed.full_name LIKE %s OR ed.nicknames LIKE %s)
                 ORDER BY pz.publication_date DESC",
+                $like,
                 $like
             )
         );
