@@ -2853,6 +2853,7 @@ class Kealoa_Shortcodes {
                     <tr>
                         <th data-sort="text"><?php esc_html_e('Player', 'kealoa-reference'); ?></th>
                         <th data-sort="number" data-default-sort="desc"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Best Score', 'kealoa-reference'); ?></th>
