@@ -3419,6 +3419,39 @@ class Kealoa_Shortcodes {
             $rounds_clues[$rid]['clues'][] = $clue;
         }
 
+        // Pre-fetch solutions for each round
+        $round_solutions_cache = [];
+        foreach ($rounds_clues as $rid => $rc) {
+            $round_solutions_cache[$rid] = $this->db->get_round_solutions($rid);
+        }
+
+        // Group clues by crossword position (puzzle_clue_number + direction)
+        $clues_by_position = [];
+        foreach ($clues as $clue) {
+            $pos_key = $clue->puzzle_clue_number . '_' . $clue->puzzle_clue_direction;
+            if (!isset($clues_by_position[$pos_key])) {
+                $clues_by_position[$pos_key] = [
+                    'puzzle_clue_number'    => (int) $clue->puzzle_clue_number,
+                    'puzzle_clue_direction' => $clue->puzzle_clue_direction,
+                    'clue_text'             => $clue->clue_text,
+                    'correct_answer'        => $clue->correct_answer,
+                    'rounds'                => [],
+                ];
+            }
+            $clues_by_position[$pos_key]['rounds'][] = [
+                'round_id'     => (int) $clue->round_id,
+                'round_date'   => $clue->round_date,
+                'round_number' => $clue->round_number,
+            ];
+        }
+        // Sort by crossword number ASC, then direction ASC (A before D)
+        usort($clues_by_position, function ($a, $b) {
+            if ($a['puzzle_clue_number'] !== $b['puzzle_clue_number']) {
+                return $a['puzzle_clue_number'] - $b['puzzle_clue_number'];
+            }
+            return strcmp($a['puzzle_clue_direction'], $b['puzzle_clue_direction']);
+        });
+
         ob_start();
         ?>
         <div class="kealoa-puzzle-view">
@@ -3556,78 +3589,49 @@ class Kealoa_Shortcodes {
 
                 <div class="kealoa-tab-panel active" data-tab="clues">
 
-            <?php foreach ($rounds_clues as $rc): ?>
-                <div class="kealoa-puzzle-round-clues">
-                    <h3>
-                        <?php
-                        $round_url = home_url('/kealoa/round/' . (int) $rc['round_id'] . '/');
-                        $solutions = $this->db->get_round_solutions((int) $rc['round_id']);
-                        $solution_words = Kealoa_Formatter::format_solution_words($solutions);
-                        $round_heading = sprintf(
-                            'KEALOA #%d &ndash; %s',
-                            (int) $rc['round_number'],
-                            esc_html($solution_words)
-                        );
-                        printf('<a href="%s">%s</a>', esc_url($round_url), $round_heading);
-                        ?>
-                    </h3>
-
                     <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-puzzle-clues-table">
                         <thead>
                             <tr>
-                                <th data-sort="number"><?php esc_html_e('#', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Clue Text', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Answer', 'kealoa-reference'); ?></th>
-                                <?php
-                                // Get guessers for this round
-                                $round_guessers = $this->db->get_round_guessers((int) $rc['round_id']);
-                                foreach ($round_guessers as $guesser):
-                                ?>
-                                    <th class="kealoa-guesser-col">
-                                        <?php echo Kealoa_Formatter::format_person_link((int) $guesser->id, $guesser->full_name); ?>
-                                    </th>
-                                <?php endforeach; ?>
+                                <th data-sort="text"><?php esc_html_e('Round Words', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($rc['clues'] as $clue): ?>
-                                <?php $clue_guesses = $this->db->get_clue_guesses((int) $clue->id); ?>
+                            <?php foreach ($clues_by_position as $entry): ?>
+                                <?php
+                                $round_words_parts = [];
+                                $round_date_parts  = [];
+                                foreach ($entry['rounds'] as $er) {
+                                    $rid = $er['round_id'];
+                                    $round_words_parts[] = isset($round_solutions_cache[$rid])
+                                        ? Kealoa_Formatter::format_solution_words_link($rid, $round_solutions_cache[$rid])
+                                        : '';
+                                    $date_cell = Kealoa_Formatter::format_round_date_link($rid, $er['round_date']);
+                                    if (!empty($er['round_number'])) {
+                                        $date_cell .= ' <span class="kealoa-round-number">(#' . esc_html($er['round_number']) . ')</span>';
+                                    }
+                                    $round_date_parts[] = $date_cell;
+                                }
+                                ?>
                                 <tr>
-                                    <td class="kealoa-clue-number"><?php echo esc_html($clue->clue_number); ?></td>
                                     <td class="kealoa-clue-ref">
-                                        <?php echo esc_html(Kealoa_Formatter::format_clue_direction((int) $clue->puzzle_clue_number, $clue->puzzle_clue_direction)); ?>
+                                        <?php echo esc_html(Kealoa_Formatter::format_clue_direction($entry['puzzle_clue_number'], $entry['puzzle_clue_direction'])); ?>
                                     </td>
-                                    <td class="kealoa-clue-text"><?php echo esc_html($clue->clue_text); ?></td>
+                                    <td class="kealoa-clue-text"><?php echo esc_html($entry['clue_text']); ?></td>
                                     <td class="kealoa-correct-answer">
-                                        <strong><?php echo esc_html($clue->correct_answer); ?></strong>
+                                        <strong><?php echo esc_html($entry['correct_answer']); ?></strong>
                                     </td>
-                                    <?php foreach ($round_guessers as $guesser): ?>
-                                        <td class="kealoa-guess">
-                                            <?php
-                                            $guess = null;
-                                            foreach ($clue_guesses as $g) {
-                                                if ($g->guesser_person_id == $guesser->id) {
-                                                    $guess = $g;
-                                                    break;
-                                                }
-                                            }
-                                            if ($guess) {
-                                                echo Kealoa_Formatter::format_guess_display($guess->guessed_word, (bool) $guess->is_correct);
-                                            } else {
-                                                echo '—';
-                                            }
-                                            ?>
-                                        </td>
-                                    <?php endforeach; ?>
+                                    <td class="kealoa-round-words"><?php echo implode('<br>', $round_words_parts); ?></td>
+                                    <td class="kealoa-round-date"><?php echo implode('<br>', $round_date_parts); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
                     </div>
-                </div>
-            <?php endforeach; ?>
 
                 </div><!-- end Clues tab -->
 

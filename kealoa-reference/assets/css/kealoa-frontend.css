@@ -681,13 +681,6 @@
     text-align: center;
 }
 
-.kealoa-puzzle-round-clues h3 {
-    margin-top: 25px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--deep-lagoon);
-    color: var(--driftwood-dark);
-}
-
 .kealoa-puzzle-clues-table {
     font-size: 13px;
     table-layout: auto;
