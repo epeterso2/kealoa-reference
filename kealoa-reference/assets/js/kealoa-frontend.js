@@ -362,45 +362,86 @@
     }
 
     /**
-     * Tab switching for person view
+     * Tab switching – supports nested .kealoa-tabs containers.
+     *
+     * Each .kealoa-tabs only controls its own direct .kealoa-tab-nav buttons
+     * and direct .kealoa-tab-panel children so that inner (secondary) tab
+     * groups operate independently of outer (primary) ones.
      */
     function initTabs() {
+        /**
+         * Return only the buttons and panels that belong directly to a
+         * given .kealoa-tabs container (not to a nested one).
+         */
+        function getOwnChildren(container) {
+            var nav = container.querySelector(':scope > .kealoa-tab-nav');
+            var buttons = nav ? nav.querySelectorAll(':scope > .kealoa-tab-button') : [];
+            var panels = [];
+            container.querySelectorAll(':scope > .kealoa-tab-panel').forEach(function(p) {
+                panels.push(p);
+            });
+            return { buttons: buttons, panels: panels };
+        }
+
         var tabContainers = document.querySelectorAll('.kealoa-tabs');
         tabContainers.forEach(function(container) {
-            var buttons = container.querySelectorAll('.kealoa-tab-button');
-            var panels = container.querySelectorAll('.kealoa-tab-panel');
+            var own = getOwnChildren(container);
 
-            buttons.forEach(function(button) {
+            own.buttons.forEach(function(button) {
                 button.addEventListener('click', function() {
                     var tabName = this.getAttribute('data-tab');
 
-                    buttons.forEach(function(btn) {
+                    own.buttons.forEach(function(btn) {
                         btn.classList.remove('active');
                     });
-                    panels.forEach(function(panel) {
+                    own.panels.forEach(function(panel) {
                         panel.classList.remove('active');
                     });
 
                     this.classList.add('active');
-                    var targetPanel = container.querySelector('.kealoa-tab-panel[data-tab="' + tabName + '"]');
-                    if (targetPanel) {
-                        targetPanel.classList.add('active');
-                    }
+                    own.panels.forEach(function(panel) {
+                        if (panel.getAttribute('data-tab') === tabName) {
+                            panel.classList.add('active');
+                        }
+                    });
                 });
             });
         });
 
-        // If the URL hash requests a specific tab (e.g. #kealoa-tab=as-editor),
-        // activate that tab in the first container that has a matching button.
-        var hashMatch = window.location.hash.match(/^#kealoa-tab=(.+)$/);
-        if (hashMatch) {
-            var requestedTab = decodeURIComponent(hashMatch[1]);
-            tabContainers.forEach(function(container) {
-                var targetBtn = container.querySelector('.kealoa-tab-button[data-tab="' + requestedTab + '"]');
-                if (targetBtn) {
-                    targetBtn.click();
+        // URL hash activation: supports #kealoa-tab=primary or
+        // #kealoa-tab=primary&kealoa-subtab=secondary
+        var hash = window.location.hash.replace(/^#/, '');
+        if (hash) {
+            var params = {};
+            hash.split('&').forEach(function(part) {
+                var kv = part.split('=');
+                if (kv.length === 2) {
+                    params[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]);
                 }
             });
+            if (params['kealoa-tab']) {
+                tabContainers.forEach(function(container) {
+                    var nav = container.querySelector(':scope > .kealoa-tab-nav');
+                    if (!nav) return;
+                    var btn = nav.querySelector('.kealoa-tab-button[data-tab="' + params['kealoa-tab'] + '"]');
+                    if (btn) {
+                        btn.click();
+                    }
+                });
+            }
+            if (params['kealoa-subtab']) {
+                // Small delay so the primary panel is visible first
+                setTimeout(function() {
+                    tabContainers.forEach(function(container) {
+                        var nav = container.querySelector(':scope > .kealoa-tab-nav');
+                        if (!nav) return;
+                        var btn = nav.querySelector('.kealoa-tab-button[data-tab="' + params['kealoa-subtab'] + '"]');
+                        if (btn) {
+                            btn.click();
+                        }
+                    });
+                }, 0);
+            }
         }
     }
 
@@ -843,9 +884,10 @@
             var tabsContainer = link.closest('.kealoa-tabs');
             if (!tabsContainer) return;
 
-            // Switch tab
-            var buttons = tabsContainer.querySelectorAll('.kealoa-tab-button');
-            var panels = tabsContainer.querySelectorAll('.kealoa-tab-panel');
+            // Switch tab – scope to this container's own children
+            var nav = tabsContainer.querySelector(':scope > .kealoa-tab-nav');
+            var buttons = nav ? nav.querySelectorAll(':scope > .kealoa-tab-button') : [];
+            var panels = tabsContainer.querySelectorAll(':scope > .kealoa-tab-panel');
 
             buttons.forEach(function (btn) {
                 btn.classList.remove('active');

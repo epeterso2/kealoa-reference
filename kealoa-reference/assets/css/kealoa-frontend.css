@@ -854,6 +854,18 @@
         border-bottom-color: var(--deep-lagoon);
     }
 
+    /* Secondary tabs: stack vertically on mobile */
+    .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button {
+        flex: 1 1 45%;
+        font-size: 12px;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--jungle-deep);
+    }
+
+    .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button.active {
+        border-bottom-color: var(--deep-lagoon);
+    }
+
     /* Round player photos */
     .kealoa-round-player img,
     .kealoa-puzzle-constructor img,
@@ -1322,6 +1334,36 @@
 
 .kealoa-tab-panel.active {
     display: block;
+}
+
+/* Secondary (nested) tabs - visually lighter than primary */
+.kealoa-tab-panel > .kealoa-tabs {
+    margin-top: 0;
+}
+
+.kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav {
+    border-bottom: 1px solid var(--jungle-deep);
+    margin-bottom: 16px;
+}
+
+.kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button {
+    font-size: 13px;
+    padding: 8px 16px;
+    font-weight: 500;
+    background: none;
+    color: var(--deep-lagoon);
+    border-bottom: 2px solid transparent;
+}
+
+.kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button:hover {
+    color: var(--cloud-white);
+    background-color: var(--deep-lagoon);
+}
+
+.kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button.active {
+    color: var(--cloud-white);
+    background-color: var(--deep-lagoon);
+    border-bottom-color: var(--deep-lagoon);
 }
 
 /* ==========================================================================
