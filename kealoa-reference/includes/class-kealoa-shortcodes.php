@@ -906,8 +906,8 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-tabs">
                     <div class="kealoa-tab-nav">
                         <button class="kealoa-tab-button active" data-tab="player-stats"><?php esc_html_e('Overall Stats', 'kealoa-reference'); ?></button>
-                        <button class="kealoa-tab-button" data-tab="puzzle"><?php esc_html_e('Puzzle Stats', 'kealoa-reference'); ?></button>
                         <button class="kealoa-tab-button" data-tab="round"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></button>
+                        <button class="kealoa-tab-button" data-tab="puzzle"><?php esc_html_e('Puzzle Stats', 'kealoa-reference'); ?></button>
                         <button class="kealoa-tab-button" data-tab="puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></button>
                         <button class="kealoa-tab-button" data-tab="by-constructor"><?php esc_html_e('By Constructor', 'kealoa-reference'); ?></button>
                         <button class="kealoa-tab-button" data-tab="by-editor"><?php esc_html_e('By Editor', 'kealoa-reference'); ?></button>
@@ -2139,12 +2139,12 @@ class Kealoa_Shortcodes {
 
                 <div class="kealoa-tabs">
                     <div class="kealoa-tab-nav">
-                        <button class="kealoa-tab-button active" data-tab="constructor-stats"><?php esc_html_e('Stats', 'kealoa-reference'); ?></button>
-                        <button class="kealoa-tab-button" data-tab="constructor-puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></button>
+                        <button class="kealoa-tab-button active" data-tab="constructor-puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></button>
                         <button class="kealoa-tab-button" data-tab="constructor-results"><?php esc_html_e('Results', 'kealoa-reference'); ?></button>
+                        <button class="kealoa-tab-button" data-tab="constructor-stats"><?php esc_html_e('Stats', 'kealoa-reference'); ?></button>
                     </div>
 
-                <div class="kealoa-tab-panel active" data-tab="constructor-stats">
+                <div class="kealoa-tab-panel" data-tab="constructor-stats">
 
                     <?php if ($constructor_stats): ?>
                     <div class="kealoa-person-constructor-overview">
@@ -2185,7 +2185,7 @@ class Kealoa_Shortcodes {
 
                 </div><!-- end constructor-stats sub-tab -->
 
-                <div class="kealoa-tab-panel" data-tab="constructor-puzzles">
+                <div class="kealoa-tab-panel active" data-tab="constructor-puzzles">
 
                     <?php if (!empty($constructor_puzzles)): ?>
                     <?php
@@ -2441,12 +2441,12 @@ class Kealoa_Shortcodes {
 
                 <div class="kealoa-tabs">
                     <div class="kealoa-tab-nav">
-                        <button class="kealoa-tab-button active" data-tab="editor-stats"><?php esc_html_e('Stats', 'kealoa-reference'); ?></button>
-                        <button class="kealoa-tab-button" data-tab="editor-puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></button>
+                        <button class="kealoa-tab-button active" data-tab="editor-puzzles"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></button>
                         <button class="kealoa-tab-button" data-tab="editor-results"><?php esc_html_e('Results', 'kealoa-reference'); ?></button>
+                        <button class="kealoa-tab-button" data-tab="editor-stats"><?php esc_html_e('Stats', 'kealoa-reference'); ?></button>
                     </div>
 
-                <div class="kealoa-tab-panel active" data-tab="editor-stats">
+                <div class="kealoa-tab-panel" data-tab="editor-stats">
 
                     <?php if ($editor_stats): ?>
                     <div class="kealoa-person-editor-overview">
@@ -2487,7 +2487,7 @@ class Kealoa_Shortcodes {
 
                 </div><!-- end editor-stats sub-tab -->
 
-                <div class="kealoa-tab-panel" data-tab="editor-puzzles">
+                <div class="kealoa-tab-panel active" data-tab="editor-puzzles">
 
                     <?php if (!empty($editor_puzzles)): ?>
                     <div class="kealoa-editor-puzzles">
