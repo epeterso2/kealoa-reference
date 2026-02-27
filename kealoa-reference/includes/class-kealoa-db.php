@@ -2074,6 +2074,7 @@ class Kealoa_DB {
             FROM {$this->rounds_table} r
             LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+                AND g.guesser_person_id IN (SELECT person_id FROM {$this->round_guessers_table} WHERE round_id = r.id)
             WHERE r.clue_giver_id = %d",
             $person_id,
             $person_id
@@ -2096,6 +2097,7 @@ class Kealoa_DB {
             FROM {$this->rounds_table} r
             LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+                AND g.guesser_person_id IN (SELECT person_id FROM {$this->round_guessers_table} WHERE round_id = r.id)
             WHERE r.clue_giver_id = %d
             GROUP BY YEAR(r.round_date)
             ORDER BY year DESC",
@@ -2119,6 +2121,7 @@ class Kealoa_DB {
             FROM {$this->rounds_table} r
             LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+                AND g.guesser_person_id IN (SELECT person_id FROM {$this->round_guessers_table} WHERE round_id = r.id)
             WHERE r.clue_giver_id = %d
             GROUP BY DAYOFWEEK(r.round_date)
             ORDER BY MOD(DAYOFWEEK(r.round_date) + 5, 7) ASC",
@@ -2179,6 +2182,7 @@ class Kealoa_DB {
                     COALESCE(SUM(g.is_correct), 0) as correct_guesses
                 FROM {$this->clues_table} c
                 LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+                    AND g.guesser_person_id IN (SELECT person_id FROM {$this->round_guessers_table} WHERE round_id = c.round_id)
                 GROUP BY c.round_id
             ) cs ON cs.round_id = r.id
             LEFT JOIN (
@@ -2216,6 +2220,7 @@ class Kealoa_DB {
             FROM {$this->rounds_table} r
             INNER JOIN {$this->clues_table} c ON c.round_id = r.id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+                AND g.guesser_person_id IN (SELECT person_id FROM {$this->round_guessers_table} WHERE round_id = r.id)
             WHERE r.clue_giver_id = %d
             GROUP BY c.id, c.round_id, c.clue_number, r.round_date, r.round_number
             ORDER BY r.round_date ASC, r.round_number ASC, c.clue_number ASC",
