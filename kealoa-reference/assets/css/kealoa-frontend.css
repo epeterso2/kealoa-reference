@@ -369,6 +369,9 @@
 
 .kealoa-persons-table-wrapper .kealoa-table,
 .kealoa-clue-givers-table-wrapper .kealoa-table,
+.kealoa-constructors-table-wrapper .kealoa-table,
+.kealoa-editors-table-wrapper .kealoa-table,
+.kealoa-puzzles-table-wrapper .kealoa-table,
 .kealoa-person-view .kealoa-table {
     width: auto;
 }
@@ -377,6 +380,12 @@
 .kealoa-persons-table-wrapper .kealoa-table td,
 .kealoa-clue-givers-table-wrapper .kealoa-table th,
 .kealoa-clue-givers-table-wrapper .kealoa-table td,
+.kealoa-constructors-table-wrapper .kealoa-table th,
+.kealoa-constructors-table-wrapper .kealoa-table td,
+.kealoa-editors-table-wrapper .kealoa-table th,
+.kealoa-editors-table-wrapper .kealoa-table td,
+.kealoa-puzzles-table-wrapper .kealoa-table th,
+.kealoa-puzzles-table-wrapper .kealoa-table td,
 .kealoa-person-view .kealoa-table th,
 .kealoa-person-view .kealoa-table td {
     white-space: nowrap;
