@@ -3564,10 +3564,9 @@ class Kealoa_Shortcodes {
                         $solutions = $this->db->get_round_solutions((int) $rc['round_id']);
                         $solution_words = Kealoa_Formatter::format_solution_words($solutions);
                         $round_heading = sprintf(
-                            '%s: KEALOA #%d &ndash; %s',
-                            esc_html($solution_words),
+                            'KEALOA #%d &ndash; %s',
                             (int) $rc['round_number'],
-                            esc_html(Kealoa_Formatter::format_date($rc['round_date']))
+                            esc_html($solution_words)
                         );
                         printf('<a href="%s">%s</a>', esc_url($round_url), $round_heading);
                         ?>
