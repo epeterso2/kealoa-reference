@@ -565,7 +565,7 @@ class Kealoa_Admin {
 
             <div class="kealoa-import-section">
                 <h2><?php esc_html_e('Puzzle Editors', 'kealoa-reference'); ?></h2>
-                <p><?php esc_html_e('Auto-populate puzzle editor names based on publication dates using historical NYT editor information.', 'kealoa-reference'); ?></p>
+                <p><?php esc_html_e('Auto-populate puzzle editor names based on puzzle dates using historical NYT editor information.', 'kealoa-reference'); ?></p>
 
                 <form method="post" style="margin-top: 10px;">
                     <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
@@ -573,7 +573,7 @@ class Kealoa_Admin {
                     <input type="submit" class="button button-secondary" value="<?php esc_attr_e('Auto-Populate Editors', 'kealoa-reference'); ?>"
                            onclick="return confirm('<?php esc_attr_e('This will overwrite all existing editor names based on puzzle dates. Continue?', 'kealoa-reference'); ?>');" />
                     <p class="description" style="margin-top: 10px;">
-                        <?php esc_html_e('This will update editor names for all puzzles based on their publication dates. Existing editor names will be overwritten.', 'kealoa-reference'); ?>
+                        <?php esc_html_e('This will update editor names for all puzzles based on their puzzle dates. Existing editor names will be overwritten.', 'kealoa-reference'); ?>
                     </p>
                 </form>
             </div>
@@ -1125,7 +1125,7 @@ class Kealoa_Admin {
             <thead>
                 <tr>
                     <th><?php esc_html_e('ID', 'kealoa-reference'); ?></th>
-                    <th><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
+                    <th><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Day of Week', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Constructors', 'kealoa-reference'); ?></th>
@@ -1221,7 +1221,7 @@ class Kealoa_Admin {
 
             <table class="form-table">
                 <tr>
-                    <th><label for="publication_date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?> *</label></th>
+                    <th><label for="publication_date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?> *</label></th>
                     <td>
                         <input type="date" name="publication_date" id="publication_date" required
                                value="<?php echo esc_attr($puzzle->publication_date ?? ''); ?>" />
@@ -2354,7 +2354,7 @@ class Kealoa_Admin {
                 'label'       => 'Orphan Puzzles',
                 'description' => 'Puzzles not referenced by any clue (unused puzzles).',
                 'action'      => 'repair_delete_puzzles',
-                'columns'     => ['ID', 'Publication Date', 'Editor ID'],
+                'columns'     => ['ID', 'Puzzle Date', 'Editor ID'],
                 'fields'      => ['id', 'publication_date', 'editor_id'],
             ],
             'rounds_no_clues' => [
@@ -2461,7 +2461,7 @@ class Kealoa_Admin {
                 'label'       => 'Puzzles With Missing Editor',
                 'description' => 'Puzzles whose editor_id references a person that no longer exists.',
                 'action'      => null,
-                'columns'     => ['Puzzle ID', 'Publication Date', 'Editor ID'],
+                'columns'     => ['Puzzle ID', 'Puzzle Date', 'Editor ID'],
                 'fields'      => ['id', 'publication_date', 'editor_id'],
             ],
             'orphan_persons' => [

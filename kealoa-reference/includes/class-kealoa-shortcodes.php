@@ -1336,7 +1336,7 @@ class Kealoa_Shortcodes {
                                 <input type="text" id="kealoa-pp-search-words" class="kealoa-filter-input" data-filter="search" data-col="5" placeholder="<?php esc_attr_e('e.g. KEALOA', 'kealoa-reference'); ?>">
                             </div>
                             <div class="kealoa-filter-group">
-                                <label for="kealoa-pp-date-from"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></label>
+                                <label for="kealoa-pp-date-from"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></label>
                                 <div class="kealoa-filter-range">
                                     <input type="date" id="kealoa-pp-date-from" class="kealoa-filter-input" data-filter="date-min" data-col="1">
                                     <span class="kealoa-filter-range-sep">&ndash;</span>
@@ -1355,7 +1355,7 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
-                                <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
+                                <th data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
@@ -2236,7 +2236,7 @@ class Kealoa_Shortcodes {
                             <thead>
                                 <tr>
                                     <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
-                                    <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
+                                    <th data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
                                     <?php if ($has_co_constructors): ?>
                                     <th data-sort="text"><?php esc_html_e('Co-Constructors', 'kealoa-reference'); ?></th>
                                     <?php endif; ?>
@@ -2520,7 +2520,7 @@ class Kealoa_Shortcodes {
                                     <input type="text" id="kealoa-ped-search-words" class="kealoa-filter-input" data-filter="search" data-col="3" placeholder="<?php esc_attr_e('e.g. KEALOA', 'kealoa-reference'); ?>">
                                 </div>
                                 <div class="kealoa-filter-group">
-                                    <label for="kealoa-ped-date-from"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></label>
+                                    <label for="kealoa-ped-date-from"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></label>
                                     <div class="kealoa-filter-range">
                                         <input type="date" id="kealoa-ped-date-from" class="kealoa-filter-input" data-filter="date-min" data-col="0">
                                         <span class="kealoa-filter-range-sep">&ndash;</span>
@@ -2539,7 +2539,7 @@ class Kealoa_Shortcodes {
                             <thead>
                                 <tr>
                                     <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
-                                    <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
+                                    <th data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
                                     <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
                                     <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
                                     <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
@@ -3171,7 +3171,7 @@ class Kealoa_Shortcodes {
                         </select>
                     </div>
                     <div class="kealoa-filter-group">
-                        <label for="kealoa-pz-date-from"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></label>
+                        <label for="kealoa-pz-date-from"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></label>
                         <div class="kealoa-filter-range">
                             <input type="date" id="kealoa-pz-date-from" class="kealoa-filter-input" data-filter="date-min" data-col="1">
                             <span class="kealoa-filter-range-sep">&ndash;</span>
@@ -3194,7 +3194,7 @@ class Kealoa_Shortcodes {
                 <thead>
                     <tr>
                         <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
-                        <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
+                        <th data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
                         <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
                         <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
                         <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
@@ -3328,7 +3328,7 @@ class Kealoa_Shortcodes {
                     <thead>
                         <tr>
                             <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
-                            <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
+                            <th data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
                             <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
                             <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
                             <th data-sort="text"><?php esc_html_e('Round Words', 'kealoa-reference'); ?></th>
