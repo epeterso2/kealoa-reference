@@ -702,14 +702,14 @@
     white-space: normal;
 }
 
-/* Host tab rounds table: allow all columns to wrap */
+/* Host tab rounds table */
 #kealoa-person-cg-rounds-table {
-    width: 100%;
+    width: auto;
 }
 
 #kealoa-person-cg-rounds-table th,
 #kealoa-person-cg-rounds-table td {
-    white-space: normal;
+    white-space: nowrap;
 }
 
 .kealoa-puzzle-player-stats h2 {

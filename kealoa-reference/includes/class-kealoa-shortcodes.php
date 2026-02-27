@@ -1835,11 +1835,11 @@ class Kealoa_Shortcodes {
 
                 <div class="kealoa-tabs">
                     <div class="kealoa-tab-nav">
-                        <button class="kealoa-tab-button active" data-tab="host-stats"><?php esc_html_e('Stats', 'kealoa-reference'); ?></button>
-                        <button class="kealoa-tab-button" data-tab="host-rounds"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></button>
+                        <button class="kealoa-tab-button active" data-tab="host-rounds"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></button>
+                        <button class="kealoa-tab-button" data-tab="host-stats"><?php esc_html_e('Stats', 'kealoa-reference'); ?></button>
                     </div>
 
-                <div class="kealoa-tab-panel active" data-tab="host-stats">
+                <div class="kealoa-tab-panel" data-tab="host-stats">
 
                     <?php if ($clue_giver_stats): ?>
                     <div class="kealoa-person-clue-giver-overview">
@@ -2036,7 +2036,7 @@ class Kealoa_Shortcodes {
 
                 </div><!-- end host-stats sub-tab -->
 
-                <div class="kealoa-tab-panel" data-tab="host-rounds">
+                <div class="kealoa-tab-panel active" data-tab="host-rounds">
 
                     <?php if (!empty($clue_giver_rounds)): ?>
                     <div class="kealoa-clue-giver-rounds">
