@@ -2362,15 +2362,28 @@ class Kealoa_DB {
                 ed.id as editor_id,
                 GROUP_CONCAT(DISTINCT con.full_name ORDER BY pc.constructor_order ASC SEPARATOR ', ') as constructor_names,
                 GROUP_CONCAT(DISTINCT con.id ORDER BY pc.constructor_order ASC) as constructor_ids,
-                COUNT(DISTINCT c.round_id) as round_count
+                rd.round_count,
+                rd.round_ids,
+                rd.round_dates,
+                rd.round_numbers
             FROM {$this->puzzles_table} pz
             LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             LEFT JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
             LEFT JOIN {$this->persons_table} con ON pc.person_id = con.id
-            INNER JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
-            GROUP BY pz.id, pz.publication_date, ed.full_name, ed.id
-            HAVING COUNT(DISTINCT c.round_id) > 1
-            ORDER BY round_count DESC, pz.publication_date ASC";
+            INNER JOIN (
+                SELECT
+                    dc.puzzle_id,
+                    COUNT(dc.round_id) as round_count,
+                    GROUP_CONCAT(dc.round_id ORDER BY r.round_date ASC, r.round_number ASC) as round_ids,
+                    GROUP_CONCAT(r.round_date ORDER BY r.round_date ASC, r.round_number ASC) as round_dates,
+                    GROUP_CONCAT(r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers
+                FROM (SELECT DISTINCT puzzle_id, round_id FROM {$this->clues_table}) dc
+                INNER JOIN {$this->rounds_table} r ON r.id = dc.round_id
+                GROUP BY dc.puzzle_id
+                HAVING COUNT(dc.round_id) > 1
+            ) rd ON rd.puzzle_id = pz.id
+            GROUP BY pz.id, pz.publication_date, ed.full_name, ed.id, rd.round_count, rd.round_ids, rd.round_dates, rd.round_numbers
+            ORDER BY rd.round_count DESC, pz.publication_date ASC";
 
         return $this->wpdb->get_results($sql) ?: [];
     }
