@@ -449,7 +449,7 @@ class Kealoa_Shortcodes {
                         <strong class="kealoa-meta-label"><?php esc_html_e('Host', 'kealoa-reference'); ?></strong>
                         <span><?php
                         if ($clue_giver) {
-                            echo Kealoa_Formatter::format_person_link((int) $clue_giver->id, $clue_giver->full_name);
+                            echo Kealoa_Formatter::format_person_link((int) $clue_giver->id, $clue_giver->full_name, 'host');
                         } else {
                             esc_html_e('Unknown', 'kealoa-reference');
                         }
@@ -527,7 +527,7 @@ class Kealoa_Shortcodes {
                         ?>
                         <?php
                         $player_slug = str_replace(' ', '_', $player->full_name);
-                        $player_url = home_url('/kealoa/person/' . urlencode($player_slug) . '/');
+                        $player_url = home_url('/kealoa/person/' . urlencode($player_slug) . '/') . '#kealoa-tab=player';
                         ?>
                         <div class="kealoa-round-player">
                             <a href="<?php echo esc_url($player_url); ?>">
@@ -2950,7 +2950,7 @@ class Kealoa_Shortcodes {
                     <?php foreach ($constructors as $con): ?>
                         <tr>
                             <td>
-                                <?php echo Kealoa_Formatter::format_constructor_link((int) $con->id, $con->full_name, 'as-constructor'); ?>
+                                <?php echo Kealoa_Formatter::format_constructor_link((int) $con->id, $con->full_name, 'constructor'); ?>
                             </td>
                             <td><?php echo esc_html(number_format_i18n((int) $con->puzzle_count)); ?></td>
                             <td><?php echo esc_html(number_format_i18n((int) $con->clue_count)); ?></td>
@@ -3020,7 +3020,7 @@ class Kealoa_Shortcodes {
                     <?php foreach ($editors as $ed): ?>
                         <tr>
                             <td>
-                                <?php echo Kealoa_Formatter::format_editor_link((int) $ed->id, $ed->editor_name, 'as-editor'); ?>
+                                <?php echo Kealoa_Formatter::format_editor_link((int) $ed->id, $ed->editor_name, 'editor'); ?>
                             </td>
                             <td><?php echo esc_html(number_format_i18n((int) $ed->puzzle_count)); ?></td>
                             <td><?php echo esc_html(number_format_i18n((int) $ed->clue_count)); ?></td>
@@ -3091,7 +3091,7 @@ class Kealoa_Shortcodes {
                     <?php foreach ($clue_givers as $cg): ?>
                         <tr>
                             <td>
-                                <?php echo Kealoa_Formatter::format_person_link((int) $cg->id, $cg->clue_giver_name, 'as-clue-giver'); ?>
+                                <?php echo Kealoa_Formatter::format_person_link((int) $cg->id, $cg->clue_giver_name, 'host'); ?>
                             </td>
                             <td><?php echo esc_html(number_format_i18n((int) $cg->round_count)); ?></td>
                             <td><?php echo esc_html(number_format_i18n((int) $cg->clue_count)); ?></td>
@@ -3443,7 +3443,7 @@ class Kealoa_Shortcodes {
                         }
 
                         $con_slug = str_replace(' ', '_', $con->full_name);
-                        $con_url = home_url('/kealoa/person/' . urlencode($con_slug) . '/');
+                        $con_url = home_url('/kealoa/person/' . urlencode($con_slug) . '/') . '#kealoa-tab=constructor';
                         ?>
                         <div class="kealoa-puzzle-constructor">
                             <a href="<?php echo esc_url($con_url); ?>">
@@ -3462,7 +3462,7 @@ class Kealoa_Shortcodes {
                     <?php if (!empty($editor_image_url) && !empty($editor_name)): ?>
                         <?php
                         $editor_slug = str_replace(' ', '_', $editor_name);
-                        $editor_url = home_url('/kealoa/person/' . urlencode($editor_slug) . '/');
+                        $editor_url = home_url('/kealoa/person/' . urlencode($editor_slug) . '/') . '#kealoa-tab=editor';
                         ?>
                         <div class="kealoa-puzzle-constructor">
                             <a href="<?php echo esc_url($editor_url); ?>">

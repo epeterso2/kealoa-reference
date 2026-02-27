@@ -100,10 +100,10 @@ class Kealoa_Formatter {
      *
      * @param int    $person_id The person's ID
      * @param string $full_name The person's full name
-     * @param string $tab       Optional tab slug to activate on the person page (appended as #kealoa-tab=…)
+     * @param string $tab       Tab slug to activate on the person page (appended as #kealoa-tab=…). Defaults to 'player'.
      * @return string HTML link to person view
      */
-    public static function format_person_link(int $person_id, string $full_name, string $tab = ''): string {
+    public static function format_person_link(int $person_id, string $full_name, string $tab = 'player'): string {
         $slug = str_replace(' ', '_', $full_name);
         $url = home_url('/kealoa/person/' . urlencode($slug) . '/');
         if ($tab !== '') {
@@ -121,10 +121,10 @@ class Kealoa_Formatter {
      *
      * @param int    $person_id The person's ID (constructor)
      * @param string $full_name The constructor's full name
-     * @param string $tab       Optional tab slug to activate on the person page
+     * @param string $tab       Tab slug to activate on the person page. Defaults to 'constructor'.
      * @return string HTML link to person view
      */
-    public static function format_constructor_link(int $person_id, string $full_name, string $tab = ''): string {
+    public static function format_constructor_link(int $person_id, string $full_name, string $tab = 'constructor'): string {
         return self::format_person_link($person_id, $full_name, $tab);
     }
 
@@ -133,10 +133,10 @@ class Kealoa_Formatter {
      *
      * @param int    $person_id The person's ID (editor)
      * @param string $full_name The editor's full name
-     * @param string $tab       Optional tab slug to activate on the person page
+     * @param string $tab       Tab slug to activate on the person page. Defaults to 'editor'.
      * @return string HTML link to person view
      */
-    public static function format_editor_link(int $person_id, string $full_name, string $tab = ''): string {
+    public static function format_editor_link(int $person_id, string $full_name, string $tab = 'editor'): string {
         return self::format_person_link($person_id, $full_name, $tab);
     }
 
