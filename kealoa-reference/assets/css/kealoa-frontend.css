@@ -408,6 +408,10 @@
     border-bottom-color: var(--deep-lagoon);
 }
 
+.kealoa-person-view .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav {
+    border-bottom-color: var(--tropical-teal);
+}
+
 .kealoa-person-view .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button {
     color: var(--tropical-teal);
 }
@@ -885,7 +889,7 @@
         padding: 8px 14px;
         font-size: 13px;
         text-align: center;
-        border-bottom: 2px solid var(--jungle-deep);
+        border-bottom: 2px solid var(--deep-lagoon);
     }
 
     .kealoa-tab-button.active {
@@ -897,7 +901,7 @@
         flex: 1 1 45%;
         font-size: 12px;
         padding: 6px 10px;
-        border-bottom: 1px solid var(--jungle-deep);
+        border-bottom: 1px solid var(--deep-lagoon);
     }
 
     .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button.active {
@@ -1338,7 +1342,7 @@
 
 .kealoa-tab-nav {
     display: flex;
-    border-bottom: 2px solid var(--jungle-deep);
+    border-bottom: 2px solid var(--deep-lagoon);
     margin-bottom: 20px;
     gap: 0;
 }
@@ -1382,7 +1386,7 @@
 }
 
 .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav {
-    border-bottom: 1px solid var(--jungle-deep);
+    border-bottom: 1px solid var(--deep-lagoon);
     margin-bottom: 16px;
 }
 
