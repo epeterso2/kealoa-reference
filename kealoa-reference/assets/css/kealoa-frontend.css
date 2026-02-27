@@ -1370,8 +1370,6 @@
 
 .kealoa-tab-panel {
     display: none;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
 }
 
 .kealoa-tab-panel.active {

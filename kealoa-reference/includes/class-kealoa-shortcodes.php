@@ -3697,6 +3697,7 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-puzzle-player-stats">
                     <h2><?php esc_html_e('Results by Player', 'kealoa-reference'); ?></h2>
 
+                    <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-puzzle-player-table">
                         <thead>
                             <tr>
@@ -3724,6 +3725,7 @@ class Kealoa_Shortcodes {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             <?php endif; ?>
 
