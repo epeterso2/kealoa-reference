@@ -3131,7 +3131,7 @@ class Kealoa_Shortcodes {
                 <button class="kealoa-tab-button active" role="tab" aria-selected="true" data-tab="kealoa-puzzles-tab-all"><?php esc_html_e('All Puzzles', 'kealoa-reference'); ?></button>
                 <button class="kealoa-tab-button" role="tab" aria-selected="false" data-tab="kealoa-puzzles-tab-curiosities"><?php esc_html_e('Curiosities', 'kealoa-reference'); ?></button>
             </nav>
-            <div class="kealoa-tab-panel active" id="kealoa-puzzles-tab-all" role="tabpanel">
+            <div class="kealoa-tab-panel active" id="kealoa-puzzles-tab-all" data-tab="kealoa-puzzles-tab-all" role="tabpanel">
         <?php if (empty($puzzles)): ?>
             <p class="kealoa-no-data"><?php esc_html_e('No puzzles found.', 'kealoa-reference'); ?></p>
         <?php else: ?>
@@ -3272,7 +3272,7 @@ class Kealoa_Shortcodes {
         </div>
         <?php endif; ?>
             </div><!-- end kealoa-puzzles-tab-all -->
-            <div class="kealoa-tab-panel" id="kealoa-puzzles-tab-curiosities" role="tabpanel">
+            <div class="kealoa-tab-panel" id="kealoa-puzzles-tab-curiosities" data-tab="kealoa-puzzles-tab-curiosities" role="tabpanel">
                 <?php $this->render_curiosities_panel($multi_round_puzzles); ?>
             </div><!-- end kealoa-puzzles-tab-curiosities -->
         </div><!-- end kealoa-tabs -->
