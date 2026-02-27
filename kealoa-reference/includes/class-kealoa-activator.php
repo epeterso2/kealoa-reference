@@ -74,6 +74,7 @@ class Kealoa_Activator {
         $sql_persons = "CREATE TABLE {$persons_table} (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             full_name varchar(255) NOT NULL,
+            nicknames varchar(500) DEFAULT NULL,
             home_page_url varchar(500) DEFAULT NULL,
             image_url varchar(500) DEFAULT NULL,
             media_id bigint(20) UNSIGNED DEFAULT NULL,

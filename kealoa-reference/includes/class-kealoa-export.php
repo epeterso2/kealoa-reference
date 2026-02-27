@@ -154,13 +154,14 @@ class Kealoa_Export {
      * Write persons CSV
      */
     private function write_persons($output): void {
-        fputcsv($output, ['full_name', 'home_page_url', 'image_url', 'hide_xwordinfo', 'xwordinfo_profile_name', 'xwordinfo_image_url', 'media_id']);
+        fputcsv($output, ['full_name', 'nicknames', 'home_page_url', 'image_url', 'hide_xwordinfo', 'xwordinfo_profile_name', 'xwordinfo_image_url', 'media_id']);
 
         $persons = $this->db->get_persons(['limit' => 999999, 'orderby' => 'full_name', 'order' => 'ASC']);
 
         foreach ($persons as $person) {
             fputcsv($output, [
                 $person->full_name,
+                $person->nicknames ?? '',
                 $person->home_page_url ?? '',
                 $person->image_url ?? '',
                 $person->hide_xwordinfo ?? 0,

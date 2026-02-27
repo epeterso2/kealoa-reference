@@ -237,6 +237,7 @@ class Kealoa_Import {
                 // Update existing person
                 $update_data = [
                     'full_name' => $row['full_name'],
+                    'nicknames' => $row['nicknames'] ?? null,
                     'home_page_url' => $row['home_page_url'] ?? null,
                     'image_url' => $row['image_url'] ?? null,
                     'hide_xwordinfo' => !empty($row['hide_xwordinfo']),
@@ -251,6 +252,7 @@ class Kealoa_Import {
                 // Create new person
                 $create_data = [
                     'full_name' => $row['full_name'],
+                    'nicknames' => $row['nicknames'] ?? null,
                     'home_page_url' => $row['home_page_url'] ?? null,
                     'image_url' => $row['image_url'] ?? null,
                     'hide_xwordinfo' => !empty($row['hide_xwordinfo']),

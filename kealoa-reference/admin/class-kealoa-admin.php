@@ -986,6 +986,16 @@ class Kealoa_Admin {
                     </td>
                 </tr>
                 <tr>
+                    <th><label for="nicknames"><?php esc_html_e('Nicknames', 'kealoa-reference'); ?></label></th>
+                    <td>
+                        <input type="text" name="nicknames" id="nicknames" class="regular-text"
+                               value="<?php echo esc_attr($person->nicknames ?? ''); ?>" />
+                        <p class="description">
+                            <?php esc_html_e('Comma-separated list of nicknames or aliases for this person.', 'kealoa-reference'); ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
                     <th><label for="home_page_url"><?php esc_html_e('Home Page URL', 'kealoa-reference'); ?></label></th>
                     <td>
                         <input type="url" name="home_page_url" id="home_page_url" class="regular-text"
@@ -1938,6 +1948,7 @@ class Kealoa_Admin {
     private function handle_create_person(): void {
         $id = $this->db->create_person([
             'full_name' => $_POST['full_name'] ?? '',
+            'nicknames' => $_POST['nicknames'] ?? null,
             'home_page_url' => $_POST['home_page_url'] ?? null,
             'image_url' => $_POST['image_url'] ?? null,
             'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
@@ -1961,6 +1972,7 @@ class Kealoa_Admin {
 
         $result = $this->db->update_person($id, [
             'full_name' => $_POST['full_name'] ?? '',
+            'nicknames' => $_POST['nicknames'] ?? null,
             'home_page_url' => $_POST['home_page_url'] ?? null,
             'image_url' => $_POST['image_url'] ?? null,
             'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,

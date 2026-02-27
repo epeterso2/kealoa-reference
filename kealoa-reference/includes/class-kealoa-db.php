@@ -145,6 +145,9 @@ class Kealoa_DB {
     public function create_person(array $data): int|false {
         $insert_data = [
             'full_name' => sanitize_text_field($data['full_name']),
+            'nicknames' => isset($data['nicknames'])
+                ? sanitize_text_field($data['nicknames'])
+                : null,
             'home_page_url' => isset($data['home_page_url'])
                 ? esc_url_raw($data['home_page_url'])
                 : null,
@@ -159,7 +162,7 @@ class Kealoa_DB {
                 ? esc_url_raw($data['xwordinfo_image_url'])
                 : null,
         ];
-        $format = ['%s', '%s', '%s', '%d', '%s', '%s'];
+        $format = ['%s', '%s', '%s', '%s', '%d', '%s', '%s'];
 
         if (array_key_exists('media_id', $data)) {
             $insert_data['media_id'] = $data['media_id'] ? (int) $data['media_id'] : null;
@@ -184,6 +187,12 @@ class Kealoa_DB {
 
         if (isset($data['full_name'])) {
             $update_data['full_name'] = sanitize_text_field($data['full_name']);
+            $format[] = '%s';
+        }
+        if (array_key_exists('nicknames', $data)) {
+            $update_data['nicknames'] = $data['nicknames']
+                ? sanitize_text_field($data['nicknames'])
+                : null;
             $format[] = '%s';
         }
         if (array_key_exists('home_page_url', $data)) {

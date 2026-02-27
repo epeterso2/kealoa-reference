@@ -413,6 +413,7 @@ class Kealoa_REST_API {
         $data = [
             'id'                     => (int) $person->id,
             'full_name'              => $person->full_name,
+            'nicknames'              => $person->nicknames ?? '',
             'home_page_url'          => $person->home_page_url ?? '',
             'xwordinfo_profile_name' => $person->xwordinfo_profile_name ?? '',
             'xwordinfo_image_url'    => $person->xwordinfo_image_url ?? '',

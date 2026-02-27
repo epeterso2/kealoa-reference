@@ -866,6 +866,10 @@ class Kealoa_Shortcodes {
                     <div class="kealoa-person-details">
                         <h2 class="kealoa-person-name"><?php echo esc_html($person->full_name); ?></h2>
 
+                        <?php if (!empty($person->nicknames)): ?>
+                            <p class="kealoa-person-nicknames"><?php echo esc_html($person->nicknames); ?></p>
+                        <?php endif; ?>
+
                         <?php if (!empty($roles)): ?>
                             <p class="kealoa-person-roles">
                                 <?php
