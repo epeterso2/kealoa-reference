@@ -3,7 +3,7 @@
 Read-only REST API for KEALOA Reference data.
 
 **Base URL:** `/wp-json/kealoa/v1`
-**Version:** 2.0.12
+**Version:** 2.0.73
 
 All endpoints use the `GET` method and are publicly accessible (`permission_callback: __return_true`). All responses are JSON.
 
@@ -24,7 +24,7 @@ All endpoints use the `GET` method and are publicly accessible (`permission_call
 4. [Persons](#persons)
    - [GET /persons](#get-persons)
    - [GET /persons/{id}](#get-personsid)
-   - [GET /persons/{id}/rounds](#get-personsidgrounds)
+   - [GET /persons/{id}/rounds](#get-personsidrounds)
    - [GET /persons/{id}/puzzles](#get-personsidpuzzles)
    - [GET /persons/{id}/stats/by-year](#get-personsidstatsby-year)
    - [GET /persons/{id}/stats/by-day](#get-personsidstatsby-day)
@@ -56,10 +56,10 @@ The following endpoints return paginated results: `/rounds`, `/persons`, `/puzzl
 
 **Query parameters:**
 
-| Parameter  | Type    | Default | Min | Max | Description       |
+| Parameter  | Type    | Default | Min | Max   | Description        |
 |---|---|---:|---:|---:|---|
-| `page`     | integer | `1`     | `1` | —   | 1-based page index |
-| `per_page` | integer | `50`    | `1` | `500` | Items per page  |
+| `page`     | integer | `1`     | `1` | —     | 1-based page index |
+| `per_page` | integer | `50`    | `1` | `500` | Items per page     |
 
 **Response envelope:**
 
@@ -187,10 +187,10 @@ Returns a paginated list of rounds.
 
 Supports [pagination parameters](#pagination) plus:
 
-| Parameter | Type   | Default      | Description                          |
+| Parameter | Type   | Default      | Description                        |
 |---|---|---|---|
-| `orderby` | string | `round_date` | Column to sort by (sanitized text)   |
-| `order`   | string | `DESC`       | Sort direction: `ASC` or `DESC`      |
+| `orderby` | string | `round_date` | Column to sort by (sanitized text) |
+| `order`   | string | `DESC`       | Sort direction: `ASC` or `DESC`    |
 
 **Response: 200 OK**
 
@@ -334,7 +334,7 @@ Supports [pagination parameters](#pagination) plus:
       "id": 1,
       "full_name": "Jane Doe",
       "roles": ["player", "constructor"],
-      "url": "https://example.com/kealoa/person/jane_doe/"
+      "url": "https://example.com/kealoa/person/Jane_Doe/"
     }
   ]
 }
@@ -352,7 +352,7 @@ Supports [pagination parameters](#pagination) plus:
     {
       "id": 1,
       "full_name": "Jane Doe",
-      "url": "https://example.com/kealoa/person/jane_doe/"
+      "url": "https://example.com/kealoa/person/Jane_Doe/"
     }
   ]
 }
@@ -376,13 +376,14 @@ Returns the full profile for a single person including role-specific stats.
 {
   "id": 1,
   "full_name": "Jane Doe",
+  "nicknames": "",
   "home_page_url": "https://janedoe.example.com",
   "xwordinfo_profile_name": "Jane Doe",
   "xwordinfo_image_url": "https://www.xwordinfo.com/photos/jane_doe.jpg",
   "roles": ["player", "constructor"],
   "stats": {},
   "constructor_stats": {},
-  "url": "https://example.com/kealoa/person/jane_doe/"
+  "url": "https://example.com/kealoa/person/Jane_Doe/"
 }
 ```
 
@@ -390,7 +391,7 @@ Notes:
 - `stats` contains aggregate player stats; fields depend on data present.
 - `constructor_stats` is only included when the person has the `constructor` role.
 - `editor_stats` is only included when the person has the `editor` role.
-- `clue_giver_stats` is only included when the person has the `clue_giver` role. Contains `round_count`, `clue_count`, `guesser_count`, `total_guesses`, and `correct_guesses`.
+- `clue_giver_stats` is only included when the person has the `clue_giver` role.
 
 **Response: 404 Not Found**
 
@@ -420,7 +421,7 @@ Returns all rounds in which the person participated as a guesser.
 }
 ```
 
-The `rounds` array contains round summary objects. Fields match those returned by `GET /rounds` items.
+The `rounds` array contains round summary objects with fields matching those returned by `GET /rounds` items.
 
 **Response: 404 Not Found**
 
@@ -458,7 +459,7 @@ Returns all puzzles associated with rounds that the person participated in (as a
         {
           "id": 5,
           "full_name": "Amanda Chung",
-          "url": "https://example.com/kealoa/person/amanda_chung/"
+          "url": "https://example.com/kealoa/person/Amanda_Chung/"
         }
       ],
       "round_ids": [1, 4],
@@ -487,7 +488,7 @@ Returns the person's guess results grouped by calendar year.
 |---|---|---|
 | `id`      | integer | Person ID   |
 
-**Response: 200 OK** — Array of rows from `get_person_results_by_year()`. Each row contains aggregated totals for that year.
+**Response: 200 OK** — Array of objects with aggregated totals for each year.
 
 **Response: 404 Not Found**
 
@@ -507,7 +508,7 @@ Returns the person's guess results grouped by day of week.
 |---|---|---|
 | `id`      | integer | Person ID   |
 
-**Response: 200 OK** — Array of rows from `get_person_results_by_day_of_week()`. Each row covers one day of the week (Monday–Sunday).
+**Response: 200 OK** — Array of objects, one per day of the week (Monday–Sunday).
 
 **Response: 404 Not Found**
 
@@ -527,7 +528,7 @@ Returns the person's guess results grouped by puzzle constructor.
 |---|---|---|
 | `id`      | integer | Person ID   |
 
-**Response: 200 OK** — Array of rows from `get_person_results_by_constructor()`. Each row represents one constructor.
+**Response: 200 OK** — Array of objects, one per constructor.
 
 **Response: 404 Not Found**
 
@@ -547,7 +548,7 @@ Returns the person's guess results grouped by puzzle editor.
 |---|---|---|
 | `id`      | integer | Person ID   |
 
-**Response: 200 OK** — Array of rows from `get_person_results_by_editor()`. Each row represents one editor.
+**Response: 200 OK** — Array of objects, one per editor.
 
 **Response: 404 Not Found**
 
@@ -567,7 +568,7 @@ Returns the person's guess results grouped by crossword clue direction (Across /
 |---|---|---|
 | `id`      | integer | Person ID   |
 
-**Response: 200 OK** — Array of rows from `get_person_results_by_direction()`.
+**Response: 200 OK** — Array of objects, one per direction.
 
 **Response: 404 Not Found**
 
@@ -587,7 +588,7 @@ Returns the person's guess results grouped by answer length (number of letters).
 |---|---|---|
 | `id`      | integer | Person ID   |
 
-**Response: 200 OK** — Array of rows from `get_person_results_by_answer_length()`.
+**Response: 200 OK** — Array of objects, one per answer length.
 
 **Response: 404 Not Found**
 
@@ -607,7 +608,7 @@ Returns the person's guess results grouped by the puzzle's publication decade.
 |---|---|---|
 | `id`      | integer | Person ID   |
 
-**Response: 200 OK** — Array of rows from `get_person_results_by_decade()`.
+**Response: 200 OK** — Array of objects, one per decade.
 
 **Response: 404 Not Found**
 
@@ -627,7 +628,7 @@ Returns the person's guess results grouped by clue number within a round (clue 1
 |---|---|---|
 | `id`      | integer | Person ID   |
 
-**Response: 200 OK** — Array of rows from `get_person_results_by_clue_number()`.
+**Response: 200 OK** — Array of objects, one per clue position.
 
 **Response: 404 Not Found**
 
@@ -647,7 +648,7 @@ Returns the person's best consecutive correct-guess streaks grouped by year.
 |---|---|---|
 | `id`      | integer | Person ID   |
 
-**Response: 200 OK** — Array of rows from `get_person_best_streaks_by_year()`. Each row contains the year and the best streak length for that year.
+**Response: 200 OK** — Array of objects containing the year and the best streak length for that year.
 
 **Response: 404 Not Found**
 
@@ -667,10 +668,10 @@ Returns a paginated list of puzzles.
 
 Supports [pagination parameters](#pagination) plus:
 
-| Parameter | Type   | Default            | Description                          |
+| Parameter | Type   | Default            | Description                        |
 |---|---|---|---|
-| `orderby` | string | `publication_date` | Column to sort by (sanitized text)   |
-| `order`   | string | `DESC`             | Sort direction: `ASC` or `DESC`      |
+| `orderby` | string | `publication_date` | Column to sort by (sanitized text) |
+| `order`   | string | `DESC`             | Sort direction: `ASC` or `DESC`    |
 
 **Response: 200 OK**
 
@@ -691,7 +692,7 @@ Supports [pagination parameters](#pagination) plus:
         {
           "id": 5,
           "full_name": "Amanda Chung",
-          "url": "https://example.com/kealoa/person/amanda_chung/"
+          "url": "https://example.com/kealoa/person/Amanda_Chung/"
         }
       ],
       "url": "https://example.com/kealoa/puzzle/2024-01-10/"
@@ -725,7 +726,7 @@ Returns full detail for a single puzzle, including all rounds that used clues fr
     {
       "id": 5,
       "full_name": "Amanda Chung",
-      "url": "https://example.com/kealoa/person/amanda_chung/"
+      "url": "https://example.com/kealoa/person/Amanda_Chung/"
     }
   ],
   "rounds": [
@@ -762,7 +763,7 @@ Returns full detail for a single puzzle, including all rounds that used clues fr
       "total_guesses": 3,
       "correct_guesses": 3,
       "accuracy": 100.0,
-      "url": "https://example.com/kealoa/person/jane_doe/"
+      "url": "https://example.com/kealoa/person/Jane_Doe/"
     }
   ],
   "xwordinfo_url": "https://www.xwordinfo.com/Crossword?date=2024-01-10",
@@ -838,9 +839,9 @@ Performs a full-text search across persons, rounds, and puzzles.
 
 **Query parameters:**
 
-| Parameter | Type   | Required | Validation                                 |
+| Parameter | Type   | Required | Validation                             |
 |---|---|---|---|
-| `q`       | string | Yes      | Minimum trimmed length of 2 characters     |
+| `q`       | string | Yes      | Minimum trimmed length of 2 characters |
 
 **Response: 200 OK**
 
@@ -866,7 +867,7 @@ Returns all persons ranked by their highest single-round score.
 
 **Query parameters:** None
 
-**Response: 200 OK** — Array of entries from `get_all_persons_highest_round_scores()`. Each entry contains person identity fields and score data. Fields depend on the data present.
+**Response: 200 OK** — Array of objects with person identity fields and score data.
 
 ---
 
@@ -876,5 +877,5 @@ Returns all persons ranked by their longest correct-guess streak across all roun
 
 **Query parameters:** None
 
-**Response: 200 OK** — Array of entries from `get_all_persons_longest_streaks()`. Each entry contains person identity fields and streak data. Fields depend on the data present.
+**Response: 200 OK** — Array of objects with person identity fields and streak data.
 
