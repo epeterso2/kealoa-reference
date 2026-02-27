@@ -950,7 +950,11 @@
     .kealoa-persons-table-wrapper .kealoa-table th,
     .kealoa-persons-table-wrapper .kealoa-table td,
     .kealoa-clue-givers-table-wrapper .kealoa-table th,
-    .kealoa-clue-givers-table-wrapper .kealoa-table td {
+    .kealoa-clue-givers-table-wrapper .kealoa-table td,
+    .kealoa-constructors-table-wrapper .kealoa-table th,
+    .kealoa-constructors-table-wrapper .kealoa-table td,
+    .kealoa-editors-table-wrapper .kealoa-table th,
+    .kealoa-editors-table-wrapper .kealoa-table td {
         white-space: normal;
     }
 

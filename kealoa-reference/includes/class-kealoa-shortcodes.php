@@ -323,6 +323,7 @@ class Kealoa_Shortcodes {
                     </div>
                 </div>
             </div>
+            <div class="kealoa-table-scroll">
             <table class="kealoa-table kealoa-rounds-table" id="kealoa-rounds-table">
                 <thead>
                     <tr>
@@ -363,6 +364,7 @@ class Kealoa_Shortcodes {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
 
                 </div><!-- end Rounds Played tab -->
             </div><!-- end kealoa-tabs -->
@@ -2845,6 +2847,7 @@ class Kealoa_Shortcodes {
                 </div>
             </div>
 
+            <div class="kealoa-table-scroll">
             <table class="kealoa-table kealoa-persons-table" id="kealoa-persons-table">
                 <thead>
                     <tr>
@@ -2880,6 +2883,7 @@ class Kealoa_Shortcodes {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
         </div>
         <?php
         return ob_get_clean();
@@ -2922,6 +2926,7 @@ class Kealoa_Shortcodes {
                 </div>
             </div>
 
+            <div class="kealoa-table-scroll">
             <table class="kealoa-table kealoa-constructors-table" id="kealoa-constructors-table">
                 <thead>
                     <tr>
@@ -2955,6 +2960,7 @@ class Kealoa_Shortcodes {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
         </div>
         <?php
         return ob_get_clean();
@@ -2992,6 +2998,7 @@ class Kealoa_Shortcodes {
                 </div>
             </div>
 
+            <div class="kealoa-table-scroll">
             <table class="kealoa-table kealoa-editors-table" id="kealoa-editors-table">
                 <thead>
                     <tr>
@@ -3025,6 +3032,7 @@ class Kealoa_Shortcodes {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
         </div>
         <?php
         return ob_get_clean();
@@ -3062,6 +3070,7 @@ class Kealoa_Shortcodes {
                 </div>
             </div>
 
+            <div class="kealoa-table-scroll">
             <table class="kealoa-table kealoa-clue-givers-table" id="kealoa-clue-givers-table">
                 <thead>
                     <tr>
@@ -3097,6 +3106,7 @@ class Kealoa_Shortcodes {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
         </div>
         <?php
         return ob_get_clean();
