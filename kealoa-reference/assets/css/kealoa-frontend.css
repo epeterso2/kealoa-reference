@@ -390,11 +390,21 @@
 }
 
 .kealoa-person-view .kealoa-tab-button {
-    color: var(--tropical-teal);
+    color: var(--deep-lagoon);
 }
 
 .kealoa-person-view .kealoa-tab-button:hover,
 .kealoa-person-view .kealoa-tab-button.active {
+    background-color: var(--deep-lagoon);
+    border-bottom-color: var(--deep-lagoon);
+}
+
+.kealoa-person-view .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button {
+    color: var(--tropical-teal);
+}
+
+.kealoa-person-view .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button:hover,
+.kealoa-person-view .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button.active {
     background-color: var(--tropical-teal);
     border-bottom-color: var(--tropical-teal);
 }
