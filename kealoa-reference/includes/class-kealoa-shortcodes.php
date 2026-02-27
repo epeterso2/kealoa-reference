@@ -527,7 +527,8 @@ class Kealoa_Shortcodes {
                         ?>
                         <?php
                         $player_slug = str_replace(' ', '_', $player->full_name);
-                        $player_url = home_url('/kealoa/person/' . urlencode($player_slug) . '/') . '#kealoa-tab=player';
+                        $player_tab = ($clue_giver && (int) $player->id === (int) $clue_giver->id) ? 'host' : 'player';
+                        $player_url = home_url('/kealoa/person/' . urlencode($player_slug) . '/') . '#kealoa-tab=' . $player_tab;
                         ?>
                         <div class="kealoa-round-player">
                             <a href="<?php echo esc_url($player_url); ?>">
