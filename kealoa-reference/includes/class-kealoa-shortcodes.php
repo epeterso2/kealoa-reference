@@ -3747,7 +3747,7 @@ class Kealoa_Shortcodes {
      */
     public function render_version(array $atts = []): string {
         return sprintf(
-            '<p class="kealoa-version-widget">Plugin Version: %s, Database Version: %s.</p>',
+            '<p class="kealoa-version-widget">Plugin Version: %s<br />Database Version: %s.</p>',
             esc_html(KEALOA_VERSION),
             esc_html(KEALOA_DB_VERSION)
         );
