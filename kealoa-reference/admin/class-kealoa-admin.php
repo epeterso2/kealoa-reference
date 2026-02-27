@@ -37,10 +37,26 @@ class Kealoa_Admin {
         add_action('admin_bar_menu', [$this, 'modify_edit_link'], 999);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('admin_init', [$this, 'handle_form_submissions']);
+        add_action('admin_notices', [$this, 'render_admin_notices']);
 
         // AJAX handlers
         add_action('wp_ajax_kealoa_get_persons', [$this, 'ajax_get_persons']);
         add_action('wp_ajax_kealoa_save_media', [$this, 'ajax_save_media']);
+    }
+
+    /**
+     * Display any queued flash message stored in the kealoa_admin_message transient.
+     */
+    public function render_admin_notices(): void {
+        $msg = get_transient('kealoa_admin_message');
+        if (!$msg) {
+            return;
+        }
+        delete_transient('kealoa_admin_message');
+        $css_type = ($msg['type'] ?? 'success') === 'error' ? 'notice-error' : 'notice-success';
+        echo '<div class="notice ' . esc_attr($css_type) . ' is-dismissible"><p>'
+            . esc_html($msg['message'])
+            . '</p></div>';
     }
 
     /**
@@ -966,6 +982,11 @@ class Kealoa_Admin {
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons')); ?>" class="button">
             &larr; <?php esc_html_e('Back to Persons', 'kealoa-reference'); ?>
         </a>
+        <?php if ($is_edit): ?>
+            <a href="<?php echo esc_url(home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $person->full_name)) . '/')); ?>" class="button" target="_blank" rel="noopener">
+                <?php esc_html_e('View', 'kealoa-reference'); ?> &nearr;
+            </a>
+        <?php endif; ?>
 
         <form method="post" class="kealoa-form">
             <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
@@ -1210,6 +1231,11 @@ class Kealoa_Admin {
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-puzzles')); ?>" class="button">
             &larr; <?php esc_html_e('Back to Puzzles', 'kealoa-reference'); ?>
         </a>
+        <?php if ($is_edit): ?>
+            <a href="<?php echo esc_url(home_url('/kealoa/puzzle/' . urlencode($puzzle->publication_date) . '/')); ?>" class="button" target="_blank" rel="noopener">
+                <?php esc_html_e('View', 'kealoa-reference'); ?> &nearr;
+            </a>
+        <?php endif; ?>
 
         <form method="post" class="kealoa-form">
             <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
@@ -1399,6 +1425,9 @@ class Kealoa_Admin {
         </a>
 
         <?php if ($is_edit): ?>
+            <a href="<?php echo esc_url(home_url('/kealoa/round/' . $id . '/')); ?>" class="button" target="_blank" rel="noopener">
+                <?php esc_html_e('View', 'kealoa-reference'); ?> &nearr;
+            </a>
             <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $id)); ?>" class="button">
                 <?php esc_html_e('Manage Clues', 'kealoa-reference'); ?>
             </a>
@@ -1958,7 +1987,7 @@ class Kealoa_Admin {
         ]);
 
         if ($id) {
-            $this->redirect_with_message('kealoa-persons', 'Person created successfully.');
+            $this->redirect_with_message('kealoa-persons', 'Person created successfully.', 'success', ['action' => 'edit', 'id' => $id]);
         } else {
             $this->redirect_with_message('kealoa-persons', 'Failed to create person.', 'error');
         }
@@ -1982,9 +2011,9 @@ class Kealoa_Admin {
         ]);
 
         if ($result) {
-            $this->redirect_with_message('kealoa-persons', 'Person updated successfully.');
+            $this->redirect_with_message('kealoa-persons', 'Person updated successfully.', 'success', ['action' => 'edit', 'id' => $id]);
         } else {
-            $this->redirect_with_message('kealoa-persons', 'Failed to update person.', 'error');
+            $this->redirect_with_message('kealoa-persons', 'Failed to update person.', 'error', ['action' => 'edit', 'id' => $id]);
         }
     }
 
@@ -2011,7 +2040,7 @@ class Kealoa_Admin {
             if (!empty($constructors)) {
                 $this->db->set_puzzle_constructors($id, array_map('intval', $constructors));
             }
-            $this->redirect_with_message('kealoa-puzzles', 'Puzzle created successfully.');
+            $this->redirect_with_message('kealoa-puzzles', 'Puzzle created successfully.', 'success', ['action' => 'edit', 'id' => $id]);
         } else {
             $this->redirect_with_message('kealoa-puzzles', 'Failed to create puzzle.', 'error');
         }
@@ -2032,9 +2061,9 @@ class Kealoa_Admin {
         $this->db->set_puzzle_constructors($id, array_map('intval', $constructors));
 
         if ($result) {
-            $this->redirect_with_message('kealoa-puzzles', 'Puzzle updated successfully.');
+            $this->redirect_with_message('kealoa-puzzles', 'Puzzle updated successfully.', 'success', ['action' => 'edit', 'id' => $id]);
         } else {
-            $this->redirect_with_message('kealoa-puzzles', 'Failed to update puzzle.', 'error');
+            $this->redirect_with_message('kealoa-puzzles', 'Failed to update puzzle.', 'error', ['action' => 'edit', 'id' => $id]);
         }
     }
 
@@ -2078,7 +2107,7 @@ class Kealoa_Admin {
                 $this->db->set_round_guessers($id, array_map('intval', $guessers));
             }
 
-            $this->redirect_with_message('kealoa-rounds', 'Round created successfully.');
+            $this->redirect_with_message('kealoa-rounds', 'Round created successfully.', 'success', ['action' => 'edit', 'id' => $id]);
         } else {
             $this->redirect_with_message('kealoa-rounds', 'Failed to create round.', 'error');
         }
@@ -2117,9 +2146,9 @@ class Kealoa_Admin {
         $this->db->set_round_guessers($id, array_map('intval', $guessers));
 
         if ($result) {
-            $this->redirect_with_message('kealoa-rounds', 'Round updated successfully.');
+            $this->redirect_with_message('kealoa-rounds', 'Round updated successfully.', 'success', ['action' => 'edit', 'id' => $id]);
         } else {
-            $this->redirect_with_message('kealoa-rounds', 'Failed to update round.', 'error');
+            $this->redirect_with_message('kealoa-rounds', 'Failed to update round.', 'error', ['action' => 'edit', 'id' => $id]);
         }
     }
 
@@ -2280,7 +2309,7 @@ class Kealoa_Admin {
     /**
      * Redirect with message
      */
-    private function redirect_with_message(string $page, string $message, string $type = 'success'): void {
+    private function redirect_with_message(string $page, string $message, string $type = 'success', array $extra_args = []): void {
         // Flush transient caches before redirecting (must happen before exit)
         Kealoa_Shortcodes::flush_all_caches();
 
@@ -2289,7 +2318,12 @@ class Kealoa_Admin {
             'type' => $type,
         ], 30);
 
-        wp_redirect(admin_url('admin.php?page=' . $page));
+        $url = admin_url('admin.php?page=' . $page);
+        if (!empty($extra_args)) {
+            $url = add_query_arg($extra_args, $url);
+        }
+
+        wp_redirect($url);
         exit;
     }
 
