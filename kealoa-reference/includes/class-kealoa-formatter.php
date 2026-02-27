@@ -339,7 +339,9 @@ class Kealoa_Formatter {
         $nophoto_url = 'https://www.xwordinfo.com/images/cons/nophoto.jpg';
 
         if (empty($image_url)) {
-            $image_url = $nophoto_url;
+            $image_url = !empty($alt_text)
+                ? self::xwordinfo_image_url_from_name($alt_text)
+                : $nophoto_url;
         }
         
         return sprintf(
