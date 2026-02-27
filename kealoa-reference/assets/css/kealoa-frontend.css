@@ -708,6 +708,7 @@
 #kealoa-person-cg-rounds-table td:nth-child(2),
 #kealoa-person-cg-rounds-table td:nth-child(3) {
     white-space: normal;
+    max-width: 200px;
 }
 
 .kealoa-puzzle-player-stats h2 {
