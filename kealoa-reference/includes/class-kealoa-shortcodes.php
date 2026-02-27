@@ -3562,13 +3562,12 @@ class Kealoa_Shortcodes {
                         <?php
                         $round_url = home_url('/kealoa/round/' . (int) $rc['round_id'] . '/');
                         $solutions = $this->db->get_round_solutions((int) $rc['round_id']);
-                        $solution_words = Kealoa_Formatter::format_solution_words($solutions);
-                        $round_label = sprintf(
-                            '<a href="%s">KEALOA #%d</a>',
-                            esc_url($round_url),
-                            (int) $rc['round_id']
+                        $round_heading = sprintf(
+                            'WORD LIST: KEALOA #%d &ndash; %s',
+                            (int) $rc['round_number'],
+                            esc_html(Kealoa_Formatter::format_date($rc['round_date']))
                         );
-                        echo $round_label . ' — ' . esc_html($solution_words);
+                        printf('<a href="%s">%s</a>', esc_url($round_url), $round_heading);
                         ?>
                     </h3>
 
