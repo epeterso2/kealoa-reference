@@ -3139,13 +3139,19 @@ class Kealoa_Shortcodes {
         return $this->get_cached_or_render('puzzles_table', function () {
 
         $puzzles = $this->db->get_all_puzzles_with_details();
-
-        if (empty($puzzles)) {
-            return '<p class="kealoa-no-data">' . esc_html__('No puzzles found.', 'kealoa-reference') . '</p>';
-        }
+        $multi_round_puzzles = $this->db->get_puzzles_used_in_multiple_rounds();
 
         ob_start();
         ?>
+        <div class="kealoa-tabs">
+            <nav class="kealoa-tab-nav" role="tablist">
+                <button class="kealoa-tab-button active" role="tab" aria-selected="true" data-tab="kealoa-puzzles-tab-all"><?php esc_html_e('All Puzzles', 'kealoa-reference'); ?></button>
+                <button class="kealoa-tab-button" role="tab" aria-selected="false" data-tab="kealoa-puzzles-tab-curiosities"><?php esc_html_e('Curiosities', 'kealoa-reference'); ?></button>
+            </nav>
+            <div class="kealoa-tab-panel active" id="kealoa-puzzles-tab-all" role="tabpanel">
+        <?php if (empty($puzzles)): ?>
+            <p class="kealoa-no-data"><?php esc_html_e('No puzzles found.', 'kealoa-reference'); ?></p>
+        <?php else: ?>
         <div class="kealoa-puzzles-table-wrapper">
             <div class="kealoa-filter-controls" data-target="kealoa-puzzles-table">
                 <div class="kealoa-filter-row">
@@ -3281,10 +3287,82 @@ class Kealoa_Shortcodes {
             </table>
             </div>
         </div>
+        <?php endif; ?>
+            </div><!-- end kealoa-puzzles-tab-all -->
+            <div class="kealoa-tab-panel" id="kealoa-puzzles-tab-curiosities" role="tabpanel">
+                <?php $this->render_curiosities_panel($multi_round_puzzles); ?>
+            </div><!-- end kealoa-puzzles-tab-curiosities -->
+        </div><!-- end kealoa-tabs -->
         <?php
         return ob_get_clean();
 
         }); // end get_cached_or_render
+    }
+
+    /**
+     * Render the Curiosities tab panel — puzzles used in more than one round.
+     *
+     * @param array $puzzles Array of puzzle objects with round_count.
+     */
+    private function render_curiosities_panel(array $puzzles): void {
+        if (empty($puzzles)): ?>
+            <p class="kealoa-no-data"><?php esc_html_e('No puzzles have been used in more than one round yet.', 'kealoa-reference'); ?></p>
+        <?php return; endif; ?>
+        <div class="kealoa-puzzles-table-wrapper">
+            <div class="kealoa-table-scroll">
+                <table class="kealoa-table kealoa-puzzles-table" id="kealoa-puzzles-curiosities-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
+                            <th data-sort="date"><?php esc_html_e('Publication Date', 'kealoa-reference'); ?></th>
+                            <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
+                            <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
+                            <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($puzzles as $puzzle): ?>
+                            <?php
+                            $constructor_ids   = !empty($puzzle->constructor_ids)   ? explode(',', $puzzle->constructor_ids)   : [];
+                            $constructor_names = !empty($puzzle->constructor_names) ? explode(', ', $puzzle->constructor_names) : [];
+                            ?>
+                            <tr>
+                                <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($puzzle->publication_date)); ?></td>
+                                <td><?php echo Kealoa_Formatter::format_puzzle_date_link($puzzle->publication_date); ?></td>
+                                <td>
+                                    <?php
+                                    if (!empty($constructor_ids)) {
+                                        $links = [];
+                                        for ($i = 0; $i < count($constructor_ids); $i++) {
+                                            $cid   = (int) $constructor_ids[$i];
+                                            $cname = $constructor_names[$i] ?? '';
+                                            if ($cid && $cname) {
+                                                $links[] = Kealoa_Formatter::format_constructor_link($cid, $cname);
+                                            }
+                                        }
+                                        echo Kealoa_Formatter::format_list_with_and($links);
+                                    } else {
+                                        echo '&mdash;';
+                                    }
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php
+                                    if (!empty($puzzle->editor_id)) {
+                                        echo Kealoa_Formatter::format_editor_link((int) $puzzle->editor_id, $puzzle->editor_name);
+                                    } else {
+                                        echo '&mdash;';
+                                    }
+                                    ?>
+                                </td>
+                                <td class="kealoa-results-cell"><?php echo esc_html((int) $puzzle->round_count); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?php
     }
 
     /**

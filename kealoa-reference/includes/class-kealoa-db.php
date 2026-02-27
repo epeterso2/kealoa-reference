@@ -2331,6 +2331,38 @@ class Kealoa_DB {
     /**
      * Get co-constructors for a constructor's puzzles
      */
+    /**
+     * Get all puzzles that have been used in more than one distinct round.
+     *
+     * Returns puzzle rows with constructor/editor info and a round_count column,
+     * ordered by round_count DESC then publication_date ASC.
+     *
+     * @return array Array of puzzle objects.
+     */
+    public function get_puzzles_used_in_multiple_rounds(): array {
+        $sql = "SELECT
+                pz.id,
+                pz.publication_date,
+                COALESCE(ed.full_name, '') as editor_name,
+                ed.id as editor_id,
+                GROUP_CONCAT(DISTINCT con.full_name ORDER BY pc.constructor_order ASC SEPARATOR ', ') as constructor_names,
+                GROUP_CONCAT(DISTINCT con.id ORDER BY pc.constructor_order ASC) as constructor_ids,
+                COUNT(DISTINCT c.round_id) as round_count
+            FROM {$this->puzzles_table} pz
+            LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
+            LEFT JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
+            LEFT JOIN {$this->persons_table} con ON pc.person_id = con.id
+            INNER JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
+            GROUP BY pz.id, pz.publication_date, ed.full_name, ed.id
+            HAVING COUNT(DISTINCT c.round_id) > 1
+            ORDER BY round_count DESC, pz.publication_date ASC";
+
+        return $this->wpdb->get_results($sql) ?: [];
+    }
+
+    /**
+     * Get co-constructors for a constructor's puzzles
+     */
     public function get_puzzle_co_constructors(int $puzzle_id, int $exclude_person_id): array {
         $sql = $this->wpdb->prepare(
             "SELECT p.id, p.full_name, p.xwordinfo_profile_name
