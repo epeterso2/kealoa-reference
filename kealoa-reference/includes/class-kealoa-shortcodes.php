@@ -3419,10 +3419,15 @@ class Kealoa_Shortcodes {
             $rounds_clues[$rid]['clues'][] = $clue;
         }
 
-        // Pre-fetch solutions for each round
+        // Pre-fetch solutions for each round and count of rounds per date
         $round_solutions_cache = [];
+        $rounds_per_date_cache = [];
         foreach ($rounds_clues as $rid => $rc) {
             $round_solutions_cache[$rid] = $this->db->get_round_solutions($rid);
+            $date = $rc['round_date'];
+            if (!isset($rounds_per_date_cache[$date])) {
+                $rounds_per_date_cache[$date] = count($this->db->get_rounds_by_date($date));
+            }
         }
 
         // Group clues by crossword position (puzzle_clue_number + direction)
@@ -3611,7 +3616,7 @@ class Kealoa_Shortcodes {
                                         ? Kealoa_Formatter::format_solution_words_link($rid, $round_solutions_cache[$rid])
                                         : '';
                                     $date_cell = Kealoa_Formatter::format_round_date_link($rid, $er['round_date']);
-                                    if (!empty($er['round_number'])) {
+                                    if (!empty($er['round_number']) && ($rounds_per_date_cache[$er['round_date']] ?? 1) > 1) {
                                         $date_cell .= ' <span class="kealoa-round-number">(#' . esc_html($er['round_number']) . ')</span>';
                                     }
                                     $round_date_parts[] = $date_cell;
