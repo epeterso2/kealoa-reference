@@ -869,16 +869,17 @@ class Kealoa_Shortcodes {
                         <?php if (!empty($roles)): ?>
                             <p class="kealoa-person-roles">
                                 <?php
-                                $role_badge_labels = [
+                                $role_labels = [
                                     'player'      => __('Player', 'kealoa-reference'),
                                     'constructor' => __('Constructor', 'kealoa-reference'),
                                     'editor'      => __('Editor', 'kealoa-reference'),
                                     'clue_giver'  => __('Host', 'kealoa-reference'),
                                 ];
+                                $role_names = array_map(function($role) use ($role_labels) {
+                                    return esc_html($role_labels[$role] ?? ucfirst($role));
+                                }, $roles);
+                                echo Kealoa_Formatter::format_list_with_and($role_names);
                                 ?>
-                                <?php foreach ($roles as $role): ?>
-                                    <span class="kealoa-role-badge kealoa-role-<?php echo esc_attr($role); ?>"><?php echo esc_html($role_badge_labels[$role] ?? ucfirst($role)); ?></span>
-                                <?php endforeach; ?>
                             </p>
                         <?php endif; ?>
 
