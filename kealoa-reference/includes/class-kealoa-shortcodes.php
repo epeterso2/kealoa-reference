@@ -869,23 +869,6 @@ class Kealoa_Shortcodes {
                             <p class="kealoa-person-nicknames"><?php echo esc_html($person->nicknames); ?></p>
                         <?php endif; ?>
 
-                        <?php if (!empty($roles)): ?>
-                            <p class="kealoa-person-roles">
-                                <?php
-                                $role_labels = [
-                                    'player'      => __('Player', 'kealoa-reference'),
-                                    'constructor' => __('Constructor', 'kealoa-reference'),
-                                    'editor'      => __('Editor', 'kealoa-reference'),
-                                    'clue_giver'  => __('Host', 'kealoa-reference'),
-                                ];
-                                $role_names = array_map(function($role) use ($role_labels) {
-                                    return esc_html($role_labels[$role] ?? ucfirst($role));
-                                }, $roles);
-                                echo Kealoa_Formatter::format_list_with_and($role_names);
-                                ?>
-                            </p>
-                        <?php endif; ?>
-
                         <?php if (empty($person->hide_xwordinfo)): ?>
                         <p class="kealoa-person-xwordinfo">
                             <?php echo Kealoa_Formatter::format_xwordinfo_link($person->full_name, 'XWordInfo Profile'); ?>
