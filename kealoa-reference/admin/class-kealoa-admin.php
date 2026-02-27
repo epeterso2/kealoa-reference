@@ -1074,16 +1074,6 @@ class Kealoa_Admin {
                         </p>
                     </td>
                 </tr>
-                <tr>
-                    <th><?php esc_html_e('Hide XWordInfo', 'kealoa-reference'); ?></th>
-                    <td>
-                        <label for="hide_xwordinfo">
-                            <input type="checkbox" name="hide_xwordinfo" id="hide_xwordinfo" value="1"
-                                   <?php checked(!empty($person->hide_xwordinfo)); ?> />
-                            <?php esc_html_e('Hide XWordInfo link on the player view', 'kealoa-reference'); ?>
-                        </label>
-                    </td>
-                </tr>
             </table>
 
             <p class="submit">
@@ -1981,7 +1971,6 @@ class Kealoa_Admin {
             'home_page_url' => $_POST['home_page_url'] ?? null,
             'image_url' => $_POST['image_url'] ?? null,
             'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
-            'hide_xwordinfo' => !empty($_POST['hide_xwordinfo']),
             'xwordinfo_profile_name' => $_POST['xwordinfo_profile_name'] ?? null,
             'xwordinfo_image_url' => $_POST['xwordinfo_image_url'] ?? null,
         ]);
@@ -2005,7 +1994,6 @@ class Kealoa_Admin {
             'home_page_url' => $_POST['home_page_url'] ?? null,
             'image_url' => $_POST['image_url'] ?? null,
             'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
-            'hide_xwordinfo' => !empty($_POST['hide_xwordinfo']),
             'xwordinfo_profile_name' => $_POST['xwordinfo_profile_name'] ?? null,
             'xwordinfo_image_url' => $_POST['xwordinfo_image_url'] ?? null,
         ]);
