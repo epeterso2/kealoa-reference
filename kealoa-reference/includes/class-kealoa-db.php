@@ -2064,14 +2064,18 @@ class Kealoa_DB {
             "SELECT
                 COUNT(DISTINCT r.id) as round_count,
                 COUNT(DISTINCT c.id) as clue_count,
-                COUNT(DISTINCT rg.person_id) as guesser_count,
+                (SELECT COUNT(DISTINCT rg.person_id)
+                    FROM {$this->round_guessers_table} rg
+                    INNER JOIN {$this->rounds_table} r2 ON r2.id = rg.round_id
+                    WHERE r2.clue_giver_id = %d
+                ) as guesser_count,
                 COUNT(g.id) as total_guesses,
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses
             FROM {$this->rounds_table} r
             LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
-            LEFT JOIN {$this->round_guessers_table} rg ON rg.round_id = r.id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
             WHERE r.clue_giver_id = %d",
+            $person_id,
             $person_id
         );
 
