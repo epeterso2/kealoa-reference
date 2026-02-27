@@ -823,6 +823,7 @@ class Kealoa_Import {
         
         $id = $this->db->create_person([
             'full_name' => $name,
+            'xwordinfo_image_url' => Kealoa_Formatter::xwordinfo_image_url_from_name($name),
         ]);
         
         return $id ? $this->db->get_person($id) : null;

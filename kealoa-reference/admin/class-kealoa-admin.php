@@ -900,14 +900,13 @@ class Kealoa_Admin {
                     <th><?php esc_html_e('ID', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Full Name', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Home Page', 'kealoa-reference'); ?></th>
-                    <th><?php esc_html_e('Image URL', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Actions', 'kealoa-reference'); ?></th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($persons)): ?>
                     <tr>
-                        <td colspan="5"><?php esc_html_e('No persons found.', 'kealoa-reference'); ?></td>
+                        <td colspan="4"><?php esc_html_e('No persons found.', 'kealoa-reference'); ?></td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($persons as $person): ?>
@@ -917,13 +916,6 @@ class Kealoa_Admin {
                             <td>
                                 <?php if ($person->home_page_url): ?>
                                     <?php echo Kealoa_Formatter::format_home_page_link($person->home_page_url); ?>
-                                <?php else: ?>
-                                    —
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php if (!empty($person->image_url)): ?>
-                                    <?php echo esc_html($person->image_url); ?>
                                 <?php else: ?>
                                     —
                                 <?php endif; ?>
@@ -1021,13 +1013,6 @@ class Kealoa_Admin {
                     <td>
                         <input type="url" name="home_page_url" id="home_page_url" class="regular-text"
                                value="<?php echo esc_attr($person->home_page_url ?? ''); ?>" />
-                    </td>
-                </tr>
-                <tr>
-                    <th><label for="image_url"><?php esc_html_e('Image URL', 'kealoa-reference'); ?></label></th>
-                    <td>
-                        <input type="url" name="image_url" id="image_url" class="regular-text"
-                               value="<?php echo esc_attr($person->image_url ?? ''); ?>" />
                     </td>
                 </tr>
                 <tr>
@@ -1965,14 +1950,16 @@ class Kealoa_Admin {
      * Handle create person
      */
     private function handle_create_person(): void {
+        $full_name = $_POST['full_name'] ?? '';
         $id = $this->db->create_person([
-            'full_name' => $_POST['full_name'] ?? '',
+            'full_name' => $full_name,
             'nicknames' => $_POST['nicknames'] ?? null,
             'home_page_url' => $_POST['home_page_url'] ?? null,
-            'image_url' => $_POST['image_url'] ?? null,
             'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
             'xwordinfo_profile_name' => $_POST['xwordinfo_profile_name'] ?? null,
-            'xwordinfo_image_url' => $_POST['xwordinfo_image_url'] ?? null,
+            'xwordinfo_image_url' => !empty($_POST['xwordinfo_image_url'])
+                ? $_POST['xwordinfo_image_url']
+                : Kealoa_Formatter::xwordinfo_image_url_from_name($full_name),
         ]);
 
         if ($id) {
@@ -1992,7 +1979,6 @@ class Kealoa_Admin {
             'full_name' => $_POST['full_name'] ?? '',
             'nicknames' => $_POST['nicknames'] ?? null,
             'home_page_url' => $_POST['home_page_url'] ?? null,
-            'image_url' => $_POST['image_url'] ?? null,
             'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
             'xwordinfo_profile_name' => $_POST['xwordinfo_profile_name'] ?? null,
             'xwordinfo_image_url' => $_POST['xwordinfo_image_url'] ?? null,

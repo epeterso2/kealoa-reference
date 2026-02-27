@@ -336,11 +336,11 @@ class Kealoa_Formatter {
      * @return string HTML img tag
      */
     public static function format_xwordinfo_image(string $image_url, string $alt_text = ''): string {
-        if (empty($image_url)) {
-            return '';
-        }
-        
         $nophoto_url = 'https://www.xwordinfo.com/images/cons/nophoto.jpg';
+
+        if (empty($image_url)) {
+            $image_url = $nophoto_url;
+        }
         
         return sprintf(
             '<img src="%s" alt="%s" class="kealoa-xwordinfo-image" loading="lazy" onerror="this.onerror=null;this.src=\'%s\';" />',

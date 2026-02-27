@@ -521,7 +521,7 @@ class Kealoa_Shortcodes {
                             }
                         }
                         if (empty($player_img_source)) {
-                            $player_img_url = Kealoa_Formatter::xwordinfo_image_url_from_name($player->full_name);
+                            $player_img_url = $player->xwordinfo_image_url ?? '';
                             $player_img_source = 'xwordinfo';
                         }
                         ?>
@@ -836,9 +836,8 @@ class Kealoa_Shortcodes {
             }
         }
 
-        if (empty($person_image_source) && empty($person->hide_xwordinfo)) {
-            // Derive XWordInfo image URL from person's name
-            $person_media_url = Kealoa_Formatter::xwordinfo_image_url_from_name($person->full_name);
+        if (empty($person_image_source)) {
+            $person_media_url = $person->xwordinfo_image_url ?? '';
             $person_image_source = 'xwordinfo';
         }
 
@@ -851,7 +850,7 @@ class Kealoa_Shortcodes {
         <div class="kealoa-person-view">
             <div class="kealoa-person-header">
                 <div class="kealoa-person-info">
-                    <?php if (!empty($person_media_url)): ?>
+                    <?php if ($person_image_source !== ''): ?>
                         <div class="kealoa-person-image">
                             <?php if ($person_image_source === 'media'): ?>
                                 <img src="<?php echo esc_url($person_media_url); ?>"
@@ -3336,8 +3335,8 @@ class Kealoa_Shortcodes {
                     $editor_image_source = 'media';
                 }
             }
-            if (empty($editor_image_source) && empty($editor_person->hide_xwordinfo)) {
-                $editor_image_url = Kealoa_Formatter::xwordinfo_image_url_from_name($editor_name);
+            if (empty($editor_image_source)) {
+                $editor_image_url = $editor_person->xwordinfo_image_url ?? '';
                 $editor_image_source = 'xwordinfo';
             }
         }
@@ -3464,7 +3463,7 @@ class Kealoa_Shortcodes {
                         </div>
                     <?php endforeach; ?>
 
-                    <?php if (!empty($editor_image_url) && !empty($editor_name)): ?>
+                    <?php if (!empty($editor_name) && $editor_image_source !== ''): ?>
                         <?php
                         $editor_slug = str_replace(' ', '_', $editor_name);
                         $editor_url = home_url('/kealoa/person/' . urlencode($editor_slug) . '/') . '#kealoa-tab=editor';
