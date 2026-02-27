@@ -1037,6 +1037,7 @@ class Kealoa_Import {
             $constructor_name_raw = trim($row['constructor_name'] ?? '');
             $puzzle_clue_number   = trim($row['clue_number'] ?? '');
             $clue_direction_raw   = trim($row['clue_direction'] ?? '');
+            $clue_text_raw        = trim($row['clue_text'] ?? '');
 
             // Normalize optional puzzle date
             $puzzle_date = null;
@@ -1187,10 +1188,16 @@ class Kealoa_Import {
                 $clue_data['puzzle_clue_direction'] = $clue_direction;
             }
 
+            if ($clue_text_raw !== '') {
+                $clue_data['clue_text'] = $clue_text_raw;
+            }
+
             if (!$existing_clue) {
                 $clue_data['round_id']    = $round_id;
                 $clue_data['clue_number'] = $clue_number_in_round;
-                $clue_data['clue_text']   = '';
+                if (!isset($clue_data['clue_text'])) {
+                    $clue_data['clue_text'] = '';
+                }
                 $new_clue_id = $this->db->create_clue($clue_data);
                 if (!$new_clue_id) {
                     $errors[] = "Line {$line}: Could not create clue {$clue_number_in_round} for round {$round_id}.";
