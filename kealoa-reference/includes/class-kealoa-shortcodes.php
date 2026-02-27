@@ -2403,7 +2403,7 @@ class Kealoa_Shortcodes {
                             <thead>
                                 <tr>
                                     <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
-                                    <th data-sort="number"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number" data-default-sort="desc"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
@@ -3004,7 +3004,7 @@ class Kealoa_Shortcodes {
                 <thead>
                     <tr>
                         <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></th>
+                        <th data-sort="number" data-default-sort="desc"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
