@@ -1360,6 +1360,65 @@ class Kealoa_Shortcodes {
                 </div>
             <?php endif; ?>
 
+            <?php if (!empty($round_history)): ?>
+                <?php
+                // Build Mixup % vs Accuracy table for this player
+                $player_mixup_buckets = [];
+                foreach ($round_history as $rh) {
+                    $rid = (int) $rh->round_id;
+                    $mixup = $this->db->get_round_mixup_pct($rid);
+                    $bucket = (int) floor($mixup / 10) * 10;
+                    if ($bucket >= 100) {
+                        $bucket = 90; // merge 100% into 90-100 bucket
+                    }
+                    if (!isset($player_mixup_buckets[$bucket])) {
+                        $player_mixup_buckets[$bucket] = ['rounds' => 0, 'guesses' => 0, 'correct' => 0];
+                    }
+                    $player_mixup_buckets[$bucket]['rounds']++;
+                    $player_mixup_buckets[$bucket]['guesses'] += (int) $rh->total_clues;
+                    $player_mixup_buckets[$bucket]['correct'] += (int) $rh->correct_count;
+                }
+                ksort($player_mixup_buckets);
+                ?>
+                <?php if (!empty($player_mixup_buckets)): ?>
+                <div class="kealoa-mixup-accuracy-section">
+                    <h2><?php esc_html_e('Mixup % vs Accuracy', 'kealoa-reference'); ?></h2>
+                    <p class="kealoa-section-description"><?php esc_html_e('Mixup % measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
+
+                    <table class="kealoa-table kealoa-mixup-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="text"><?php esc_html_e('Mixup %', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($player_mixup_buckets as $bucket => $mbstats): ?>
+                                <?php
+                                $bucket_label = $bucket . '%–' . ($bucket + 10) . '%';
+                                $bucket_acc = $mbstats['guesses'] > 0
+                                    ? ($mbstats['correct'] / $mbstats['guesses']) * 100
+                                    : 0;
+                                ?>
+                                <tr>
+                                    <td><?php echo esc_html($bucket_label); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n($mbstats['rounds'])); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n($mbstats['guesses'])); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n($mbstats['correct'])); ?></td>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $bucket_acc, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($bucket_acc); ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
+            <?php endif; ?>
+
             </div>
 
                 </div><!-- end Overall Stats sub-tab -->
