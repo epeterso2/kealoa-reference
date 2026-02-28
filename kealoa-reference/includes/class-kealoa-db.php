@@ -1236,35 +1236,36 @@ class Kealoa_DB {
     }
 
     /**
-     * Get the opening run length for a round.
+     * Get the Mixup % for a round (Wald-Wolfowitz run-count metric).
      *
-     * Counts how many consecutive clues at the start of the round share
-     * the same correct answer before a different answer appears.
+     * A "run" is a maximal consecutive sequence of identical correct answers.
+     * Mixup % = ((r - 1) / (n - 1)) * 100, where r = number of runs and
+     * n = number of clues.  Returns 0 when the round has fewer than 2 clues.
      *
      * @param int $round_id The round ID.
-     * @return int The number of consecutive opening clues with the same answer (0 if no clues).
+     * @return float The Mixup percentage (0-100).
      */
-    public function get_round_opening_run(int $round_id): int {
+    public function get_round_mixup_pct(int $round_id): float {
         $sql = $this->wpdb->prepare(
             "SELECT correct_answer FROM {$this->clues_table} WHERE round_id = %d ORDER BY clue_number ASC",
             $round_id
         );
         $answers = $this->wpdb->get_col($sql);
 
-        if (empty($answers)) {
-            return 0;
+        $n = count($answers);
+        if ($n < 2) {
+            return 0.0;
         }
 
-        $first = $answers[0];
-        $run = 1;
-        for ($i = 1, $len = count($answers); $i < $len; $i++) {
-            if ($answers[$i] !== $first) {
-                break;
+        // Count the number of runs
+        $runs = 1;
+        for ($i = 1; $i < $n; $i++) {
+            if ($answers[$i] !== $answers[$i - 1]) {
+                $runs++;
             }
-            $run++;
         }
 
-        return $run;
+        return (($runs - 1) / ($n - 1)) * 100;
     }
 
     /**
