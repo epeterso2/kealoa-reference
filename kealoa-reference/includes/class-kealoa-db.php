@@ -1236,6 +1236,38 @@ class Kealoa_DB {
     }
 
     /**
+     * Get the opening run length for a round.
+     *
+     * Counts how many consecutive clues at the start of the round share
+     * the same correct answer before a different answer appears.
+     *
+     * @param int $round_id The round ID.
+     * @return int The number of consecutive opening clues with the same answer (0 if no clues).
+     */
+    public function get_round_opening_run(int $round_id): int {
+        $sql = $this->wpdb->prepare(
+            "SELECT correct_answer FROM {$this->clues_table} WHERE round_id = %d ORDER BY clue_number ASC",
+            $round_id
+        );
+        $answers = $this->wpdb->get_col($sql);
+
+        if (empty($answers)) {
+            return 0;
+        }
+
+        $first = $answers[0];
+        $run = 1;
+        for ($i = 1, $len = count($answers); $i < $len; $i++) {
+            if ($answers[$i] !== $first) {
+                break;
+            }
+            $run++;
+        }
+
+        return $run;
+    }
+
+    /**
      * Get guesser results for a round
      */
     public function get_round_guesser_results(int $round_id): array {
