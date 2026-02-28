@@ -1269,6 +1269,29 @@ class Kealoa_DB {
     }
 
     /**
+     * Get per-round mixup % and accuracy data for all rounds.
+     *
+     * Returns an array of objects with round_id, total_guesses, and
+     * correct_guesses.  The caller computes mixup % via
+     * get_round_mixup_pct() for each round.
+     *
+     * @return array Array of objects with round_id, total_guesses, correct_guesses.
+     */
+    public function get_rounds_guess_stats(): array {
+        $sql = "SELECT
+                r.id AS round_id,
+                COUNT(g.id) AS total_guesses,
+                COALESCE(SUM(g.is_correct), 0) AS correct_guesses
+            FROM {$this->rounds_table} r
+            LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
+            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+            GROUP BY r.id
+            ORDER BY r.id ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get guesser results for a round
      */
     public function get_round_guesser_results(int $round_id): array {
