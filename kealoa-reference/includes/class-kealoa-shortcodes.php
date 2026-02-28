@@ -2045,6 +2045,8 @@ class Kealoa_Shortcodes {
                     <div class="kealoa-clue-giver-rounds">
                         <h2><?php esc_html_e('Rounds', 'kealoa-reference'); ?></h2>
 
+                        <p class="kealoa-section-description"><?php esc_html_e('The Opening Run column shows how many consecutive clues at the start of the round shared the same answer before a different answer was introduced.', 'kealoa-reference'); ?></p>
+
                         <div class="kealoa-filter-controls" data-target="kealoa-person-cg-rounds-table">
                             <div class="kealoa-filter-row">
                                 <div class="kealoa-filter-group">
