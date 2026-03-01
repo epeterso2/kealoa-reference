@@ -592,9 +592,14 @@ class Kealoa_DB {
 
     /**
      * Get the previous round (by date desc, round_number desc)
+     *
+     * @param int         $current_round_id The current round ID.
+     * @param object|null $current          Optional pre-loaded round object to avoid an extra query.
      */
-    public function get_previous_round(int $current_round_id): ?object {
-        $current = $this->get_round($current_round_id);
+    public function get_previous_round(int $current_round_id, ?object $current = null): ?object {
+        if (!$current) {
+            $current = $this->get_round($current_round_id);
+        }
         if (!$current) {
             return null;
         }
@@ -613,9 +618,14 @@ class Kealoa_DB {
 
     /**
      * Get the next round (by date asc, round_number asc)
+     *
+     * @param int         $current_round_id The current round ID.
+     * @param object|null $current          Optional pre-loaded round object to avoid an extra query.
      */
-    public function get_next_round(int $current_round_id): ?object {
-        $current = $this->get_round($current_round_id);
+    public function get_next_round(int $current_round_id, ?object $current = null): ?object {
+        if (!$current) {
+            $current = $this->get_round($current_round_id);
+        }
         if (!$current) {
             return null;
         }
@@ -703,39 +713,27 @@ class Kealoa_DB {
      * Get overview statistics for all rounds
      */
     public function get_rounds_overview_stats(): object {
-        $total_rounds = $this->count_rounds();
-
-        $total_players = (int) $this->wpdb->get_var(
-            "SELECT COUNT(DISTINCT person_id) FROM {$this->round_guessers_table}"
+        $row = $this->wpdb->get_row(
+            "SELECT
+                (SELECT COUNT(*) FROM {$this->rounds_table}) as total_rounds,
+                (SELECT COUNT(DISTINCT person_id) FROM {$this->round_guessers_table}) as total_players,
+                (SELECT COUNT(*) FROM {$this->clues_table}) as total_clues,
+                (SELECT COUNT(DISTINCT puzzle_id) FROM {$this->clues_table} WHERE puzzle_id IS NOT NULL) as total_puzzles,
+                (SELECT COUNT(DISTINCT pc.person_id) FROM {$this->puzzle_constructors_table} pc
+                    INNER JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id) as total_constructors,
+                (SELECT COUNT(*) FROM {$this->guesses_table}) as total_guesses,
+                (SELECT COALESCE(SUM(is_correct), 0) FROM {$this->guesses_table}) as total_correct"
         );
 
-        $total_clues = (int) $this->wpdb->get_var(
-            "SELECT COUNT(*) FROM {$this->clues_table}"
-        );
-
-        $total_puzzles = (int) $this->wpdb->get_var(
-            "SELECT COUNT(DISTINCT puzzle_id) FROM {$this->clues_table} WHERE puzzle_id IS NOT NULL"
-        );
-
-        $total_constructors = (int) $this->wpdb->get_var(
-            "SELECT COUNT(DISTINCT pc.person_id)
-             FROM {$this->puzzle_constructors_table} pc
-             INNER JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id"
-        );
-
-        $guess_stats = $this->wpdb->get_row(
-            "SELECT COUNT(*) as total_guesses, SUM(is_correct) as total_correct FROM {$this->guesses_table}"
-        );
-
-        $total_guesses = (int) ($guess_stats->total_guesses ?? 0);
-        $total_correct = (int) ($guess_stats->total_correct ?? 0);
+        $total_guesses = (int) ($row->total_guesses ?? 0);
+        $total_correct = (int) ($row->total_correct ?? 0);
 
         return (object) [
-            'total_players' => $total_players,
-            'total_rounds' => $total_rounds,
-            'total_clues' => $total_clues,
-            'total_puzzles' => $total_puzzles,
-            'total_constructors' => $total_constructors,
+            'total_players' => (int) ($row->total_players ?? 0),
+            'total_rounds' => (int) ($row->total_rounds ?? 0),
+            'total_clues' => (int) ($row->total_clues ?? 0),
+            'total_puzzles' => (int) ($row->total_puzzles ?? 0),
+            'total_constructors' => (int) ($row->total_constructors ?? 0),
             'total_guesses' => $total_guesses,
             'total_correct' => $total_correct,
             'accuracy' => $total_guesses > 0
@@ -1223,6 +1221,381 @@ class Kealoa_DB {
     // =========================================================================
     // STATISTICS QUERIES
     // =========================================================================
+
+    // =========================================================================
+    // BULK-FETCH METHODS
+    // =========================================================================
+
+    /**
+     * Build a safe comma-separated list of integer IDs for use in IN clauses.
+     *
+     * @param int[] $ids Array of integer IDs.
+     * @return string Comma-separated integer string (e.g. "1,2,3").
+     */
+    private function ids_in_clause(array $ids): string {
+        return implode(',', array_map('intval', $ids));
+    }
+
+    /**
+     * Get solution words for multiple rounds in a single query.
+     *
+     * @param int[] $round_ids Array of round IDs.
+     * @return array<int, array> Map of round_id => array of solution objects.
+     */
+    public function get_rounds_bulk(array $round_ids): array {
+        $map = [];
+        foreach ($round_ids as $rid) {
+            $map[(int) $rid] = null;
+        }
+        if (empty($round_ids)) {
+            return $map;
+        }
+        $in = $this->ids_in_clause($round_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $rows = $this->wpdb->get_results(
+            "SELECT r.*, p.full_name AS clue_giver_name
+            FROM {$this->rounds_table} r
+            LEFT JOIN {$this->persons_table} p ON r.clue_giver_id = p.id
+            WHERE r.id IN ($in)"
+        );
+        foreach ($rows as $row) {
+            $map[(int) $row->id] = $row;
+        }
+        return $map;
+    }
+
+    /**
+     * Get solution words for multiple rounds in a single query.
+     *
+     * @param int[] $round_ids Array of round IDs.
+     * @return array<int, array> Map of round_id => array of solution objects.
+     */
+    public function get_round_solutions_bulk(array $round_ids): array {
+        $map = [];
+        foreach ($round_ids as $rid) {
+            $map[(int) $rid] = [];
+        }
+        if (empty($round_ids)) {
+            return $map;
+        }
+        $in = $this->ids_in_clause($round_ids);
+        $sql = "SELECT * FROM {$this->round_solutions_table}
+                WHERE round_id IN ({$in})
+                ORDER BY round_id, word_order ASC";
+        $rows = $this->wpdb->get_results($sql);
+        foreach ($rows as $row) {
+            $map[(int) $row->round_id][] = $row;
+        }
+        return $map;
+    }
+
+    /**
+     * Get constructors for multiple puzzles in a single query.
+     *
+     * @param int[] $puzzle_ids Array of puzzle IDs.
+     * @return array<int, array> Map of puzzle_id => array of person objects.
+     */
+    public function get_puzzle_constructors_bulk(array $puzzle_ids): array {
+        $map = [];
+        foreach ($puzzle_ids as $pid) {
+            $map[(int) $pid] = [];
+        }
+        if (empty($puzzle_ids)) {
+            return $map;
+        }
+        $in = $this->ids_in_clause($puzzle_ids);
+        $sql = "SELECT p.*, pc.puzzle_id FROM {$this->persons_table} p
+                INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.person_id
+                WHERE pc.puzzle_id IN ({$in})
+                ORDER BY pc.puzzle_id, pc.constructor_order ASC";
+        $rows = $this->wpdb->get_results($sql);
+        foreach ($rows as $row) {
+            $map[(int) $row->puzzle_id][] = $row;
+        }
+        return $map;
+    }
+
+    /**
+     * Get guesses for multiple clues in a single query.
+     *
+     * @param int[] $clue_ids Array of clue IDs.
+     * @return array<int, array> Map of clue_id => array of guess objects.
+     */
+    public function get_clue_guesses_bulk(array $clue_ids): array {
+        $map = [];
+        foreach ($clue_ids as $cid) {
+            $map[(int) $cid] = [];
+        }
+        if (empty($clue_ids)) {
+            return $map;
+        }
+        $in = $this->ids_in_clause($clue_ids);
+        $sql = "SELECT g.*, p.full_name as guesser_name
+                FROM {$this->guesses_table} g
+                INNER JOIN {$this->persons_table} p ON g.guesser_person_id = p.id
+                WHERE g.clue_id IN ({$in})
+                ORDER BY g.clue_id, p.full_name ASC";
+        $rows = $this->wpdb->get_results($sql);
+        foreach ($rows as $row) {
+            $map[(int) $row->clue_id][] = $row;
+        }
+        return $map;
+    }
+
+    /**
+     * Get guesser results for multiple rounds in a single query.
+     *
+     * @param int[] $round_ids Array of round IDs.
+     * @return array<int, array> Map of round_id => array of result objects
+     *                           (person_id, full_name, total_guesses, correct_guesses).
+     */
+    public function get_round_guesser_results_bulk(array $round_ids): array {
+        $map = [];
+        foreach ($round_ids as $rid) {
+            $map[(int) $rid] = [];
+        }
+        if (empty($round_ids)) {
+            return $map;
+        }
+        $in = $this->ids_in_clause($round_ids);
+        $sql = "SELECT
+                    rg.round_id,
+                    p.id as person_id,
+                    p.full_name,
+                    COUNT(g.id) as total_guesses,
+                    COALESCE(SUM(g.is_correct), 0) as correct_guesses
+                FROM {$this->round_guessers_table} rg
+                INNER JOIN {$this->persons_table} p ON p.id = rg.person_id
+                LEFT JOIN {$this->clues_table} c ON c.round_id = rg.round_id
+                LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id AND g.guesser_person_id = p.id
+                WHERE rg.round_id IN ({$in})
+                GROUP BY rg.round_id, p.id, p.full_name
+                ORDER BY rg.round_id, p.full_name ASC";
+        $rows = $this->wpdb->get_results($sql);
+        foreach ($rows as $row) {
+            $map[(int) $row->round_id][] = $row;
+        }
+        return $map;
+    }
+
+    /**
+     * Get clue counts for multiple rounds in a single query.
+     *
+     * @param int[] $round_ids Array of round IDs.
+     * @return array<int, int> Map of round_id => clue count.
+     */
+    public function get_round_clue_counts_bulk(array $round_ids): array {
+        $map = [];
+        foreach ($round_ids as $rid) {
+            $map[(int) $rid] = 0;
+        }
+        if (empty($round_ids)) {
+            return $map;
+        }
+        $in = $this->ids_in_clause($round_ids);
+        $sql = "SELECT round_id, COUNT(*) as cnt
+                FROM {$this->clues_table}
+                WHERE round_id IN ({$in})
+                GROUP BY round_id";
+        $rows = $this->wpdb->get_results($sql);
+        foreach ($rows as $row) {
+            $map[(int) $row->round_id] = (int) $row->cnt;
+        }
+        return $map;
+    }
+
+    /**
+     * Get the number of rounds per date across all dates.
+     *
+     * @return array<string, int> Map of date string => round count.
+     */
+    public function get_rounds_per_date_counts(): array {
+        $sql = "SELECT round_date, COUNT(*) as cnt
+                FROM {$this->rounds_table}
+                GROUP BY round_date";
+        $rows = $this->wpdb->get_results($sql);
+        $map = [];
+        foreach ($rows as $row) {
+            $map[$row->round_date] = (int) $row->cnt;
+        }
+        return $map;
+    }
+
+    /**
+     * Get guessers (person objects) for multiple rounds in a single query.
+     *
+     * @param int[] $round_ids Array of round IDs.
+     * @return array<int, array> Map of round_id => array of person objects.
+     */
+    public function get_round_guessers_bulk(array $round_ids): array {
+        $map = [];
+        foreach ($round_ids as $rid) {
+            $map[(int) $rid] = [];
+        }
+        if (empty($round_ids)) {
+            return $map;
+        }
+        $in = $this->ids_in_clause($round_ids);
+        $sql = "SELECT p.*, rg.round_id
+                FROM {$this->persons_table} p
+                INNER JOIN {$this->round_guessers_table} rg ON p.id = rg.person_id
+                WHERE rg.round_id IN ({$in})
+                ORDER BY rg.round_id, p.full_name ASC";
+        $rows = $this->wpdb->get_results($sql);
+        foreach ($rows as $row) {
+            $map[(int) $row->round_id][] = $row;
+        }
+        return $map;
+    }
+
+    /**
+     * Get Mixup percentages for multiple rounds in a single query.
+     *
+     * Fetches all correct_answer values for the given rounds, then
+     * computes the run-count metric per round in PHP.
+     *
+     * @param int[] $round_ids Array of round IDs.
+     * @return array<int, float> Map of round_id => mixup percentage (0-100).
+     */
+    public function get_round_mixup_pcts_bulk(array $round_ids): array {
+        $map = [];
+        foreach ($round_ids as $rid) {
+            $map[(int) $rid] = 0.0;
+        }
+        if (empty($round_ids)) {
+            return $map;
+        }
+        $in = $this->ids_in_clause($round_ids);
+        $sql = "SELECT round_id, correct_answer
+                FROM {$this->clues_table}
+                WHERE round_id IN ({$in})
+                ORDER BY round_id, clue_number ASC";
+        $rows = $this->wpdb->get_results($sql);
+
+        // Group answers by round_id
+        $answers_by_round = [];
+        foreach ($rows as $row) {
+            $answers_by_round[(int) $row->round_id][] = $row->correct_answer;
+        }
+
+        // Compute mixup per round
+        foreach ($answers_by_round as $rid => $answers) {
+            $n = count($answers);
+            if ($n < 2) {
+                $map[$rid] = 0.0;
+                continue;
+            }
+            $runs = 1;
+            for ($i = 1; $i < $n; $i++) {
+                if ($answers[$i] !== $answers[$i - 1]) {
+                    $runs++;
+                }
+            }
+            $map[$rid] = (($runs - 1) / ($n - 1)) * 100;
+        }
+        return $map;
+    }
+
+    /**
+     * Get mean clue age (in days) for multiple rounds in a single query.
+     *
+     * Clue age is the number of days between the round date and the
+     * puzzle publication date of each clue.
+     *
+     * @param int[] $round_ids Array of round IDs.
+     * @return array<int, object|null> Map of round_id => object with mean property, or null.
+     */
+    public function get_round_clue_age_stats_bulk(array $round_ids): array {
+        $map = [];
+        foreach ($round_ids as $rid) {
+            $map[(int) $rid] = null;
+        }
+        if (empty($round_ids)) {
+            return $map;
+        }
+        $in = $this->ids_in_clause($round_ids);
+        $sql = "SELECT c.round_id, DATEDIFF(r.round_date, p.publication_date) AS age_days
+                FROM {$this->clues_table} c
+                INNER JOIN {$this->rounds_table} r ON r.id = c.round_id
+                INNER JOIN {$this->puzzles_table} p ON p.id = c.puzzle_id
+                WHERE c.round_id IN ({$in})
+                ORDER BY c.round_id, c.clue_number ASC";
+        $rows = $this->wpdb->get_results($sql);
+
+        // Group ages by round_id
+        $ages_by_round = [];
+        foreach ($rows as $row) {
+            $ages_by_round[(int) $row->round_id][] = (int) $row->age_days;
+        }
+
+        // Compute mean per round
+        foreach ($ages_by_round as $rid => $ages) {
+            $n = count($ages);
+            if ($n === 0) {
+                continue;
+            }
+            $mean = array_sum($ages) / $n;
+            $sum_sq = 0.0;
+            foreach ($ages as $age) {
+                $sum_sq += ($age - $mean) ** 2;
+            }
+            $stddev = sqrt($sum_sq / $n);
+            $map[$rid] = (object) [
+                'mean'   => round($mean, 1),
+                'stddev' => round($stddev, 1),
+            ];
+        }
+        return $map;
+    }
+
+    /**
+     * Get all person roles for all persons in bulk.
+     *
+     * @return array<int, string[]> Map of person_id => array of role strings.
+     */
+    public function get_all_person_roles(): array {
+        // Players
+        $player_ids = $this->wpdb->get_col(
+            "SELECT DISTINCT person_id FROM {$this->round_guessers_table}"
+        );
+        // Constructors
+        $constructor_ids = $this->wpdb->get_col(
+            "SELECT DISTINCT person_id FROM {$this->puzzle_constructors_table}"
+        );
+        // Editors
+        $editor_ids = $this->wpdb->get_col(
+            "SELECT DISTINCT editor_id FROM {$this->puzzles_table} WHERE editor_id IS NOT NULL"
+        );
+        // Clue givers
+        $clue_giver_ids = $this->wpdb->get_col(
+            "SELECT DISTINCT clue_giver_id FROM {$this->rounds_table}"
+        );
+
+        $all_ids = array_unique(array_merge(
+            array_map('intval', $player_ids),
+            array_map('intval', $constructor_ids),
+            array_map('intval', $editor_ids),
+            array_map('intval', $clue_giver_ids)
+        ));
+
+        $map = [];
+        foreach ($all_ids as $pid) {
+            $map[$pid] = [];
+        }
+        foreach ($player_ids as $id) {
+            $map[(int) $id][] = 'player';
+        }
+        foreach ($constructor_ids as $id) {
+            $map[(int) $id][] = 'constructor';
+        }
+        foreach ($editor_ids as $id) {
+            $map[(int) $id][] = 'editor';
+        }
+        foreach ($clue_giver_ids as $id) {
+            $map[(int) $id][] = 'clue_giver';
+        }
+        return $map;
+    }
 
     /**
      * Get number of clues in a round
@@ -1822,38 +2195,6 @@ class Kealoa_DB {
     }
 
     /**
-     * Get the longest consecutive correct answer streak for a person in a round
-     */
-    public function get_person_round_streak(int $round_id, int $person_id): int {
-        $sql = $this->wpdb->prepare(
-            "SELECT g.is_correct
-            FROM {$this->clues_table} c
-            LEFT JOIN {$this->guesses_table} g ON c.id = g.clue_id AND g.guesser_person_id = %d
-            WHERE c.round_id = %d
-            ORDER BY c.clue_number ASC",
-            $person_id,
-            $round_id
-        );
-
-        $results = $this->wpdb->get_results($sql);
-
-        $max_streak = 0;
-        $current_streak = 0;
-        foreach ($results as $row) {
-            if ((int) ($row->is_correct ?? 0) === 1) {
-                $current_streak++;
-                if ($current_streak > $max_streak) {
-                    $max_streak = $current_streak;
-                }
-            } else {
-                $current_streak = 0;
-            }
-        }
-
-        return $max_streak;
-    }
-
-    /**
      * Get all puzzles from rounds a person has played
      */
     public function get_person_puzzles(int $person_id): array {
@@ -2381,66 +2722,34 @@ class Kealoa_DB {
     // =========================================================================
 
     /**
-     * Check if a person has the player role (has made at least one guess in at least one round)
-     */
-    public function is_player(int $person_id): bool {
-        $sql = $this->wpdb->prepare(
-            "SELECT 1 FROM {$this->round_guessers_table} WHERE person_id = %d LIMIT 1",
-            $person_id
-        );
-        return (bool) $this->wpdb->get_var($sql);
-    }
-
-    /**
-     * Check if a person has the constructor role
-     */
-    public function is_constructor(int $person_id): bool {
-        $sql = $this->wpdb->prepare(
-            "SELECT 1 FROM {$this->puzzle_constructors_table} WHERE person_id = %d LIMIT 1",
-            $person_id
-        );
-        return (bool) $this->wpdb->get_var($sql);
-    }
-
-    /**
-     * Check if a person has the editor role
-     */
-    public function is_editor(int $person_id): bool {
-        $sql = $this->wpdb->prepare(
-            "SELECT 1 FROM {$this->puzzles_table} WHERE editor_id = %d LIMIT 1",
-            $person_id
-        );
-        return (bool) $this->wpdb->get_var($sql);
-    }
-
-    /**
-     * Check if a person has the clue giver role (gave clues in one or more rounds)
-     */
-    public function is_clue_giver(int $person_id): bool {
-        $sql = $this->wpdb->prepare(
-            "SELECT 1 FROM {$this->rounds_table} WHERE clue_giver_id = %d LIMIT 1",
-            $person_id
-        );
-        return (bool) $this->wpdb->get_var($sql);
-    }
-
-    /**
      * Get all active roles for a person
      *
      * @return string[] Array of role names: 'player', 'constructor', 'editor', 'clue_giver'
      */
     public function get_person_roles(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT
+                (SELECT 1 FROM {$this->round_guessers_table} WHERE person_id = %d LIMIT 1) as is_player,
+                (SELECT 1 FROM {$this->puzzle_constructors_table} WHERE person_id = %d LIMIT 1) as is_constructor,
+                (SELECT 1 FROM {$this->puzzles_table} WHERE editor_id = %d LIMIT 1) as is_editor,
+                (SELECT 1 FROM {$this->rounds_table} WHERE clue_giver_id = %d LIMIT 1) as is_clue_giver",
+            $person_id,
+            $person_id,
+            $person_id,
+            $person_id
+        );
+        $row = $this->wpdb->get_row($sql);
         $roles = [];
-        if ($this->is_player($person_id)) {
+        if ($row->is_player) {
             $roles[] = 'player';
         }
-        if ($this->is_constructor($person_id)) {
+        if ($row->is_constructor) {
             $roles[] = 'constructor';
         }
-        if ($this->is_editor($person_id)) {
+        if ($row->is_editor) {
             $roles[] = 'editor';
         }
-        if ($this->is_clue_giver($person_id)) {
+        if ($row->is_clue_giver) {
             $roles[] = 'clue_giver';
         }
         return $roles;
@@ -2691,8 +3000,9 @@ class Kealoa_DB {
 
         $rows = $this->wpdb->get_results($sql);
 
-        // First pass: find the best streak value per person
-        $best = [];
+        // Single pass: track best streak value, best streak per round, and collect round IDs
+        $best = [];              // person_id => best streak length
+        $round_best = [];        // "person_id-round_id" => best streak in that round
         $prev_person = null;
         $prev_round = null;
         $streak = 0;
@@ -2713,41 +3023,18 @@ class Kealoa_DB {
                 if (!isset($best[$person_id]) || $streak > $best[$person_id]) {
                     $best[$person_id] = $streak;
                 }
-            } else {
-                $streak = 0;
-            }
-        }
-
-        // Second pass: collect round IDs that achieved the best streak for each person
-        $map = [];
-        $round_best_streak = [];
-        $prev_person = null;
-        $prev_round = null;
-        $streak = 0;
-
-        foreach ($rows as $row) {
-            $person_id = (int) $row->guesser_person_id;
-            $round_id = (int) $row->round_id;
-            $correct = (int) $row->is_correct;
-
-            if ($person_id !== $prev_person || $round_id !== $prev_round) {
-                $streak = 0;
-                $prev_person = $person_id;
-                $prev_round = $round_id;
-            }
-
-            if ($correct) {
-                $streak++;
                 $key = $person_id . '-' . $round_id;
-                if (!isset($round_best_streak[$key]) || $streak > $round_best_streak[$key]) {
-                    $round_best_streak[$key] = $streak;
+                if (!isset($round_best[$key]) || $streak > $round_best[$key]) {
+                    $round_best[$key] = $streak;
                 }
             } else {
                 $streak = 0;
             }
         }
 
-        foreach ($round_best_streak as $key => $streak_val) {
+        // Build map: person_id => [round_ids that achieved best streak]
+        $map = [];
+        foreach ($round_best as $key => $streak_val) {
             [$person_id, $round_id] = array_map('intval', explode('-', $key));
             if (isset($best[$person_id]) && $streak_val === $best[$person_id]) {
                 $map[$person_id][] = $round_id;

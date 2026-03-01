@@ -247,8 +247,12 @@ class Kealoa_REST_API {
         ]);
         $total = $this->db->count_rounds();
 
-        $items = array_map(function ($r) {
-            $solutions = $this->db->get_round_solutions((int) $r->id);
+        // Bulk pre-fetch solutions for all rounds in this page
+        $round_ids = array_map(fn($r) => (int) $r->id, $rounds);
+        $bulk_solutions_map = !empty($round_ids) ? $this->db->get_round_solutions_bulk($round_ids) : [];
+
+        $items = array_map(function ($r) use ($bulk_solutions_map) {
+            $solutions = $bulk_solutions_map[(int) $r->id] ?? [];
             return [
                 'id'             => (int) $r->id,
                 'round_date'     => $r->round_date,
@@ -285,14 +289,20 @@ class Kealoa_REST_API {
         $guessers        = $this->db->get_round_guessers($id);
         $clues_raw       = $this->db->get_round_clues($id);
         $guesser_results = $this->db->get_round_guesser_results($id);
-        $prev            = $this->db->get_previous_round($id);
-        $next            = $this->db->get_next_round($id);
+        $prev            = $this->db->get_previous_round($id, $round);
+        $next            = $this->db->get_next_round($id, $round);
 
-        $clues = array_map(function ($c) {
-            $guesses = $this->db->get_clue_guesses((int) $c->id);
+        // Bulk pre-fetch guesses and constructors for all clues
+        $clue_ids = array_map(fn($c) => (int) $c->id, $clues_raw);
+        $puzzle_ids = array_unique(array_filter(array_map(fn($c) => (int) ($c->puzzle_id ?? 0), $clues_raw)));
+        $bulk_guesses_map = !empty($clue_ids) ? $this->db->get_clue_guesses_bulk($clue_ids) : [];
+        $bulk_constructors_map = !empty($puzzle_ids) ? $this->db->get_puzzle_constructors_bulk($puzzle_ids) : [];
+
+        $clues = array_map(function ($c) use ($bulk_guesses_map, $bulk_constructors_map) {
+            $guesses = $bulk_guesses_map[(int) $c->id] ?? [];
             $constructors = '';
             if (!empty($c->puzzle_id)) {
-                $pc    = $this->db->get_puzzle_constructors((int) $c->puzzle_id);
+                $pc    = $bulk_constructors_map[(int) $c->puzzle_id] ?? [];
                 $names = array_map(fn($con) => $con->full_name, $pc);
                 $constructors = implode(' & ', $names);
             }
@@ -595,8 +605,12 @@ class Kealoa_REST_API {
         ]);
         $total = $this->db->count_puzzles();
 
-        $items = array_map(function ($p) {
-            $constructors = $this->db->get_puzzle_constructors((int) $p->id);
+        // Bulk pre-fetch constructors for all puzzles in this page
+        $puzzle_ids = array_map(fn($p) => (int) $p->id, $puzzles);
+        $bulk_constructors_map = !empty($puzzle_ids) ? $this->db->get_puzzle_constructors_bulk($puzzle_ids) : [];
+
+        $items = array_map(function ($p) use ($bulk_constructors_map) {
+            $constructors = $bulk_constructors_map[(int) $p->id] ?? [];
             $day_name = date('l', strtotime($p->publication_date));
             return [
                 'id'               => (int) $p->id,
@@ -628,6 +642,10 @@ class Kealoa_REST_API {
         $clues          = $this->db->get_puzzle_clues($id);
         $player_results = $this->db->get_puzzle_player_results($id);
 
+        // Bulk pre-fetch guesses for all clues
+        $clue_ids = array_map(fn($c) => (int) $c->id, $clues);
+        $bulk_guesses_map = !empty($clue_ids) ? $this->db->get_clue_guesses_bulk($clue_ids) : [];
+
         // Group clues by round
         $rounds_clues = [];
         foreach ($clues as $clue) {
@@ -643,7 +661,7 @@ class Kealoa_REST_API {
                 ];
             }
 
-            $clue_guesses = $this->db->get_clue_guesses((int) $clue->id);
+            $clue_guesses = $bulk_guesses_map[(int) $clue->id] ?? [];
             $rounds_clues[$rid]['clues'][] = [
                 'id'                    => (int) $clue->id,
                 'clue_number'           => (int) $clue->clue_number,
@@ -659,9 +677,11 @@ class Kealoa_REST_API {
             ];
         }
 
-        // Get solution words for each round
+        // Get solution words for each round (bulk)
+        $round_ids_in_puzzle = array_keys($rounds_clues);
+        $bulk_solutions_map = !empty($round_ids_in_puzzle) ? $this->db->get_round_solutions_bulk($round_ids_in_puzzle) : [];
         foreach ($rounds_clues as $rid => &$rc) {
-            $solutions = $this->db->get_round_solutions($rid);
+            $solutions = $bulk_solutions_map[$rid] ?? [];
             $rc['solution_words'] = array_map(fn($s) => $s->word, $solutions);
         }
         unset($rc);

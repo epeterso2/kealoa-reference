@@ -305,10 +305,12 @@ class Kealoa_Shortcodes {
             <?php
             // Build Mixup vs Accuracy table
             $round_guess_stats = $this->db->get_rounds_guess_stats();
+            $all_rgs_ids = array_map(function ($rgs) { return (int) $rgs->round_id; }, $round_guess_stats);
+            $all_mixup_pcts = $this->db->get_round_mixup_pcts_bulk($all_rgs_ids);
             $mixup_buckets = [];
             foreach ($round_guess_stats as $rgs) {
                 $rid = (int) $rgs->round_id;
-                $mixup = $this->db->get_round_mixup_pct($rid);
+                $mixup = $all_mixup_pcts[$rid] ?? 0.0;
                 $bucket = (int) floor($mixup / 10) * 10;
                 if ($bucket >= 100) {
                     $bucket = 90; // merge 100% into 90-100 bucket
@@ -389,19 +391,28 @@ class Kealoa_Shortcodes {
                     </tr>
                 </thead>
                 <tbody>
+                    <?php
+                    // Bulk pre-fetch data for all rounds
+                    $all_round_ids = array_map(function ($r) { return (int) $r->id; }, $rounds);
+                    $bulk_solutions = $this->db->get_round_solutions_bulk($all_round_ids);
+                    $bulk_clue_counts = $this->db->get_round_clue_counts_bulk($all_round_ids);
+                    $bulk_guesser_results = $this->db->get_round_guesser_results_bulk($all_round_ids);
+                    $rounds_per_date = $this->db->get_rounds_per_date_counts();
+                    ?>
                     <?php foreach ($rounds as $round): ?>
                         <?php
-                        $solutions = $this->db->get_round_solutions((int) $round->id);
-                        $clue_count = $this->db->get_round_clue_count((int) $round->id);
-                        $guesser_results = $this->db->get_round_guesser_results((int) $round->id);
+                        $rid = (int) $round->id;
+                        $solutions = $bulk_solutions[$rid] ?? [];
+                        $clue_count = $bulk_clue_counts[$rid] ?? 0;
+                        $guesser_results = $bulk_guesser_results[$rid] ?? [];
                         $round_num = (int) ($round->round_number ?? 1);
-                        $rounds_on_date = $this->db->get_rounds_by_date($round->round_date);
+                        $date_count = $rounds_per_date[$round->round_date] ?? 1;
                         ?>
                         <tr>
                             <td class="kealoa-date-cell" data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($round->round_date)) * 100 + $round_num); ?>">
                                 <?php
                                 echo Kealoa_Formatter::format_round_date_link((int) $round->id, $round->round_date);
-                                if (count($rounds_on_date) > 1) {
+                                if ($date_count > 1) {
                                     echo ' <span class="kealoa-round-number">(#' . esc_html($round_num) . ')</span>';
                                 }
                                 ?>
@@ -641,6 +652,13 @@ class Kealoa_Shortcodes {
             <?php endif; ?>
 
             <?php if (!empty($clues)): ?>
+                <?php
+                // Bulk pre-fetch constructors and guesses for all clues
+                $clue_puzzle_ids = array_unique(array_filter(array_map(fn($c) => (int) $c->puzzle_id, $clues)));
+                $clue_ids_list   = array_map(fn($c) => (int) $c->id, $clues);
+                $bulk_constructors_map = !empty($clue_puzzle_ids) ? $this->db->get_puzzle_constructors_bulk($clue_puzzle_ids) : [];
+                $bulk_guesses_map      = !empty($clue_ids_list) ? $this->db->get_clue_guesses_bulk($clue_ids_list) : [];
+                ?>
                 <div class="kealoa-clues-section">
                     <h2><?php esc_html_e('Clues', 'kealoa-reference'); ?></h2>
 
@@ -666,8 +684,8 @@ class Kealoa_Shortcodes {
                         <tbody>
                             <?php foreach ($clues as $clue): ?>
                                 <?php
-                                $constructors = !empty($clue->puzzle_id) ? $this->db->get_puzzle_constructors((int) $clue->puzzle_id) : [];
-                                $clue_guesses = $this->db->get_clue_guesses((int) $clue->id);
+                                $constructors = !empty($clue->puzzle_id) ? ($bulk_constructors_map[(int) $clue->puzzle_id] ?? []) : [];
+                                $clue_guesses = $bulk_guesses_map[(int) $clue->id] ?? [];
                                 ?>
                                 <tr>
                                     <td class="kealoa-clue-number"><?php echo esc_html($clue->clue_number); ?></td>
@@ -723,8 +741,8 @@ class Kealoa_Shortcodes {
             <?php endif; ?>
 
             <?php
-            $prev_round = $this->db->get_previous_round($round_id);
-            $next_round = $this->db->get_next_round($round_id);
+            $prev_round = $this->db->get_previous_round($round_id, $round);
+            $next_round = $this->db->get_next_round($round_id, $round);
             ?>
             <?php if ($prev_round || $next_round): ?>
             <div class="kealoa-round-nav">
@@ -832,11 +850,35 @@ class Kealoa_Shortcodes {
         $streak_per_round = $this->db->get_person_streak_per_round($person_id);
         $correct_clue_rounds = $this->db->get_person_correct_clue_rounds($person_id);
 
+        // Collect ALL round IDs needed across all tabs for bulk pre-fetching
+        $all_person_round_ids = array_map(function ($rh) { return (int) $rh->round_id; }, $round_history);
+        $cg_round_ids = array_map(function ($cgr) { return (int) $cgr->round_id; }, $clue_giver_rounds);
+        $puzzle_sources = [$person_puzzles, $constructor_puzzles, $editor_puzzles];
+        $puzzle_round_ids = [];
+        foreach ($puzzle_sources as $pz_list) {
+            foreach ($pz_list as $pz) {
+                if (!empty($pz->round_ids)) {
+                    foreach (explode(',', $pz->round_ids) as $rid) {
+                        $puzzle_round_ids[] = (int) $rid;
+                    }
+                }
+            }
+        }
+        $every_round_id = array_values(array_unique(array_merge($all_person_round_ids, $cg_round_ids, $puzzle_round_ids)));
+
+        // Bulk pre-fetch: solutions, rounds-per-date, mixup percentages
+        $bulk_solutions_map = $this->db->get_round_solutions_bulk($every_round_id);
+        $rounds_per_date_map = $this->db->get_rounds_per_date_counts();
+        $bulk_mixup_map = $this->db->get_round_mixup_pcts_bulk($every_round_id);
+        // Bulk pre-fetch guessers for round history co-players
+        $bulk_guessers_map = $this->db->get_round_guessers_bulk($all_person_round_ids);
+
         // Build round info lookup: round_id => {url, date, words, score}
         $round_info = [];
         foreach ($round_history as $rh) {
-            $rh_solutions = $this->db->get_round_solutions((int) $rh->round_id);
-            $round_info[(int) $rh->round_id] = [
+            $rid = (int) $rh->round_id;
+            $rh_solutions = $bulk_solutions_map[$rid] ?? [];
+            $round_info[$rid] = [
                 'url' => home_url('/kealoa/round/' . $rh->round_id . '/'),
                 'date' => Kealoa_Formatter::format_date($rh->round_date),
                 'words' => Kealoa_Formatter::format_solution_words($rh_solutions),
@@ -1389,7 +1431,7 @@ class Kealoa_Shortcodes {
                 $player_mixup_buckets = [];
                 foreach ($round_history as $rh) {
                     $rid = (int) $rh->round_id;
-                    $mixup = $this->db->get_round_mixup_pct($rid);
+                    $mixup = $bulk_mixup_map[$rid] ?? 0.0;
                     $bucket = (int) floor($mixup / 10) * 10;
                     if ($bucket >= 100) {
                         $bucket = 90; // merge 100% into 90-100 bucket
@@ -1570,7 +1612,7 @@ class Kealoa_Shortcodes {
                                             for ($i = 0; $i < count($round_ids); $i++) {
                                                 $rid = (int) $round_ids[$i];
                                                 if ($rid) {
-                                                    $solutions = $this->db->get_round_solutions($rid);
+                                                    $solutions = $bulk_solutions_map[$rid] ?? [];
                                                     $solution_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
                                                 }
                                             }
@@ -1861,7 +1903,7 @@ class Kealoa_Shortcodes {
                 $round_co_players = [];
                 $has_co_players = false;
                 foreach ($round_history as $rh_check) {
-                    $rh_guessers = $this->db->get_round_guessers((int) $rh_check->round_id);
+                    $rh_guessers = $bulk_guessers_map[(int) $rh_check->round_id] ?? [];
                     $co_players = array_filter($rh_guessers, function($g) use ($person_id) {
                         return (int) $g->id !== $person_id;
                     });
@@ -1935,15 +1977,16 @@ class Kealoa_Shortcodes {
                         <tbody>
                             <?php foreach ($round_history as $history): ?>
                                 <?php
-                                $solutions = $this->db->get_round_solutions((int) $history->round_id);
+                                $hist_rid = (int) $history->round_id;
+                                $solutions = $bulk_solutions_map[$hist_rid] ?? [];
                                 $history_round_num = (int) ($history->round_number ?? 1);
-                                $history_rounds_on_date = $this->db->get_rounds_by_date($history->round_date);
+                                $history_date_count = $rounds_per_date_map[$history->round_date] ?? 1;
                                 ?>
                                 <tr data-year="<?php echo esc_attr(date('Y', strtotime($history->round_date))); ?>">
                                     <td data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($history->round_date)) * 100 + $history_round_num); ?>">
                                         <?php
                                         echo Kealoa_Formatter::format_round_date_link((int) $history->round_id, $history->round_date);
-                                        if (count($history_rounds_on_date) > 1) {
+                                        if ($history_date_count > 1) {
                                             echo ' <span class="kealoa-round-number">(#' . esc_html($history_round_num) . ')</span>';
                                         }
                                         ?>
@@ -1963,7 +2006,7 @@ class Kealoa_Shortcodes {
                                     ?></td>
                                     <?php endif; ?>
                                     <td data-total="<?php echo esc_attr((int) $history->total_clues); ?>"><?php echo esc_html($history->correct_count); ?></td>
-                                    <td><?php echo esc_html($this->db->get_person_round_streak((int) $history->round_id, $person_id)); ?></td>
+                                    <td><?php echo esc_html($streak_per_round[$hist_rid] ?? 0); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -2241,18 +2284,18 @@ class Kealoa_Shortcodes {
                                     $cgr_pct = (int) $cgr->total_guesses > 0
                                         ? ((int) $cgr->correct_guesses / (int) $cgr->total_guesses) * 100
                                         : 0;
-                                    $cgr_solutions = $this->db->get_round_solutions($cgr_id);
+                                    $cgr_solutions = $bulk_solutions_map[$cgr_id] ?? [];
                                     $cgr_guesser_ids = !empty($cgr->guesser_ids) ? array_map('intval', explode(',', $cgr->guesser_ids)) : [];
                                     $cgr_guesser_names = !empty($cgr->guesser_names) ? explode(', ', $cgr->guesser_names) : [];
-                                    $cgr_mixup_pct = $this->db->get_round_mixup_pct($cgr_id);
-                                    $cgr_rounds_on_date = $this->db->get_rounds_by_date($cgr->round_date);
+                                    $cgr_mixup_pct = $bulk_mixup_map[$cgr_id] ?? 0.0;
+                                    $cgr_date_count = $rounds_per_date_map[$cgr->round_date] ?? 1;
                                     $cgr_round_num = (int) ($cgr->round_number ?? 1);
                                     ?>
                                     <tr>
                                         <td data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($cgr->round_date)) * 100 + $cgr_round_num); ?>">
                                             <?php
                                             echo Kealoa_Formatter::format_round_date_link($cgr_id, $cgr->round_date);
-                                            if (count($cgr_rounds_on_date) > 1) {
+                                            if ($cgr_date_count > 1) {
                                                 echo ' <span class="kealoa-round-number">(#' . esc_html($cgr_round_num) . ')</span>';
                                             }
                                             ?>
@@ -2464,7 +2507,7 @@ class Kealoa_Shortcodes {
                                                 for ($i = 0; $i < count($cp_round_ids); $i++) {
                                                     $rid = (int) $cp_round_ids[$i];
                                                     if ($rid) {
-                                                        $solutions = $this->db->get_round_solutions($rid);
+                                                        $solutions = $bulk_solutions_map[$rid] ?? [];
                                                         $cp_sol_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
                                                     }
                                                 }
@@ -2759,7 +2802,7 @@ class Kealoa_Shortcodes {
                                                 for ($i = 0; $i < count($ep_round_ids); $i++) {
                                                     $rid = (int) $ep_round_ids[$i];
                                                     if ($rid) {
-                                                        $solutions = $this->db->get_round_solutions($rid);
+                                                        $solutions = $bulk_solutions_map[$rid] ?? [];
                                                         $ep_sol_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
                                                     }
                                                 }
@@ -2938,12 +2981,16 @@ class Kealoa_Shortcodes {
         }
         $all_round_ids = array_unique($all_round_ids);
 
+        // Bulk-fetch rounds and solutions for all needed round IDs
+        $bulk_rounds_map    = !empty($all_round_ids) ? $this->db->get_rounds_bulk($all_round_ids) : [];
+        $bulk_solutions_map = !empty($all_round_ids) ? $this->db->get_round_solutions_bulk($all_round_ids) : [];
+
         // Build round info for all needed rounds
         $round_info = [];
         foreach ($all_round_ids as $rid) {
-            $round = $this->db->get_round($rid);
+            $round = $bulk_rounds_map[(int) $rid] ?? null;
             if ($round) {
-                $solutions = $this->db->get_round_solutions($rid);
+                $solutions = $bulk_solutions_map[(int) $rid] ?? [];
                 $round_info[$rid] = [
                     'url' => home_url('/kealoa/round/' . $rid . '/'),
                     'date' => Kealoa_Formatter::format_date($round->round_date),
@@ -3306,6 +3353,22 @@ class Kealoa_Shortcodes {
         <?php if (empty($puzzles)): ?>
             <p class="kealoa-no-data"><?php esc_html_e('No puzzles found.', 'kealoa-reference'); ?></p>
         <?php else: ?>
+        <?php
+        // Bulk pre-fetch solutions for all round IDs across all puzzles
+        $all_puzzle_round_ids = [];
+        foreach ($puzzles as $puzzle) {
+            if (!empty($puzzle->round_ids)) {
+                foreach (explode(',', $puzzle->round_ids) as $rid) {
+                    $rid = (int) $rid;
+                    if ($rid) {
+                        $all_puzzle_round_ids[] = $rid;
+                    }
+                }
+            }
+        }
+        $all_puzzle_round_ids = array_unique($all_puzzle_round_ids);
+        $bulk_puzzle_solutions_map = !empty($all_puzzle_round_ids) ? $this->db->get_round_solutions_bulk($all_puzzle_round_ids) : [];
+        ?>
         <div class="kealoa-puzzles-table-wrapper">
             <div class="kealoa-filter-controls" data-target="kealoa-puzzles-table">
                 <div class="kealoa-filter-row">
@@ -3425,7 +3488,7 @@ class Kealoa_Shortcodes {
                                     for ($i = 0; $i < count($round_ids); $i++) {
                                         $rid = (int) $round_ids[$i];
                                         if ($rid) {
-                                            $solutions = $this->db->get_round_solutions($rid);
+                                            $solutions = $bulk_puzzle_solutions_map[$rid] ?? [];
                                             $solution_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
                                         }
                                     }
@@ -3467,22 +3530,20 @@ class Kealoa_Shortcodes {
         if (!empty($puzzles)):
 
         // Pre-fetch solutions and per-date round counts for all rounds across all puzzles
-        $cur_solutions_cache    = [];
-        $cur_rounds_per_date    = [];
+        $cur_all_rids = [];
         foreach ($puzzles as $puzzle) {
-            $rids  = !empty($puzzle->round_ids)   ? explode(',', $puzzle->round_ids)   : [];
-            $rdates = !empty($puzzle->round_dates) ? explode(',', $puzzle->round_dates) : [];
-            foreach ($rids as $idx => $rid) {
-                $rid = (int) $rid;
-                if ($rid && !isset($cur_solutions_cache[$rid])) {
-                    $cur_solutions_cache[$rid] = $this->db->get_round_solutions($rid);
-                }
-                $rdate = $rdates[$idx] ?? '';
-                if ($rdate && !isset($cur_rounds_per_date[$rdate])) {
-                    $cur_rounds_per_date[$rdate] = count($this->db->get_rounds_by_date($rdate));
+            if (!empty($puzzle->round_ids)) {
+                foreach (explode(',', $puzzle->round_ids) as $rid) {
+                    $rid = (int) $rid;
+                    if ($rid) {
+                        $cur_all_rids[] = $rid;
+                    }
                 }
             }
         }
+        $cur_all_rids = array_unique($cur_all_rids);
+        $cur_solutions_cache = !empty($cur_all_rids) ? $this->db->get_round_solutions_bulk($cur_all_rids) : [];
+        $cur_rounds_per_date = $this->db->get_rounds_per_date_counts();
         ?>
         <h2><?php esc_html_e('Puzzles Used in Multiple Rounds', 'kealoa-reference'); ?></h2>
         <div class="kealoa-puzzles-table-wrapper">
@@ -3564,6 +3625,14 @@ class Kealoa_Shortcodes {
         <?php endif; // end if (!empty($puzzles)) ?>
 
         <?php if (!empty($no_puzzle_rounds)): ?>
+        <?php
+        // Bulk pre-fetch for rounds without puzzles
+        $np_round_ids = array_map(fn($r) => (int) $r->id, $no_puzzle_rounds);
+        $np_solutions_map = $this->db->get_round_solutions_bulk($np_round_ids);
+        $np_clue_counts_map = $this->db->get_round_clue_counts_bulk($np_round_ids);
+        $np_guesser_results_map = $this->db->get_round_guesser_results_bulk($np_round_ids);
+        $np_rounds_per_date = $this->db->get_rounds_per_date_counts();
+        ?>
         <h2><?php esc_html_e('Rounds Without Puzzles', 'kealoa-reference'); ?></h2>
         <p class="kealoa-section-description"><?php esc_html_e('These rounds have no clues linked to a crossword puzzle.', 'kealoa-reference'); ?></p>
         <div class="kealoa-puzzles-table-wrapper">
@@ -3581,17 +3650,17 @@ class Kealoa_Shortcodes {
                     <tbody>
                         <?php foreach ($no_puzzle_rounds as $round):
                             $rid = (int) $round->id;
-                            $solutions = $this->db->get_round_solutions($rid);
-                            $clue_count = $this->db->get_round_clue_count($rid);
-                            $guesser_results = $this->db->get_round_guesser_results($rid);
+                            $solutions = $np_solutions_map[$rid] ?? [];
+                            $clue_count = $np_clue_counts_map[$rid] ?? 0;
+                            $guesser_results = $np_guesser_results_map[$rid] ?? [];
                             $round_num = (int) ($round->round_number ?? 1);
-                            $rounds_on_date = $this->db->get_rounds_by_date($round->round_date);
+                            $date_count = $np_rounds_per_date[$round->round_date] ?? 1;
                         ?>
                         <tr>
                             <td class="kealoa-date-cell" data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($round->round_date)) * 100 + $round_num); ?>">
                                 <?php
                                 echo Kealoa_Formatter::format_round_date_link($rid, $round->round_date);
-                                if (count($rounds_on_date) > 1) {
+                                if ($date_count > 1) {
                                     echo ' <span class="kealoa-round-number">(#' . esc_html($round_num) . ')</span>';
                                 }
                                 ?>
@@ -3695,15 +3764,9 @@ class Kealoa_Shortcodes {
         }
 
         // Pre-fetch solutions for each round and count of rounds per date
-        $round_solutions_cache = [];
-        $rounds_per_date_cache = [];
-        foreach ($rounds_clues as $rid => $rc) {
-            $round_solutions_cache[$rid] = $this->db->get_round_solutions($rid);
-            $date = $rc['round_date'];
-            if (!isset($rounds_per_date_cache[$date])) {
-                $rounds_per_date_cache[$date] = count($this->db->get_rounds_by_date($date));
-            }
-        }
+        $round_rid_list = array_keys($rounds_clues);
+        $round_solutions_cache = !empty($round_rid_list) ? $this->db->get_round_solutions_bulk($round_rid_list) : [];
+        $rounds_per_date_cache = $this->db->get_rounds_per_date_counts();
 
         // Group clues by crossword position (puzzle_clue_number + direction)
         $clues_by_position = [];

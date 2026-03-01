@@ -2,7 +2,7 @@
 
 A WordPress plugin for managing and displaying KEALOA quiz game data from the [Fill Me In](https://bemoresmarter.libsyn.com) podcast.
 
-**Version:** 2.0.73 &bull; **DB Version:** 2.1.0 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+**Version:** 2.0.88 &bull; **DB Version:** 2.1.0 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 ---
 
@@ -21,9 +21,10 @@ A WordPress plugin for managing and displaying KEALOA quiz game data from the [F
 11. [Search Integration](#search-integration)
 12. [Sitemap Integration](#sitemap-integration)
 13. [Frontend Features](#frontend-features)
-14. [CSS Palette](#css-palette)
-15. [File Structure](#file-structure)
-16. [License](#license)
+14. [Performance](#performance)
+15. [CSS Palette](#css-palette)
+16. [File Structure](#file-structure)
+17. [License](#license)
 
 ---
 
@@ -92,15 +93,15 @@ All shortcode output is cached via WordPress transients (24-hour TTL) with a ver
 | Shortcode | Attributes | Description |
 |---|---|---|
 | `[kealoa_rounds_table]` | `limit`, `order` | Tabbed view: rounds table (sortable/filterable) and stats (overview grid, yearly stats, clue-number frequency matrices) |
-| `[kealoa_round]` | `id` (required) | Round detail: meta, episode link, solution words, host, players with scores, person photos, clue table with guesses, social sharing bar |
+| `[kealoa_round]` | `id` (required) | Round detail: meta, episode link, solution words, host, players with scores, person photos, mixup metric, average clue age, clue table with guesses, social sharing bar |
 | `[kealoa_rounds_stats]` | — | Statistics grid: total players, rounds, puzzles, constructors, clues, guesses, correct answers, accuracy |
-| `[kealoa_person]` | `id` (required) | Person profile with tabbed interface: role-specific statistics (player, constructor, editor, host), round history, performance charts, person images |
+| `[kealoa_person]` | `id` (required) | Person profile with tabbed interface: role-specific statistics (player, constructor, editor, host), mixup vs accuracy breakdown, round history, co-players, performance charts, person images |
 | `[kealoa_persons_table]` | — | Table of all players with rounds played, clues guessed, and accuracy |
 | `[kealoa_constructors_table]` | — | Table of all constructors with puzzle count and statistics |
 | `[kealoa_editors_table]` | — | Table of all editors with puzzle count and statistics |
 | `[kealoa_clue_givers_table]` | — | Table of all clue givers with rounds, clues, guessers, and accuracy |
 | `[kealoa_hosts_table]` | — | Table of all hosts with rounds, clues, players, and accuracy |
-| `[kealoa_puzzles_table]` | — | Table of all puzzles with dates, editors, constructors, and round details |
+| `[kealoa_puzzles_table]` | — | Tabbed view: all puzzles with dates, editors, constructors, and round details; curiosities tab (puzzles used in multiple rounds, rounds without puzzles) |
 | `[kealoa_puzzle]` | `date` (required, `YYYY-MM-DD`) | Puzzle detail: person images, clue details, and round information |
 | `[kealoa_version]` | — | Plugin and database version numbers |
 
@@ -475,6 +476,17 @@ Person profile pages use Chart.js 4.x for interactive performance visualizations
 
 ---
 
+## Performance
+
+The plugin uses several strategies to minimize database queries:
+
+- **Bulk-fetch methods** — Instead of querying one row at a time inside loops (N+1 pattern), the database layer provides bulk methods that fetch data for many IDs in a single `WHERE id IN (...)` query and return ID-keyed maps. Bulk methods exist for round solutions, puzzle constructors, clue guesses, guesser results, clue counts, round guessers, mixup percentages, and clue age statistics.
+- **Query consolidation** — Multi-query operations are merged into single SQL statements. For example, rounds overview statistics (6 queries → 1) and person role detection (4 queries → 1).
+- **Pre-computed maps** — Renderers collect all needed IDs before entering loops, then perform bulk fetches up front and use map lookups inside the loop body.
+- **Transient caching** — All shortcode output is cached via WordPress transients (24-hour TTL) with a versioned cache key that is invalidated after any data mutation.
+
+---
+
 ## CSS Palette
 
 The plugin defines a Hawaiian-themed color palette via CSS custom properties in `kealoa-palette.css`:
@@ -543,7 +555,7 @@ kealoa-reference/
 ├── includes/
 │   ├── class-kealoa-activator.php    Plugin activation (table creation, migrations, rewrite rules)
 │   ├── class-kealoa-blocks.php       Gutenberg block registration
-│   ├── class-kealoa-db.php           Database query methods (CRUD, stats, search)
+│   ├── class-kealoa-db.php           Database query methods (CRUD, stats, search, bulk-fetch)
 │   ├── class-kealoa-deactivator.php  Plugin deactivation (flush rewrite rules)
 │   ├── class-kealoa-export.php       CSV/ZIP export logic
 │   ├── class-kealoa-formatter.php    Data formatting helpers (dates, links, images, sharing)
