@@ -3285,6 +3285,7 @@ class Kealoa_Shortcodes {
 
         $puzzles = $this->db->get_all_puzzles_with_details();
         $multi_round_puzzles = $this->db->get_puzzles_used_in_multiple_rounds();
+        $rounds_without_puzzles = $this->db->get_rounds_without_puzzles();
 
         ob_start();
         ?>
@@ -3435,7 +3436,7 @@ class Kealoa_Shortcodes {
         <?php endif; ?>
             </div><!-- end kealoa-puzzles-tab-all -->
             <div class="kealoa-tab-panel" id="kealoa-puzzles-tab-curiosities" data-tab="kealoa-puzzles-tab-curiosities" role="tabpanel">
-                <?php $this->render_curiosities_panel($multi_round_puzzles); ?>
+                <?php $this->render_curiosities_panel($multi_round_puzzles, $rounds_without_puzzles); ?>
             </div><!-- end kealoa-puzzles-tab-curiosities -->
         </div><!-- end kealoa-tabs -->
         <?php
@@ -3447,12 +3448,15 @@ class Kealoa_Shortcodes {
     /**
      * Render the Curiosities tab panel — puzzles used in more than one round.
      *
-     * @param array $puzzles Array of puzzle objects with round_count.
+     * @param array $puzzles     Array of puzzle objects with round_count.
+     * @param array $no_puzzle_rounds Array of round objects without linked puzzles.
      */
-    private function render_curiosities_panel(array $puzzles): void {
-        if (empty($puzzles)): ?>
-            <p class="kealoa-no-data"><?php esc_html_e('No puzzles have been used in more than one round yet.', 'kealoa-reference'); ?></p>
+    private function render_curiosities_panel(array $puzzles, array $no_puzzle_rounds = []): void {
+        if (empty($puzzles) && empty($no_puzzle_rounds)): ?>
+            <p class="kealoa-no-data"><?php esc_html_e('No curiosities found yet.', 'kealoa-reference'); ?></p>
         <?php return; endif;
+
+        if (!empty($puzzles)):
 
         // Pre-fetch solutions and per-date round counts for all rounds across all puzzles
         $cur_solutions_cache    = [];
@@ -3548,6 +3552,67 @@ class Kealoa_Shortcodes {
                 </table>
             </div>
         </div>
+
+        <?php endif; // end if (!empty($puzzles)) ?>
+
+        <?php if (!empty($no_puzzle_rounds)): ?>
+        <h2><?php esc_html_e('Rounds Without Puzzles', 'kealoa-reference'); ?></h2>
+        <p class="kealoa-section-description"><?php esc_html_e('These rounds have no clues linked to a crossword puzzle.', 'kealoa-reference'); ?></p>
+        <div class="kealoa-puzzles-table-wrapper">
+            <div class="kealoa-table-scroll">
+                <table class="kealoa-table kealoa-rounds-table" id="kealoa-puzzles-curiosities-no-puzzle-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
+                            <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                            <th data-sort="text"><?php esc_html_e('Host', 'kealoa-reference'); ?></th>
+                            <th><?php esc_html_e('Results', 'kealoa-reference'); ?></th>
+                            <th data-sort="text"><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($no_puzzle_rounds as $round):
+                            $rid = (int) $round->id;
+                            $solutions = $this->db->get_round_solutions($rid);
+                            $clue_count = $this->db->get_round_clue_count($rid);
+                            $guesser_results = $this->db->get_round_guesser_results($rid);
+                            $round_num = (int) ($round->round_number ?? 1);
+                            $rounds_on_date = $this->db->get_rounds_by_date($round->round_date);
+                        ?>
+                        <tr>
+                            <td class="kealoa-date-cell" data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($round->round_date)) * 100 + $round_num); ?>">
+                                <?php
+                                echo Kealoa_Formatter::format_round_date_link($rid, $round->round_date);
+                                if (count($rounds_on_date) > 1) {
+                                    echo ' <span class="kealoa-round-number">(#' . esc_html($round_num) . ')</span>';
+                                }
+                                ?>
+                            </td>
+                            <td class="kealoa-solutions-cell">
+                                <?php echo Kealoa_Formatter::format_solution_words_link($rid, $solutions); ?>
+                            </td>
+                            <td>
+                                <?php
+                                if (!empty($round->clue_giver_id)) {
+                                    echo Kealoa_Formatter::format_person_link((int) $round->clue_giver_id, $round->clue_giver_name, 'host');
+                                } else {
+                                    echo '&mdash;';
+                                }
+                                ?>
+                            </td>
+                            <td class="kealoa-results-cell">
+                                <?php echo Kealoa_Formatter::format_guesser_results($guesser_results, $clue_count); ?>
+                            </td>
+                            <td class="kealoa-description-cell">
+                                <?php echo esc_html($round->description ?? ''); ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?php endif; ?>
         <?php
     }
 

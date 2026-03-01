@@ -1313,6 +1313,26 @@ class Kealoa_DB {
     }
 
     /**
+     * Get rounds where no clue has a linked puzzle.
+     *
+     * Returns round objects with clue_giver_name, ordered by round_date DESC.
+     *
+     * @return array Array of round objects.
+     */
+    public function get_rounds_without_puzzles(): array {
+        $sql = "SELECT r.*, p.full_name AS clue_giver_name
+            FROM {$this->rounds_table} r
+            LEFT JOIN {$this->persons_table} p ON r.clue_giver_id = p.id
+            WHERE NOT EXISTS (
+                SELECT 1 FROM {$this->clues_table} c
+                WHERE c.round_id = r.id AND c.puzzle_id IS NOT NULL
+            )
+            ORDER BY r.round_date DESC, r.round_number ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get per-round Mixup and accuracy data for all rounds.
      *
      * Returns an array of objects with round_id, total_guesses, and
