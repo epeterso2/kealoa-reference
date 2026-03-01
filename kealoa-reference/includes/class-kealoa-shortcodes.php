@@ -549,6 +549,21 @@ class Kealoa_Shortcodes {
                         <strong class="kealoa-meta-label"><?php esc_html_e('Mixup', 'kealoa-reference'); ?></strong>
                         <span><?php echo Kealoa_Formatter::format_percentage($mixup_pct, 0); ?></span>
                     </p>
+                    <?php
+                    $clue_age_stats = $this->db->get_round_clue_age_stats($round_id);
+                    if ($clue_age_stats): ?>
+                    <p>
+                        <strong class="kealoa-meta-label"><?php esc_html_e('Clue Age', 'kealoa-reference'); ?></strong>
+                        <span><?php
+                            printf(
+                                /* translators: %s = mean days, %s = std dev days */
+                                '%s &plusmn; %s days',
+                                esc_html(number_format($clue_age_stats->mean, 1)),
+                                esc_html(number_format($clue_age_stats->stddev, 1))
+                            );
+                        ?></span>
+                    </p>
+                    <?php endif; ?>
                 </div>
 
                 <?php

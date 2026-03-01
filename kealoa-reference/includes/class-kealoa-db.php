@@ -1269,6 +1269,50 @@ class Kealoa_DB {
     }
 
     /**
+     * Get the mean and standard deviation of clue ages for a round.
+     *
+     * Clue age is the number of days between the round date and the
+     * puzzle publication date of each clue.  Clues without a linked
+     * puzzle are excluded.
+     *
+     * @param int $round_id The round ID.
+     * @return object|null Object with properties mean and stddev (both floats,
+     *                     in days), or null when no clues have a linked puzzle.
+     */
+    public function get_round_clue_age_stats(int $round_id): ?object {
+        $sql = $this->wpdb->prepare(
+            "SELECT DATEDIFF(r.round_date, p.publication_date) AS age_days
+             FROM {$this->clues_table} c
+             INNER JOIN {$this->rounds_table} r ON r.id = c.round_id
+             INNER JOIN {$this->puzzles_table} p ON p.id = c.puzzle_id
+             WHERE c.round_id = %d
+             ORDER BY c.clue_number ASC",
+            $round_id
+        );
+        $rows = $this->wpdb->get_col($sql);
+
+        $n = count($rows);
+        if ($n === 0) {
+            return null;
+        }
+
+        $ages = array_map('intval', $rows);
+        $mean = array_sum($ages) / $n;
+
+        $sum_sq = 0.0;
+        foreach ($ages as $age) {
+            $sum_sq += ($age - $mean) ** 2;
+        }
+        // Use population standard deviation (every clue in the round)
+        $stddev = sqrt($sum_sq / $n);
+
+        return (object) [
+            'mean'   => round($mean, 1),
+            'stddev' => round($stddev, 1),
+        ];
+    }
+
+    /**
      * Get per-round Mixup and accuracy data for all rounds.
      *
      * Returns an array of objects with round_id, total_guesses, and
