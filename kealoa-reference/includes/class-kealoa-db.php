@@ -1236,10 +1236,10 @@ class Kealoa_DB {
     }
 
     /**
-     * Get the Mixup % for a round (Wald-Wolfowitz run-count metric).
+     * Get the Mixup for a round (Wald-Wolfowitz run-count metric).
      *
      * A "run" is a maximal consecutive sequence of identical correct answers.
-     * Mixup % = ((r - 1) / (n - 1)) * 100, where r = number of runs and
+     * Mixup = ((r - 1) / (n - 1)) * 100, where r = number of runs and
      * n = number of clues.  Returns 0 when the round has fewer than 2 clues.
      *
      * @param int $round_id The round ID.
@@ -1269,10 +1269,10 @@ class Kealoa_DB {
     }
 
     /**
-     * Get per-round mixup % and accuracy data for all rounds.
+     * Get per-round Mixup and accuracy data for all rounds.
      *
      * Returns an array of objects with round_id, total_guesses, and
-     * correct_guesses.  The caller computes mixup % via
+     * correct_guesses.  The caller computes Mixup via
      * get_round_mixup_pct() for each round.
      *
      * @return array Array of objects with round_id, total_guesses, correct_guesses.

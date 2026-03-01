@@ -303,7 +303,7 @@ class Kealoa_Shortcodes {
             <?php endforeach; ?>
 
             <?php
-            // Build Mixup % vs Accuracy table
+            // Build Mixup vs Accuracy table
             $round_guess_stats = $this->db->get_rounds_guess_stats();
             $mixup_buckets = [];
             foreach ($round_guess_stats as $rgs) {
@@ -323,12 +323,12 @@ class Kealoa_Shortcodes {
             ksort($mixup_buckets);
             ?>
             <?php if (!empty($mixup_buckets)): ?>
-            <h3><?php esc_html_e('Mixup % vs Accuracy', 'kealoa-reference'); ?></h3>
-            <p class="kealoa-section-description"><?php esc_html_e('Mixup % measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
+            <h3><?php esc_html_e('Mixup vs Accuracy', 'kealoa-reference'); ?></h3>
+            <p class="kealoa-section-description"><?php esc_html_e('Mixup measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
             <table class="kealoa-table kealoa-mixup-table">
                 <thead>
                     <tr>
-                        <th data-sort="text"><?php esc_html_e('Mixup %', 'kealoa-reference'); ?></th>
+                        <th data-sort="text"><?php esc_html_e('Mixup', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
@@ -546,8 +546,8 @@ class Kealoa_Shortcodes {
                     $mixup_pct = $this->db->get_round_mixup_pct($round_id);
                     ?>
                     <p>
-                        <strong class="kealoa-meta-label"><?php esc_html_e('Mixup %', 'kealoa-reference'); ?></strong>
-                        <span><?php echo Kealoa_Formatter::format_percentage($mixup_pct); ?></span>
+                        <strong class="kealoa-meta-label"><?php esc_html_e('Mixup', 'kealoa-reference'); ?></strong>
+                        <span><?php echo Kealoa_Formatter::format_percentage($mixup_pct, 0); ?></span>
                     </p>
                 </div>
 
@@ -1362,7 +1362,7 @@ class Kealoa_Shortcodes {
 
             <?php if (!empty($round_history)): ?>
                 <?php
-                // Build Mixup % vs Accuracy table for this player
+                // Build Mixup vs Accuracy table for this player
                 $player_mixup_buckets = [];
                 foreach ($round_history as $rh) {
                     $rid = (int) $rh->round_id;
@@ -1382,13 +1382,13 @@ class Kealoa_Shortcodes {
                 ?>
                 <?php if (!empty($player_mixup_buckets)): ?>
                 <div class="kealoa-mixup-accuracy-section">
-                    <h2><?php esc_html_e('Mixup % vs Accuracy', 'kealoa-reference'); ?></h2>
-                    <p class="kealoa-section-description"><?php esc_html_e('Mixup % measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
+                    <h2><?php esc_html_e('Mixup vs Accuracy', 'kealoa-reference'); ?></h2>
+                    <p class="kealoa-section-description"><?php esc_html_e('Mixup measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
 
                     <table class="kealoa-table kealoa-mixup-table">
                         <thead>
                             <tr>
-                                <th data-sort="text"><?php esc_html_e('Mixup %', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Mixup', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
@@ -2166,7 +2166,7 @@ class Kealoa_Shortcodes {
                     <div class="kealoa-clue-giver-rounds">
                         <h2><?php esc_html_e('Rounds', 'kealoa-reference'); ?></h2>
 
-                        <p class="kealoa-section-description"><?php esc_html_e('Mixup % measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
+                        <p class="kealoa-section-description"><?php esc_html_e('Mixup measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
 
                         <div class="kealoa-filter-controls" data-target="kealoa-person-cg-rounds-table">
                             <div class="kealoa-filter-row">
@@ -2187,7 +2187,7 @@ class Kealoa_Shortcodes {
                                     <input type="text" id="kealoa-pcgr-guesser" class="kealoa-filter-input" data-filter="search" data-col="2" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
                                 </div>
                                 <div class="kealoa-filter-group">
-                                    <label for="kealoa-pcgr-min-mixup"><?php esc_html_e('Min Mixup %', 'kealoa-reference'); ?></label>
+                                    <label for="kealoa-pcgr-min-mixup"><?php esc_html_e('Min Mixup', 'kealoa-reference'); ?></label>
                                     <input type="number" id="kealoa-pcgr-min-mixup" class="kealoa-filter-input" data-filter="min" data-col="4" min="0" max="100" placeholder="<?php esc_attr_e('e.g. 50', 'kealoa-reference'); ?>">
                                 </div>
                                 <div class="kealoa-filter-group kealoa-filter-actions">
@@ -2205,7 +2205,7 @@ class Kealoa_Shortcodes {
                                     <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                                     <th data-sort="text"><?php esc_html_e('Players', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
-                                    <th data-sort="number"><?php esc_html_e('Mixup %', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Mixup', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
@@ -2252,7 +2252,7 @@ class Kealoa_Shortcodes {
                                         ?></td>
                                         <td><?php echo esc_html($cgr->clue_count); ?></td>
                                         <td data-value="<?php echo esc_attr(number_format($cgr_mixup_pct, 2, '.', '')); ?>">
-                                            <?php echo Kealoa_Formatter::format_percentage($cgr_mixup_pct); ?>
+                                            <?php echo Kealoa_Formatter::format_percentage($cgr_mixup_pct, 0); ?>
                                         </td>
                                         <td><?php echo esc_html(number_format_i18n((int) $cgr->total_guesses)); ?></td>
                                         <td><?php echo esc_html($cgr->correct_guesses); ?></td>
