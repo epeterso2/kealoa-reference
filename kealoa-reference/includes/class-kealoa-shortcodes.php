@@ -3729,7 +3729,7 @@ class Kealoa_Shortcodes {
                         }
 
                         if (empty($con_image_source)) {
-                            $con_image_url = Kealoa_Formatter::xwordinfo_image_url_from_name($con->full_name);
+                            $con_image_url = $con->xwordinfo_image_url ?? '';
                             $con_image_source = 'xwordinfo';
                         }
 
