@@ -430,8 +430,8 @@ class Kealoa_Shortcodes {
                             <td data-value="<?php echo esc_attr(number_format($even_pct, 2, '.', '')); ?>">
                                 <?php echo Kealoa_Formatter::format_percentage($even_pct, 0); ?>
                             </td>
-                            <td data-value="<?php echo esc_attr($age_stats ? number_format($age_stats->mean, 1, '.', '') : ''); ?>">
-                                <?php echo $age_stats ? esc_html(number_format_i18n($age_stats->mean, 1) . ' days') : '—'; ?>
+                            <td data-value="<?php echo esc_attr($age_stats ? number_format($age_stats->mean, 0, '.', '') : ''); ?>">
+                                <?php echo $age_stats ? esc_html(number_format_i18n($age_stats->mean, 0) . ' days') : '—'; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
