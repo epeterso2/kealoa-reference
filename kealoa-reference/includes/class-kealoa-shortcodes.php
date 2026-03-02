@@ -565,6 +565,27 @@ class Kealoa_Shortcodes {
                         <span><?php echo Kealoa_Formatter::format_percentage($mixup_pct, 0); ?></span>
                     </p>
                     <?php
+                    // Pielou's Evenness Index: J' = H' / ln(S), scaled to 0-100%
+                    $s_count = count($answer_counts);
+                    if ($s_count <= 1) {
+                        $evenness_pct = 100.0;
+                    } else {
+                        $n_total = array_sum($answer_counts);
+                        $h_prime = 0.0;
+                        foreach ($answer_counts as $count) {
+                            $p_i = $count / $n_total;
+                            if ($p_i > 0) {
+                                $h_prime -= $p_i * log($p_i);
+                            }
+                        }
+                        $evenness_pct = ($h_prime / log($s_count)) * 100;
+                    }
+                    ?>
+                    <p>
+                        <strong class="kealoa-meta-label"><?php esc_html_e('Evenness', 'kealoa-reference'); ?></strong>
+                        <span><?php echo Kealoa_Formatter::format_percentage($evenness_pct, 0); ?></span>
+                    </p>
+                    <?php
                     $clue_age_stats = $this->db->get_round_clue_age_stats($round_id);
                     if ($clue_age_stats): ?>
                     <p>
