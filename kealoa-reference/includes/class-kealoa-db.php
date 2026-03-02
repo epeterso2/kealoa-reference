@@ -1449,15 +1449,15 @@ class Kealoa_DB {
     }
 
     /**
-     * Get Mixup percentages for multiple rounds in a single query.
+     * Get Alternation percentages for multiple rounds in a single query.
      *
      * Fetches all correct_answer values for the given rounds, then
      * computes the run-count metric per round in PHP.
      *
      * @param int[] $round_ids Array of round IDs.
-     * @return array<int, float> Map of round_id => mixup percentage (0-100).
+     * @return array<int, float> Map of round_id => alternation percentage (0-100).
      */
-    public function get_round_mixup_pcts_bulk(array $round_ids): array {
+    public function get_round_alternation_pcts_bulk(array $round_ids): array {
         $map = [];
         foreach ($round_ids as $rid) {
             $map[(int) $rid] = 0.0;
@@ -1478,7 +1478,7 @@ class Kealoa_DB {
             $answers_by_round[(int) $row->round_id][] = $row->correct_answer;
         }
 
-        // Compute mixup per round
+        // Compute alternation per round
         foreach ($answers_by_round as $rid => $answers) {
             $n = count($answers);
             if ($n < 2) {
@@ -1609,16 +1609,16 @@ class Kealoa_DB {
     }
 
     /**
-     * Get the Mixup for a round (Wald-Wolfowitz run-count metric).
+     * Get the Alternation for a round (Wald-Wolfowitz run-count metric).
      *
      * A "run" is a maximal consecutive sequence of identical correct answers.
-     * Mixup = ((r - 1) / (n - 1)) * 100, where r = number of runs and
+     * Alternation = ((r - 1) / (n - 1)) * 100, where r = number of runs and
      * n = number of clues.  Returns 0 when the round has fewer than 2 clues.
      *
      * @param int $round_id The round ID.
-     * @return float The Mixup percentage (0-100).
+     * @return float The Alternation percentage (0-100).
      */
-    public function get_round_mixup_pct(int $round_id): float {
+    public function get_round_alternation_pct(int $round_id): float {
         $sql = $this->wpdb->prepare(
             "SELECT correct_answer FROM {$this->clues_table} WHERE round_id = %d ORDER BY clue_number ASC",
             $round_id
@@ -1706,11 +1706,11 @@ class Kealoa_DB {
     }
 
     /**
-     * Get per-round Mixup and accuracy data for all rounds.
+     * Get per-round Alternation and accuracy data for all rounds.
      *
      * Returns an array of objects with round_id, total_guesses, and
-     * correct_guesses.  The caller computes Mixup via
-     * get_round_mixup_pct() for each round.
+     * correct_guesses.  The caller computes Alternation via
+     * get_round_alternation_pct() for each round.
      *
      * @return array Array of objects with round_id, total_guesses, correct_guesses.
      */

@@ -93,9 +93,9 @@ All shortcode output is cached via WordPress transients (24-hour TTL) with a ver
 | Shortcode | Attributes | Description |
 |---|---|---|
 | `[kealoa_rounds_table]` | `limit`, `order` | Tabbed view: rounds table (sortable/filterable) and stats (overview grid, yearly stats, clue-number frequency matrices) |
-| `[kealoa_round]` | `id` (required) | Round detail: meta, episode link, solution words, host, players with scores, person photos, mixup metric, average clue age, clue table with guesses, social sharing bar |
+| `[kealoa_round]` | `id` (required) | Round detail: meta, episode link, solution words, host, players with scores, person photos, alternation metric, evenness metric, average clue age, clue table with guesses, social sharing bar |
 | `[kealoa_rounds_stats]` | — | Statistics grid: total players, rounds, puzzles, constructors, clues, guesses, correct answers, accuracy |
-| `[kealoa_person]` | `id` (required) | Person profile with tabbed interface: role-specific statistics (player, constructor, editor, host), mixup vs accuracy breakdown, round history, co-players, performance charts, person images |
+| `[kealoa_person]` | `id` (required) | Person profile with tabbed interface: role-specific statistics (player, constructor, editor, host), alternation vs accuracy breakdown, round history, co-players, performance charts, person images |
 | `[kealoa_persons_table]` | — | Table of all players with rounds played, clues guessed, and accuracy |
 | `[kealoa_constructors_table]` | — | Table of all constructors with puzzle count and statistics |
 | `[kealoa_editors_table]` | — | Table of all editors with puzzle count and statistics |
@@ -480,7 +480,7 @@ Person profile pages use Chart.js 4.x for interactive performance visualizations
 
 The plugin uses several strategies to minimize database queries:
 
-- **Bulk-fetch methods** — Instead of querying one row at a time inside loops (N+1 pattern), the database layer provides bulk methods that fetch data for many IDs in a single `WHERE id IN (...)` query and return ID-keyed maps. Bulk methods exist for round solutions, puzzle constructors, clue guesses, guesser results, clue counts, round guessers, mixup percentages, and clue age statistics.
+- **Bulk-fetch methods** — Instead of querying one row at a time inside loops (N+1 pattern), the database layer provides bulk methods that fetch data for many IDs in a single `WHERE id IN (...)` query and return ID-keyed maps. Bulk methods exist for round solutions, puzzle constructors, clue guesses, guesser results, clue counts, round guessers, alternation percentages, and clue age statistics.
 - **Query consolidation** — Multi-query operations are merged into single SQL statements. For example, rounds overview statistics (6 queries → 1) and person role detection (4 queries → 1).
 - **Pre-computed maps** — Renderers collect all needed IDs before entering loops, then perform bulk fetches up front and use map lookups inside the loop body.
 - **Transient caching** — All shortcode output is cached via WordPress transients (24-hour TTL) with a versioned cache key that is invalidated after any data mutation.
