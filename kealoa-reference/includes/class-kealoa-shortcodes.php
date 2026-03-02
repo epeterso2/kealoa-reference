@@ -2461,10 +2461,6 @@ class Kealoa_Shortcodes {
                                     <label for="kealoa-pcgr-guesser"><?php esc_html_e('Player', 'kealoa-reference'); ?></label>
                                     <input type="text" id="kealoa-pcgr-guesser" class="kealoa-filter-input" data-filter="search" data-col="2" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
                                 </div>
-                                <div class="kealoa-filter-group">
-                                    <label for="kealoa-pcgr-min-alternation"><?php esc_html_e('Min', 'kealoa-reference'); ?> <a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a></label>
-                                    <input type="number" id="kealoa-pcgr-min-alternation" class="kealoa-filter-input" data-filter="min" data-col="4" min="0" max="100" placeholder="<?php esc_attr_e('e.g. 50', 'kealoa-reference'); ?>">
-                                </div>
                                 <div class="kealoa-filter-group kealoa-filter-actions">
                                     <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
                                     <span class="kealoa-filter-count"></span>
@@ -2480,7 +2476,6 @@ class Kealoa_Shortcodes {
                                     <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                                     <th data-sort="text"><?php esc_html_e('Players', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
-                                    <th data-sort="number"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
@@ -2526,9 +2521,6 @@ class Kealoa_Shortcodes {
                                             }
                                         ?></td>
                                         <td><?php echo esc_html($cgr->clue_count); ?></td>
-                                        <td data-value="<?php echo esc_attr(number_format($cgr_alternation_pct, 2, '.', '')); ?>">
-                                            <?php echo Kealoa_Formatter::format_percentage($cgr_alternation_pct, 0); ?>
-                                        </td>
                                         <td><?php echo esc_html(number_format_i18n((int) $cgr->total_guesses)); ?></td>
                                         <td><?php echo esc_html(number_format_i18n((int) $cgr->correct_guesses)); ?></td>
                                         <td data-value="<?php echo esc_attr(number_format((float) $cgr_pct, 2, '.', '')); ?>">
