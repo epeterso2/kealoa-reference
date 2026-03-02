@@ -328,13 +328,13 @@ class Kealoa_Shortcodes {
             ksort($alternation_buckets);
             ?>
             <?php if (!empty($alternation_buckets)): ?>
-            <h3><?php esc_html_e('Alternation vs Accuracy', 'kealoa-reference'); ?></h3>
-            <p class="kealoa-section-description"><?php esc_html_e('Alternation measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
+            <h3><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('vs Accuracy', 'kealoa-reference'); ?></h3>
+            <p class="kealoa-section-description"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
             <div class="kealoa-table-scroll">
             <table class="kealoa-table kealoa-alternation-table">
                 <thead>
                     <tr>
-                        <th data-sort="text"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></th>
+                        <th data-sort="text"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a></th>
                         <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
@@ -390,7 +390,7 @@ class Kealoa_Shortcodes {
                 </div>
                 <div class="kealoa-filter-row">
                     <div class="kealoa-filter-group">
-                        <label for="kealoa-ds-alt-min"><?php esc_html_e('Alternation Range', 'kealoa-reference'); ?></label>
+                        <label for="kealoa-ds-alt-min"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('Range', 'kealoa-reference'); ?></label>
                         <div class="kealoa-filter-range">
                             <input type="number" id="kealoa-ds-alt-min" class="kealoa-filter-input" data-filter="range-min" data-col="2" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
                             <span class="kealoa-filter-range-sep">&ndash;</span>
@@ -398,7 +398,7 @@ class Kealoa_Shortcodes {
                         </div>
                     </div>
                     <div class="kealoa-filter-group">
-                        <label for="kealoa-ds-even-min"><?php esc_html_e('Evenness Range', 'kealoa-reference'); ?></label>
+                        <label for="kealoa-ds-even-min"><a href="/faq#definition-evenness"><?php esc_html_e('Evenness', 'kealoa-reference'); ?></a> <?php esc_html_e('Range', 'kealoa-reference'); ?></label>
                         <div class="kealoa-filter-range">
                             <input type="number" id="kealoa-ds-even-min" class="kealoa-filter-input" data-filter="range-min" data-col="3" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
                             <span class="kealoa-filter-range-sep">&ndash;</span>
@@ -421,8 +421,8 @@ class Kealoa_Shortcodes {
                     <tr>
                         <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
                         <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Evenness', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a></th>
+                        <th data-sort="number"><a href="/faq#definition-evenness"><?php esc_html_e('Evenness', 'kealoa-reference'); ?></a></th>
                         <th data-sort="number"><?php esc_html_e('Avg Clue Age', 'kealoa-reference'); ?></th>
                     </tr>
                 </thead>
@@ -669,7 +669,7 @@ class Kealoa_Shortcodes {
                     $alternation_pct = $this->db->get_round_alternation_pct($round_id);
                     ?>
                     <p>
-                        <strong class="kealoa-meta-label"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></strong>
+                        <strong class="kealoa-meta-label"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a></strong>
                         <span><?php
                         echo Kealoa_Formatter::format_percentage($alternation_pct, 0);
                         $n_clues = count($clues);
@@ -704,7 +704,7 @@ class Kealoa_Shortcodes {
                     }
                     ?>
                     <p>
-                        <strong class="kealoa-meta-label"><?php esc_html_e('Evenness', 'kealoa-reference'); ?></strong>
+                        <strong class="kealoa-meta-label"><a href="/faq#definition-evenness"><?php esc_html_e('Evenness', 'kealoa-reference'); ?></a></strong>
                         <span><?php
                         echo Kealoa_Formatter::format_percentage($evenness_pct, 0);
                         $word_parts = [];
@@ -1604,14 +1604,14 @@ class Kealoa_Shortcodes {
                 ?>
                 <?php if (!empty($player_alternation_buckets)): ?>
                 <div class="kealoa-alternation-accuracy-section">
-                    <h2><?php esc_html_e('Alternation vs Accuracy', 'kealoa-reference'); ?></h2>
-                    <p class="kealoa-section-description"><?php esc_html_e('Alternation measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
+                    <h2><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('vs Accuracy', 'kealoa-reference'); ?></h2>
+                    <p class="kealoa-section-description"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
 
                     <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-alternation-table">
                         <thead>
                             <tr>
-                                <th data-sort="text"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a></th>
                                 <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
@@ -2445,7 +2445,7 @@ class Kealoa_Shortcodes {
                     <div class="kealoa-clue-giver-rounds">
                         <h2><?php esc_html_e('Rounds', 'kealoa-reference'); ?></h2>
 
-                        <p class="kealoa-section-description"><?php esc_html_e('Alternation measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
+                        <p class="kealoa-section-description"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
 
                         <div class="kealoa-filter-controls" data-target="kealoa-person-cg-rounds-table">
                             <div class="kealoa-filter-row">
@@ -2466,7 +2466,7 @@ class Kealoa_Shortcodes {
                                     <input type="text" id="kealoa-pcgr-guesser" class="kealoa-filter-input" data-filter="search" data-col="2" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
                                 </div>
                                 <div class="kealoa-filter-group">
-                                    <label for="kealoa-pcgr-min-alternation"><?php esc_html_e('Min Alternation', 'kealoa-reference'); ?></label>
+                                    <label for="kealoa-pcgr-min-alternation"><?php esc_html_e('Min', 'kealoa-reference'); ?> <a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a></label>
                                     <input type="number" id="kealoa-pcgr-min-alternation" class="kealoa-filter-input" data-filter="min" data-col="4" min="0" max="100" placeholder="<?php esc_attr_e('e.g. 50', 'kealoa-reference'); ?>">
                                 </div>
                                 <div class="kealoa-filter-group kealoa-filter-actions">
@@ -2484,7 +2484,7 @@ class Kealoa_Shortcodes {
                                     <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                                     <th data-sort="text"><?php esc_html_e('Players', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
-                                    <th data-sort="number"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a></th>
                                     <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
