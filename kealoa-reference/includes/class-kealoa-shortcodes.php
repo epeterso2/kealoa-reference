@@ -199,10 +199,11 @@ class Kealoa_Shortcodes {
             <div class="kealoa-tabs">
                 <div class="kealoa-tab-nav">
                     <button class="kealoa-tab-button active" data-tab="rounds-played"><?php esc_html_e('Rounds Played', 'kealoa-reference'); ?></button>
-                    <button class="kealoa-tab-button" data-tab="stats"><?php esc_html_e('Stats', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="detailed-stats"><?php esc_html_e('Detailed Stats', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button" data-tab="summary-stats"><?php esc_html_e('Summary Stats', 'kealoa-reference'); ?></button>
                 </div>
 
-                <div class="kealoa-tab-panel" data-tab="stats">
+                <div class="kealoa-tab-panel" data-tab="summary-stats">
             <?php echo $this->render_rounds_stats_html($overview); ?>
 
             <?php $yearly_stats = $this->db->get_rounds_stats_by_year(); ?>
@@ -363,7 +364,82 @@ class Kealoa_Shortcodes {
             </div>
             <?php endif; ?>
 
-                </div><!-- end Stats tab -->
+                </div><!-- end Summary Stats tab -->
+
+                <div class="kealoa-tab-panel" data-tab="detailed-stats">
+
+            <h3><?php esc_html_e('Round Details', 'kealoa-reference'); ?></h3>
+            <div class="kealoa-filter-controls" data-target="kealoa-detailed-stats-table">
+                <div class="kealoa-filter-row">
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ds-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                        <input type="text" id="kealoa-ds-search" class="kealoa-filter-input" data-filter="search" data-col="1" placeholder="<?php esc_attr_e('Solution words...', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group kealoa-filter-actions">
+                        <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                        <span class="kealoa-filter-count"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="kealoa-table-scroll">
+            <table class="kealoa-table kealoa-detailed-stats-table" id="kealoa-detailed-stats-table">
+                <thead>
+                    <tr>
+                        <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
+                        <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Evenness', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Avg Clue Age', 'kealoa-reference'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    // Bulk pre-fetch data for all rounds
+                    $ds_round_ids = array_map(function ($r) { return (int) $r->id; }, $rounds);
+                    $ds_solutions = $this->db->get_round_solutions_bulk($ds_round_ids);
+                    $ds_alternation = $this->db->get_round_alternation_pcts_bulk($ds_round_ids);
+                    $ds_evenness = $this->db->get_round_evenness_bulk($ds_round_ids);
+                    $ds_clue_ages = $this->db->get_round_clue_age_stats_bulk($ds_round_ids);
+                    $ds_rounds_per_date = $rounds_per_date ?? $this->db->get_rounds_per_date_counts();
+                    ?>
+                    <?php foreach ($rounds as $round): ?>
+                        <?php
+                        $rid = (int) $round->id;
+                        $solutions = $ds_solutions[$rid] ?? [];
+                        $alt_pct = $ds_alternation[$rid] ?? 0.0;
+                        $even_pct = $ds_evenness[$rid] ?? 0.0;
+                        $age_stats = $ds_clue_ages[$rid] ?? null;
+                        $round_num = (int) ($round->round_number ?? 1);
+                        $date_count = $ds_rounds_per_date[$round->round_date] ?? 1;
+                        ?>
+                        <tr>
+                            <td class="kealoa-date-cell" data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($round->round_date)) * 100 + $round_num); ?>">
+                                <?php
+                                echo Kealoa_Formatter::format_round_date_link((int) $round->id, $round->round_date);
+                                if ($date_count > 1) {
+                                    echo ' <span class="kealoa-round-number">(#' . esc_html($round_num) . ')</span>';
+                                }
+                                ?>
+                            </td>
+                            <td class="kealoa-solutions-cell">
+                                <?php echo Kealoa_Formatter::format_solution_words_link((int) $round->id, $solutions); ?>
+                            </td>
+                            <td data-value="<?php echo esc_attr(number_format($alt_pct, 2, '.', '')); ?>">
+                                <?php echo Kealoa_Formatter::format_percentage($alt_pct, 0); ?>
+                            </td>
+                            <td data-value="<?php echo esc_attr(number_format($even_pct, 2, '.', '')); ?>">
+                                <?php echo Kealoa_Formatter::format_percentage($even_pct, 0); ?>
+                            </td>
+                            <td data-value="<?php echo esc_attr($age_stats ? number_format($age_stats->mean, 1, '.', '') : ''); ?>">
+                                <?php echo $age_stats ? esc_html(number_format_i18n($age_stats->mean, 1) . ' days') : '—'; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            </div>
+
+                </div><!-- end Detailed Stats tab -->
 
                 <div class="kealoa-tab-panel active" data-tab="rounds-played">
 
@@ -3071,10 +3147,22 @@ class Kealoa_Shortcodes {
             return '<p class="kealoa-no-data">' . esc_html__('No players found.', 'kealoa-reference') . '</p>';
         }
 
-        $highest_scores = $this->db->get_all_persons_highest_round_scores();
-        $longest_streaks = $this->db->get_all_persons_longest_streaks();
-        $best_score_round_ids = $this->db->get_all_persons_highest_round_score_round_ids();
-        $best_streak_round_ids = $this->db->get_all_persons_longest_streak_round_ids();
+        $scores_combined = $this->db->get_all_persons_highest_round_scores_with_round_ids();
+        $streaks_combined = $this->db->get_all_persons_longest_streaks_with_round_ids();
+
+        $highest_scores = [];
+        $best_score_round_ids = [];
+        foreach ($scores_combined as $pid => $data) {
+            $highest_scores[$pid] = $data['score'];
+            $best_score_round_ids[$pid] = $data['round_ids'];
+        }
+
+        $longest_streaks = [];
+        $best_streak_round_ids = [];
+        foreach ($streaks_combined as $pid => $data) {
+            $longest_streaks[$pid] = $data['streak'];
+            $best_streak_round_ids[$pid] = $data['round_ids'];
+        }
 
         // Collect all unique round IDs needed for picker links
         $all_round_ids = [];
@@ -3961,7 +4049,7 @@ class Kealoa_Shortcodes {
                                 <?php
                                 $sol_parts = [];
                                 foreach ($rounds_clues as $rc) {
-                                    $solutions = $this->db->get_round_solutions((int) $rc['round_id']);
+                                    $solutions = $round_solutions_cache[(int) $rc['round_id']] ?? [];
                                     $sol_parts[] = Kealoa_Formatter::format_solution_words_link((int) $rc['round_id'], $solutions);
                                 }
                                 echo implode(', ', $sol_parts);

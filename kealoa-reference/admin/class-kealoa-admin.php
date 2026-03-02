@@ -1138,8 +1138,12 @@ class Kealoa_Admin {
                         <td colspan="6"><?php esc_html_e('No puzzles found.', 'kealoa-reference'); ?></td>
                     </tr>
                 <?php else: ?>
+                    <?php
+                    $puzzle_ids = array_map(fn($p) => (int) $p->id, $puzzles);
+                    $bulk_constructors = $this->db->get_puzzle_constructors_bulk($puzzle_ids);
+                    ?>
                     <?php foreach ($puzzles as $puzzle): ?>
-                        <?php $constructors = $this->db->get_puzzle_constructors((int) $puzzle->id); ?>
+                        <?php $constructors = $bulk_constructors[(int) $puzzle->id] ?? []; ?>
                         <tr>
                             <td><?php echo esc_html($puzzle->id); ?></td>
                             <td><?php echo Kealoa_Formatter::format_puzzle_date_link($puzzle->publication_date); ?></td>
@@ -1324,10 +1328,15 @@ class Kealoa_Admin {
                         <td colspan="8"><?php esc_html_e('No rounds found.', 'kealoa-reference'); ?></td>
                     </tr>
                 <?php else: ?>
+                    <?php
+                    $all_round_ids = array_map(fn($r) => (int) $r->id, $rounds);
+                    $bulk_solutions = $this->db->get_round_solutions_bulk($all_round_ids);
+                    $bulk_clue_counts = $this->db->get_round_clue_counts_bulk($all_round_ids);
+                    ?>
                     <?php foreach ($rounds as $round): ?>
                         <?php
-                        $solutions = $this->db->get_round_solutions((int) $round->id);
-                        $clue_count = $this->db->get_round_clue_count((int) $round->id);
+                        $solutions = $bulk_solutions[(int) $round->id] ?? [];
+                        $clue_count = $bulk_clue_counts[(int) $round->id] ?? 0;
                         ?>
                         <tr>
                             <td><?php echo esc_html($round->id); ?></td>
@@ -1598,8 +1607,12 @@ class Kealoa_Admin {
                     </tr>
                 </thead>
                 <tbody>
+                    <?php
+                    $clue_ids = array_map(fn($c) => (int) $c->id, $clues);
+                    $bulk_clue_guesses = $this->db->get_clue_guesses_bulk($clue_ids);
+                    ?>
                     <?php foreach ($clues as $clue): ?>
-                        <?php $clue_guesses = $this->db->get_clue_guesses((int) $clue->id); ?>
+                        <?php $clue_guesses = $bulk_clue_guesses[(int) $clue->id] ?? []; ?>
                         <tr>
                             <td><?php echo esc_html($clue->clue_number); ?></td>
                             <td><?php echo Kealoa_Formatter::format_puzzle_date_link($clue->puzzle_date); ?></td>

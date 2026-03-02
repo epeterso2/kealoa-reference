@@ -381,11 +381,12 @@ class Kealoa_REST_API {
             ]);
             $total = $this->db->count_persons($search);
 
-            $items = array_map(function ($p) {
+            $all_roles = $this->db->get_all_person_roles();
+            $items = array_map(function ($p) use ($all_roles) {
                 return [
                     'id'        => (int) $p->id,
                     'full_name' => $p->full_name,
-                    'roles'     => $this->db->get_person_roles((int) $p->id),
+                    'roles'     => $all_roles[(int) $p->id] ?? [],
                     'url'       => home_url('/kealoa/person/' . urlencode(str_replace(' ', '_', $p->full_name)) . '/'),
                 ];
             }, $persons);
