@@ -21,22 +21,23 @@
     border-radius: 12px;
 }
 
-.kealoa-game__welcome--debug {
+.kealoa-game__welcome--inline {
     padding: 20px 30px;
-    background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
-    border: 2px dashed var(--volcanic-ember);
+    background: linear-gradient(135deg, var(--cloud-white) 0%, var(--pale-sand) 100%);
+    border: 1px solid var(--driftwood-light);
+    border-radius: 12px;
 }
 
-.kealoa-game__debug-label {
+.kealoa-game__play-label {
     font-size: 14px;
     font-weight: 600;
-    color: var(--volcanic-ember);
+    color: var(--driftwood-dark);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin: 0 0 12px 0;
 }
 
-.kealoa-game--debug {
+.kealoa-game--inline {
     margin-top: 24px;
 }
 
