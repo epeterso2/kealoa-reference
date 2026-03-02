@@ -237,7 +237,7 @@
     flex: 1;
 }
 
-.kealoa-clues-section h3 {
+.kealoa-clues-section h2 {
     margin-top: 0;
     padding-bottom: 10px;
     border-bottom: 2px solid var(--deep-lagoon);
@@ -561,8 +561,14 @@
 .kealoa-constructor-stats h2,
 .kealoa-editor-stats h2,
 .kealoa-accuracy-chart-section h2,
+.kealoa-score-distribution-section h2,
 .kealoa-round-history h2,
 .kealoa-rounds-table-wrapper h3,
+.kealoa-answer-length-stats h2,
+.kealoa-mixup-accuracy-section h2,
+.kealoa-answer-word-count-stats h2,
+.kealoa-person-puzzles h2,
+.kealoa-curiosities-section h2,
 .kealoa-constructor-puzzles h2,
 .kealoa-constructor-player-stats h2,
 .kealoa-constructor-editor-stats h2,

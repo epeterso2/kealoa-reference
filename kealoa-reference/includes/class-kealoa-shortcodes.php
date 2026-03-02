@@ -3620,6 +3620,7 @@ class Kealoa_Shortcodes {
         $cur_solutions_cache = !empty($cur_all_rids) ? $this->db->get_round_solutions_bulk($cur_all_rids) : [];
         $cur_rounds_per_date = $this->db->get_rounds_per_date_counts();
         ?>
+        <div class="kealoa-curiosities-section">
         <h2><?php esc_html_e('Puzzles Used in Multiple Rounds', 'kealoa-reference'); ?></h2>
         <div class="kealoa-puzzles-table-wrapper">
             <div class="kealoa-table-scroll">
@@ -3696,6 +3697,7 @@ class Kealoa_Shortcodes {
                 </table>
             </div>
         </div>
+        </div>
 
         <?php endif; // end if (!empty($puzzles)) ?>
 
@@ -3708,6 +3710,7 @@ class Kealoa_Shortcodes {
         $np_guesser_results_map = $this->db->get_round_guesser_results_bulk($np_round_ids);
         $np_rounds_per_date = $this->db->get_rounds_per_date_counts();
         ?>
+        <div class="kealoa-curiosities-section">
         <h2><?php esc_html_e('Rounds Without Puzzles', 'kealoa-reference'); ?></h2>
         <p class="kealoa-section-description"><?php esc_html_e('These rounds have no clues linked to a crossword puzzle.', 'kealoa-reference'); ?></p>
         <div class="kealoa-puzzles-table-wrapper">
@@ -3763,6 +3766,7 @@ class Kealoa_Shortcodes {
                     </tbody>
                 </table>
             </div>
+        </div>
         </div>
         <?php endif; ?>
         <?php
