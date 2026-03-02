@@ -548,7 +548,22 @@ class Kealoa_Shortcodes {
                     ?>
                     <p>
                         <strong class="kealoa-meta-label"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></strong>
-                        <span><?php echo Kealoa_Formatter::format_percentage($alternation_pct, 0); ?></span>
+                        <span><?php
+                        echo Kealoa_Formatter::format_percentage($alternation_pct, 0);
+                        $n_clues = count($clues);
+                        $answer_changes = 0;
+                        for ($i = 1; $i < $n_clues; $i++) {
+                            if ($clues[$i]->correct_answer !== $clues[$i - 1]->correct_answer) {
+                                $answer_changes++;
+                            }
+                        }
+                        /* translators: %1$d = number of answer changes, %2$d = maximum possible changes */
+                        echo ' ' . sprintf(
+                            esc_html__('(%1$d of %2$d)', 'kealoa-reference'),
+                            $answer_changes,
+                            max($n_clues - 1, 0)
+                        );
+                        ?></span>
                     </p>
                     <?php
                     // Pielou's Evenness Index: J' = H' / ln(S), scaled to 0-100%
