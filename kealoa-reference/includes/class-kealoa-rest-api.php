@@ -107,7 +107,7 @@ class Kealoa_REST_API {
                     'default'           => '',
                     'sanitize_callback' => 'sanitize_text_field',
                     'validate_callback' => function ($v) {
-                        return empty($v) || in_array($v, ['player', 'constructor', 'editor'], true);
+                        return empty($v) || in_array($v, ['player', 'constructor', 'editor', 'clue_giver'], true);
                     },
                 ],
             ]),
@@ -332,7 +332,7 @@ class Kealoa_REST_API {
             'episode_number'  => (int) ($round->episode_number ?? 0),
             'episode_id'      => $round->episode_id ?? '',
             'episode_url'     => $round->episode_url ?? '',
-            'episode_start_time' => $round->episode_start_time ?? '',
+            'episode_start_time' => Kealoa_Formatter::seconds_to_time((int) ($round->episode_start_seconds ?? 0)),
             'description'     => $round->description ?? '',
             'description2'    => $round->description2 ?? '',
             'clue_giver'      => $round->clue_giver_name ?? '',
@@ -368,6 +368,10 @@ class Kealoa_REST_API {
             $all = $this->db->get_persons_who_are_constructors();
         } elseif ($role === 'editor') {
             $all = $this->db->get_persons_who_are_editors();
+        } elseif ($role === 'player') {
+            $all = $this->db->get_persons_with_stats();
+        } elseif ($role === 'clue_giver') {
+            $all = $this->db->get_persons_who_are_clue_givers();
         } else {
             // Default: paginated list
             $persons = $this->db->get_persons([

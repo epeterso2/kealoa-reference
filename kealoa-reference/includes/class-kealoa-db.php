@@ -2403,6 +2403,7 @@ class Kealoa_DB {
     public function get_persons_who_are_editors(): array {
         $sql = "SELECT
                 ed.id,
+                ed.full_name,
                 ed.full_name as editor_name,
                 COUNT(DISTINCT p.id) as puzzle_count,
                 COUNT(DISTINCT c.id) as clue_count,
@@ -2522,6 +2523,7 @@ class Kealoa_DB {
     public function get_persons_who_are_clue_givers(): array {
         $sql = "SELECT
                 p.id,
+                p.full_name,
                 p.full_name as clue_giver_name,
                 COUNT(DISTINCT r.id) as round_count,
                 COUNT(DISTINCT c.id) as clue_count,

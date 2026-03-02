@@ -2,7 +2,7 @@
 
 A WordPress plugin for managing and displaying KEALOA quiz game data from the [Fill Me In](https://bemoresmarter.libsyn.com) podcast.
 
-**Version:** 2.0.88 &bull; **DB Version:** 2.1.0 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+**Version:** 2.1.1 &bull; **DB Version:** 2.1.0 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 ---
 
@@ -114,19 +114,19 @@ The plugin registers 15 blocks under the `kealoa` namespace. Each block renders 
 | Block slug | Title | Icon | Description |
 |---|---|---|---|
 | `clue-givers-table` | KEALOA Clue Givers Table | `microphone` | Table of all clue givers with rounds, clues, guessers, and accuracy |
-| `constructor-view` | KEALOA Constructor View | `hammer` | **Deprecated** — use Person View instead |
+| `constructor-view` | KEALOA Constructor View | `hammer` | **Deprecated:** use Person View instead. Displays a person's KEALOA statistics and history |
 | `constructors-table` | KEALOA Constructors Table | `hammer` | Table of all constructors with statistics |
-| `editor-view` | KEALOA Editor View | `edit` | **Deprecated** — use Person View instead |
+| `editor-view` | KEALOA Editor View | `edit` | **Deprecated:** use Person View instead. Displays a person's KEALOA statistics and history |
 | `editors-table` | KEALOA Editors Table | `edit` | Table of all editors with statistics |
 | `hosts-table` | KEALOA Hosts Table | `microphone` | Table of all hosts with rounds, clues, players, and accuracy |
 | `person-view` | KEALOA Person View | `admin-users` | Person profile with statistics, round history, and performance metrics |
 | `persons-table` | KEALOA Players Table | `groups` | Table of all players with rounds played, clues guessed, and accuracy |
-| `play-game` | KEALOA Play Game | `games` | Interactive in-browser KEALOA game |
+| `play-game` | KEALOA Play Game | `games` | An interactive KEALOA game that lets visitors play a random round |
 | `puzzle-view` | KEALOA Puzzle View | `grid-view` | Single puzzle with person images, clue details, and round information |
-| `puzzles-table` | KEALOA Puzzles Table | `grid-view` | Table of all puzzles with puzzle date, constructors, editor, and round details |
+| `puzzles-table` | KEALOA Puzzles Table | `grid-view` | Table of all puzzles with puzzle date, persons, editor, and round details |
 | `round-view` | KEALOA Round View | `media-document` | Single round with all clues, guesses, and results |
 | `rounds-stats` | KEALOA Rounds Stats | `chart-bar` | Round statistics: total rounds, clues, guesses, correct answers, and accuracy |
-| `rounds-table` | KEALOA Rounds Table | `editor-table` | Paginated table of all rounds with dates, episodes, solutions, and results |
+| `rounds-table` | KEALOA Rounds Table | `editor-table` | Table of all KEALOA rounds with dates, episodes, solutions, and results |
 | `version-info` | KEALOA Version Info | `info-outline` | Plugin and database version numbers |
 
 ### Block Attributes

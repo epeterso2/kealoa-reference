@@ -3,7 +3,7 @@
 Read-only REST API for KEALOA Reference data.
 
 **Base URL:** `/wp-json/kealoa/v1`
-**Version:** 2.0.88
+**Version:** 2.1.1
 
 All endpoints use the `GET` method and are publicly accessible (`permission_callback: __return_true`). All responses are JSON.
 
@@ -253,7 +253,7 @@ Returns full detail for a single round, including all clues, all guesses, player
   "round_date": "2024-03-15",
   "round_number": 1,
   "episode_number": 100,
-  "episode_id": "abc123",
+  "episode_id": 12345,
   "episode_url": "https://bemoresmarter.libsyn.com/episode/100",
   "episode_start_time": "00:12:34",
   "description": "Optional description",
@@ -312,6 +312,8 @@ Returns full detail for a single round, including all clues, all guesses, player
 
 Returns a paginated list of persons. When `role` is omitted, each item includes the full `roles` array. When `role` is specified, the items omit `roles`.
 
+`role=player` returns persons who have participated as guessers. `role=clue_giver` returns persons who have hosted rounds.
+
 **Query parameters:**
 
 Supports [pagination parameters](#pagination) plus:
@@ -319,7 +321,7 @@ Supports [pagination parameters](#pagination) plus:
 | Parameter | Type   | Default | Description                                               |
 |---|---|---|---|
 | `search`  | string | `""`    | Filter by name substring (case-insensitive)               |
-| `role`    | string | `""`    | Restrict to persons with this role: `player`, `constructor`, or `editor` |
+| `role`    | string | `""`    | Restrict to persons with this role: `player`, `constructor`, `editor`, or `clue_giver` |
 
 **Response (no role filter): 200 OK**
 
