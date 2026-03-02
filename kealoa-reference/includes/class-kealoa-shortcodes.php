@@ -1164,19 +1164,19 @@ class Kealoa_Shortcodes {
                 </div>
             </div>
 
-            <div class="kealoa-tabs">
+            <div class="kealoa-tabs" data-role="<?php echo esc_attr($default_tab); ?>">
                 <div class="kealoa-tab-nav">
                     <?php if ($is_player): ?>
-                    <button class="kealoa-tab-button<?php echo $tab_active('player'); ?>" data-tab="player"><?php esc_html_e('Player', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button kealoa-tab-button--player<?php echo $tab_active('player'); ?>" data-tab="player"><?php esc_html_e('Player', 'kealoa-reference'); ?></button>
                     <?php endif; ?>
                     <?php if ($is_clue_giver): ?>
-                    <button class="kealoa-tab-button<?php echo $tab_active('host'); ?>" data-tab="host"><?php esc_html_e('Host', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button kealoa-tab-button--host<?php echo $tab_active('host'); ?>" data-tab="host"><?php esc_html_e('Host', 'kealoa-reference'); ?></button>
                     <?php endif; ?>
                     <?php if ($is_constructor): ?>
-                    <button class="kealoa-tab-button<?php echo $tab_active('constructor'); ?>" data-tab="constructor"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button kealoa-tab-button--constructor<?php echo $tab_active('constructor'); ?>" data-tab="constructor"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></button>
                     <?php endif; ?>
                     <?php if ($is_editor): ?>
-                    <button class="kealoa-tab-button<?php echo $tab_active('editor'); ?>" data-tab="editor"><?php esc_html_e('Editor', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button kealoa-tab-button--editor<?php echo $tab_active('editor'); ?>" data-tab="editor"><?php esc_html_e('Editor', 'kealoa-reference'); ?></button>
                     <?php endif; ?>
                 </div>
 

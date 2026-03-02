@@ -404,6 +404,12 @@
                             panel.classList.add('active');
                         }
                     });
+
+                    // Sync the data-role attribute on the container so
+                    // the tab-nav border color follows the active tab.
+                    if (container.hasAttribute('data-role')) {
+                        container.setAttribute('data-role', tabName);
+                    }
                 });
             });
         });

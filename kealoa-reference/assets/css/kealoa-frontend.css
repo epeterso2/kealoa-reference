@@ -409,28 +409,111 @@
     -webkit-overflow-scrolling: touch;
 }
 
-.kealoa-person-view .kealoa-tab-button {
+/* -- Primary role-colored tabs ------------------------------------------- */
+
+.kealoa-person-view .kealoa-tab-button--player {
     color: var(--deep-lagoon);
 }
-
-.kealoa-person-view .kealoa-tab-button:hover,
-.kealoa-person-view .kealoa-tab-button.active {
+.kealoa-person-view .kealoa-tab-button--player:hover,
+.kealoa-person-view .kealoa-tab-button--player.active {
     background-color: var(--deep-lagoon);
     border-bottom-color: var(--deep-lagoon);
 }
 
-.kealoa-person-view .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav {
-    border-bottom-color: var(--tropical-teal);
+.kealoa-person-view .kealoa-tab-button--host {
+    color: var(--volcanic-ember);
+}
+.kealoa-person-view .kealoa-tab-button--host:hover,
+.kealoa-person-view .kealoa-tab-button--host.active {
+    background-color: var(--volcanic-ember);
+    border-bottom-color: var(--volcanic-ember);
 }
 
-.kealoa-person-view .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button {
+.kealoa-person-view .kealoa-tab-button--constructor {
+    color: var(--jungle-deep);
+}
+.kealoa-person-view .kealoa-tab-button--constructor:hover,
+.kealoa-person-view .kealoa-tab-button--constructor.active {
+    background-color: var(--jungle-deep);
+    border-bottom-color: var(--jungle-deep);
+}
+
+.kealoa-person-view .kealoa-tab-button--editor {
+    color: var(--ash-dark);
+}
+.kealoa-person-view .kealoa-tab-button--editor:hover,
+.kealoa-person-view .kealoa-tab-button--editor.active {
+    background-color: var(--ash-dark);
+    border-bottom-color: var(--ash-dark);
+}
+
+/* -- Tab-nav border follows the active role ------------------------------ */
+
+.kealoa-person-view .kealoa-tabs[data-role="player"] > .kealoa-tab-nav {
+    border-bottom-color: var(--deep-lagoon);
+}
+.kealoa-person-view .kealoa-tabs[data-role="host"] > .kealoa-tab-nav {
+    border-bottom-color: var(--volcanic-ember);
+}
+.kealoa-person-view .kealoa-tabs[data-role="constructor"] > .kealoa-tab-nav {
+    border-bottom-color: var(--jungle-deep);
+}
+.kealoa-person-view .kealoa-tabs[data-role="editor"] > .kealoa-tab-nav {
+    border-bottom-color: var(--ash-dark);
+}
+
+/* -- Secondary (nested) tabs — per-role colors -------------------------- */
+
+.kealoa-person-view .kealoa-tab-panel[data-tab="player"] > .kealoa-tabs > .kealoa-tab-nav {
+    border-bottom-color: var(--tropical-teal);
+}
+.kealoa-person-view .kealoa-tab-panel[data-tab="player"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button {
     color: var(--tropical-teal);
 }
-
-.kealoa-person-view .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button:hover,
-.kealoa-person-view .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button.active {
+.kealoa-person-view .kealoa-tab-panel[data-tab="player"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button:hover,
+.kealoa-person-view .kealoa-tab-panel[data-tab="player"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button.active {
+    color: var(--cloud-white);
     background-color: var(--tropical-teal);
     border-bottom-color: var(--tropical-teal);
+}
+
+.kealoa-person-view .kealoa-tab-panel[data-tab="host"] > .kealoa-tabs > .kealoa-tab-nav {
+    border-bottom-color: var(--lava-orange);
+}
+.kealoa-person-view .kealoa-tab-panel[data-tab="host"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button {
+    color: var(--lava-orange);
+}
+.kealoa-person-view .kealoa-tab-panel[data-tab="host"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button:hover,
+.kealoa-person-view .kealoa-tab-panel[data-tab="host"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button.active {
+    color: var(--cloud-white);
+    background-color: var(--lava-orange);
+    border-bottom-color: var(--lava-orange);
+}
+
+.kealoa-person-view .kealoa-tab-panel[data-tab="constructor"] > .kealoa-tabs > .kealoa-tab-nav {
+    border-bottom-color: var(--palm-green);
+}
+.kealoa-person-view .kealoa-tab-panel[data-tab="constructor"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button {
+    color: var(--palm-green);
+}
+.kealoa-person-view .kealoa-tab-panel[data-tab="constructor"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button:hover,
+.kealoa-person-view .kealoa-tab-panel[data-tab="constructor"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button.active {
+    color: var(--cloud-white);
+    background-color: var(--palm-green);
+    border-bottom-color: var(--palm-green);
+}
+
+.kealoa-person-view .kealoa-tab-panel[data-tab="editor"] > .kealoa-tabs > .kealoa-tab-nav {
+    border-bottom-color: var(--pumice);
+}
+.kealoa-person-view .kealoa-tab-panel[data-tab="editor"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button {
+    color: var(--pumice);
+}
+.kealoa-person-view .kealoa-tab-panel[data-tab="editor"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button:hover,
+.kealoa-person-view .kealoa-tab-panel[data-tab="editor"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button.active {
+    color: var(--cloud-white);
+    background-color: var(--pumice);
+    border-bottom-color: var(--pumice);
 }
 
 .kealoa-person-header {
