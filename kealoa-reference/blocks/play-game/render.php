@@ -47,8 +47,8 @@ $force_order = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : '';
      <?php if ($force_round && in_array($force_round, array_map('intval', $round_ids), true)): ?>
      data-force-round="<?php echo esc_attr($force_round); ?>"
      <?php endif; ?>
-     <?php if ($force_order === 'random'): ?>
-     data-force-order="random"
+     <?php if ($force_order === 'random' || $force_order === 'show'): ?>
+     data-force-order="<?php echo esc_attr($force_order); ?>"
      <?php endif; ?>>
     <div class="kealoa-game__welcome">
         <h2 class="kealoa-game__title"><?php esc_html_e('Play KEALOA!', 'kealoa-reference'); ?></h2>

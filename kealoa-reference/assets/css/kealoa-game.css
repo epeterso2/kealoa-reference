@@ -41,6 +41,58 @@
     margin-top: 24px;
 }
 
+/* ==========================================================================
+   Play-Round Links (Round View)
+   ========================================================================== */
+
+.kealoa-play-links {
+    margin-top: 24px;
+    text-align: center;
+    padding: 20px 30px;
+    background: linear-gradient(135deg, var(--cloud-white) 0%, var(--pale-sand) 100%);
+    border: 1px solid var(--driftwood-light);
+    border-radius: 12px;
+}
+
+.kealoa-play-links__label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--driftwood-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 12px 0;
+}
+
+.kealoa-play-links__buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.kealoa-play-links__btn {
+    display: inline-block;
+    padding: 12px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--volcanic-ember);
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.kealoa-play-links__btn:hover {
+    background: var(--lava-orange);
+    color: #fff;
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.kealoa-play-links__btn:active {
+    transform: translateY(0);
+}
+
 .kealoa-game__title {
     font-size: 32px;
     color: var(--driftwood-dark);

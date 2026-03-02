@@ -6,7 +6,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://github.com/epeterso2/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 2.1.4
+ * Version: 2.1.5
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '2.1.4');
+define('KEALOA_VERSION', '2.1.5');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -358,6 +358,36 @@ function kealoa_rest_game_round(WP_REST_Request $request): WP_REST_Response {
     ];
 
     return new WP_REST_Response($data, 200);
+}
+
+/**
+ * Get the URL of the page containing the play-game block.
+ *
+ * Finds the first published page that has the kealoa/play-game block.
+ * The result is cached in a transient for performance.
+ *
+ * @return string|null Page permalink, or null if no play-game page exists.
+ */
+function kealoa_get_play_page_url(): ?string {
+    $cache_key = 'kealoa_play_page_url_' . KEALOA_VERSION;
+    $cached = get_transient($cache_key);
+    if ($cached !== false) {
+        return $cached ?: null;
+    }
+
+    global $wpdb;
+    $page_id = $wpdb->get_var(
+        "SELECT ID FROM {$wpdb->posts}
+         WHERE post_type = 'page'
+           AND post_status = 'publish'
+           AND post_content LIKE '%<!-- wp:kealoa/play-game%'
+         ORDER BY ID ASC
+         LIMIT 1"
+    );
+
+    $url = $page_id ? get_permalink((int) $page_id) : '';
+    set_transient($cache_key, $url, DAY_IN_SECONDS);
+    return $url ?: null;
 }
 
 /**

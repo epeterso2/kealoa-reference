@@ -742,7 +742,7 @@
 
     // Auto-start if a forced round and order are specified via URL
     if (forceRoundId && forceOrder) {
-        startGame(forceOrder);
+        startGame(forceOrder === 'random' ? 'random' : 'show');
     }
 
     } // end initGame
