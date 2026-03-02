@@ -557,11 +557,10 @@ class Kealoa_Shortcodes {
                                 $answer_changes++;
                             }
                         }
-                        /* translators: %1$d = number of answer changes, %2$d = maximum possible changes */
+                        /* translators: %d = number of answer changes */
                         echo ' ' . sprintf(
-                            esc_html__('(%1$d of %2$d)', 'kealoa-reference'),
-                            $answer_changes,
-                            max($n_clues - 1, 0)
+                            esc_html(_n('(%d answer change)', '(%d answer changes)', $answer_changes, 'kealoa-reference')),
+                            $answer_changes
                         );
                         ?></span>
                     </p>
