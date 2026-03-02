@@ -86,7 +86,7 @@ function kealoa_yoast_sitemap_content(): void {
  * Hook Yoast integration only when Yoast SEO is active.
  */
 function kealoa_maybe_init_yoast_sitemap(): void {
-    if (!class_exists('WPSEO_Sitemaps')) {
+    if (!defined('WPSEO_VERSION')) {
         return;
     }
 
