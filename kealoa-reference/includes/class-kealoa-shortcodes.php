@@ -329,7 +329,6 @@ class Kealoa_Shortcodes {
             ?>
             <?php if (!empty($alternation_buckets)): ?>
             <h3><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('vs Accuracy', 'kealoa-reference'); ?></h3>
-            <p class="kealoa-section-description"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
             <div class="kealoa-table-scroll">
             <table class="kealoa-table kealoa-alternation-table">
                 <thead>
@@ -1605,7 +1604,6 @@ class Kealoa_Shortcodes {
                 <?php if (!empty($player_alternation_buckets)): ?>
                 <div class="kealoa-alternation-accuracy-section">
                     <h2><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('vs Accuracy', 'kealoa-reference'); ?></h2>
-                    <p class="kealoa-section-description"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
 
                     <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-alternation-table">
@@ -2444,8 +2442,6 @@ class Kealoa_Shortcodes {
                     <?php if (!empty($clue_giver_rounds)): ?>
                     <div class="kealoa-clue-giver-rounds">
                         <h2><?php esc_html_e('Rounds', 'kealoa-reference'); ?></h2>
-
-                        <p class="kealoa-section-description"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
 
                         <div class="kealoa-filter-controls" data-target="kealoa-person-cg-rounds-table">
                             <div class="kealoa-filter-row">
