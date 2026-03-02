@@ -334,7 +334,7 @@ class Kealoa_Shortcodes {
             <table class="kealoa-table kealoa-alternation-table">
                 <thead>
                     <tr>
-                        <th data-sort="text"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a></th>
+                        <th data-sort="text"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
@@ -421,8 +421,8 @@ class Kealoa_Shortcodes {
                     <tr>
                         <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
                         <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a></th>
-                        <th data-sort="number"><a href="/faq#definition-evenness"><?php esc_html_e('Evenness', 'kealoa-reference'); ?></a></th>
+                        <th data-sort="number"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Evenness', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Avg Clue Age', 'kealoa-reference'); ?></th>
                     </tr>
                 </thead>
@@ -1611,7 +1611,7 @@ class Kealoa_Shortcodes {
                     <table class="kealoa-table kealoa-alternation-table">
                         <thead>
                             <tr>
-                                <th data-sort="text"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a></th>
+                                <th data-sort="text"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
@@ -2484,7 +2484,7 @@ class Kealoa_Shortcodes {
                                     <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                                     <th data-sort="text"><?php esc_html_e('Players', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
-                                    <th data-sort="number"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a></th>
+                                    <th data-sort="number"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                                     <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
