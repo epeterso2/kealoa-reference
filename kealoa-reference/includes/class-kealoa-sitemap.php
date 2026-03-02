@@ -63,9 +63,7 @@ function kealoa_yoast_sitemap_content(): void {
     $provider = new Kealoa_Sitemap_Provider();
     $urls = $provider->get_all_urls();
 
-    $xml  = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-    $xml .= '<?xml-stylesheet type="text/xsl" href="' . esc_url(home_url('/main-sitemap.xsl')) . '"?>' . "\n";
-    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+    $xml  = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 
     foreach ($urls as $entry) {
         $xml .= "\t<url>\n";
