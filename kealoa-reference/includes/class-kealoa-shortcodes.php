@@ -208,6 +208,7 @@ class Kealoa_Shortcodes {
             <?php $yearly_stats = $this->db->get_rounds_stats_by_year(); ?>
             <?php if (!empty($yearly_stats)): ?>
             <h3><?php esc_html_e('Statistics by Year', 'kealoa-reference'); ?></h3>
+            <div class="kealoa-table-scroll">
             <table class="kealoa-table kealoa-year-table">
                 <thead>
                     <tr>
@@ -239,6 +240,7 @@ class Kealoa_Shortcodes {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
             <?php endif; ?>
 
             <?php
@@ -327,6 +329,7 @@ class Kealoa_Shortcodes {
             <?php if (!empty($mixup_buckets)): ?>
             <h3><?php esc_html_e('Mixup vs Accuracy', 'kealoa-reference'); ?></h3>
             <p class="kealoa-section-description"><?php esc_html_e('Mixup measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
+            <div class="kealoa-table-scroll">
             <table class="kealoa-table kealoa-mixup-table">
                 <thead>
                     <tr>
@@ -357,6 +360,7 @@ class Kealoa_Shortcodes {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
             <?php endif; ?>
 
                 </div><!-- end Stats tab -->
@@ -1314,6 +1318,7 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-year-stats">
                     <h2><?php esc_html_e('Results by Year of Round', 'kealoa-reference'); ?></h2>
 
+                    <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-year-table">
                         <thead>
                             <tr>
@@ -1354,6 +1359,7 @@ class Kealoa_Shortcodes {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -1361,6 +1367,7 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-clue-number-stats">
                     <h2><?php esc_html_e('Results by Clue Number', 'kealoa-reference'); ?></h2>
 
+                    <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-clue-number-table">
                         <thead>
                             <tr>
@@ -1389,6 +1396,7 @@ class Kealoa_Shortcodes {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -1396,6 +1404,7 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-answer-length-stats">
                     <h2><?php esc_html_e('Results by Answer Length', 'kealoa-reference'); ?></h2>
 
+                    <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-answer-length-table">
                         <thead>
                             <tr>
@@ -1423,6 +1432,7 @@ class Kealoa_Shortcodes {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -1451,6 +1461,7 @@ class Kealoa_Shortcodes {
                     <h2><?php esc_html_e('Mixup vs Accuracy', 'kealoa-reference'); ?></h2>
                     <p class="kealoa-section-description"><?php esc_html_e('Mixup measures how often the host changed the answer between consecutive clues. 0% means every clue had the same answer; 100% means the answer changed on every clue.', 'kealoa-reference'); ?></p>
 
+                    <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-mixup-table">
                         <thead>
                             <tr>
@@ -1481,6 +1492,7 @@ class Kealoa_Shortcodes {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    </div>
                 </div>
                 <?php endif; ?>
             <?php endif; ?>
@@ -1489,6 +1501,7 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-answer-word-count-stats">
                     <h2><?php esc_html_e('Results by Number of Answer Words', 'kealoa-reference'); ?></h2>
 
+                    <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-answer-word-count-table">
                         <thead>
                             <tr>
@@ -1516,6 +1529,7 @@ class Kealoa_Shortcodes {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -1675,6 +1689,7 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-day-of-week-stats">
                     <h2><?php esc_html_e('Results by Puzzle Day of Week', 'kealoa-reference'); ?></h2>
 
+                    <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-day-of-week-table">
                         <thead>
                             <tr>
@@ -1702,6 +1717,7 @@ class Kealoa_Shortcodes {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -1709,6 +1725,7 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-decade-stats">
                     <h2><?php esc_html_e('Results by Puzzle Decade', 'kealoa-reference'); ?></h2>
 
+                    <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-decade-table">
                         <thead>
                             <tr>
@@ -1736,6 +1753,7 @@ class Kealoa_Shortcodes {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -1743,6 +1761,7 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-direction-stats">
                     <h2><?php esc_html_e('Results by Clue Direction', 'kealoa-reference'); ?></h2>
 
+                    <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-direction-table">
                         <thead>
                             <tr>
@@ -1778,6 +1797,7 @@ class Kealoa_Shortcodes {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -1843,6 +1863,7 @@ class Kealoa_Shortcodes {
                         </div>
                     </div>
 
+                    <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-constructor-table" id="kealoa-person-constructor-table">
                         <thead>
                             <tr>
@@ -1870,6 +1891,7 @@ class Kealoa_Shortcodes {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -1898,6 +1920,7 @@ class Kealoa_Shortcodes {
                         </div>
                     </div>
 
+                    <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-editor-table" id="kealoa-person-editor-table">
                         <thead>
                             <tr>
@@ -1925,6 +1948,7 @@ class Kealoa_Shortcodes {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -1997,6 +2021,7 @@ class Kealoa_Shortcodes {
                         </div>
                     </div>
 
+                    <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-history-table" id="kealoa-person-round-history-table">
                         <thead>
                             <tr>
@@ -2046,6 +2071,7 @@ class Kealoa_Shortcodes {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -2136,6 +2162,7 @@ class Kealoa_Shortcodes {
                             </div>
                         </div>
 
+                        <div class="kealoa-table-scroll">
                         <table class="kealoa-table" id="kealoa-person-cg-year-table">
                             <thead>
                                 <tr>
@@ -2167,6 +2194,7 @@ class Kealoa_Shortcodes {
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                        </div>
                     </div>
                     <?php endif; ?>
 
@@ -2174,6 +2202,7 @@ class Kealoa_Shortcodes {
                     <div class="kealoa-clue-giver-by-day">
                         <h2><?php esc_html_e('By Day of Week', 'kealoa-reference'); ?></h2>
 
+                        <div class="kealoa-table-scroll">
                         <table class="kealoa-table" id="kealoa-person-cg-day-table">
                             <thead>
                                 <tr>
@@ -2205,6 +2234,7 @@ class Kealoa_Shortcodes {
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                        </div>
                     </div>
                     <?php endif; ?>
 
@@ -2229,6 +2259,7 @@ class Kealoa_Shortcodes {
                             </div>
                         </div>
 
+                        <div class="kealoa-table-scroll">
                         <table class="kealoa-table" id="kealoa-person-cg-guesser-table">
                             <thead>
                                 <tr>
@@ -2256,6 +2287,7 @@ class Kealoa_Shortcodes {
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                        </div>
                     </div>
                     <?php endif; ?>
 
@@ -2585,6 +2617,7 @@ class Kealoa_Shortcodes {
                             </div>
                         </div>
 
+                        <div class="kealoa-table-scroll">
                         <table class="kealoa-table kealoa-constructor-player-table" id="kealoa-person-con-player-table">
                             <thead>
                                 <tr>
@@ -2612,6 +2645,7 @@ class Kealoa_Shortcodes {
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                        </div>
                     </div>
                     <?php endif; ?>
 
@@ -2636,6 +2670,7 @@ class Kealoa_Shortcodes {
                             </div>
                         </div>
 
+                        <div class="kealoa-table-scroll">
                         <table class="kealoa-table kealoa-constructor-editor-table" id="kealoa-person-con-editor-table">
                             <thead>
                                 <tr>
@@ -2667,6 +2702,7 @@ class Kealoa_Shortcodes {
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                        </div>
                     </div>
                     <?php endif; ?>
 
@@ -2880,6 +2916,7 @@ class Kealoa_Shortcodes {
                             </div>
                         </div>
 
+                        <div class="kealoa-table-scroll">
                         <table class="kealoa-table kealoa-editor-player-table" id="kealoa-person-ed-player-table">
                             <thead>
                                 <tr>
@@ -2907,6 +2944,7 @@ class Kealoa_Shortcodes {
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                        </div>
                     </div>
                     <?php endif; ?>
 
@@ -2939,6 +2977,7 @@ class Kealoa_Shortcodes {
                             </div>
                         </div>
 
+                        <div class="kealoa-table-scroll">
                         <table class="kealoa-table kealoa-editor-constructor-table" id="kealoa-person-ed-constructor-table">
                             <thead>
                                 <tr>
@@ -2970,6 +3009,7 @@ class Kealoa_Shortcodes {
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                        </div>
                     </div>
                     <?php endif; ?>
 

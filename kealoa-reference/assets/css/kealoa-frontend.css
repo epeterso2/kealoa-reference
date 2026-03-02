@@ -117,6 +117,9 @@
 .kealoa-rounds-table-wrapper,
 .kealoa-persons-table-wrapper,
 .kealoa-clue-givers-table-wrapper,
+.kealoa-constructors-table-wrapper,
+.kealoa-editors-table-wrapper,
+.kealoa-puzzles-table-wrapper,
 .kealoa-table-scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -305,6 +308,8 @@
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 30px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .kealoa-search-heading {
@@ -614,6 +619,9 @@
 
 .kealoa-puzzle-view {
     margin: 20px 0;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .kealoa-puzzle-view .kealoa-table {
@@ -964,8 +972,15 @@
     .kealoa-constructors-table-wrapper .kealoa-table th,
     .kealoa-constructors-table-wrapper .kealoa-table td,
     .kealoa-editors-table-wrapper .kealoa-table th,
-    .kealoa-editors-table-wrapper .kealoa-table td {
+    .kealoa-editors-table-wrapper .kealoa-table td,
+    .kealoa-puzzles-table-wrapper .kealoa-table th,
+    .kealoa-puzzles-table-wrapper .kealoa-table td {
         white-space: normal;
+    }
+
+    /* Search results: auto-size type column */
+    .kealoa-search-table th:first-child {
+        width: auto;
     }
 
     /* Puzzle tables: allow wrapping */
@@ -1008,7 +1023,13 @@
     }
 
     .kealoa-clues-table .kealoa-guesser-col {
-        min-width: 55px;
+        min-width: auto;
+    }
+
+    /* Hide less critical columns on small screens */
+    .kealoa-clues-table .kealoa-day-cell,
+    .kealoa-clues-table .kealoa-editor {
+        display: none;
     }
 
     /* Headers: compact */
@@ -1069,7 +1090,7 @@
     .kealoa-xwordinfo-image,
     .kealoa-entity-image,
     .kealoa-player-image {
-        height: 200px;
+        height: 150px;
     }
 
     /* Chart container: shorter */

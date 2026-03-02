@@ -636,7 +636,6 @@
     .kealoa-game__review-table th,
     .kealoa-game__review-table td {
         padding: 6px 5px;
-        white-space: nowrap;
     }
 
     .kealoa-game__score-table th,
