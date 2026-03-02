@@ -1337,9 +1337,9 @@ class Kealoa_Shortcodes {
                                 ?>
                                 <tr>
                                     <td><a class="kealoa-year-tab-link" data-year="<?php echo esc_attr($yr); ?>" data-tab-target="round" data-filter-target="kealoa-rh-year"><?php echo esc_html($yr); ?></a></td>
-                                    <td><?php echo esc_html($result->rounds_played); ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->rounds_played)); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->total_answered)); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->correct_count)); ?></td>
                                     <?php
                                     $pct = $result->total_answered > 0
                                         ? ($result->correct_count / $result->total_answered) * 100
@@ -1375,8 +1375,8 @@ class Kealoa_Shortcodes {
                                 <?php $cn = (int) $result->clue_number; ?>
                                 <tr>
                                     <td><?php echo esc_html($cn); ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->total_answered)); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->correct_count)); ?></td>
                                     <?php
                                     $pct = $result->total_answered > 0
                                         ? ($result->correct_count / $result->total_answered) * 100
@@ -1409,8 +1409,8 @@ class Kealoa_Shortcodes {
                             <?php foreach ($answer_length_results as $result): ?>
                                 <tr>
                                     <td><?php echo esc_html($result->answer_length); ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->total_answered)); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->correct_count)); ?></td>
                                     <?php
                                     $pct = $result->total_answered > 0
                                         ? ($result->correct_count / $result->total_answered) * 100
@@ -1502,8 +1502,8 @@ class Kealoa_Shortcodes {
                             <?php foreach ($answer_word_count_results as $result): ?>
                                 <tr>
                                     <td><?php echo esc_html($result->answer_word_count); ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->total_answered)); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->correct_count)); ?></td>
                                     <?php
                                     $pct = $result->total_answered > 0
                                         ? ($result->correct_count / $result->total_answered) * 100
@@ -1688,8 +1688,8 @@ class Kealoa_Shortcodes {
                             <?php foreach ($day_of_week_results as $result): ?>
                                 <tr>
                                     <td><?php echo esc_html(Kealoa_Formatter::get_day_name((int) $result->day_of_week)); ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->total_answered)); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->correct_count)); ?></td>
                                     <?php
                                     $pct = $result->total_answered > 0
                                         ? ($result->correct_count / $result->total_answered) * 100
@@ -1722,8 +1722,8 @@ class Kealoa_Shortcodes {
                             <?php foreach ($decade_results as $result): ?>
                                 <tr>
                                     <td><?php echo esc_html($result->decade . 's'); ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->total_answered)); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->correct_count)); ?></td>
                                     <?php
                                     $pct = $result->total_answered > 0
                                         ? ($result->correct_count / $result->total_answered) * 100
@@ -1764,8 +1764,8 @@ class Kealoa_Shortcodes {
                                             esc_html_e('No Direction', 'kealoa-reference');
                                         }
                                     ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->total_answered)); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->correct_count)); ?></td>
                                     <?php
                                     $pct = $result->total_answered > 0
                                         ? ($result->correct_count / $result->total_answered) * 100
@@ -1856,8 +1856,8 @@ class Kealoa_Shortcodes {
                             <?php foreach ($constructor_results as $result): ?>
                                 <tr>
                                     <td><?php echo Kealoa_Formatter::format_constructor_link((int) $result->constructor_id, $result->full_name); ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->total_answered)); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->correct_count)); ?></td>
                                     <?php
                                     $pct = $result->total_answered > 0
                                         ? ($result->correct_count / $result->total_answered) * 100
@@ -1911,8 +1911,8 @@ class Kealoa_Shortcodes {
                             <?php foreach ($editor_results as $result): ?>
                                 <tr>
                                     <td><?php echo Kealoa_Formatter::format_editor_link((int) $result->editor_id, $result->editor_name); ?></td>
-                                    <td><?php echo esc_html($result->total_answered); ?></td>
-                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->total_answered)); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->correct_count)); ?></td>
                                     <?php
                                     $pct = $result->total_answered > 0
                                         ? ($result->correct_count / $result->total_answered) * 100
@@ -2040,7 +2040,7 @@ class Kealoa_Shortcodes {
                                         }
                                     ?></td>
                                     <?php endif; ?>
-                                    <td data-total="<?php echo esc_attr((int) $history->total_clues); ?>"><?php echo esc_html($history->correct_count); ?></td>
+                                    <td data-total="<?php echo esc_attr((int) $history->total_clues); ?>"><?php echo esc_html(number_format_i18n((int) $history->correct_count)); ?></td>
                                     <td><?php echo esc_html($streak_per_round[$hist_rid] ?? 0); ?></td>
                                 </tr>
                             <?php endforeach; ?>
@@ -2156,10 +2156,10 @@ class Kealoa_Shortcodes {
                                     ?>
                                     <tr>
                                         <td><?php echo esc_html($cgy->year); ?></td>
-                                        <td><?php echo esc_html($cgy->round_count); ?></td>
-                                        <td><?php echo esc_html($cgy->clue_count); ?></td>
-                                        <td><?php echo esc_html($cgy->total_guesses); ?></td>
-                                        <td><?php echo esc_html($cgy->correct_guesses); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cgy->round_count)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cgy->clue_count)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cgy->total_guesses)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cgy->correct_guesses)); ?></td>
                                         <td data-value="<?php echo esc_attr(number_format((float) $cgy_pct, 2, '.', '')); ?>">
                                             <?php echo Kealoa_Formatter::format_percentage($cgy_pct); ?>
                                         </td>
@@ -2194,10 +2194,10 @@ class Kealoa_Shortcodes {
                                     ?>
                                     <tr>
                                         <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::get_day_name((int) $cgd->day_of_week)); ?></td>
-                                        <td><?php echo esc_html($cgd->round_count); ?></td>
-                                        <td><?php echo esc_html($cgd->clue_count); ?></td>
-                                        <td><?php echo esc_html($cgd->total_guesses); ?></td>
-                                        <td><?php echo esc_html($cgd->correct_guesses); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cgd->round_count)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cgd->clue_count)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cgd->total_guesses)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cgd->correct_guesses)); ?></td>
                                         <td data-value="<?php echo esc_attr(number_format((float) $cgd_pct, 2, '.', '')); ?>">
                                             <?php echo Kealoa_Formatter::format_percentage($cgd_pct); ?>
                                         </td>
@@ -2247,8 +2247,8 @@ class Kealoa_Shortcodes {
                                     ?>
                                     <tr>
                                         <td><?php echo Kealoa_Formatter::format_person_link((int) $cgg->person_id, $cgg->full_name); ?></td>
-                                        <td><?php echo esc_html($cgg->total_guesses); ?></td>
-                                        <td><?php echo esc_html($cgg->correct_guesses); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cgg->total_guesses)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cgg->correct_guesses)); ?></td>
                                         <td data-value="<?php echo esc_attr(number_format((float) $cgg_pct, 2, '.', '')); ?>">
                                             <?php echo Kealoa_Formatter::format_percentage($cgg_pct); ?>
                                         </td>
@@ -2356,7 +2356,7 @@ class Kealoa_Shortcodes {
                                             <?php echo Kealoa_Formatter::format_percentage($cgr_mixup_pct, 0); ?>
                                         </td>
                                         <td><?php echo esc_html(number_format_i18n((int) $cgr->total_guesses)); ?></td>
-                                        <td><?php echo esc_html($cgr->correct_guesses); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cgr->correct_guesses)); ?></td>
                                         <td data-value="<?php echo esc_attr(number_format((float) $cgr_pct, 2, '.', '')); ?>">
                                             <?php echo Kealoa_Formatter::format_percentage($cgr_pct); ?>
                                         </td>
@@ -2598,8 +2598,8 @@ class Kealoa_Shortcodes {
                                 <?php foreach ($constructor_player_results as $cpr): ?>
                                     <tr>
                                         <td><?php echo Kealoa_Formatter::format_person_link((int) $cpr->person_id, $cpr->full_name); ?></td>
-                                        <td><?php echo esc_html($cpr->total_answered); ?></td>
-                                        <td><?php echo esc_html($cpr->correct_count); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cpr->total_answered)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cpr->correct_count)); ?></td>
                                         <?php
                                         $pct = $cpr->total_answered > 0
                                             ? ($cpr->correct_count / $cpr->total_answered) * 100
@@ -2651,10 +2651,10 @@ class Kealoa_Shortcodes {
                                 <?php foreach ($constructor_editor_results as $cer): ?>
                                     <tr>
                                         <td><?php echo Kealoa_Formatter::format_editor_link((int) $cer->editor_id, $cer->editor_name); ?></td>
-                                        <td><?php echo esc_html($cer->puzzle_count); ?></td>
-                                        <td><?php echo esc_html($cer->clue_count); ?></td>
-                                        <td><?php echo esc_html($cer->total_guesses); ?></td>
-                                        <td><?php echo esc_html($cer->correct_guesses); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cer->puzzle_count)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cer->clue_count)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cer->total_guesses)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $cer->correct_guesses)); ?></td>
                                         <?php
                                         $pct = $cer->total_guesses > 0
                                             ? ($cer->correct_guesses / $cer->total_guesses) * 100
@@ -2893,8 +2893,8 @@ class Kealoa_Shortcodes {
                                 <?php foreach ($editor_player_results as $epr): ?>
                                     <tr>
                                         <td><?php echo Kealoa_Formatter::format_person_link((int) $epr->person_id, $epr->full_name); ?></td>
-                                        <td><?php echo esc_html($epr->total_answered); ?></td>
-                                        <td><?php echo esc_html($epr->correct_count); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $epr->total_answered)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $epr->correct_count)); ?></td>
                                         <?php
                                         $pct = $epr->total_answered > 0
                                             ? ($epr->correct_count / $epr->total_answered) * 100
@@ -2954,10 +2954,10 @@ class Kealoa_Shortcodes {
                                 <?php foreach ($editor_constructor_results as $ecr): ?>
                                     <tr>
                                         <td><?php echo Kealoa_Formatter::format_constructor_link((int) $ecr->constructor_id, $ecr->full_name); ?></td>
-                                        <td><?php echo esc_html($ecr->puzzle_count); ?></td>
-                                        <td><?php echo esc_html($ecr->clue_count); ?></td>
-                                        <td><?php echo esc_html($ecr->total_guesses); ?></td>
-                                        <td><?php echo esc_html($ecr->correct_guesses); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $ecr->puzzle_count)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $ecr->clue_count)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $ecr->total_guesses)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $ecr->correct_guesses)); ?></td>
                                         <?php
                                         $pct = $ecr->total_guesses > 0
                                             ? ($ecr->correct_guesses / $ecr->total_guesses) * 100
@@ -3590,8 +3590,8 @@ class Kealoa_Shortcodes {
                             <th data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
                             <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
                             <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
-                            <th data-sort="text"><?php esc_html_e('Round Words', 'kealoa-reference'); ?></th>
-                            <th data-sort="text"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
+                            <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
+                            <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -3648,8 +3648,8 @@ class Kealoa_Shortcodes {
                                     }
                                     ?>
                                 </td>
-                                <td class="kealoa-round-words"><?php echo implode('<br>', $round_words_parts); ?></td>
                                 <td class="kealoa-round-date"><?php echo implode('<br>', $round_date_parts); ?></td>
+                                <td class="kealoa-round-words"><?php echo implode('<br>', $round_words_parts); ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -3974,7 +3974,7 @@ class Kealoa_Shortcodes {
                                 <th data-sort="text"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Clue Text', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Answer', 'kealoa-reference'); ?></th>
-                                <th data-sort="text"><?php esc_html_e('Round Words', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
@@ -4033,8 +4033,8 @@ class Kealoa_Shortcodes {
                             <?php foreach ($player_results as $result): ?>
                                 <tr>
                                     <td><?php echo Kealoa_Formatter::format_person_link((int) $result->person_id, $result->full_name); ?></td>
-                                    <td><?php echo esc_html($result->total_guesses); ?></td>
-                                    <td><?php echo esc_html($result->correct_guesses); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->total_guesses)); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $result->correct_guesses)); ?></td>
                                     <?php
                                     $pct = $result->total_guesses > 0
                                         ? ($result->correct_guesses / $result->total_guesses) * 100
