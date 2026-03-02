@@ -839,6 +839,7 @@ class Kealoa_Shortcodes {
         $person_puzzles = $is_player ? $this->db->get_person_puzzles($person_id) : [];
         $clue_number_results = $this->db->get_person_results_by_clue_number($person_id);
         $answer_length_results = $this->db->get_person_results_by_answer_length($person_id);
+        $answer_word_count_results = $this->db->get_person_results_by_answer_word_count($person_id);
         $direction_results = $this->db->get_person_results_by_direction($person_id);
         $day_of_week_results = $this->db->get_person_results_by_day_of_week($person_id);
         $decade_results = $this->db->get_person_results_by_decade($person_id);
@@ -1482,6 +1483,40 @@ class Kealoa_Shortcodes {
                     </table>
                 </div>
                 <?php endif; ?>
+            <?php endif; ?>
+
+            <?php if (!empty($answer_word_count_results)): ?>
+                <div class="kealoa-answer-word-count-stats">
+                    <h2><?php esc_html_e('Results by Number of Answer Words', 'kealoa-reference'); ?></h2>
+
+                    <table class="kealoa-table kealoa-answer-word-count-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="number"><?php esc_html_e('Words', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($answer_word_count_results as $result): ?>
+                                <tr>
+                                    <td><?php echo esc_html($result->answer_word_count); ?></td>
+                                    <td><?php echo esc_html($result->total_answered); ?></td>
+                                    <td><?php echo esc_html($result->correct_count); ?></td>
+                                    <?php
+                                    $pct = $result->total_answered > 0
+                                        ? ($result->correct_count / $result->total_answered) * 100
+                                        : 0;
+                                    ?>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($pct); ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             <?php endif; ?>
 
             </div>

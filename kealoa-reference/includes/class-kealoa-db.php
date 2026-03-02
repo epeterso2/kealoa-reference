@@ -1909,6 +1909,32 @@ class Kealoa_DB {
     }
 
     /**
+     * Get person results grouped by the number of answer words in the round
+     */
+    public function get_person_results_by_answer_word_count(int $person_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT
+                rs_count.word_count as answer_word_count,
+                COUNT(*) as total_answered,
+                SUM(g.is_correct) as correct_count
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
+            INNER JOIN (
+                SELECT round_id, COUNT(*) as word_count
+                FROM {$this->round_solutions_table}
+                GROUP BY round_id
+            ) rs_count ON rs_count.round_id = c.round_id
+            WHERE g.guesser_person_id = %d
+            GROUP BY rs_count.word_count
+            ORDER BY rs_count.word_count ASC",
+            $person_id
+        );
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get person results by clue direction (Across vs Down)
      */
     public function get_person_results_by_direction(int $person_id): array {
