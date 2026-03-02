@@ -372,12 +372,46 @@ class Kealoa_Shortcodes {
             <div class="kealoa-filter-controls" data-target="kealoa-detailed-stats-table">
                 <div class="kealoa-filter-row">
                     <div class="kealoa-filter-group">
+                        <label for="kealoa-ds-date-min"><?php esc_html_e('Date Range', 'kealoa-reference'); ?></label>
+                        <div class="kealoa-filter-range">
+                            <input type="date" id="kealoa-ds-date-min" class="kealoa-filter-input" data-filter="date-min" data-col="0">
+                            <span class="kealoa-filter-range-sep">&ndash;</span>
+                            <input type="date" id="kealoa-ds-date-max" class="kealoa-filter-input" data-filter="date-max" data-col="0">
+                        </div>
+                    </div>
+                    <div class="kealoa-filter-group">
                         <label for="kealoa-ds-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
                         <input type="text" id="kealoa-ds-search" class="kealoa-filter-input" data-filter="search" data-col="1" placeholder="<?php esc_attr_e('Solution words...', 'kealoa-reference'); ?>">
                     </div>
                     <div class="kealoa-filter-group kealoa-filter-actions">
                         <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
                         <span class="kealoa-filter-count"></span>
+                    </div>
+                </div>
+                <div class="kealoa-filter-row">
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ds-alt-min"><?php esc_html_e('Alternation Range', 'kealoa-reference'); ?></label>
+                        <div class="kealoa-filter-range">
+                            <input type="number" id="kealoa-ds-alt-min" class="kealoa-filter-input" data-filter="range-min" data-col="2" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
+                            <span class="kealoa-filter-range-sep">&ndash;</span>
+                            <input type="number" id="kealoa-ds-alt-max" class="kealoa-filter-input" data-filter="range-max" data-col="2" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
+                        </div>
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ds-even-min"><?php esc_html_e('Evenness Range', 'kealoa-reference'); ?></label>
+                        <div class="kealoa-filter-range">
+                            <input type="number" id="kealoa-ds-even-min" class="kealoa-filter-input" data-filter="range-min" data-col="3" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
+                            <span class="kealoa-filter-range-sep">&ndash;</span>
+                            <input type="number" id="kealoa-ds-even-max" class="kealoa-filter-input" data-filter="range-max" data-col="3" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
+                        </div>
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ds-age-min"><?php esc_html_e('Clue Age Range', 'kealoa-reference'); ?></label>
+                        <div class="kealoa-filter-range">
+                            <input type="number" id="kealoa-ds-age-min" class="kealoa-filter-input" data-filter="range-min" data-col="4" min="0" placeholder="<?php esc_attr_e('Min days', 'kealoa-reference'); ?>">
+                            <span class="kealoa-filter-range-sep">&ndash;</span>
+                            <input type="number" id="kealoa-ds-age-max" class="kealoa-filter-input" data-filter="range-max" data-col="4" min="0" placeholder="<?php esc_attr_e('Max days', 'kealoa-reference'); ?>">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -447,8 +481,20 @@ class Kealoa_Shortcodes {
             <div class="kealoa-filter-controls" data-target="kealoa-rounds-table">
                 <div class="kealoa-filter-row">
                     <div class="kealoa-filter-group">
+                        <label for="kealoa-rd-date-min"><?php esc_html_e('Date Range', 'kealoa-reference'); ?></label>
+                        <div class="kealoa-filter-range">
+                            <input type="date" id="kealoa-rd-date-min" class="kealoa-filter-input" data-filter="date-min" data-col="0">
+                            <span class="kealoa-filter-range-sep">&ndash;</span>
+                            <input type="date" id="kealoa-rd-date-max" class="kealoa-filter-input" data-filter="date-max" data-col="0">
+                        </div>
+                    </div>
+                    <div class="kealoa-filter-group">
                         <label for="kealoa-rd-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
                         <input type="text" id="kealoa-rd-search" class="kealoa-filter-input" data-filter="search" data-col="1" placeholder="<?php esc_attr_e('Solution words...', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-rd-player"><?php esc_html_e('Player', 'kealoa-reference'); ?></label>
+                        <input type="text" id="kealoa-rd-player" class="kealoa-filter-input" data-filter="search" data-col="2" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
                     </div>
                     <div class="kealoa-filter-group">
                         <label for="kealoa-rd-desc"><?php esc_html_e('Description', 'kealoa-reference'); ?></label>

@@ -620,7 +620,7 @@
      *   - Text search (data-filter="search", data-col="N") — supports multiple
      *   - Exact match select (data-filter="exact", data-col="N")
      *   - Minimum threshold (data-filter="min", data-col="N") — supports multiple
-     *   - Accuracy range (data-filter="range-min" / "range-max", data-col="N")
+     *   - Numeric range (data-filter="range-min" / "range-max", data-col="N") — supports multiple pairs
      *   - Top/Bottom N by accuracy (data-filter="topn-dir" + "topn-count")
      *   - Above/Below average (data-filter="vs-avg", data-avg="X")
      *   - Date range (data-filter="date-min" / "date-max", data-col="N")
@@ -646,8 +646,8 @@
             var searchInputs = Array.prototype.slice.call(container.querySelectorAll('[data-filter="search"]'));
             var exactSelects = Array.prototype.slice.call(container.querySelectorAll('[data-filter="exact"]'));
             var minInputs = Array.prototype.slice.call(container.querySelectorAll('[data-filter="min"]'));
-            var rangeMinInput = container.querySelector('[data-filter="range-min"]');
-            var rangeMaxInput = container.querySelector('[data-filter="range-max"]');
+            var rangeMinInputs = Array.prototype.slice.call(container.querySelectorAll('[data-filter="range-min"]'));
+            var rangeMaxInputs = Array.prototype.slice.call(container.querySelectorAll('[data-filter="range-max"]'));
             var topnDirSelect = container.querySelector('[data-filter="topn-dir"]');
             var topnCountInput = container.querySelector('[data-filter="topn-count"]');
             var vsAvgSelect = container.querySelector('[data-filter="vs-avg"]');
@@ -671,9 +671,20 @@
             }
 
             function applyFilters() {
-                var rangeMinVal = rangeMinInput ? parseFloat(rangeMinInput.value) : NaN;
-                var rangeMaxVal = rangeMaxInput ? parseFloat(rangeMaxInput.value) : NaN;
-                var rangeCol = rangeMinInput ? parseInt(rangeMinInput.getAttribute('data-col'), 10) : 3;
+                // Build a map of range filters keyed by column index
+                var rangeCols = {};
+                rangeMinInputs.forEach(function (inp) {
+                    var col = parseInt(inp.getAttribute('data-col'), 10);
+                    if (!rangeCols[col]) rangeCols[col] = {};
+                    rangeCols[col].min = parseFloat(inp.value);
+                });
+                rangeMaxInputs.forEach(function (inp) {
+                    var col = parseInt(inp.getAttribute('data-col'), 10);
+                    if (!rangeCols[col]) rangeCols[col] = {};
+                    rangeCols[col].max = parseFloat(inp.value);
+                });
+                // For backward compat: pick the first range col for topn/vsAvg sorting
+                var rangeCol = rangeMinInputs.length ? parseInt(rangeMinInputs[0].getAttribute('data-col'), 10) : 3;
 
                 var topnDir = topnDirSelect ? topnDirSelect.value : '';
                 var topnCount = topnCountInput ? parseInt(topnCountInput.value, 10) : NaN;
@@ -740,15 +751,21 @@
                         }
                     }
 
-                    // Accuracy range
-                    if (!isNaN(rangeMinVal) && show) {
-                        if (getCellNumeric(row, rangeCol) < rangeMinVal) {
-                            show = false;
-                        }
-                    }
-                    if (!isNaN(rangeMaxVal) && show) {
-                        if (getCellNumeric(row, rangeCol) > rangeMaxVal) {
-                            show = false;
+                    // Numeric range filters (multiple pairs)
+                    if (show) {
+                        for (var rc in rangeCols) {
+                            if (!rangeCols.hasOwnProperty(rc)) continue;
+                            var colIdx = parseInt(rc, 10);
+                            var rMin = rangeCols[rc].min;
+                            var rMax = rangeCols[rc].max;
+                            if (!isNaN(rMin) && getCellNumeric(row, colIdx) < rMin) {
+                                show = false;
+                                break;
+                            }
+                            if (!isNaN(rMax) && getCellNumeric(row, colIdx) > rMax) {
+                                show = false;
+                                break;
+                            }
                         }
                     }
 
