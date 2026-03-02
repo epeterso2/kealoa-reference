@@ -800,8 +800,7 @@ class Kealoa_Import {
         
         // Auto-generate XWordInfo fields for new constructor persons
         $profile_name = str_replace(' ', '_', $name);
-        $image_name = preg_replace('/[^A-Za-z0-9]/', '', $name);
-        $image_url = 'https://www.xwordinfo.com/images/cons/' . $image_name . '.jpg';
+        $image_url = Kealoa_Formatter::xwordinfo_image_url_from_name($name);
         
         $id = $this->db->create_person([
             'full_name' => $name,

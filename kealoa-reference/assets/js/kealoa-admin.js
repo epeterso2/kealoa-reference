@@ -127,7 +127,7 @@
         /**
          * Auto-populate XWordInfo fields from constructor name
          * Profile URL: https://www.xwordinfo.com/Author/{name with spaces as underscores}
-         * Image URL: https://www.xwordinfo.com/images/cons/{name with spaces removed}.jpg
+         * Image URL: https://www.xwordinfo.com/images/cons/{name with punctuation and spaces removed, hyphens kept}.jpg
          */
         $('#full_name').on('change blur', function () {
             var fullName = $(this).val().trim();
@@ -145,7 +145,7 @@
             
             if ($imageField.length && fullName) {
                 if (!$imageField.val()) {
-                    var imageName = fullName.replace(/ /g, '');
+                    var imageName = fullName.replace(/[^A-Za-z0-9\-]/g, '');
                     var imageUrl = 'https://www.xwordinfo.com/images/cons/' + encodeURIComponent(imageName) + '.jpg';
                     $imageField.val(imageUrl);
                     $imageField.trigger('change');
