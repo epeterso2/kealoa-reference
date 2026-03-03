@@ -1028,6 +1028,16 @@ class Kealoa_Admin {
                     </td>
                 </tr>
                 <tr>
+                    <th><label for="hide_xwordinfo"><?php esc_html_e('Hide XWordInfo Link', 'kealoa-reference'); ?></label></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="hide_xwordinfo" id="hide_xwordinfo" value="1"
+                                   <?php checked($person->hide_xwordinfo ?? 0, 1); ?> />
+                            <?php esc_html_e('Hide XWordInfo profile link on the person page', 'kealoa-reference'); ?>
+                        </label>
+                    </td>
+                </tr>
+                <tr>
                     <th><label for="xwordinfo_image_url"><?php esc_html_e('XWordInfo Image URL', 'kealoa-reference'); ?></label></th>
                     <td>
                         <input type="url" name="xwordinfo_image_url" id="xwordinfo_image_url" class="regular-text"
@@ -1971,6 +1981,7 @@ class Kealoa_Admin {
             'nicknames' => $_POST['nicknames'] ?? null,
             'home_page_url' => $_POST['home_page_url'] ?? null,
             'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
+            'hide_xwordinfo' => !empty($_POST['hide_xwordinfo']),
             'xwordinfo_profile_name' => $_POST['xwordinfo_profile_name'] ?? null,
             'xwordinfo_image_url' => !empty($_POST['xwordinfo_image_url'])
                 ? $_POST['xwordinfo_image_url']
@@ -1995,6 +2006,7 @@ class Kealoa_Admin {
             'nicknames' => $_POST['nicknames'] ?? null,
             'home_page_url' => $_POST['home_page_url'] ?? null,
             'media_id' => !empty($_POST['media_id']) ? (int) $_POST['media_id'] : null,
+            'hide_xwordinfo' => !empty($_POST['hide_xwordinfo']),
             'xwordinfo_profile_name' => $_POST['xwordinfo_profile_name'] ?? null,
             'xwordinfo_image_url' => $_POST['xwordinfo_image_url'] ?? null,
         ]);
