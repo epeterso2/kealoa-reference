@@ -2,7 +2,7 @@
 
 A WordPress plugin for managing and displaying KEALOA quiz game data from the [Fill Me In](https://bemoresmarter.libsyn.com) podcast.
 
-**Version:** 2.1.5 &bull; **DB Version:** 2.1.0 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+**Version:** 2.1.29 &bull; **DB Version:** 2.1.0 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 ---
 
@@ -516,6 +516,8 @@ The plugin defines a Hawaiian-themed color palette via CSS custom properties in 
 ---
 
 ## File Structure
+
+All PHP classes and functions reside in the `com\epeterso2\kealoa` namespace.
 
 ```
 kealoa-reference/
