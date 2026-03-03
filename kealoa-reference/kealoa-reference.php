@@ -6,7 +6,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://github.com/epeterso2/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 2.1.29
+ * Version: 2.1.30
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -33,7 +33,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '2.1.29');
+define('KEALOA_VERSION', '2.1.30');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -427,19 +427,6 @@ function kealoa_register_rewrite_rules(): void {
         'top'
     );
 
-    // Legacy constructor/editor routes — kept as rewrite rules for 301 redirects
-    add_rewrite_rule(
-        '^kealoa/constructor/([^/]+)/?$',
-        'index.php?kealoa_constructor_name=$matches[1]',
-        'top'
-    );
-
-    add_rewrite_rule(
-        '^kealoa/editor/([^/]+)/?$',
-        'index.php?kealoa_editor_name=$matches[1]',
-        'top'
-    );
-
     add_rewrite_rule(
         '^kealoa/puzzle/([0-9]{4}-[0-9]{2}-[0-9]{2})/?$',
         'index.php?kealoa_puzzle_date=$matches[1]',
@@ -453,8 +440,6 @@ function kealoa_register_rewrite_rules(): void {
 function kealoa_query_vars(array $vars): array {
     $vars[] = 'kealoa_person_name';
     $vars[] = 'kealoa_round_id';
-    $vars[] = 'kealoa_constructor_name';
-    $vars[] = 'kealoa_editor_name';
     $vars[] = 'kealoa_puzzle_date';
     return $vars;
 }
@@ -468,8 +453,6 @@ function kealoa_query_vars(array $vars): array {
 function kealoa_template_redirect(): void {
     $person_name = get_query_var('kealoa_person_name');
     $round_id = get_query_var('kealoa_round_id');
-    $constructor_name = get_query_var('kealoa_constructor_name');
-    $editor_name = get_query_var('kealoa_editor_name');
     $puzzle_date = get_query_var('kealoa_puzzle_date');
 
     $title = '';
@@ -515,18 +498,6 @@ function kealoa_template_redirect(): void {
         // Store object info for admin bar
         $GLOBALS['kealoa_object_type'] = 'round';
         $GLOBALS['kealoa_object_id'] = (int) $round_id;
-    } elseif ($constructor_name) {
-        // 301 redirect legacy constructor URL to unified person URL
-        $decoded = urldecode($constructor_name);
-        $person_slug = str_replace(' ', '_', $decoded);
-        wp_redirect(home_url('/kealoa/person/' . urlencode($person_slug) . '/'), 301);
-        exit;
-    } elseif ($editor_name) {
-        // 301 redirect legacy editor URL to unified person URL
-        $decoded = urldecode($editor_name);
-        $person_slug = str_replace(' ', '_', $decoded);
-        wp_redirect(home_url('/kealoa/person/' . urlencode($person_slug) . '/'), 301);
-        exit;
     } elseif ($puzzle_date) {
         $db = new Kealoa_DB();
         $puzzle = $db->get_puzzle_by_date($puzzle_date);

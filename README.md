@@ -2,7 +2,7 @@
 
 A WordPress plugin for managing and displaying KEALOA quiz game data from the [Fill Me In](https://bemoresmarter.libsyn.com) podcast.
 
-**Version:** 2.1.29 &bull; **DB Version:** 2.1.0 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+**Version:** 2.1.30 &bull; **DB Version:** 2.1.0 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 ---
 
@@ -145,17 +145,13 @@ The plugin registers 15 blocks under the `kealoa` namespace. Each block renders 
 
 ## Custom URL Routes
 
-The plugin registers five custom rewrite rules. Name-based routes use underscores in place of spaces.
+The plugin registers three custom rewrite rules. Name-based routes use underscores in place of spaces.
 
 | URL pattern | Description |
 |---|---|
 | `/kealoa/round/{id}/` | Round detail page |
 | `/kealoa/person/{name}/` | Person profile page |
 | `/kealoa/puzzle/{YYYY-MM-DD}/` | Puzzle detail page |
-| `/kealoa/constructor/{name}/` | **Redirects (301)** to `/kealoa/person/{name}/` |
-| `/kealoa/editor/{name}/` | **Redirects (301)** to `/kealoa/person/{name}/` |
-
-The constructor and editor URL forms are kept for backward compatibility. All canonical person URLs use the `/kealoa/person/` prefix.
 
 Each virtual page sets up a fake `WP_Post` object so WordPress (and caching plugins like WP Super Cache) treats the response as a normal 200 page. GeneratePress is forced to "no-sidebar" layout on KEALOA pages.
 
