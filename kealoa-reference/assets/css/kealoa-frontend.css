@@ -215,12 +215,6 @@
     margin-bottom: 20px;
 }
 
-.kealoa-round-title {
-    margin: 0 0 15px 0;
-    font-size: 24px;
-    color: var(--driftwood-dark);
-}
-
 .kealoa-round-meta p {
     display: flex;
     margin: 8px 0;
@@ -682,15 +676,6 @@
     color: var(--pumice);
 }
 
-/* Summary Stats Table */
-.kealoa-summary-stats-table {
-    max-width: 600px;
-}
-
-.kealoa-summary-stats-table td:first-child {
-    font-weight: 600;
-}
-
 /* Clue Number and Day of Week Tables */
 .kealoa-clue-number-table,
 .kealoa-day-of-week-table {
@@ -740,12 +725,6 @@
     flex: 1;
     min-width: 250px;
     overflow: hidden;
-}
-
-.kealoa-puzzle-title {
-    margin: 0 0 15px 0;
-    font-size: 28px;
-    color: var(--driftwood-dark);
 }
 
 .kealoa-puzzle-details p {
@@ -882,7 +861,6 @@
     .kealoa-person-view .kealoa-year-table,
     .kealoa-person-view .kealoa-clue-number-table,
     .kealoa-person-view .kealoa-answer-length-table,
-    .kealoa-person-view .kealoa-summary-stats-table,
     .kealoa-person-view .kealoa-direction-table,
     .kealoa-person-view .kealoa-day-of-week-table,
     .kealoa-person-view .kealoa-decade-table,
@@ -961,8 +939,7 @@
     }
 
     /* Reduce entity name size */
-    .kealoa-person-name,
-    .kealoa-puzzle-title {
+    .kealoa-person-name {
         font-size: 22px;
     }
 
@@ -1122,12 +1099,7 @@
         padding: 12px;
     }
 
-    .kealoa-round-title {
-        font-size: 18px;
-    }
-
-    .kealoa-person-name,
-    .kealoa-puzzle-title {
+    .kealoa-person-name {
         font-size: 20px;
     }
 
