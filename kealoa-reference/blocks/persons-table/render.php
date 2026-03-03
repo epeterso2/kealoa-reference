@@ -8,6 +8,8 @@
  * @package KEALOA_Reference
  */
 
+namespace com\epeterso2\kealoa;
+
 // Prevent direct access
 if (!defined('ABSPATH')) {
     exit;

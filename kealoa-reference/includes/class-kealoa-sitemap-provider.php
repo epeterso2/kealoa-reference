@@ -15,6 +15,10 @@
 
 declare(strict_types=1);
 
+namespace com\epeterso2\kealoa;
+
+use WP_Sitemaps_Provider;
+
 if (!defined('ABSPATH')) {
     exit;
 }

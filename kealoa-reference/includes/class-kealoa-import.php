@@ -10,6 +10,8 @@
  * @package KEALOA_Reference
  */
 
+namespace com\epeterso2\kealoa;
+
 if (!defined('ABSPATH')) {
     exit;
 }

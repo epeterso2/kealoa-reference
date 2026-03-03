@@ -6,7 +6,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://github.com/epeterso2/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 2.1.28
+ * Version: 2.1.29
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -20,13 +20,20 @@
 
 declare(strict_types=1);
 
+namespace com\epeterso2\kealoa;
+
+use WP_Post;
+use WP_Query;
+use WP_REST_Request;
+use WP_REST_Response;
+
 // Prevent direct access
 if (!defined('ABSPATH')) {
     exit;
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '2.1.28');
+define('KEALOA_VERSION', '2.1.29');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -81,8 +88,11 @@ function kealoa_check_requirements(): bool {
  * Autoloader for plugin classes
  */
 spl_autoload_register(function (string $class): void {
-    $prefix = 'Kealoa\\';
-    $base_dir = KEALOA_PLUGIN_DIR . 'includes/';
+    $prefix = 'com\\epeterso2\\kealoa\\';
+    $base_dirs = [
+        KEALOA_PLUGIN_DIR . 'includes/',
+        KEALOA_PLUGIN_DIR . 'admin/',
+    ];
 
     $len = strlen($prefix);
     if (strncmp($prefix, $class, $len) !== 0) {
@@ -90,10 +100,14 @@ spl_autoload_register(function (string $class): void {
     }
 
     $relative_class = substr($class, $len);
-    $file = $base_dir . 'class-' . strtolower(str_replace(['\\', '_'], ['-', '-'], $relative_class)) . '.php';
+    $filename = 'class-' . strtolower(str_replace(['\\', '_'], ['-', '-'], $relative_class)) . '.php';
 
-    if (file_exists($file)) {
-        require $file;
+    foreach ($base_dirs as $base_dir) {
+        $file = $base_dir . $filename;
+        if (file_exists($file)) {
+            require $file;
+            return;
+        }
     }
 });
 
@@ -176,28 +190,28 @@ function kealoa_init(): void {
     new Kealoa_Blocks();
 
     // Enqueue frontend assets
-    add_action('wp_enqueue_scripts', 'kealoa_enqueue_frontend_assets');
+    add_action('wp_enqueue_scripts', __NAMESPACE__ . '\\kealoa_enqueue_frontend_assets');
 
     // Register rewrite rules for custom URLs
-    add_action('init', 'kealoa_register_rewrite_rules');
-    add_filter('query_vars', 'kealoa_query_vars');
-    add_action('template_redirect', 'kealoa_template_redirect');
-    add_filter('template_include', 'kealoa_template_include');
+    add_action('init', __NAMESPACE__ . '\\kealoa_register_rewrite_rules');
+    add_filter('query_vars', __NAMESPACE__ . '\\kealoa_query_vars');
+    add_action('template_redirect', __NAMESPACE__ . '\\kealoa_template_redirect');
+    add_filter('template_include', __NAMESPACE__ . '\\kealoa_template_include');
 
     // Force no-sidebar layout for KEALOA virtual pages (GeneratePress compatibility)
-    add_filter('generate_sidebar_layout', 'kealoa_force_no_sidebar');
+    add_filter('generate_sidebar_layout', __NAMESPACE__ . '\\kealoa_force_no_sidebar');
 
     // Prevent WordPress from adding edit link for virtual KEALOA pages
-    add_filter('get_edit_post_link', 'kealoa_filter_edit_post_link', 10, 2);
+    add_filter('get_edit_post_link', __NAMESPACE__ . '\\kealoa_filter_edit_post_link', 10, 2);
 
     // Register REST API routes
-    add_action('rest_api_init', 'kealoa_register_rest_routes');
+    add_action('rest_api_init', __NAMESPACE__ . '\\kealoa_register_rest_routes');
 
     // Add KEALOA results to WordPress search
-    add_filter('the_posts', 'kealoa_inject_search_placeholder', 10, 2);
-    add_action('loop_start', 'kealoa_search_loop_start');
+    add_filter('the_posts', __NAMESPACE__ . '\\kealoa_inject_search_placeholder', 10, 2);
+    add_action('loop_start', __NAMESPACE__ . '\\kealoa_search_loop_start');
 }
-add_action('plugins_loaded', 'kealoa_init');
+add_action('plugins_loaded', __NAMESPACE__ . '\\kealoa_init');
 
 /**
  * Enqueue frontend assets
@@ -255,7 +269,7 @@ function kealoa_enqueue_frontend_assets(): void {
 function kealoa_register_rest_routes(): void {
     register_rest_route('kealoa/v1', '/game-round/(?P<id>\d+)', [
         'methods'             => 'GET',
-        'callback'            => 'kealoa_rest_game_round',
+        'callback'            => __NAMESPACE__ . '\\kealoa_rest_game_round',
         'permission_callback' => '__return_true',
         'args'                => [
             'id' => [

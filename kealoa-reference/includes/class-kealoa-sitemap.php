@@ -17,6 +17,10 @@
 
 declare(strict_types=1);
 
+namespace com\epeterso2\kealoa;
+
+use WP_Sitemaps;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -32,7 +36,7 @@ function kealoa_register_sitemap_provider(WP_Sitemaps $wp_sitemaps): void {
     require_once __DIR__ . '/class-kealoa-sitemap-provider.php';
     $wp_sitemaps->registry->add_provider('kealoa', new Kealoa_Sitemap_Provider());
 }
-add_action('wp_sitemaps_init', 'kealoa_register_sitemap_provider');
+add_action('wp_sitemaps_init', __NAMESPACE__ . '\\kealoa_register_sitemap_provider');
 
 // =============================================================================
 // YOAST SEO INTEGRATION
@@ -88,7 +92,7 @@ function kealoa_maybe_init_yoast_sitemap(): void {
         return;
     }
 
-    add_filter('wpseo_sitemap_index', 'kealoa_yoast_sitemap_index');
-    add_action('wpseo_do_sitemap_kealoa', 'kealoa_yoast_sitemap_content');
+    add_filter('wpseo_sitemap_index', __NAMESPACE__ . '\\kealoa_yoast_sitemap_index');
+    add_action('wpseo_do_sitemap_kealoa', __NAMESPACE__ . '\\kealoa_yoast_sitemap_content');
 }
-add_action('init', 'kealoa_maybe_init_yoast_sitemap');
+add_action('init', __NAMESPACE__ . '\\kealoa_maybe_init_yoast_sitemap');

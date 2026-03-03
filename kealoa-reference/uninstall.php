@@ -11,6 +11,8 @@
  * @package KEALOA_Reference
  */
 
+namespace com\epeterso2\kealoa;
+
 // Exit if uninstall not called from WordPress
 if (!defined('WP_UNINSTALL_PLUGIN')) {
     exit;

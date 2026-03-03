@@ -12,6 +12,8 @@
 
 declare(strict_types=1);
 
+namespace com\epeterso2\kealoa;
+
 // Prevent direct access
 if (!defined('ABSPATH')) {
     exit;

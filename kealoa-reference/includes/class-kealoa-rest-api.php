@@ -36,6 +36,11 @@
  * @package KEALOA_Reference
  */
 
+namespace com\epeterso2\kealoa;
+
+use WP_REST_Request;
+use WP_REST_Response;
+
 if (!defined('ABSPATH')) {
     exit;
 }
