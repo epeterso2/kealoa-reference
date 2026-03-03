@@ -1502,7 +1502,7 @@
 }
 
 .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav {
-    border-bottom: 1px solid var(--deep-lagoon);
+    border-bottom: 2px solid var(--deep-lagoon);
     margin-bottom: 16px;
 }
 
