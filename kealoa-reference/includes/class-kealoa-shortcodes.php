@@ -822,10 +822,10 @@ class Kealoa_Shortcodes {
                         <thead>
                             <tr>
                                 <th data-sort="number"><?php esc_html_e('#', 'kealoa-reference'); ?></th>
-                                <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
+                                <th data-sort="weekday" class="kealoa-day-cell"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                                 <th data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></th>
-                                <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
+                                <th data-sort="text" class="kealoa-editor"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
                                 <th data-sort="clue"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Clue Text', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Answer', 'kealoa-reference'); ?></th>
