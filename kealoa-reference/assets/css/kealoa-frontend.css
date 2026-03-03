@@ -1115,12 +1115,6 @@
         min-width: auto;
     }
 
-    /* Hide less critical columns on small screens */
-    .kealoa-clues-table .kealoa-day-cell,
-    .kealoa-clues-table .kealoa-editor {
-        display: none;
-    }
-
     /* Headers: compact */
     .kealoa-round-header,
     .kealoa-person-header,
