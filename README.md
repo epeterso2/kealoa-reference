@@ -70,6 +70,10 @@ The plugin adds a **KEALOA** top-level menu to the WordPress admin sidebar with 
 | Data Check  | 16 data consistency checks with repair tools for orphaned records |
 | Settings    | Plugin configuration (debug mode toggle) |
 
+### Person Edit Form
+
+The person edit form includes fields for name, nicknames, homepage URL, XWordInfo profile name, XWordInfo image URL, media library image, and a **Hide XWordInfo Link** checkbox that suppresses the XWordInfo profile link on the person's frontend page.
+
 ### Admin Bar Integration
 
 On the frontend, a KEALOA dropdown in the WordPress admin toolbar provides quick links to all admin pages. When viewing a KEALOA virtual page (person, round, or puzzle), the default "Edit" link is overridden to point to the appropriate admin edit form.
@@ -95,7 +99,7 @@ All shortcode output is cached via WordPress transients (24-hour TTL) with a ver
 | `[kealoa_rounds_table]` | `limit`, `order` | Tabbed view: rounds table (sortable/filterable) and stats (overview grid, yearly stats, clue-number frequency matrices) |
 | `[kealoa_round]` | `id` (required) | Round detail: meta, episode link, solution words, host, players with scores, person photos, alternation metric, evenness metric, average clue age, clue table with guesses, social sharing bar |
 | `[kealoa_rounds_stats]` | — | Statistics grid: total players, rounds, puzzles, constructors, clues, guesses, correct answers, accuracy |
-| `[kealoa_person]` | `id` (required) | Person profile with tabbed interface: role-specific statistics (player, constructor, editor, host), alternation vs accuracy breakdown, round history, co-players, performance charts, person images |
+| `[kealoa_person]` | `id` (required) | Person profile with tabbed interface: achievement badges, role-specific statistics (player, constructor, editor, host), alternation vs accuracy breakdown, round history, co-players, performance charts, person images |
 | `[kealoa_persons_table]` | — | Table of all players with rounds played, clues guessed, and accuracy |
 | `[kealoa_constructors_table]` | — | Table of all constructors with puzzle count and statistics |
 | `[kealoa_editors_table]` | — | Table of all editors with puzzle count and statistics |
@@ -119,7 +123,7 @@ The plugin registers 15 blocks under the `kealoa` namespace. Each block renders 
 | `editor-view` | KEALOA Editor View | `edit` | **Deprecated:** use Person View instead. Displays a person's KEALOA statistics and history |
 | `editors-table` | KEALOA Editors Table | `edit` | Table of all editors with statistics |
 | `hosts-table` | KEALOA Hosts Table | `microphone` | Table of all hosts with rounds, clues, players, and accuracy |
-| `person-view` | KEALOA Person View | `admin-users` | Person profile with statistics, round history, and performance metrics |
+| `person-view` | KEALOA Person View | `admin-users` | Person profile with achievement badges, statistics, round history, and performance metrics |
 | `persons-table` | KEALOA Players Table | `groups` | Table of all players with rounds played, clues guessed, and accuracy |
 | `play-game` | KEALOA Play Game | `games` | An interactive KEALOA game that lets visitors play a random round |
 | `puzzle-view` | KEALOA Puzzle View | `grid-view` | Single puzzle with person images, clue details, and round information |
@@ -432,6 +436,24 @@ When Yoast SEO is active, a `<sitemap>` entry for `/kealoa-sitemap.xml` is added
 
 ## Frontend Features
 
+### Achievement Badges
+
+The person view header displays achievement badges earned across four roles. Each badge is a pill-shaped element showing an SVG icon, the tier threshold value, and a short label (e.g., "200 HOSTED"). Badge background color matches the role's primary tab color; foreground is white.
+
+Badges are computed by the `Kealoa_Badges` class based on the person's metrics. A person earns the first badge at the minimum threshold and advances a tier for each increment. Only the highest achieved tier is shown. The tooltip displays the person's actual metric value and tier number.
+
+| Role | Metric | Min | Increment | Max | Tiers |
+|---|---|---:|---:|---:|---:|
+| Host | Rounds Hosted | 25 | 25 | 200 | 8 |
+| Host | Players in a Single Round | 2 | 1 | 10 | 9 |
+| Host | Correct Streak | 10 | 10 | 100 | 10 |
+| Player | Rounds Played | 25 | 25 | 200 | 8 |
+| Player | Best Streak | 5 | 1 | 10 | 6 |
+| Player | Best Correct | 5 | 1 | 10 | 6 |
+| Player | Overall Accuracy | 50% | 10% | 100% | 6 |
+| Constructor | Puzzles Used | 5 | 5 | 50 | 10 |
+| Editor | Puzzles Edited | 25 | 25 | 1,000 | 40 |
+
 ### Table Sorting
 
 All `.kealoa-table` columns with a `data-sort` attribute support click-to-sort with ascending/descending toggle. Sort types: `date`, `number`, `text` (locale-aware), `clue` (e.g. "42D"), and `weekday`. Supports `data-default-sort` and `data-sort-value` overrides. Empty columns are automatically hidden.
@@ -476,9 +498,10 @@ Person profile pages use Chart.js 4.x for interactive performance visualizations
 
 The plugin uses several strategies to minimize database queries:
 
-- **Bulk-fetch methods** — Instead of querying one row at a time inside loops (N+1 pattern), the database layer provides bulk methods that fetch data for many IDs in a single `WHERE id IN (...)` query and return ID-keyed maps. Bulk methods exist for round solutions, puzzle constructors, clue guesses, guesser results, clue counts, round guessers, alternation percentages, and clue age statistics.
+- **Bulk-fetch methods** — Instead of querying one row at a time inside loops (N+1 pattern), the database layer provides bulk methods that fetch data for many IDs in a single `WHERE id IN (...)` query and return ID-keyed maps. Bulk methods exist for round solutions, puzzle constructors, clue guesses, guesser results, clue counts, round guessers, alternation percentages, puzzle guess statistics, and clue age statistics.
 - **Query consolidation** — Multi-query operations are merged into single SQL statements. For example, rounds overview statistics (6 queries → 1) and person role detection (4 queries → 1).
 - **Pre-computed maps** — Renderers collect all needed IDs before entering loops, then perform bulk fetches up front and use map lookups inside the loop body.
+- **Composite indexes** — Frequently queried column pairs use composite indexes (e.g., `idx_round_clue` on clues, `idx_guesser_clue` on guesses) for efficient lookups. Superseded single-column indexes are automatically dropped during activation.
 - **Transient caching** — All shortcode output is cached via WordPress transients (24-hour TTL) with a versioned cache key that is invalidated after any data mutation.
 
 ---
@@ -529,6 +552,8 @@ kealoa-reference/
 │   │   ├── kealoa-frontend.css       Frontend page styles
 │   │   ├── kealoa-game.css           Play-game interactive styles
 │   │   └── kealoa-palette.css        Color palette CSS custom properties
+│   ├── images/
+│   │   └── badges/                   SVG badge icons (9 files, one per metric)
 │   └── js/
 │       ├── blocks-editor.js          Gutenberg block editor registrations
 │       ├── kealoa-admin.js           Admin page JavaScript
@@ -552,6 +577,7 @@ kealoa-reference/
 │   └── version-info/                 block.json + render.php
 ├── includes/
 │   ├── class-kealoa-activator.php    Plugin activation (table creation, migrations, rewrite rules)
+│   ├── class-kealoa-badges.php       Achievement badge computation and rendering
 │   ├── class-kealoa-blocks.php       Gutenberg block registration
 │   ├── class-kealoa-db.php           Database query methods (CRUD, stats, search, bulk-fetch)
 │   ├── class-kealoa-deactivator.php  Plugin deactivation (flush rewrite rules)
