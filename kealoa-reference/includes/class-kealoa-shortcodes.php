@@ -927,7 +927,7 @@ class Kealoa_Shortcodes {
             $show_url = add_query_arg(['round' => $round_id, 'order' => 'show'], $play_page_url);
             $random_url = add_query_arg(['round' => $round_id, 'order' => 'random'], $play_page_url);
             $html .= '<div class="kealoa-play-links">';
-            $html .= '<p class="kealoa-play-links__label">' . esc_html__('Play This Round', 'kealoa-reference') . '</p>';
+            $html .= '<h2 class="kealoa-play-links__title">' . esc_html__('Play KEALOA!', 'kealoa-reference') . '</h2>';
             $html .= '<div class="kealoa-play-links__buttons">';
             $html .= '<a href="' . esc_url($show_url) . '" class="kealoa-play-links__btn">' . esc_html__('In Show Order', 'kealoa-reference') . '</a>';
             $html .= '<a href="' . esc_url($random_url) . '" class="kealoa-play-links__btn">' . esc_html__('In Random Order', 'kealoa-reference') . '</a>';
