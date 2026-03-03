@@ -535,6 +535,69 @@ class Kealoa_DB {
     }
 
     /**
+     * Get guess stats per clue position for a specific puzzle.
+     *
+     * Returns an array of objects keyed by "{number}_{direction}" with
+     * total_guesses and correct_guesses fields.
+     *
+     * @param int $puzzle_id The puzzle ID.
+     * @return array<string, object> Map of position key => stats object.
+     */
+    public function get_puzzle_clue_stats(int $puzzle_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT
+                c.puzzle_clue_number,
+                c.puzzle_clue_direction,
+                COUNT(g.id) as total_guesses,
+                COALESCE(SUM(g.is_correct), 0) as correct_guesses
+            FROM {$this->clues_table} c
+            LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+            WHERE c.puzzle_id = %d
+            GROUP BY c.puzzle_clue_number, c.puzzle_clue_direction
+            ORDER BY c.puzzle_clue_number ASC, c.puzzle_clue_direction ASC",
+            $puzzle_id
+        );
+
+        $rows = $this->wpdb->get_results($sql);
+        $map = [];
+        foreach ($rows as $row) {
+            $key = $row->puzzle_clue_number . '_' . $row->puzzle_clue_direction;
+            $map[$key] = $row;
+        }
+        return $map;
+    }
+
+    /**
+     * Get guess stats per puzzle for multiple puzzles in a single query.
+     *
+     * @param int[] $puzzle_ids Array of puzzle IDs.
+     * @return array<int, object> Map of puzzle_id => stats object with total_guesses and correct_guesses.
+     */
+    public function get_puzzle_guess_stats_bulk(array $puzzle_ids): array {
+        $map = [];
+        foreach ($puzzle_ids as $pid) {
+            $map[(int) $pid] = (object) ['total_guesses' => 0, 'correct_guesses' => 0];
+        }
+        if (empty($puzzle_ids)) {
+            return $map;
+        }
+        $in = $this->ids_in_clause($puzzle_ids);
+        $sql = "SELECT
+                    c.puzzle_id,
+                    COUNT(g.id) as total_guesses,
+                    COALESCE(SUM(g.is_correct), 0) as correct_guesses
+                FROM {$this->clues_table} c
+                LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
+                WHERE c.puzzle_id IN ({$in})
+                GROUP BY c.puzzle_id";
+        $rows = $this->wpdb->get_results($sql);
+        foreach ($rows as $row) {
+            $map[(int) $row->puzzle_id] = $row;
+        }
+        return $map;
+    }
+
+    /**
      * Get constructors (persons) for a puzzle
      */
     public function get_puzzle_constructors(int $puzzle_id): array {

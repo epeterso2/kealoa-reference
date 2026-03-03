@@ -1025,6 +1025,16 @@ class Kealoa_Shortcodes {
         // Bulk pre-fetch guessers for round history co-players
         $bulk_guessers_map = $this->db->get_round_guessers_bulk($all_person_round_ids);
 
+        // Bulk pre-fetch guess stats per puzzle for constructor/editor tables
+        $all_puzzle_ids = [];
+        foreach ($puzzle_sources as $pz_list) {
+            foreach ($pz_list as $pz) {
+                $all_puzzle_ids[] = (int) $pz->puzzle_id;
+            }
+        }
+        $all_puzzle_ids = array_values(array_unique($all_puzzle_ids));
+        $bulk_puzzle_stats_map = !empty($all_puzzle_ids) ? $this->db->get_puzzle_guess_stats_bulk($all_puzzle_ids) : [];
+
         // Build round info lookup: round_id => {url, date, words, score}
         $round_info = [];
         foreach ($round_history as $rh) {
@@ -2648,6 +2658,9 @@ class Kealoa_Shortcodes {
                                     <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
                                     <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
                                     <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -2719,6 +2732,17 @@ class Kealoa_Shortcodes {
                                                 echo '—';
                                             }
                                             ?>
+                                        </td>
+                                        <?php
+                                        $cp_stats = $bulk_puzzle_stats_map[(int) $cpuzzle->puzzle_id] ?? (object) ['total_guesses' => 0, 'correct_guesses' => 0];
+                                        $cp_total   = (int) $cp_stats->total_guesses;
+                                        $cp_correct = (int) $cp_stats->correct_guesses;
+                                        $cp_pct     = $cp_total > 0 ? ($cp_correct / $cp_total) * 100 : 0;
+                                        ?>
+                                        <td class="kealoa-clue-guesses"><?php echo esc_html(number_format_i18n($cp_total)); ?></td>
+                                        <td class="kealoa-clue-correct"><?php echo esc_html(number_format_i18n($cp_correct)); ?></td>
+                                        <td class="kealoa-clue-accuracy" data-value="<?php echo esc_attr(number_format((float) $cp_pct, 2, '.', '')); ?>">
+                                            <?php echo Kealoa_Formatter::format_percentage($cp_pct); ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -2952,6 +2976,9 @@ class Kealoa_Shortcodes {
                                     <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
                                     <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
                                     <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -3018,6 +3045,17 @@ class Kealoa_Shortcodes {
                                                 echo '—';
                                             }
                                             ?>
+                                        </td>
+                                        <?php
+                                        $ep_stats = $bulk_puzzle_stats_map[(int) $epuzzle->puzzle_id] ?? (object) ['total_guesses' => 0, 'correct_guesses' => 0];
+                                        $ep_total   = (int) $ep_stats->total_guesses;
+                                        $ep_correct = (int) $ep_stats->correct_guesses;
+                                        $ep_pct     = $ep_total > 0 ? ($ep_correct / $ep_total) * 100 : 0;
+                                        ?>
+                                        <td class="kealoa-clue-guesses"><?php echo esc_html(number_format_i18n($ep_total)); ?></td>
+                                        <td class="kealoa-clue-correct"><?php echo esc_html(number_format_i18n($ep_correct)); ?></td>
+                                        <td class="kealoa-clue-accuracy" data-value="<?php echo esc_attr(number_format((float) $ep_pct, 2, '.', '')); ?>">
+                                            <?php echo Kealoa_Formatter::format_percentage($ep_pct); ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -3997,6 +4035,9 @@ class Kealoa_Shortcodes {
         $round_solutions_cache = !empty($round_rid_list) ? $this->db->get_round_solutions_bulk($round_rid_list) : [];
         $rounds_per_date_cache = $this->db->get_rounds_per_date_counts();
 
+        // Pre-fetch guess stats per clue position
+        $clue_stats_cache = $this->db->get_puzzle_clue_stats($puzzle_id);
+
         // Group clues by crossword position (puzzle_clue_number + direction)
         $clues_by_position = [];
         foreach ($clues as $clue) {
@@ -4139,6 +4180,9 @@ class Kealoa_Shortcodes {
                                 <th data-sort="text"><?php esc_html_e('Answer', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                                 <th data-sort="text"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -4157,6 +4201,12 @@ class Kealoa_Shortcodes {
                                     }
                                     $round_date_parts[] = $date_cell;
                                 }
+                                $pos_key = $entry['puzzle_clue_number'] . '_' . $entry['puzzle_clue_direction'];
+                                $clue_total   = (int) ($clue_stats_cache[$pos_key]->total_guesses ?? 0);
+                                $clue_correct = (int) ($clue_stats_cache[$pos_key]->correct_guesses ?? 0);
+                                $clue_pct     = $clue_total > 0
+                                    ? ($clue_correct / $clue_total) * 100
+                                    : 0;
                                 ?>
                                 <tr>
                                     <td class="kealoa-clue-ref">
@@ -4168,6 +4218,11 @@ class Kealoa_Shortcodes {
                                     </td>
                                     <td class="kealoa-round-words"><?php echo implode('<br>', $round_words_parts); ?></td>
                                     <td class="kealoa-round-date"><?php echo implode('<br>', $round_date_parts); ?></td>
+                                    <td class="kealoa-clue-guesses"><?php echo esc_html(number_format_i18n($clue_total)); ?></td>
+                                    <td class="kealoa-clue-correct"><?php echo esc_html(number_format_i18n($clue_correct)); ?></td>
+                                    <td class="kealoa-clue-accuracy" data-value="<?php echo esc_attr(number_format((float) $clue_pct, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($clue_pct); ?>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
