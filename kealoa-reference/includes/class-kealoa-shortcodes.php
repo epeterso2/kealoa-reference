@@ -3565,6 +3565,7 @@ class Kealoa_Shortcodes {
 
         ob_start();
         ?>
+        <div class="kealoa-puzzles-page">
         <div class="kealoa-tabs">
             <nav class="kealoa-tab-nav" role="tablist">
                 <button class="kealoa-tab-button active" role="tab" aria-selected="true" data-tab="kealoa-puzzles-tab-all"><?php esc_html_e('All Puzzles', 'kealoa-reference'); ?></button>
@@ -3731,6 +3732,7 @@ class Kealoa_Shortcodes {
                 <?php $this->render_curiosities_panel($multi_round_puzzles, $rounds_without_puzzles); ?>
             </div><!-- end kealoa-puzzles-tab-curiosities -->
         </div><!-- end kealoa-tabs -->
+        </div><!-- end kealoa-puzzles-page -->
         <?php
         return ob_get_clean();
 

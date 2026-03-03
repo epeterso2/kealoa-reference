@@ -433,12 +433,12 @@
 }
 
 .kealoa-person-view .kealoa-tab-button--editor {
-    color: var(--ash-dark);
+    color: var(--driftwood-dark);
 }
 .kealoa-person-view .kealoa-tab-button--editor:hover,
 .kealoa-person-view .kealoa-tab-button--editor.active {
-    background-color: var(--ash-dark);
-    border-bottom-color: var(--ash-dark);
+    background-color: var(--driftwood-dark);
+    border-bottom-color: var(--driftwood-dark);
 }
 
 /* -- Tab-nav border follows the active role ------------------------------ */
@@ -453,7 +453,7 @@
     border-bottom-color: var(--jungle-deep);
 }
 .kealoa-person-view .kealoa-tabs[data-role="editor"] > .kealoa-tab-nav {
-    border-bottom-color: var(--ash-dark);
+    border-bottom-color: var(--driftwood-dark);
 }
 
 /* -- Secondary (nested) tabs — per-role colors -------------------------- */
@@ -498,16 +498,16 @@
 }
 
 .kealoa-person-view .kealoa-tab-panel[data-tab="editor"] > .kealoa-tabs > .kealoa-tab-nav {
-    border-bottom-color: var(--pumice);
+    border-bottom-color: var(--bamboo-brown);
 }
 .kealoa-person-view .kealoa-tab-panel[data-tab="editor"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button {
-    color: var(--pumice);
+    color: var(--bamboo-brown);
 }
 .kealoa-person-view .kealoa-tab-panel[data-tab="editor"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button:hover,
 .kealoa-person-view .kealoa-tab-panel[data-tab="editor"] > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button.active {
     color: var(--cloud-white);
-    background-color: var(--pumice);
-    border-bottom-color: var(--pumice);
+    background-color: var(--bamboo-brown);
+    border-bottom-color: var(--bamboo-brown);
 }
 
 .kealoa-person-header {
@@ -976,6 +976,22 @@
         border-bottom-color: var(--deep-lagoon);
     }
 
+    .kealoa-puzzles-page .kealoa-tab-button {
+        border-bottom-color: var(--ash-dark);
+    }
+
+    .kealoa-puzzles-page .kealoa-tab-button.active {
+        border-bottom-color: var(--ash-dark);
+    }
+
+    .kealoa-rounds-table-wrapper .kealoa-tab-button {
+        border-bottom-color: var(--pumice);
+    }
+
+    .kealoa-rounds-table-wrapper .kealoa-tab-button.active {
+        border-bottom-color: var(--pumice);
+    }
+
     /* Secondary tabs: stack vertically on mobile */
     .kealoa-tab-panel > .kealoa-tabs > .kealoa-tab-nav > .kealoa-tab-button {
         flex: 1 1 45%;
@@ -1417,6 +1433,44 @@
 /* ==========================================================================
    Tabs
    ========================================================================== */
+
+/* -- Puzzles page: ash-dark tab bar -------------------------------------- */
+
+.kealoa-puzzles-page .kealoa-tab-nav {
+    border-bottom-color: var(--ash-dark);
+}
+
+.kealoa-puzzles-page .kealoa-tab-button {
+    color: var(--ash-dark);
+}
+
+.kealoa-puzzles-page .kealoa-tab-button:hover {
+    background-color: var(--ash-dark);
+}
+
+.kealoa-puzzles-page .kealoa-tab-button.active {
+    background-color: var(--ash-dark);
+    border-bottom-color: var(--ash-dark);
+}
+
+/* -- Rounds table: pumice tab bar ---------------------------------------- */
+
+.kealoa-rounds-table-wrapper .kealoa-tab-nav {
+    border-bottom-color: var(--pumice);
+}
+
+.kealoa-rounds-table-wrapper .kealoa-tab-button {
+    color: var(--pumice);
+}
+
+.kealoa-rounds-table-wrapper .kealoa-tab-button:hover {
+    background-color: var(--pumice);
+}
+
+.kealoa-rounds-table-wrapper .kealoa-tab-button.active {
+    background-color: var(--pumice);
+    border-bottom-color: var(--pumice);
+}
 
 .kealoa-tabs {
     margin-top: 20px;
