@@ -986,6 +986,7 @@ class Kealoa_Shortcodes {
         $clue_giver_stats_by_guesser = $is_clue_giver ? $this->db->get_clue_giver_stats_by_guesser($person_id) : [];
         $clue_giver_rounds = $is_clue_giver ? $this->db->get_clue_giver_rounds($person_id) : [];
         $clue_giver_streaks = $is_clue_giver ? $this->db->get_clue_giver_streaks($person_id) : null;
+        $clue_giver_max_players = $is_clue_giver ? $this->db->get_clue_giver_max_players_per_round($person_id) : 0;
 
         $person_puzzles = $is_player ? $this->db->get_person_puzzles($person_id) : [];
         $clue_number_results = $this->db->get_person_results_by_clue_number($person_id);
@@ -1128,6 +1129,29 @@ class Kealoa_Shortcodes {
             }
         }
 
+        // Compute achievement badges
+        $badge_metrics = [];
+        if ($is_clue_giver && $clue_giver_stats) {
+            $badge_metrics['host_rounds']  = (int) $clue_giver_stats->round_count;
+            $badge_metrics['host_players'] = $clue_giver_max_players;
+            if ($clue_giver_streaks) {
+                $badge_metrics['host_streak'] = (int) $clue_giver_streaks->best_correct_streak;
+            }
+        }
+        if ($is_player && $stats) {
+            $badge_metrics['player_rounds']   = (int) $stats->rounds_played;
+            $badge_metrics['player_streak']   = (int) $stats->best_streak;
+            $badge_metrics['player_correct']  = (int) $stats->max_correct;
+            $badge_metrics['player_accuracy'] = (float) $stats->overall_percentage;
+        }
+        if ($is_constructor && $constructor_stats) {
+            $badge_metrics['constructor_puzzles'] = (int) $constructor_stats->puzzle_count;
+        }
+        if ($is_editor && $editor_stats) {
+            $badge_metrics['editor_puzzles'] = (int) $editor_stats->puzzle_count;
+        }
+        $person_badges = Kealoa_Badges::compute_badges($badge_metrics);
+
         // Determine image to display: media library > XWordInfo constructor image (with nophoto fallback)
         $person_media_id = (int) ($person->media_id ?? 0);
         $person_media_url = '';
@@ -1185,6 +1209,8 @@ class Kealoa_Shortcodes {
                                 <?php echo Kealoa_Formatter::format_home_page_link($person->home_page_url); ?>
                             </p>
                         <?php endif; ?>
+
+                        <?php echo Kealoa_Badges::render_badges($person_badges); ?>
                     </div>
                 </div>
             </div>

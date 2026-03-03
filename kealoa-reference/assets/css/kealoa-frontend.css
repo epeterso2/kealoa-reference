@@ -526,6 +526,74 @@
     flex-wrap: wrap;
 }
 
+/* ---------- Person badges ---------- */
+
+.kealoa-person-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.kealoa-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px 4px 6px;
+    border-radius: 20px;
+    border: none;
+    color: var(--cloud-white);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    transition: transform 0.15s ease;
+    text-decoration: none;
+}
+
+.kealoa-badge:hover {
+    transform: scale(1.05);
+}
+
+.kealoa-badge__icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    filter: brightness(0) invert(1);
+}
+
+.kealoa-badge__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.kealoa-badge__value {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.kealoa-badge__label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    opacity: 0.85;
+}
+
+/* Role colours */
+.kealoa-badge--player {
+    background-color: var(--deep-lagoon);
+}
+
+.kealoa-badge--host {
+    background-color: var(--volcanic-ember);
+}
+
+.kealoa-badge--constructor {
+    background-color: var(--jungle-deep);
+}
+
+.kealoa-badge--editor {
+    background-color: var(--driftwood-dark);
+}
+
 .kealoa-person-image {
     flex-shrink: 0;
 }
@@ -839,6 +907,29 @@
         text-align: center;
     }
 
+    .kealoa-person-badges {
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .kealoa-badge {
+        padding: 3px 8px 3px 5px;
+        gap: 4px;
+    }
+
+    .kealoa-badge__icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .kealoa-badge__value {
+        font-size: 12px;
+    }
+
+    .kealoa-badge__label {
+        font-size: 9px;
+    }
+
     .kealoa-person-details,
     .kealoa-puzzle-details {
         min-width: 0;
@@ -1088,6 +1179,24 @@
     /* Stats grid: single column */
     .kealoa-stats-grid {
         grid-template-columns: 1fr;
+    }
+
+    .kealoa-badge {
+        padding: 2px 6px 2px 4px;
+        gap: 3px;
+    }
+
+    .kealoa-badge__icon {
+        width: 14px;
+        height: 14px;
+    }
+
+    .kealoa-badge__value {
+        font-size: 11px;
+    }
+
+    .kealoa-badge__label {
+        font-size: 8px;
     }
 
     .kealoa-page-container {
