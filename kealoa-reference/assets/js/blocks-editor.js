@@ -13,7 +13,7 @@
     const { registerBlockType } = wp.blocks;
     const { createElement, Fragment } = wp.element;
     const { InspectorControls } = wp.blockEditor;
-    const { PanelBody, SelectControl, TextControl, Placeholder } = wp.components;
+    const { PanelBody, RangeControl, SelectControl, TextControl, Placeholder } = wp.components;
     const { __ } = wp.i18n;
     const { serverSideRender: ServerSideRender } = wp;
 

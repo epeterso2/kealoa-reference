@@ -73,13 +73,6 @@
         });
 
         /**
-         * Auto-uppercase correct answer selection
-         */
-        $('#correct_answer').on('change', function () {
-            // Value is already uppercase from the options
-        });
-
-        /**
          * Convert HH:MM:SS to seconds
          */
         function timeToSeconds(time) {
@@ -262,7 +255,7 @@
          * Track when the Add Person link is clicked and refresh on window focus
          */
         var waitingForPersonRefresh = false;
-        var personSelects = $('#puzzle_constructors, #new_puzzle_constructors, #constructors');
+        var personSelects = $('#puzzle_constructors, #constructors');
         
         // When the Add new person link is clicked, set flag
         $(document).on('click', 'a[href*="page=kealoa-persons&action=add"]', function () {
