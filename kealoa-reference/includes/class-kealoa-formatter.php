@@ -286,7 +286,7 @@ class Kealoa_Formatter {
         $url = 'https://www.xwordinfo.com/Crossword?date=' . $formatted_date;
 
         return sprintf(
-            '<a href="%s" class="kealoa-xwordinfo-puzzle-link" target="_blank" rel="noopener noreferrer">%s &#x2197;</a>',
+            '<a href="%s" class="kealoa-xwordinfo-puzzle-link" target="_blank" rel="noopener noreferrer">%s</a>',
             esc_url($url),
             esc_html($formatted_date)
         );

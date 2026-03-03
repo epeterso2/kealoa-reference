@@ -4058,37 +4058,6 @@ class Kealoa_Shortcodes {
                             <strong class="kealoa-meta-label"><?php esc_html_e('XWordInfo', 'kealoa-reference'); ?></strong>
                             <span><?php echo Kealoa_Formatter::format_puzzle_xwordinfo_link($puzzle->publication_date); ?></span>
                         </p>
-
-                        <?php if (!empty($rounds_clues)): ?>
-                        <p>
-                            <strong class="kealoa-meta-label"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></strong>
-                            <span>
-                                <?php
-                                $round_links = [];
-                                foreach ($rounds_clues as $rc) {
-                                    $round_links[] = Kealoa_Formatter::format_round_date_link((int) $rc['round_id'], $rc['round_date']);
-                                }
-                                echo implode(', ', $round_links);
-                                ?>
-                            </span>
-                        </p>
-                        <?php endif; ?>
-
-                        <?php if (!empty($rounds_clues)): ?>
-                        <p>
-                            <strong class="kealoa-meta-label"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></strong>
-                            <span>
-                                <?php
-                                $sol_parts = [];
-                                foreach ($rounds_clues as $rc) {
-                                    $solutions = $round_solutions_cache[(int) $rc['round_id']] ?? [];
-                                    $sol_parts[] = Kealoa_Formatter::format_solution_words_link((int) $rc['round_id'], $solutions);
-                                }
-                                echo implode(', ', $sol_parts);
-                                ?>
-                            </span>
-                        </p>
-                        <?php endif; ?>
                     </div>
                 </div>
 
