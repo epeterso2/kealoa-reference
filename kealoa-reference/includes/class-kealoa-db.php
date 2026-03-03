@@ -2629,8 +2629,8 @@ class Kealoa_DB {
                 COUNT(DISTINCT r.id) as round_count,
                 COUNT(DISTINCT c.id) as clue_count,
                 COUNT(DISTINCT rg.person_id) as guesser_count,
-                COUNT(g.id) as total_guesses,
-                COALESCE(SUM(g.is_correct), 0) as correct_guesses
+                COUNT(DISTINCT g.id) as total_guesses,
+                COUNT(DISTINCT CASE WHEN g.is_correct = 1 THEN g.id END) as correct_guesses
             FROM {$this->persons_table} p
             INNER JOIN {$this->rounds_table} r ON r.clue_giver_id = p.id
             LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
@@ -2972,6 +2972,37 @@ class Kealoa_DB {
         );
 
         return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get co-constructors for multiple puzzles in a single query.
+     *
+     * @param int[] $puzzle_ids Array of puzzle IDs.
+     * @param int   $exclude_person_id Person ID to exclude (the main constructor).
+     * @return array<int, array> Map of puzzle_id => array of co-constructor objects.
+     */
+    public function get_puzzle_co_constructors_bulk(array $puzzle_ids, int $exclude_person_id): array {
+        $map = [];
+        foreach ($puzzle_ids as $pid) {
+            $map[(int) $pid] = [];
+        }
+        if (empty($puzzle_ids)) {
+            return $map;
+        }
+        $in = $this->ids_in_clause($puzzle_ids);
+        $sql = $this->wpdb->prepare(
+            "SELECT pc.puzzle_id, p.id, p.full_name, p.xwordinfo_profile_name
+            FROM {$this->persons_table} p
+            INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.person_id
+            WHERE pc.puzzle_id IN ({$in}) AND p.id != %d
+            ORDER BY pc.puzzle_id, pc.constructor_order ASC",
+            $exclude_person_id
+        );
+        $rows = $this->wpdb->get_results($sql);
+        foreach ($rows as $row) {
+            $map[(int) $row->puzzle_id][] = $row;
+        }
+        return $map;
     }
 
     /**

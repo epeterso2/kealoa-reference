@@ -3,7 +3,7 @@
 Read-only REST API for KEALOA Reference data.
 
 **Base URL:** `/wp-json/kealoa/v1`
-**Version:** 2.1.34
+**Version:** 2.1.35
 
 All endpoints use the `GET` method and are publicly accessible (`permission_callback: __return_true`). All responses are JSON.
 

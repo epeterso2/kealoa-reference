@@ -171,9 +171,8 @@ class Kealoa_Activator {
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            KEY idx_round_id (round_id),
-            KEY idx_puzzle_id (puzzle_id),
-            KEY idx_clue_number (clue_number)
+            KEY idx_round_clue (round_id, clue_number),
+            KEY idx_puzzle_id (puzzle_id)
         ) {$charset_collate};";
 
         // SQL for guesses table
@@ -186,8 +185,7 @@ class Kealoa_Activator {
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             UNIQUE KEY idx_clue_guesser (clue_id, guesser_person_id),
-            KEY idx_guesser_person_id (guesser_person_id),
-            KEY idx_is_correct (is_correct)
+            KEY idx_guesser_clue (guesser_person_id, clue_id)
         ) {$charset_collate};";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -200,6 +198,20 @@ class Kealoa_Activator {
         dbDelta($sql_round_guessers);
         dbDelta($sql_clues);
         dbDelta($sql_guesses);
+
+        // Drop superseded indexes that dbDelta won't remove
+        $superseded = [
+            $clues_table   => ['idx_round_id', 'idx_clue_number'],
+            $guesses_table => ['idx_guesser_person_id', 'idx_is_correct'],
+        ];
+        foreach ($superseded as $table => $indexes) {
+            $existing = $wpdb->get_col("SHOW INDEX FROM {$table} WHERE Key_name != 'PRIMARY'", 2);
+            foreach ($indexes as $idx) {
+                if (in_array($idx, $existing, true)) {
+                    $wpdb->query("ALTER TABLE {$table} DROP INDEX {$idx}");
+                }
+            }
+        }
     }
 
     /**

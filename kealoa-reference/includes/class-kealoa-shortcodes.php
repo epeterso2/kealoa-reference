@@ -1035,6 +1035,19 @@ class Kealoa_Shortcodes {
         $all_puzzle_ids = array_values(array_unique($all_puzzle_ids));
         $bulk_puzzle_stats_map = !empty($all_puzzle_ids) ? $this->db->get_puzzle_guess_stats_bulk($all_puzzle_ids) : [];
 
+        // Bulk pre-fetch co-constructors for constructor puzzles
+        $con_puzzle_ids = array_map(function ($p) { return (int) $p->puzzle_id; }, $constructor_puzzles);
+        $bulk_co_constructors_map = !empty($con_puzzle_ids)
+            ? $this->db->get_puzzle_co_constructors_bulk($con_puzzle_ids, $person_id)
+            : [];
+        $has_co_constructors = false;
+        foreach ($bulk_co_constructors_map as $co_list) {
+            if (!empty($co_list)) {
+                $has_co_constructors = true;
+                break;
+            }
+        }
+
         // Build round info lookup: round_id => {url, date, words, score}
         $round_info = [];
         foreach ($round_history as $rh) {
@@ -2606,17 +2619,6 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-tab-panel active" data-tab="constructor-puzzles">
 
                     <?php if (!empty($constructor_puzzles)): ?>
-                    <?php
-                    // Check if any puzzle has co-constructors
-                    $has_co_constructors = false;
-                    foreach ($constructor_puzzles as $p_check) {
-                        $co_check = $this->db->get_puzzle_co_constructors((int) $p_check->puzzle_id, $person_id);
-                        if (!empty($co_check)) {
-                            $has_co_constructors = true;
-                            break;
-                        }
-                    }
-                    ?>
                     <div class="kealoa-constructor-puzzles">
                         <h2><?php esc_html_e('Puzzles Constructed', 'kealoa-reference'); ?></h2>
 
@@ -2666,7 +2668,7 @@ class Kealoa_Shortcodes {
                             <tbody>
                                 <?php foreach ($constructor_puzzles as $cpuzzle): ?>
                                     <?php
-                                    $co_constructors = $this->db->get_puzzle_co_constructors((int) $cpuzzle->puzzle_id, $person_id);
+                                    $co_constructors = $bulk_co_constructors_map[(int) $cpuzzle->puzzle_id] ?? [];
                                     $cp_round_ids = !empty($cpuzzle->round_ids) ? explode(',', $cpuzzle->round_ids) : [];
                                     $cp_round_dates = !empty($cpuzzle->round_dates) ? explode(',', $cpuzzle->round_dates) : [];
                                     $cp_round_numbers = !empty($cpuzzle->round_numbers) ? explode(',', $cpuzzle->round_numbers) : [];
