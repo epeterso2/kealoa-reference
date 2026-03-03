@@ -248,8 +248,9 @@
     padding: 8px 6px;
 }
 
-.kealoa-clues-table th {
-    white-space: normal;
+.kealoa-clues-table th,
+.kealoa-clues-table td {
+    white-space: nowrap;
 }
 
 /* Narrow columns: shrink to fit content */
@@ -358,6 +359,7 @@
 
 .kealoa-clues-table .kealoa-clue-text {
     font-style: italic;
+    white-space: normal;
 }
 
 .kealoa-clues-table .kealoa-guesser-col {
@@ -1065,10 +1067,15 @@
         width: auto;
     }
 
-    /* Puzzle tables: allow wrapping */
+    /* Puzzle tables: allow wrapping (except clues table, which scrolls) */
     .kealoa-puzzle-view .kealoa-table th,
     .kealoa-puzzle-view .kealoa-table td {
         white-space: normal;
+    }
+
+    .kealoa-puzzle-view .kealoa-clues-table th,
+    .kealoa-puzzle-view .kealoa-clues-table td {
+        white-space: nowrap;
     }
 
     /* Chart container: shorter on mobile */
@@ -1102,6 +1109,7 @@
     .kealoa-clues-table th,
     .kealoa-clues-table td {
         padding: 5px 3px;
+        white-space: nowrap;
     }
 
     .kealoa-clues-table .kealoa-guesser-col {
