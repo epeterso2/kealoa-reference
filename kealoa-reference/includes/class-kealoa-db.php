@@ -2638,18 +2638,20 @@ class Kealoa_DB {
     public function get_clue_giver_stats_by_day(int $person_id): array {
         $sql = $this->wpdb->prepare(
             "SELECT
-                DAYOFWEEK(r.round_date) as day_of_week,
+                DAYOFWEEK(pz.publication_date) as day_of_week,
                 COUNT(DISTINCT r.id) as round_count,
                 COUNT(DISTINCT c.id) as clue_count,
                 COUNT(CASE WHEN grg.id IS NOT NULL THEN g.id END) as total_guesses,
                 COALESCE(SUM(CASE WHEN grg.id IS NOT NULL THEN g.is_correct END), 0) as correct_guesses
             FROM {$this->rounds_table} r
             LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
+            LEFT JOIN {$this->puzzles_table} pz ON pz.id = c.puzzle_id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
             LEFT JOIN {$this->round_guessers_table} grg ON grg.round_id = r.id AND grg.person_id = g.guesser_person_id
             WHERE r.clue_giver_id = %d
-            GROUP BY DAYOFWEEK(r.round_date)
-            ORDER BY MOD(DAYOFWEEK(r.round_date) + 5, 7) ASC",
+              AND pz.publication_date IS NOT NULL
+            GROUP BY DAYOFWEEK(pz.publication_date)
+            ORDER BY MOD(DAYOFWEEK(pz.publication_date) + 5, 7) ASC",
             $person_id
         );
 
