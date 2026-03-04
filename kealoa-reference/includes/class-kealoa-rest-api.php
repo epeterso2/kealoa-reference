@@ -260,6 +260,7 @@ class Kealoa_REST_API {
             $solutions = $bulk_solutions_map[(int) $r->id] ?? [];
             return [
                 'id'             => (int) $r->id,
+                'game_number'    => (int) ($r->game_number ?? $r->id),
                 'round_date'     => $r->round_date,
                 'round_number'   => (int) ($r->round_number ?? 1),
                 'episode_number' => (int) ($r->episode_number ?? 0),
@@ -332,6 +333,7 @@ class Kealoa_REST_API {
 
         return new WP_REST_Response([
             'id'              => (int) $round->id,
+            'game_number'     => (int) ($round->game_number ?? $round->id),
             'round_date'      => $round->round_date,
             'round_number'    => (int) ($round->round_number ?? 1),
             'episode_number'  => (int) ($round->episode_number ?? 0),

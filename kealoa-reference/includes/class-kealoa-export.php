@@ -210,7 +210,7 @@ class Kealoa_Export {
      */
     private function write_rounds($output): void {
         fputcsv($output, [
-            'round_date', 'round_number', 'episode_number', 'episode_id',
+            'game_number', 'round_date', 'round_number', 'episode_number', 'episode_id',
             'episode_url', 'episode_start_seconds', 'clue_giver',
             'guessers', 'solution_words', 'description', 'description2',
         ]);
@@ -225,6 +225,7 @@ class Kealoa_Export {
             $guesser_names = array_map(fn($g) => $g->full_name, $guessers);
 
             fputcsv($output, [
+                $round->game_number ?? '',
                 $round->round_date,
                 $round->round_number,
                 $round->episode_number,

@@ -206,7 +206,7 @@
 
         // Round info header
         var roundInfoChildren = [
-            el('span', { className: 'kealoa-game__round-label', textContent: 'KEALOA Round #' + roundData.round_id + ': ' + formatWordList(roundData.solution_words) }),
+            el('span', { className: 'kealoa-game__round-label', textContent: 'KEALOA Round #' + roundData.game_number + ': ' + formatWordList(roundData.solution_words) }),
             el('span', { className: 'kealoa-game__clue-counter', textContent: 'Clue ' + clueNum + ' of ' + totalClues })
         ];
         var roundInfo = el('div', { className: 'kealoa-game__round-info' }, roundInfoChildren);
@@ -406,7 +406,7 @@
         );
 
         container.appendChild(
-            el('p', { className: 'kealoa-game__results-round', textContent: 'KEALOA Round #' + roundData.round_id + ' \u2014 ' + formatWordList(roundData.solution_words) })
+            el('p', { className: 'kealoa-game__results-round', textContent: 'KEALOA Round #' + roundData.game_number + ' \u2014 ' + formatWordList(roundData.solution_words) })
         );
 
         // Scoreboard
@@ -666,7 +666,7 @@
         }
 
         var lines = [
-            'KEALOA Round #' + roundData.round_id + ' \u2014 ' + formatWordList(roundData.solution_words),
+            'KEALOA Round #' + roundData.game_number + ' \u2014 ' + formatWordList(roundData.solution_words),
             correct + '/' + total,
             grid,
             '\uD83C\uDFAE Play: ' + gameUrl

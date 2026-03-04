@@ -66,6 +66,33 @@
         });
 
         /**
+         * Handle "Insert After" confirmation for rounds
+         */
+        $(document).on('click', '.kealoa-insert-after-link', function (e) {
+            e.preventDefault();
+
+            var $link = $(this);
+            var gameNumber = $link.data('game-number');
+            var nonce = $link.data('nonce');
+
+            if (!confirm('Insert a new round after Game #' + gameNumber + '? This will shift all higher game numbers up by one.')) {
+                return;
+            }
+
+            var $form = $('<form>', {
+                method: 'POST',
+                action: ''
+            });
+
+            $form.append($('<input>', { type: 'hidden', name: 'kealoa_action', value: 'insert_round_after' }));
+            $form.append($('<input>', { type: 'hidden', name: 'game_number', value: gameNumber }));
+            $form.append($('<input>', { type: 'hidden', name: 'kealoa_nonce', value: nonce }));
+
+            $('body').append($form);
+            $form.submit();
+        });
+
+        /**
          * Auto-uppercase solution words input
          */
         $('#solution_words').on('blur', function () {

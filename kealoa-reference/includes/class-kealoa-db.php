@@ -863,28 +863,40 @@ class Kealoa_DB {
      * Create a round
      */
     public function create_round(array $data): int|false {
+        $insert_data = [
+            'round_date' => sanitize_text_field($data['round_date']),
+            'round_number' => (int) ($data['round_number'] ?? 1),
+            'episode_number' => (int) $data['episode_number'],
+            'episode_id' => isset($data['episode_id']) && $data['episode_id']
+                ? (int) $data['episode_id']
+                : null,
+            'episode_url' => isset($data['episode_url']) && $data['episode_url']
+                ? esc_url_raw($data['episode_url'])
+                : null,
+            'episode_start_seconds' => (int) ($data['episode_start_seconds'] ?? 0),
+            'clue_giver_id' => (int) $data['clue_giver_id'],
+            'description' => isset($data['description'])
+                ? sanitize_textarea_field($data['description'])
+                : null,
+            'description2' => isset($data['description2'])
+                ? sanitize_textarea_field($data['description2'])
+                : null,
+        ];
+        $format = ['%s', '%d', '%d', '%d', '%s', '%d', '%d', '%s', '%s'];
+
+        // Auto-assign next game_number unless explicitly provided
+        if (isset($data['game_number']) && $data['game_number'] !== '' && $data['game_number'] !== null) {
+            $insert_data['game_number'] = (int) $data['game_number'];
+            $format[] = '%d';
+        } else {
+            $insert_data['game_number'] = $this->get_next_game_number();
+            $format[] = '%d';
+        }
+
         $result = $this->wpdb->insert(
             $this->rounds_table,
-            [
-                'round_date' => sanitize_text_field($data['round_date']),
-                'round_number' => (int) ($data['round_number'] ?? 1),
-                'episode_number' => (int) $data['episode_number'],
-                'episode_id' => isset($data['episode_id']) && $data['episode_id']
-                    ? (int) $data['episode_id']
-                    : null,
-                'episode_url' => isset($data['episode_url']) && $data['episode_url']
-                    ? esc_url_raw($data['episode_url'])
-                    : null,
-                'episode_start_seconds' => (int) ($data['episode_start_seconds'] ?? 0),
-                'clue_giver_id' => (int) $data['clue_giver_id'],
-                'description' => isset($data['description'])
-                    ? sanitize_textarea_field($data['description'])
-                    : null,
-                'description2' => isset($data['description2'])
-                    ? sanitize_textarea_field($data['description2'])
-                    : null,
-            ],
-            ['%s', '%d', '%d', '%d', '%s', '%d', '%d', '%s', '%s']
+            $insert_data,
+            $format
         );
 
         return $result ? $this->wpdb->insert_id : false;
@@ -897,6 +909,10 @@ class Kealoa_DB {
         $update_data = [];
         $format = [];
 
+        if (isset($data['game_number'])) {
+            $update_data['game_number'] = (int) $data['game_number'];
+            $format[] = '%d';
+        }
         if (isset($data['round_date'])) {
             $update_data['round_date'] = sanitize_text_field($data['round_date']);
             $format[] = '%s';
@@ -959,8 +975,16 @@ class Kealoa_DB {
 
     /**
      * Delete a round
+     *
+     * Removes the round and all related data (clues, guesses, solutions,
+     * guessers). If the round has a game_number, decrements game_number
+     * for all rounds above the deleted one to preserve continuity.
      */
     public function delete_round(int $id): bool {
+        // Capture game_number before deletion
+        $round = $this->get_round($id);
+        $game_number = $round ? (int) ($round->game_number ?? 0) : 0;
+
         // Delete related data
         $clue_ids = $this->wpdb->get_col(
             $this->wpdb->prepare("SELECT id FROM {$this->clues_table} WHERE round_id = %d", $id)
@@ -986,7 +1010,49 @@ class Kealoa_DB {
             ['%d']
         );
 
+        // Close the gap: decrement game_number for all rounds above the deleted one
+        if ($result !== false && $game_number > 0) {
+            $this->wpdb->query(
+                $this->wpdb->prepare(
+                    "UPDATE {$this->rounds_table} SET game_number = game_number - 1 WHERE game_number > %d ORDER BY game_number ASC",
+                    $game_number
+                )
+            );
+        }
+
         return $result !== false;
+    }
+
+    /**
+     * Get the next available game_number (MAX + 1).
+     */
+    public function get_next_game_number(): int {
+        $max = (int) $this->wpdb->get_var(
+            "SELECT COALESCE(MAX(game_number), 0) FROM {$this->rounds_table}"
+        );
+        return $max + 1;
+    }
+
+    /**
+     * Insert a round after a given game_number.
+     *
+     * Increments all game_numbers above the target to open a slot,
+     * then creates a new empty round at game_number = $after + 1.
+     *
+     * @param int $after The game_number after which the new round is inserted.
+     * @return int|false The new round ID, or false on failure.
+     */
+    public function insert_round_after_game_number(int $after): int|false {
+        // Shift all rounds with game_number > $after up by 1
+        $this->wpdb->query(
+            $this->wpdb->prepare(
+                "UPDATE {$this->rounds_table} SET game_number = game_number + 1 WHERE game_number > %d ORDER BY game_number DESC",
+                $after
+            )
+        );
+
+        // The new round gets game_number = $after + 1
+        return $after + 1;
     }
 
     /**
@@ -3457,14 +3523,28 @@ class Kealoa_DB {
             }
         }
 
-        // Bulk-fetch solutions for all matched rounds, then build results
+        // Bulk-fetch solutions and game_numbers for all matched rounds, then build results
         $bulk_solutions = !empty($round_id_order) ? $this->get_round_solutions_bulk($round_id_order) : [];
+        $game_numbers = [];
+        if (!empty($round_id_order)) {
+            $placeholders = implode(',', array_fill(0, count($round_id_order), '%d'));
+            $rows = $this->wpdb->get_results(
+                $this->wpdb->prepare(
+                    "SELECT id, game_number FROM {$this->rounds_table} WHERE id IN ($placeholders)",
+                    ...$round_id_order
+                )
+            );
+            foreach ($rows as $row) {
+                $game_numbers[(int) $row->id] = (int) $row->game_number;
+            }
+        }
         foreach ($round_id_order as $rid) {
             $solutions = $bulk_solutions[$rid] ?? [];
             $words = array_map(fn($s) => strtoupper($s->word), $solutions);
+            $gn = $game_numbers[$rid] ?? $rid;
             $results[] = (object) [
                 'type' => 'round',
-                'name' => 'KEALOA #' . $rid . ': ' . implode(', ', $words),
+                'name' => 'KEALOA #' . $gn . ': ' . implode(', ', $words),
                 'url'  => home_url('/kealoa/round/' . $rid . '/'),
             ];
         }

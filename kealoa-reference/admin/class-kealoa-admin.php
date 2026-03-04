@@ -337,6 +337,7 @@ class Kealoa_Admin {
             'create_round' => $this->handle_create_round(),
             'update_round' => $this->handle_update_round(),
             'delete_round' => $this->handle_delete_round(),
+            'insert_round_after' => $this->handle_insert_round_after(),
             'create_clue' => $this->handle_create_clue(),
             'update_clue' => $this->handle_update_clue(),
             'delete_clue' => $this->handle_delete_clue(),
@@ -1324,7 +1325,7 @@ class Kealoa_Admin {
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
-                    <th><?php esc_html_e('ID', 'kealoa-reference'); ?></th>
+                    <th><?php esc_html_e('Game #', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Round #', 'kealoa-reference'); ?></th>
                     <th><?php esc_html_e('Episode', 'kealoa-reference'); ?></th>
@@ -1351,7 +1352,7 @@ class Kealoa_Admin {
                         $clue_count = $bulk_clue_counts[(int) $round->id] ?? 0;
                         ?>
                         <tr>
-                            <td><?php echo esc_html($round->id); ?></td>
+                            <td><?php echo esc_html($round->game_number ?? $round->id); ?></td>
                             <td><?php echo esc_html(Kealoa_Formatter::format_date($round->round_date)); ?></td>
                             <td><?php echo esc_html($round->round_number ?? 1); ?></td>
                             <td><?php echo Kealoa_Formatter::format_episode_link((int) $round->episode_number, $round->episode_url ?? null); ?></td>
@@ -1367,6 +1368,11 @@ class Kealoa_Admin {
                                 </a> |
                                 <a href="<?php echo esc_url(home_url('/kealoa/round/' . $round->id . '/')); ?>" target="_blank">
                                     <?php esc_html_e('View', 'kealoa-reference'); ?>
+                                </a> |
+                                <a href="#" class="kealoa-insert-after-link"
+                                   data-game-number="<?php echo esc_attr($round->game_number ?? $round->id); ?>"
+                                   data-nonce="<?php echo wp_create_nonce('kealoa_admin_action'); ?>">
+                                    <?php esc_html_e('Insert After', 'kealoa-reference'); ?>
                                 </a> |
                                 <a href="#" class="kealoa-delete-link"
                                    data-type="round"
@@ -1437,6 +1443,20 @@ class Kealoa_Admin {
             <?php endif; ?>
 
             <table class="form-table">
+                <tr>
+                    <th><label for="game_number"><?php esc_html_e('Game Number', 'kealoa-reference'); ?></label></th>
+                    <td>
+                        <?php
+                        $game_number_value = $round->game_number
+                            ?? ($_GET['game_number'] ?? '');
+                        ?>
+                        <input type="number" name="game_number" id="game_number" min="1"
+                               value="<?php echo esc_attr($game_number_value); ?>" />
+                        <p class="description">
+                            <?php esc_html_e('The sequential game number displayed to users. Auto-assigned if left blank when creating.', 'kealoa-reference'); ?>
+                        </p>
+                    </td>
+                </tr>
                 <tr>
                     <th><label for="round_date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?> *</label></th>
                     <td>
@@ -2091,6 +2111,7 @@ class Kealoa_Admin {
             'clue_giver_id' => $_POST['clue_giver_id'] ?? 0,
             'description' => $_POST['description'] ?? null,
             'description2' => $_POST['description2'] ?? null,
+            'game_number' => !empty($_POST['game_number']) ? (int) $_POST['game_number'] : null,
         ]);
 
         if ($id) {
@@ -2130,6 +2151,7 @@ class Kealoa_Admin {
             'clue_giver_id' => $_POST['clue_giver_id'] ?? 0,
             'description' => $_POST['description'] ?? null,
             'description2' => $_POST['description2'] ?? null,
+            'game_number' => (int) ($_POST['game_number'] ?? 0),
         ]);
 
         // Set solution words
@@ -2160,6 +2182,37 @@ class Kealoa_Admin {
         $id = (int) ($_POST['id'] ?? 0);
         $this->db->delete_round($id);
         $this->redirect_with_message('kealoa-rounds', 'Round deleted.');
+    }
+
+    /**
+     * Handle insert round after a given game_number.
+     *
+     * Shifts all rounds with a higher game_number up by one,
+     * then redirects to the "Add New Round" form with the new
+     * game_number pre-filled.
+     */
+    private function handle_insert_round_after(): void {
+        $game_number = (int) ($_POST['game_number'] ?? 0);
+
+        if ($game_number < 1) {
+            $this->redirect_with_message('kealoa-rounds', 'Invalid game number.', 'error');
+            return;
+        }
+
+        $new_game_number = $this->db->insert_round_after_game_number($game_number);
+
+        if ($new_game_number === false) {
+            $this->redirect_with_message('kealoa-rounds', 'Failed to insert round.', 'error');
+            return;
+        }
+
+        // Redirect to the Add New Round form with the game_number pre-filled
+        $this->redirect_with_message(
+            'kealoa-rounds',
+            sprintf('Game numbers shifted. Fill in the new round details for Game #%d.', $new_game_number),
+            'success',
+            ['action' => 'add', 'game_number' => $new_game_number]
+        );
     }
 
     /**

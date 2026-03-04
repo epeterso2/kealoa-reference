@@ -44,6 +44,7 @@ class Kealoa_Activator {
         }
 
         self::create_tables();
+        self::backfill_game_numbers();
         self::set_default_options();
 
         // Store the database version
@@ -117,6 +118,7 @@ class Kealoa_Activator {
         // SQL for rounds table
         $sql_rounds = "CREATE TABLE {$rounds_table} (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            game_number int(10) UNSIGNED DEFAULT NULL,
             round_date date NOT NULL,
             round_number tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
             episode_number int(10) UNSIGNED NOT NULL,
@@ -129,6 +131,7 @@ class Kealoa_Activator {
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
+            UNIQUE KEY idx_game_number (game_number),
             UNIQUE KEY idx_round_date_number (round_date, round_number),
             KEY idx_episode_number (episode_number),
             KEY idx_episode_id (episode_id),
@@ -378,6 +381,48 @@ class Kealoa_Activator {
         // --- Step 6: Drop constructors table ---
         if ($constructors_exists) {
             $wpdb->query("DROP TABLE IF EXISTS {$constructors_table}");
+        }
+    }
+
+    /**
+     * Back-fill the game_number column for existing rows that lack one.
+     *
+     * Assigns sequential numbers (1, 2, 3 …) in chronological order
+     * (round_date ASC, round_number ASC, id ASC). Runs only once;
+     * subsequent activations are a no-op because all rows already
+     * have a value.
+     */
+    private static function backfill_game_numbers(): void {
+        global $wpdb;
+        $rounds_table = $wpdb->prefix . 'kealoa_rounds';
+
+        // Check whether the column exists yet
+        $cols = $wpdb->get_col("SHOW COLUMNS FROM {$rounds_table}", 0);
+        if (!in_array('game_number', $cols, true)) {
+            return;
+        }
+
+        $needs_backfill = (int) $wpdb->get_var(
+            "SELECT COUNT(*) FROM {$rounds_table} WHERE game_number IS NULL"
+        );
+        if ($needs_backfill === 0) {
+            return;
+        }
+
+        // Assign sequential game_numbers ordered chronologically
+        $ids = $wpdb->get_col(
+            "SELECT id FROM {$rounds_table} ORDER BY round_date ASC, round_number ASC, id ASC"
+        );
+        $game_num = 1;
+        foreach ($ids as $id) {
+            $wpdb->update(
+                $rounds_table,
+                ['game_number' => $game_num],
+                ['id' => (int) $id],
+                ['%d'],
+                ['%d']
+            );
+            $game_num++;
         }
     }
 
