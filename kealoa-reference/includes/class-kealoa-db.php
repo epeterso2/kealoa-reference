@@ -2894,10 +2894,15 @@ class Kealoa_DB {
     }
 
     /**
-     * Get longest correct and incorrect clue-giving streaks for a person
+     * Get all clue-giving streaks for a person
      *
      * A clue is considered "correct" if at least one guesser answered it correctly.
      * Clues are ordered chronologically by round date, round number, and clue number.
+     *
+     * Returns an object with:
+     *   - best_correct_streak (int)
+     *   - best_incorrect_streak (int)
+     *   - streaks (array of objects with type, length, round_ids, start_date, end_date)
      */
     public function get_clue_giver_streaks(int $person_id): object {
         $sql = $this->wpdb->prepare(
@@ -2905,6 +2910,7 @@ class Kealoa_DB {
                 c.id,
                 c.round_id,
                 c.clue_number,
+                r.round_date,
                 COALESCE(SUM(CASE WHEN grg.id IS NOT NULL THEN g.is_correct END), 0) as correct_count,
                 COUNT(CASE WHEN grg.id IS NOT NULL THEN g.id END) as guess_count
             FROM {$this->rounds_table} r
@@ -2921,41 +2927,68 @@ class Kealoa_DB {
 
         $best_correct   = 0;
         $best_incorrect = 0;
-        $correct_streak   = 0;
-        $incorrect_streak = 0;
-        $correct_round_ids   = [];
-        $incorrect_round_ids = [];
-        $best_correct_round_ids   = [];
-        $best_incorrect_round_ids = [];
+        $all_streaks    = [];
+
+        // Current streak tracking
+        $current_type   = null;   // 'correct' or 'incorrect'
+        $current_length = 0;
+        $current_round_ids  = [];
+        $current_start_date = null;
+        $current_end_date   = null;
+
+        $finish_streak = function () use (&$all_streaks, &$current_type, &$current_length, &$current_round_ids, &$current_start_date, &$current_end_date) {
+            if ($current_type !== null && $current_length >= 2) {
+                $all_streaks[] = (object) [
+                    'type'       => $current_type,
+                    'length'     => $current_length,
+                    'round_ids'  => array_keys($current_round_ids),
+                    'start_date' => $current_start_date,
+                    'end_date'   => $current_end_date,
+                ];
+            }
+        };
 
         foreach ($rows as $row) {
-            $rid = (int) $row->round_id;
-            if ((int) $row->correct_count > 0) {
-                $correct_streak++;
-                $correct_round_ids[$rid] = true;
-                $incorrect_streak = 0;
-                $incorrect_round_ids = [];
-                if ($correct_streak > $best_correct) {
-                    $best_correct = $correct_streak;
-                    $best_correct_round_ids = array_keys($correct_round_ids);
-                }
+            $rid  = (int) $row->round_id;
+            $date = $row->round_date;
+            $is_correct = (int) $row->correct_count > 0;
+            $type = $is_correct ? 'correct' : 'incorrect';
+
+            if ($type === $current_type) {
+                // Continue current streak
+                $current_length++;
+                $current_round_ids[$rid] = true;
+                $current_end_date = $date;
             } else {
-                $incorrect_streak++;
-                $incorrect_round_ids[$rid] = true;
-                $correct_streak = 0;
-                $correct_round_ids = [];
-                if ($incorrect_streak > $best_incorrect) {
-                    $best_incorrect = $incorrect_streak;
-                    $best_incorrect_round_ids = array_keys($incorrect_round_ids);
-                }
+                // Finish previous streak, start new one
+                $finish_streak();
+                $current_type   = $type;
+                $current_length = 1;
+                $current_round_ids  = [$rid => true];
+                $current_start_date = $date;
+                $current_end_date   = $date;
+            }
+
+            if ($is_correct && $current_length > $best_correct) {
+                $best_correct = $current_length;
+            }
+            if (!$is_correct && $current_length > $best_incorrect) {
+                $best_incorrect = $current_length;
             }
         }
 
+        // Finish the last streak
+        $finish_streak();
+
+        // Sort streaks by length descending
+        usort($all_streaks, function ($a, $b) {
+            return $b->length <=> $a->length;
+        });
+
         return (object) [
-            'best_correct_streak'          => $best_correct,
-            'best_incorrect_streak'        => $best_incorrect,
-            'best_correct_streak_rounds'   => $best_correct_round_ids,
-            'best_incorrect_streak_rounds' => $best_incorrect_round_ids,
+            'best_correct_streak'   => $best_correct,
+            'best_incorrect_streak' => $best_incorrect,
+            'streaks'               => $all_streaks,
         ];
     }
 
