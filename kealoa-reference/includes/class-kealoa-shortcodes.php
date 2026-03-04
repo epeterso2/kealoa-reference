@@ -2358,6 +2358,7 @@ class Kealoa_Shortcodes {
                     <div class="kealoa-tab-nav">
                         <button class="kealoa-tab-button active" data-tab="host-rounds"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></button>
                         <button class="kealoa-tab-button" data-tab="host-stats"><?php esc_html_e('Stats', 'kealoa-reference'); ?></button>
+                        <button class="kealoa-tab-button" data-tab="host-streaks"><?php esc_html_e('Streaks', 'kealoa-reference'); ?></button>
                     </div>
 
                 <div class="kealoa-tab-panel" data-tab="host-stats">
@@ -2395,58 +2396,6 @@ class Kealoa_Shortcodes {
                                 ?></span>
                                 <span class="kealoa-stat-label"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></span>
                             </div>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-
-                    <?php if ($clue_giver_streaks && !empty($clue_giver_streaks->streaks)): ?>
-                    <div class="kealoa-clue-giver-streaks">
-                        <h2><?php esc_html_e('Streaks', 'kealoa-reference'); ?></h2>
-
-                        <div class="kealoa-filter-controls" data-target="kealoa-person-cg-streaks-table">
-                            <div class="kealoa-filter-row">
-                                <div class="kealoa-filter-group">
-                                    <label for="kealoa-pcgs-type"><?php esc_html_e('Type', 'kealoa-reference'); ?></label>
-                                    <select id="kealoa-pcgs-type" class="kealoa-filter-input" data-filter="exact" data-col="1">
-                                        <option value=""><?php esc_html_e('All', 'kealoa-reference'); ?></option>
-                                        <option value="Correct"><?php esc_html_e('Correct', 'kealoa-reference'); ?></option>
-                                        <option value="Incorrect"><?php esc_html_e('Incorrect', 'kealoa-reference'); ?></option>
-                                    </select>
-                                </div>
-                                <div class="kealoa-filter-group">
-                                    <label for="kealoa-pcgs-min-length"><?php esc_html_e('Min Length', 'kealoa-reference'); ?></label>
-                                    <input type="number" id="kealoa-pcgs-min-length" class="kealoa-filter-input" data-filter="min" data-col="0" min="2" placeholder="2">
-                                </div>
-                                <div class="kealoa-filter-group kealoa-filter-actions">
-                                    <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
-                                    <span class="kealoa-filter-count"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="kealoa-table-scroll">
-                        <table class="kealoa-table" id="kealoa-person-cg-streaks-table">
-                            <thead>
-                                <tr>
-                                    <th data-sort="number" class="sorted desc"><?php esc_html_e('Length', 'kealoa-reference'); ?></th>
-                                    <th data-sort="text"><?php esc_html_e('Type', 'kealoa-reference'); ?></th>
-                                    <th data-sort="date"><?php esc_html_e('Start', 'kealoa-reference'); ?></th>
-                                    <th data-sort="date"><?php esc_html_e('End', 'kealoa-reference'); ?></th>
-                                    <th><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($clue_giver_streaks->streaks as $streak): ?>
-                                <tr>
-                                    <td data-value="<?php echo esc_attr($streak->length); ?>"><?php echo esc_html(number_format_i18n($streak->length)); ?></td>
-                                    <td><?php echo esc_html($streak->type === 'correct' ? __('Correct', 'kealoa-reference') : __('Incorrect', 'kealoa-reference')); ?></td>
-                                    <td data-value="<?php echo esc_attr($streak->start_date); ?>"><?php echo esc_html(Kealoa_Formatter::format_date($streak->start_date)); ?></td>
-                                    <td data-value="<?php echo esc_attr($streak->end_date); ?>"><?php echo esc_html(Kealoa_Formatter::format_date($streak->end_date)); ?></td>
-                                    <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_cg_picker_json($streak->round_ids); ?>"><?php echo esc_html(number_format_i18n(count($streak->round_ids))); ?></a></td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
                         </div>
                     </div>
                     <?php endif; ?>
@@ -2598,6 +2547,64 @@ class Kealoa_Shortcodes {
                     <?php endif; ?>
 
                 </div><!-- end host-stats sub-tab -->
+
+                <div class="kealoa-tab-panel" data-tab="host-streaks">
+
+                    <?php if ($clue_giver_streaks && !empty($clue_giver_streaks->streaks)): ?>
+                    <div class="kealoa-clue-giver-streaks">
+                        <h2><?php esc_html_e('Streaks', 'kealoa-reference'); ?></h2>
+
+                        <div class="kealoa-filter-controls" data-target="kealoa-person-cg-streaks-table">
+                            <div class="kealoa-filter-row">
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-pcgs-type"><?php esc_html_e('Type', 'kealoa-reference'); ?></label>
+                                    <select id="kealoa-pcgs-type" class="kealoa-filter-input" data-filter="exact" data-col="1">
+                                        <option value=""><?php esc_html_e('All', 'kealoa-reference'); ?></option>
+                                        <option value="Correct"><?php esc_html_e('Correct', 'kealoa-reference'); ?></option>
+                                        <option value="Incorrect"><?php esc_html_e('Incorrect', 'kealoa-reference'); ?></option>
+                                    </select>
+                                </div>
+                                <div class="kealoa-filter-group">
+                                    <label for="kealoa-pcgs-min-length"><?php esc_html_e('Min Length', 'kealoa-reference'); ?></label>
+                                    <input type="number" id="kealoa-pcgs-min-length" class="kealoa-filter-input" data-filter="min" data-col="0" min="2" placeholder="2">
+                                </div>
+                                <div class="kealoa-filter-group kealoa-filter-actions">
+                                    <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                                    <span class="kealoa-filter-count"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="kealoa-table-scroll">
+                        <table class="kealoa-table" id="kealoa-person-cg-streaks-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="number" class="sorted desc"><?php esc_html_e('Length', 'kealoa-reference'); ?></th>
+                                    <th data-sort="text"><?php esc_html_e('Type', 'kealoa-reference'); ?></th>
+                                    <th data-sort="date"><?php esc_html_e('Start', 'kealoa-reference'); ?></th>
+                                    <th data-sort="date"><?php esc_html_e('End', 'kealoa-reference'); ?></th>
+                                    <th><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($clue_giver_streaks->streaks as $streak): ?>
+                                <tr>
+                                    <td data-value="<?php echo esc_attr($streak->length); ?>"><?php echo esc_html(number_format_i18n($streak->length)); ?></td>
+                                    <td><?php echo esc_html($streak->type === 'correct' ? __('Correct', 'kealoa-reference') : __('Incorrect', 'kealoa-reference')); ?></td>
+                                    <td data-value="<?php echo esc_attr($streak->start_date); ?>"><?php echo esc_html(Kealoa_Formatter::format_date($streak->start_date)); ?></td>
+                                    <td data-value="<?php echo esc_attr($streak->end_date); ?>"><?php echo esc_html(Kealoa_Formatter::format_date($streak->end_date)); ?></td>
+                                    <td><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_cg_picker_json($streak->round_ids); ?>"><?php echo esc_html(number_format_i18n(count($streak->round_ids))); ?></a></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <p><?php esc_html_e('No streaks of 2 or more clues found.', 'kealoa-reference'); ?></p>
+                    <?php endif; ?>
+
+                </div><!-- end host-streaks sub-tab -->
 
                 <div class="kealoa-tab-panel active" data-tab="host-rounds">
 
