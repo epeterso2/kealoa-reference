@@ -1650,6 +1650,17 @@ class Kealoa_DB {
         }
         $in = $this->ids_in_clause($round_ids);
 
+        // Get the number of solution words per round
+        $sol_sql = "SELECT round_id, COUNT(*) as word_count
+                    FROM {$this->round_solutions_table}
+                    WHERE round_id IN ({$in})
+                    GROUP BY round_id";
+        $sol_rows = $this->wpdb->get_results($sol_sql);
+        $solution_counts = [];
+        foreach ($sol_rows as $sr) {
+            $solution_counts[(int) $sr->round_id] = (int) $sr->word_count;
+        }
+
         // Count how many clues have each correct_answer, per round
         $sql = "SELECT round_id, correct_answer, COUNT(*) as cnt
                 FROM {$this->clues_table}
@@ -1665,7 +1676,13 @@ class Kealoa_DB {
 
         // Compute Pielou's Evenness per round
         foreach ($counts_by_round as $rid => $counts) {
-            $s_count = count($counts);
+            // Use solution word count (includes words with zero clues)
+            $s_count = $solution_counts[$rid] ?? count($counts);
+            // Add zero-count entries for solution words not used as clue answers
+            $missing = $s_count - count($counts);
+            for ($i = 0; $i < $missing; $i++) {
+                $counts[] = 0;
+            }
             if ($s_count <= 1) {
                 $map[$rid] = 100.0;
                 continue;

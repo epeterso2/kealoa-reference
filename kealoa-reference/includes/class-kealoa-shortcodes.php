@@ -689,13 +689,20 @@ class Kealoa_Shortcodes {
                     </p>
                     <?php
                     // Pielou's Evenness Index: J' = H' / ln(S), scaled to 0-100%
-                    $s_count = count($answer_counts);
+                    // S = number of solution words (from round_solutions), not just those used as clue answers
+                    $s_count = count($solutions);
                     if ($s_count <= 1) {
                         $evenness_pct = 100.0;
                     } else {
-                        $n_total = array_sum($answer_counts);
+                        // Include solution words with zero clues in the distribution
+                        $full_counts = [];
+                        foreach ($solutions as $s) {
+                            $word = strtoupper($s->word);
+                            $full_counts[$word] = $answer_counts[$word] ?? 0;
+                        }
+                        $n_total = array_sum($full_counts);
                         $h_prime = 0.0;
-                        foreach ($answer_counts as $count) {
+                        foreach ($full_counts as $count) {
                             $p_i = $count / $n_total;
                             if ($p_i > 0) {
                                 $h_prime -= $p_i * log($p_i);
