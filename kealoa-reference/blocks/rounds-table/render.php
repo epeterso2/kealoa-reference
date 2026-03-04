@@ -18,6 +18,6 @@ if (!defined('ABSPATH')) {
 $shortcodes = new Kealoa_Shortcodes();
 
 echo $shortcodes->render_rounds_table([
-    'limit' => $attributes['limit'] ?? 50,
+    'limit' => $attributes['limit'] ?? 0,
     'order' => $attributes['order'] ?? 'DESC',
 ]);
