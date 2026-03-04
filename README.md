@@ -153,7 +153,7 @@ The plugin registers three custom rewrite rules. Name-based routes use underscor
 
 | URL pattern | Description |
 |---|---|
-| `/kealoa/round/{id}/` | Round detail page |
+| `/kealoa/round/{game_number}/` | Round detail page |
 | `/kealoa/person/{name}/` | Person profile page |
 | `/kealoa/puzzle/{YYYY-MM-DD}/` | Puzzle detail page |
 
@@ -424,7 +424,7 @@ A custom `WP_Sitemaps_Provider` named `kealoa` registers three object subtypes:
 
 | Subtype | URL pattern |
 |---|---|
-| `rounds` | `/kealoa/round/{id}/` |
+| `rounds` | `/kealoa/round/{game_number}/` |
 | `persons` | `/kealoa/person/{name}/` |
 | `puzzles` | `/kealoa/puzzle/{date}/` |
 

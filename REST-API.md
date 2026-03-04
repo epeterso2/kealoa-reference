@@ -3,7 +3,7 @@
 Read-only REST API for KEALOA Reference data.
 
 **Base URL:** `/wp-json/kealoa/v1`
-**Version:** 2.1.82
+**Version:** 2.1.83
 
 All endpoints use the `GET` method and are publicly accessible (`permission_callback: __return_true`). All responses are JSON.
 
@@ -292,8 +292,8 @@ Returns full detail for a single round, including all clues, all guesses, player
       "correct_guesses": 3
     }
   ],
-  "previous_round_id": null,
-  "next_round_id": 2,
+  "previous_game_number": null,
+  "next_game_number": 2,
   "url": "https://example.com/kealoa/round/1/"
 }
 ```

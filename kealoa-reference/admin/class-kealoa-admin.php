@@ -1369,7 +1369,7 @@ class Kealoa_Admin {
                                 <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $round->id)); ?>">
                                     <?php esc_html_e('Clues', 'kealoa-reference'); ?>
                                 </a> |
-                                <a href="<?php echo esc_url(home_url('/kealoa/round/' . $round->id . '/')); ?>" target="_blank">
+                                <a href="<?php echo esc_url(home_url('/kealoa/round/' . ($round->game_number ?? $round->id) . '/')); ?>" target="_blank">
                                     <?php esc_html_e('View', 'kealoa-reference'); ?>
                                 </a> |
                                 <a href="#" class="kealoa-insert-after-link"
@@ -1414,7 +1414,7 @@ class Kealoa_Admin {
         </a>
 
         <?php if ($is_edit): ?>
-            <a href="<?php echo esc_url(home_url('/kealoa/round/' . $id . '/')); ?>" class="button" target="_blank" rel="noopener">
+            <a href="<?php echo esc_url(home_url('/kealoa/round/' . ($round->game_number ?? $id) . '/')); ?>" class="button" target="_blank" rel="noopener">
                 <?php esc_html_e('View', 'kealoa-reference'); ?> &nearr;
             </a>
             <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $id)); ?>" class="button">
@@ -2538,6 +2538,13 @@ class Kealoa_Admin {
                 'action'      => null,
                 'columns'     => ['ID', 'Full Name'],
                 'fields'      => ['id', 'full_name'],
+            ],
+            'non_contiguous_game_numbers' => [
+                'label'       => 'Non-Contiguous Game Numbers',
+                'description' => 'Game numbers should be contiguous integers starting at 1 with no gaps or duplicates.',
+                'action'      => null,
+                'columns'     => ['Expected', 'Actual', 'Issue'],
+                'fields'      => ['expected_game_number', 'actual_game_number', 'issue'],
             ],
         ];
 

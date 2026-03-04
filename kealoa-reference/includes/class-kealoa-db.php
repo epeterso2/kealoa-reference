@@ -498,6 +498,7 @@ class Kealoa_DB {
         $sql = $this->wpdb->prepare(
             "SELECT c.*,
                 r.id as round_id,
+                r.game_number as round_game_number,
                 r.round_date,
                 r.round_number,
                 r.episode_number
@@ -656,6 +657,21 @@ class Kealoa_DB {
     }
 
     /**
+     * Get a round by game number
+     */
+    public function get_round_by_game_number(int $game_number): ?object {
+        $sql = $this->wpdb->prepare(
+            "SELECT r.*, p.full_name as clue_giver_name
+            FROM {$this->rounds_table} r
+            LEFT JOIN {$this->persons_table} p ON r.clue_giver_id = p.id
+            WHERE r.game_number = %d",
+            $game_number
+        );
+        $result = $this->wpdb->get_row($sql);
+        return $result ?: null;
+    }
+
+    /**
      * Get the previous round (by date desc, round_number desc)
      *
      * @param int         $current_round_id The current round ID.
@@ -669,7 +685,7 @@ class Kealoa_DB {
             return null;
         }
         $sql = $this->wpdb->prepare(
-            "SELECT id FROM {$this->rounds_table}
+            "SELECT id, game_number FROM {$this->rounds_table}
             WHERE (round_date < %s) OR (round_date = %s AND round_number < %d)
             ORDER BY round_date DESC, round_number DESC
             LIMIT 1",
@@ -695,7 +711,7 @@ class Kealoa_DB {
             return null;
         }
         $sql = $this->wpdb->prepare(
-            "SELECT id FROM {$this->rounds_table}
+            "SELECT id, game_number FROM {$this->rounds_table}
             WHERE (round_date > %s) OR (round_date = %s AND round_number > %d)
             ORDER BY round_date ASC, round_number ASC
             LIMIT 1",
@@ -2384,6 +2400,7 @@ class Kealoa_DB {
         $sql = $this->wpdb->prepare(
             "SELECT
                 r.id as round_id,
+                r.game_number,
                 r.round_date,
                 r.round_number,
                 r.episode_number,
@@ -2396,7 +2413,7 @@ class Kealoa_DB {
             INNER JOIN {$this->clues_table} c ON r.id = c.round_id
             LEFT JOIN {$this->guesses_table} g ON c.id = g.clue_id AND g.guesser_person_id = rg.person_id
             WHERE rg.person_id = %d
-            GROUP BY r.id, r.round_date, r.round_number, r.episode_number, r.episode_url, r.episode_start_seconds
+            GROUP BY r.id, r.game_number, r.round_date, r.round_number, r.episode_number, r.episode_url, r.episode_start_seconds
             ORDER BY r.round_date DESC, r.round_number DESC",
             $person_id
         );
@@ -2417,6 +2434,7 @@ class Kealoa_DB {
                 GROUP_CONCAT(DISTINCT con.full_name ORDER BY pc.constructor_order ASC SEPARATOR ', ') as constructor_names,
                 GROUP_CONCAT(DISTINCT con.id ORDER BY pc.constructor_order ASC) as constructor_ids,
                 GROUP_CONCAT(DISTINCT r.id ORDER BY r.round_date ASC, r.round_number ASC) as round_ids,
+                GROUP_CONCAT(DISTINCT r.game_number ORDER BY r.round_date ASC, r.round_number ASC) as round_game_numbers,
                 GROUP_CONCAT(DISTINCT r.round_date ORDER BY r.round_date ASC, r.round_number ASC) as round_dates,
                 GROUP_CONCAT(DISTINCT r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers
             FROM {$this->puzzles_table} pz
@@ -2515,6 +2533,7 @@ class Kealoa_DB {
                 pz.editor_id,
                 COALESCE(ed.full_name, '') as editor_name,
                 GROUP_CONCAT(DISTINCT r.id ORDER BY r.round_date ASC, r.round_number ASC) as round_ids,
+                GROUP_CONCAT(DISTINCT r.game_number ORDER BY r.round_date ASC, r.round_number ASC) as round_game_numbers,
                 GROUP_CONCAT(DISTINCT r.round_date ORDER BY r.round_date ASC, r.round_number ASC) as round_dates,
                 GROUP_CONCAT(DISTINCT r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers
             FROM {$this->puzzles_table} pz
@@ -2685,6 +2704,7 @@ class Kealoa_DB {
                 GROUP_CONCAT(DISTINCT con.full_name ORDER BY pc.constructor_order ASC SEPARATOR ', ') as constructor_names,
                 GROUP_CONCAT(DISTINCT con.id ORDER BY pc.constructor_order ASC) as constructor_ids,
                 GROUP_CONCAT(DISTINCT r.id ORDER BY r.round_date ASC, r.round_number ASC) as round_ids,
+                GROUP_CONCAT(DISTINCT r.game_number ORDER BY r.round_date ASC, r.round_number ASC) as round_game_numbers,
                 GROUP_CONCAT(DISTINCT r.round_date ORDER BY r.round_date ASC, r.round_number ASC) as round_dates,
                 GROUP_CONCAT(DISTINCT r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers
             FROM {$this->puzzles_table} pz
@@ -2852,6 +2872,7 @@ class Kealoa_DB {
         $sql = $this->wpdb->prepare(
             "SELECT
                 r.id as round_id,
+                r.game_number,
                 r.round_date,
                 r.round_number,
                 r.episode_number,
@@ -3042,6 +3063,7 @@ class Kealoa_DB {
                 GROUP_CONCAT(DISTINCT con.full_name ORDER BY pc.constructor_order ASC SEPARATOR ', ') as constructor_names,
                 GROUP_CONCAT(DISTINCT con.id ORDER BY pc.constructor_order ASC) as constructor_ids,
                 GROUP_CONCAT(DISTINCT r.id ORDER BY r.round_date ASC, r.round_number ASC) as round_ids,
+                GROUP_CONCAT(DISTINCT r.game_number ORDER BY r.round_date ASC, r.round_number ASC) as round_game_numbers,
                 GROUP_CONCAT(DISTINCT r.round_date ORDER BY r.round_date ASC, r.round_number ASC) as round_dates,
                 GROUP_CONCAT(DISTINCT r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers
             FROM {$this->puzzles_table} pz
@@ -3078,7 +3100,8 @@ class Kealoa_DB {
                 rd.round_count,
                 rd.round_ids,
                 rd.round_dates,
-                rd.round_numbers
+                rd.round_numbers,
+                rd.round_game_numbers
             FROM {$this->puzzles_table} pz
             LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             LEFT JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
@@ -3089,13 +3112,14 @@ class Kealoa_DB {
                     COUNT(dc.round_id) as round_count,
                     GROUP_CONCAT(dc.round_id ORDER BY r.round_date ASC, r.round_number ASC) as round_ids,
                     GROUP_CONCAT(r.round_date ORDER BY r.round_date ASC, r.round_number ASC) as round_dates,
-                    GROUP_CONCAT(r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers
+                    GROUP_CONCAT(r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers,
+                    GROUP_CONCAT(r.game_number ORDER BY r.round_date ASC, r.round_number ASC) as round_game_numbers
                 FROM (SELECT DISTINCT puzzle_id, round_id FROM {$this->clues_table}) dc
                 INNER JOIN {$this->rounds_table} r ON r.id = dc.round_id
                 GROUP BY dc.puzzle_id
                 HAVING COUNT(dc.round_id) > 1
             ) rd ON rd.puzzle_id = pz.id
-            GROUP BY pz.id, pz.publication_date, ed.full_name, ed.id, rd.round_count, rd.round_ids, rd.round_dates, rd.round_numbers
+            GROUP BY pz.id, pz.publication_date, ed.full_name, ed.id, rd.round_count, rd.round_ids, rd.round_dates, rd.round_numbers, rd.round_game_numbers
             ORDER BY rd.round_count DESC, pz.publication_date ASC";
 
         return $this->wpdb->get_results($sql) ?: [];
@@ -3604,7 +3628,7 @@ class Kealoa_DB {
             $results[] = (object) [
                 'type' => 'round',
                 'name' => 'KEALOA #' . $gn . ': ' . implode(', ', $words),
-                'url'  => home_url('/kealoa/round/' . $rid . '/'),
+                'url'  => home_url('/kealoa/round/' . $gn . '/'),
             ];
         }
 
@@ -3811,6 +3835,34 @@ class Kealoa_DB {
         );
         if ($orphan_persons) {
             $issues['orphan_persons'] = $orphan_persons;
+        }
+
+        // 18. Non-contiguous game numbers — game_number should be 1..N with no gaps
+        $game_number_issues = [];
+        $all_game_numbers = $this->wpdb->get_col(
+            "SELECT game_number FROM {$this->rounds_table} ORDER BY game_number ASC"
+        );
+        if (!empty($all_game_numbers)) {
+            $expected = 1;
+            foreach ($all_game_numbers as $gn) {
+                $gn = (int) $gn;
+                if ($gn !== $expected) {
+                    // Report the gap: we expected $expected but found $gn
+                    $game_number_issues[] = (object) [
+                        'expected_game_number' => $expected,
+                        'actual_game_number'   => $gn,
+                        'issue'                => $gn > $expected
+                            ? sprintf('Missing game number(s) %d–%d', $expected, $gn - 1)
+                            : sprintf('Duplicate or out-of-order game number %d', $gn),
+                    ];
+                    $expected = $gn + 1;
+                } else {
+                    $expected++;
+                }
+            }
+        }
+        if ($game_number_issues) {
+            $issues['non_contiguous_game_numbers'] = $game_number_issues;
         }
 
         return $issues;

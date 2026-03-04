@@ -6,7 +6,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://github.com/epeterso2/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 2.1.83
+ * Version: 2.1.84
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -33,7 +33,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '2.1.83');
+define('KEALOA_VERSION', '2.1.84');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -372,7 +372,7 @@ function kealoa_rest_game_round(WP_REST_Request $request): WP_REST_Response {
     $data = [
         'round_id'        => $round_id,
         'game_number'     => (int) ($round->game_number ?? $round_id),
-        'round_url'       => home_url('/kealoa/round/' . $round_id),
+        'round_url'       => home_url('/kealoa/round/' . (int) ($round->game_number ?? $round_id)),
         'description'     => $round->description ?? '',
         'description2'    => $round->description2 ?? '',
         'clue_giver'      => $round->clue_giver_name ?? '',
@@ -427,7 +427,7 @@ function kealoa_register_rewrite_rules(): void {
 
     add_rewrite_rule(
         '^kealoa/round/([0-9]+)/?$',
-        'index.php?kealoa_round_id=$matches[1]',
+        'index.php?kealoa_game_number=$matches[1]',
         'top'
     );
 
@@ -443,7 +443,7 @@ function kealoa_register_rewrite_rules(): void {
  */
 function kealoa_query_vars(array $vars): array {
     $vars[] = 'kealoa_person_name';
-    $vars[] = 'kealoa_round_id';
+    $vars[] = 'kealoa_game_number';
     $vars[] = 'kealoa_puzzle_date';
     return $vars;
 }
@@ -456,7 +456,7 @@ function kealoa_query_vars(array $vars): array {
  */
 function kealoa_template_redirect(): void {
     $person_name = get_query_var('kealoa_person_name');
-    $round_id = get_query_var('kealoa_round_id');
+    $game_number = get_query_var('kealoa_game_number');
     $puzzle_date = get_query_var('kealoa_puzzle_date');
 
     $title = '';
@@ -487,22 +487,22 @@ function kealoa_template_redirect(): void {
         // Store object info for admin bar
         $GLOBALS['kealoa_object_type'] = 'person';
         $GLOBALS['kealoa_object_id'] = $person->id;
-    } elseif ($round_id) {
+    } elseif ($game_number) {
         $db = new Kealoa_DB();
-        $round = $db->get_round((int) $round_id);
+        $round = $db->get_round_by_game_number((int) $game_number);
         if (!$round) {
             wp_die(__('Round not found.', 'kealoa-reference'), '', ['response' => 404]);
         }
+        $round_id = (int) $round->id;
         $shortcodes = new Kealoa_Shortcodes();
-        $solutions = $db->get_round_solutions((int) $round_id);
+        $solutions = $db->get_round_solutions($round_id);
         $solution_text = Kealoa_Formatter::format_solution_words($solutions);
-        $game_number = (int) ($round->game_number ?? $round_id);
-        $title = sprintf(__('KEALOA #%d - %s - Round', 'kealoa-reference'), $game_number, $solution_text);
-        $content = $shortcodes->render_round(['id' => (int) $round_id]);
+        $title = sprintf(__('KEALOA #%d - %s - Round', 'kealoa-reference'), (int) $game_number, $solution_text);
+        $content = $shortcodes->render_round(['id' => $round_id]);
         $is_kealoa = true;
         // Store object info for admin bar
         $GLOBALS['kealoa_object_type'] = 'round';
-        $GLOBALS['kealoa_object_id'] = (int) $round_id;
+        $GLOBALS['kealoa_object_id'] = $round_id;
     } elseif ($puzzle_date) {
         $db = new Kealoa_DB();
         $puzzle = $db->get_puzzle_by_date($puzzle_date);

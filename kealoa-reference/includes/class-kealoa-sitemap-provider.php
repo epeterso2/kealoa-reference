@@ -107,7 +107,7 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
         $urls = [];
         foreach ($rounds as $round) {
             $urls[] = [
-                'loc' => home_url('/kealoa/round/' . $round->id . '/'),
+                'loc' => home_url('/kealoa/round/' . ($round->game_number ?? $round->id) . '/'),
             ];
         }
         return $urls;

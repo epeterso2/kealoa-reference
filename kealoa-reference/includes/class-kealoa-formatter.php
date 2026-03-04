@@ -196,12 +196,12 @@ class Kealoa_Formatter {
     /**
      * Format a round date as a link to the round view
      *
-     * @param int $round_id The round ID
+     * @param int $game_number The round game number
      * @param string $date The date in Y-m-d format
      * @return string HTML link with M/D/YYYY formatted date
      */
-    public static function format_round_date_link(int $round_id, string $date): string {
-        $url = home_url('/kealoa/round/' . $round_id . '/');
+    public static function format_round_date_link(int $game_number, string $date): string {
+        $url = home_url('/kealoa/round/' . $game_number . '/');
         $formatted_date = date('n/j/Y', strtotime($date));
         
         return sprintf(
@@ -227,12 +227,12 @@ class Kealoa_Formatter {
     /**
      * Format solution words as a link to the round view
      *
-     * @param int $round_id The round ID
+     * @param int $game_number The round game number
      * @param array $solutions The solution words
      * @return string HTML link with solution words
      */
-    public static function format_solution_words_link(int $round_id, array $solutions): string {
-        $url = home_url('/kealoa/round/' . $round_id . '/');
+    public static function format_solution_words_link(int $game_number, array $solutions): string {
+        $url = home_url('/kealoa/round/' . $game_number . '/');
         $words = self::format_solution_words($solutions);
         
         return sprintf(

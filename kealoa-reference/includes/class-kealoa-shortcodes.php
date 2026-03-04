@@ -450,14 +450,14 @@ class Kealoa_Shortcodes {
                         <tr>
                             <td class="kealoa-date-cell" data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($round->round_date)) * 100 + $round_num); ?>">
                                 <?php
-                                echo Kealoa_Formatter::format_round_date_link((int) $round->id, $round->round_date);
+                                echo Kealoa_Formatter::format_round_date_link((int) $round->game_number, $round->round_date);
                                 if ($date_count > 1) {
                                     echo ' <span class="kealoa-round-number">(#' . esc_html($round_num) . ')</span>';
                                 }
                                 ?>
                             </td>
                             <td class="kealoa-solutions-cell">
-                                <?php echo Kealoa_Formatter::format_solution_words_link((int) $round->id, $solutions); ?>
+                                <?php echo Kealoa_Formatter::format_solution_words_link((int) $round->game_number, $solutions); ?>
                             </td>
                             <td data-value="<?php echo esc_attr(number_format($alt_pct, 2, '.', '')); ?>">
                                 <?php echo Kealoa_Formatter::format_percentage($alt_pct, 0); ?>
@@ -538,14 +538,14 @@ class Kealoa_Shortcodes {
                         <tr>
                             <td class="kealoa-date-cell" data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($round->round_date)) * 100 + $round_num); ?>">
                                 <?php
-                                echo Kealoa_Formatter::format_round_date_link((int) $round->id, $round->round_date);
+                                echo Kealoa_Formatter::format_round_date_link((int) $round->game_number, $round->round_date);
                                 if ($date_count > 1) {
                                     echo ' <span class="kealoa-round-number">(#' . esc_html($round_num) . ')</span>';
                                 }
                                 ?>
                             </td>
                             <td class="kealoa-solutions-cell">
-                                <?php echo Kealoa_Formatter::format_solution_words_link((int) $round->id, $solutions); ?>
+                                <?php echo Kealoa_Formatter::format_solution_words_link((int) $round->game_number, $solutions); ?>
                             </td>
                             <td class="kealoa-results-cell">
                                 <?php echo Kealoa_Formatter::format_guesser_results($guesser_results, $clue_count); ?>
@@ -911,14 +911,14 @@ class Kealoa_Shortcodes {
             <?php if ($prev_round || $next_round): ?>
             <div class="kealoa-round-nav">
                 <?php if ($prev_round): ?>
-                    <a href="<?php echo esc_url(home_url('/kealoa/round/' . (int) $prev_round->id . '/')); ?>" class="kealoa-round-nav-btn kealoa-round-nav-prev">
+                    <a href="<?php echo esc_url(home_url('/kealoa/round/' . (int) $prev_round->game_number . '/')); ?>" class="kealoa-round-nav-btn kealoa-round-nav-prev">
                         &larr; <?php esc_html_e('Previous Round', 'kealoa-reference'); ?>
                     </a>
                 <?php else: ?>
                     <span></span>
                 <?php endif; ?>
                 <?php if ($next_round): ?>
-                    <a href="<?php echo esc_url(home_url('/kealoa/round/' . (int) $next_round->id . '/')); ?>" class="kealoa-round-nav-btn kealoa-round-nav-next">
+                    <a href="<?php echo esc_url(home_url('/kealoa/round/' . (int) $next_round->game_number . '/')); ?>" class="kealoa-round-nav-btn kealoa-round-nav-next">
                         <?php esc_html_e('Next Round', 'kealoa-reference'); ?> &rarr;
                     </a>
                 <?php endif; ?>
@@ -1065,7 +1065,7 @@ class Kealoa_Shortcodes {
                 ? ((int) $cgr->correct_guesses / (int) $cgr->total_guesses) * 100
                 : 0;
             $cg_round_info[$cgr_id] = [
-                'url'   => home_url('/kealoa/round/' . $cgr_id . '/'),
+                'url'   => home_url('/kealoa/round/' . (int) $cgr->game_number . '/'),
                 'date'  => Kealoa_Formatter::format_date($cgr->round_date),
                 'words' => Kealoa_Formatter::format_solution_words($cgr_solutions),
                 'score' => round($cgr_pct, 1) . '%',
@@ -1089,7 +1089,7 @@ class Kealoa_Shortcodes {
             $rid = (int) $rh->round_id;
             $rh_solutions = $bulk_solutions_map[$rid] ?? [];
             $round_info[$rid] = [
-                'url' => home_url('/kealoa/round/' . $rh->round_id . '/'),
+                'url' => home_url('/kealoa/round/' . (int) $rh->game_number . '/'),
                 'date' => Kealoa_Formatter::format_date($rh->round_date),
                 'words' => Kealoa_Formatter::format_solution_words($rh_solutions),
                 'score' => (int) $rh->correct_count . '/' . (int) $rh->total_clues,
@@ -1497,7 +1497,7 @@ class Kealoa_Shortcodes {
                         $correct = (int) $ch->correct_count;
                         $chart_data[] = $total > 0 ? round(($correct / $total) * 100, 1) : 0;
                         $chart_words[] = $ri ? $ri['words'] : '';
-                        $chart_urls[] = $ri ? $ri['url'] : home_url('/kealoa/round/' . $rid . '/');
+                        $chart_urls[] = $ri ? $ri['url'] : home_url('/kealoa/round/' . (int) $ch->game_number . '/');
                     }
                     ?>
                     <script>
@@ -1875,6 +1875,7 @@ class Kealoa_Shortcodes {
                                 $round_ids = !empty($puzzle->round_ids) ? explode(',', $puzzle->round_ids) : [];
                                 $round_dates = !empty($puzzle->round_dates) ? explode(',', $puzzle->round_dates) : [];
                                 $round_numbers = !empty($puzzle->round_numbers) ? explode(',', $puzzle->round_numbers) : [];
+                                $round_game_numbers = !empty($puzzle->round_game_numbers) ? explode(',', $puzzle->round_game_numbers) : [];
                                 ?>
                                 <tr>
                                     <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($puzzle->publication_date)); ?></td>
@@ -1914,8 +1915,9 @@ class Kealoa_Shortcodes {
                                             for ($i = 0; $i < count($round_ids); $i++) {
                                                 $rid = (int) $round_ids[$i];
                                                 $rdate = $round_dates[$i] ?? '';
+                                                $gn = (int) ($round_game_numbers[$i] ?? $rid);
                                                 if ($rid && $rdate) {
-                                                    $round_links[] = Kealoa_Formatter::format_round_date_link($rid, $rdate);
+                                                    $round_links[] = Kealoa_Formatter::format_round_date_link($gn, $rdate);
                                                 }
                                             }
                                             echo implode('<br>', $round_links);
@@ -1932,7 +1934,8 @@ class Kealoa_Shortcodes {
                                                 $rid = (int) $round_ids[$i];
                                                 if ($rid) {
                                                     $solutions = $bulk_solutions_map[$rid] ?? [];
-                                                    $solution_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
+                                                    $gn = (int) ($round_game_numbers[$i] ?? $rid);
+                                                    $solution_links[] = Kealoa_Formatter::format_solution_words_link($gn, $solutions);
                                                 }
                                             }
                                             echo implode('<br>', $solution_links);
@@ -2315,13 +2318,13 @@ class Kealoa_Shortcodes {
                                 <tr data-year="<?php echo esc_attr(date('Y', strtotime($history->round_date))); ?>">
                                     <td data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($history->round_date)) * 100 + $history_round_num); ?>">
                                         <?php
-                                        echo Kealoa_Formatter::format_round_date_link((int) $history->round_id, $history->round_date);
+                                        echo Kealoa_Formatter::format_round_date_link((int) $history->game_number, $history->round_date);
                                         if ($history_date_count > 1) {
                                             echo ' <span class="kealoa-round-number">(#' . esc_html($history_round_num) . ')</span>';
                                         }
                                         ?>
                                     </td>
-                                    <td><?php echo Kealoa_Formatter::format_solution_words_link((int) $history->round_id, $solutions); ?></td>
+                                    <td><?php echo Kealoa_Formatter::format_solution_words_link((int) $history->game_number, $solutions); ?></td>
                                     <?php if ($has_co_players): ?>
                                     <td><?php
                                         $co = $round_co_players[(int) $history->round_id] ?? [];
@@ -2667,13 +2670,13 @@ class Kealoa_Shortcodes {
                                     <tr>
                                         <td data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($cgr->round_date)) * 100 + $cgr_round_num); ?>">
                                             <?php
-                                            echo Kealoa_Formatter::format_round_date_link($cgr_id, $cgr->round_date);
+                                            echo Kealoa_Formatter::format_round_date_link((int) $cgr->game_number, $cgr->round_date);
                                             if ($cgr_date_count > 1) {
                                                 echo ' <span class="kealoa-round-number">(#' . esc_html($cgr_round_num) . ')</span>';
                                             }
                                             ?>
                                         </td>
-                                        <td class="kealoa-solutions-cell"><?php echo Kealoa_Formatter::format_solution_words_link($cgr_id, $cgr_solutions); ?></td>
+                                        <td class="kealoa-solutions-cell"><?php echo Kealoa_Formatter::format_solution_words_link((int) $cgr->game_number, $cgr_solutions); ?></td>
                                         <td><?php
                                             if (!empty($cgr_guesser_ids)) {
                                                 $cgr_guesser_links = [];
@@ -2816,6 +2819,7 @@ class Kealoa_Shortcodes {
                                     $cp_round_ids = !empty($cpuzzle->round_ids) ? explode(',', $cpuzzle->round_ids) : [];
                                     $cp_round_dates = !empty($cpuzzle->round_dates) ? explode(',', $cpuzzle->round_dates) : [];
                                     $cp_round_numbers = !empty($cpuzzle->round_numbers) ? explode(',', $cpuzzle->round_numbers) : [];
+                                    $cp_round_game_numbers = !empty($cpuzzle->round_game_numbers) ? explode(',', $cpuzzle->round_game_numbers) : [];
                                     ?>
                                     <tr>
                                         <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($cpuzzle->publication_date)); ?></td>
@@ -2852,8 +2856,9 @@ class Kealoa_Shortcodes {
                                                 for ($i = 0; $i < count($cp_round_ids); $i++) {
                                                     $rid = (int) $cp_round_ids[$i];
                                                     $rdate = $cp_round_dates[$i] ?? '';
+                                                    $gn = (int) ($cp_round_game_numbers[$i] ?? $rid);
                                                     if ($rid && $rdate) {
-                                                        $cp_round_links[] = Kealoa_Formatter::format_round_date_link($rid, $rdate);
+                                                        $cp_round_links[] = Kealoa_Formatter::format_round_date_link($gn, $rdate);
                                                     }
                                                 }
                                                 echo implode('<br>', $cp_round_links);
@@ -2870,7 +2875,8 @@ class Kealoa_Shortcodes {
                                                     $rid = (int) $cp_round_ids[$i];
                                                     if ($rid) {
                                                         $solutions = $bulk_solutions_map[$rid] ?? [];
-                                                        $cp_sol_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
+                                                        $gn = (int) ($cp_round_game_numbers[$i] ?? $rid);
+                                                        $cp_sol_links[] = Kealoa_Formatter::format_solution_words_link($gn, $solutions);
                                                     }
                                                 }
                                                 echo implode('<br>', $cp_sol_links);
@@ -3135,6 +3141,7 @@ class Kealoa_Shortcodes {
                                     $ep_round_ids = !empty($epuzzle->round_ids) ? explode(',', $epuzzle->round_ids) : [];
                                     $ep_round_dates = !empty($epuzzle->round_dates) ? explode(',', $epuzzle->round_dates) : [];
                                     $ep_round_numbers = !empty($epuzzle->round_numbers) ? explode(',', $epuzzle->round_numbers) : [];
+                                    $ep_round_game_numbers = !empty($epuzzle->round_game_numbers) ? explode(',', $epuzzle->round_game_numbers) : [];
                                     ?>
                                     <tr>
                                         <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($epuzzle->publication_date)); ?></td>
@@ -3165,8 +3172,9 @@ class Kealoa_Shortcodes {
                                                 for ($i = 0; $i < count($ep_round_ids); $i++) {
                                                     $rid = (int) $ep_round_ids[$i];
                                                     $rdate = $ep_round_dates[$i] ?? '';
+                                                    $gn = (int) ($ep_round_game_numbers[$i] ?? $rid);
                                                     if ($rid && $rdate) {
-                                                        $ep_round_links[] = Kealoa_Formatter::format_round_date_link($rid, $rdate);
+                                                        $ep_round_links[] = Kealoa_Formatter::format_round_date_link($gn, $rdate);
                                                     }
                                                 }
                                                 echo implode('<br>', $ep_round_links);
@@ -3183,7 +3191,8 @@ class Kealoa_Shortcodes {
                                                     $rid = (int) $ep_round_ids[$i];
                                                     if ($rid) {
                                                         $solutions = $bulk_solutions_map[$rid] ?? [];
-                                                        $ep_sol_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
+                                                        $gn = (int) ($ep_round_game_numbers[$i] ?? $rid);
+                                                        $ep_sol_links[] = Kealoa_Formatter::format_solution_words_link($gn, $solutions);
                                                     }
                                                 }
                                                 echo implode('<br>', $ep_sol_links);
@@ -3399,7 +3408,7 @@ class Kealoa_Shortcodes {
             if ($round) {
                 $solutions = $bulk_solutions_map[(int) $rid] ?? [];
                 $round_info[$rid] = [
-                    'url' => home_url('/kealoa/round/' . $rid . '/'),
+                    'url' => home_url('/kealoa/round/' . (int) $round->game_number . '/'),
                     'date' => Kealoa_Formatter::format_date($round->round_date),
                     'words' => Kealoa_Formatter::format_solution_words($solutions),
                 ];
@@ -3840,6 +3849,7 @@ class Kealoa_Shortcodes {
                         $round_ids = !empty($puzzle->round_ids) ? explode(',', $puzzle->round_ids) : [];
                         $round_dates = !empty($puzzle->round_dates) ? explode(',', $puzzle->round_dates) : [];
                         $round_numbers = !empty($puzzle->round_numbers) ? explode(',', $puzzle->round_numbers) : [];
+                        $round_game_numbers = !empty($puzzle->round_game_numbers) ? explode(',', $puzzle->round_game_numbers) : [];
                         ?>
                         <tr>
                             <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($puzzle->publication_date)); ?></td>
@@ -3879,8 +3889,9 @@ class Kealoa_Shortcodes {
                                     for ($i = 0; $i < count($round_ids); $i++) {
                                         $rid = (int) $round_ids[$i];
                                         $rdate = $round_dates[$i] ?? '';
+                                        $gn = (int) ($round_game_numbers[$i] ?? $rid);
                                         if ($rid && $rdate) {
-                                            $round_links[] = Kealoa_Formatter::format_round_date_link($rid, $rdate);
+                                            $round_links[] = Kealoa_Formatter::format_round_date_link($gn, $rdate);
                                         }
                                     }
                                     echo implode('<br>', $round_links);
@@ -3897,7 +3908,8 @@ class Kealoa_Shortcodes {
                                         $rid = (int) $round_ids[$i];
                                         if ($rid) {
                                             $solutions = $bulk_puzzle_solutions_map[$rid] ?? [];
-                                            $solution_links[] = Kealoa_Formatter::format_solution_words_link($rid, $solutions);
+                                            $gn = (int) ($round_game_numbers[$i] ?? $rid);
+                                            $solution_links[] = Kealoa_Formatter::format_solution_words_link($gn, $solutions);
                                         }
                                     }
                                     echo implode('<br>', $solution_links);
@@ -3977,6 +3989,7 @@ class Kealoa_Shortcodes {
                             $round_ids         = !empty($puzzle->round_ids)         ? explode(',', $puzzle->round_ids)         : [];
                             $round_dates       = !empty($puzzle->round_dates)       ? explode(',', $puzzle->round_dates)       : [];
                             $round_numbers     = !empty($puzzle->round_numbers)     ? explode(',', $puzzle->round_numbers)     : [];
+                            $round_game_numbers = !empty($puzzle->round_game_numbers) ? explode(',', $puzzle->round_game_numbers) : [];
 
                             $round_words_parts = [];
                             $round_date_parts  = [];
@@ -3984,10 +3997,11 @@ class Kealoa_Shortcodes {
                                 $rid    = (int) $rid;
                                 $rdate  = $round_dates[$idx]  ?? '';
                                 $rnum   = $round_numbers[$idx] ?? '';
+                                $gn     = (int) ($round_game_numbers[$idx] ?? $rid);
                                 $round_words_parts[] = isset($cur_solutions_cache[$rid])
-                                    ? Kealoa_Formatter::format_solution_words_link($rid, $cur_solutions_cache[$rid])
+                                    ? Kealoa_Formatter::format_solution_words_link($gn, $cur_solutions_cache[$rid])
                                     : '';
-                                $date_cell = Kealoa_Formatter::format_round_date_link($rid, $rdate);
+                                $date_cell = Kealoa_Formatter::format_round_date_link($gn, $rdate);
                                 if (!empty($rnum) && ($cur_rounds_per_date[$rdate] ?? 1) > 1) {
                                     $date_cell .= ' <span class="kealoa-round-number">(#' . esc_html($rnum) . ')</span>';
                                 }
@@ -4062,6 +4076,7 @@ class Kealoa_Shortcodes {
                     <tbody>
                         <?php foreach ($no_puzzle_rounds as $round):
                             $rid = (int) $round->id;
+                            $gn = (int) $round->game_number;
                             $solutions = $np_solutions_map[$rid] ?? [];
                             $clue_count = $np_clue_counts_map[$rid] ?? 0;
                             $guesser_results = $np_guesser_results_map[$rid] ?? [];
@@ -4071,14 +4086,14 @@ class Kealoa_Shortcodes {
                         <tr>
                             <td class="kealoa-date-cell" data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($round->round_date)) * 100 + $round_num); ?>">
                                 <?php
-                                echo Kealoa_Formatter::format_round_date_link($rid, $round->round_date);
+                                echo Kealoa_Formatter::format_round_date_link($gn, $round->round_date);
                                 if ($date_count > 1) {
                                     echo ' <span class="kealoa-round-number">(#' . esc_html($round_num) . ')</span>';
                                 }
                                 ?>
                             </td>
                             <td class="kealoa-solutions-cell">
-                                <?php echo Kealoa_Formatter::format_solution_words_link($rid, $solutions); ?>
+                                <?php echo Kealoa_Formatter::format_solution_words_link($gn, $solutions); ?>
                             </td>
                             <td>
                                 <?php
@@ -4198,9 +4213,10 @@ class Kealoa_Shortcodes {
                 ];
             }
             $clues_by_position[$pos_key]['rounds'][] = [
-                'round_id'     => (int) $clue->round_id,
-                'round_date'   => $clue->round_date,
-                'round_number' => $clue->round_number,
+                'round_id'          => (int) $clue->round_id,
+                'round_date'        => $clue->round_date,
+                'round_number'      => $clue->round_number,
+                'round_game_number' => (int) $clue->round_game_number,
             ];
         }
         // Sort by crossword number ASC, then direction ASC (A before D)
@@ -4338,10 +4354,11 @@ class Kealoa_Shortcodes {
                                 $round_date_parts  = [];
                                 foreach ($entry['rounds'] as $er) {
                                     $rid = $er['round_id'];
+                                    $gn = $er['round_game_number'] ?? $rid;
                                     $round_words_parts[] = isset($round_solutions_cache[$rid])
-                                        ? Kealoa_Formatter::format_solution_words_link($rid, $round_solutions_cache[$rid])
+                                        ? Kealoa_Formatter::format_solution_words_link($gn, $round_solutions_cache[$rid])
                                         : '';
-                                    $date_cell = Kealoa_Formatter::format_round_date_link($rid, $er['round_date']);
+                                    $date_cell = Kealoa_Formatter::format_round_date_link($gn, $er['round_date']);
                                     if (!empty($er['round_number']) && ($rounds_per_date_cache[$er['round_date']] ?? 1) > 1) {
                                         $date_cell .= ' <span class="kealoa-round-number">(#' . esc_html($er['round_number']) . ')</span>';
                                     }

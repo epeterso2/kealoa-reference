@@ -266,7 +266,7 @@ class Kealoa_REST_API {
                 'episode_number' => (int) ($r->episode_number ?? 0),
                 'clue_giver'     => $r->clue_giver_name ?? '',
                 'solution_words' => array_map(fn($s) => $s->word, $solutions),
-                'url'            => home_url('/kealoa/round/' . $r->id . '/'),
+                'url'            => home_url('/kealoa/round/' . (int) ($r->game_number ?? $r->id) . '/'),
             ];
         }, $rounds);
 
@@ -354,9 +354,9 @@ class Kealoa_REST_API {
                 'total_guesses'   => (int) $gr->total_guesses,
                 'correct_guesses' => (int) $gr->correct_guesses,
             ], $guesser_results),
-            'previous_round_id' => $prev ? (int) $prev->id : null,
-            'next_round_id'     => $next ? (int) $next->id : null,
-            'url'               => home_url('/kealoa/round/' . $id . '/'),
+            'previous_game_number' => $prev ? (int) $prev->game_number : null,
+            'next_game_number'     => $next ? (int) $next->game_number : null,
+            'url'               => home_url('/kealoa/round/' . (int) ($round->game_number ?? $id) . '/'),
         ], 200);
     }
 
@@ -668,7 +668,7 @@ class Kealoa_REST_API {
                     'round_date'     => $clue->round_date,
                     'round_number'   => (int) ($clue->round_number ?? 1),
                     'episode_number' => (int) ($clue->episode_number ?? 0),
-                    'round_url'      => home_url('/kealoa/round/' . $rid . '/'),
+                    'round_url'      => home_url('/kealoa/round/' . (int) ($clue->round_game_number ?? $rid) . '/'),
                     'clues'          => [],
                 ];
             }
