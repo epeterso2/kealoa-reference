@@ -55,6 +55,7 @@
 }
 
 .kealoa-play-links__title {
+    font-family: 'Joti One', serif;
     font-size: 32px;
     color: var(--driftwood-dark);
     margin: 0 0 16px 0;
@@ -70,6 +71,7 @@
 .kealoa-play-links__btn {
     display: inline-block;
     padding: 14px 40px;
+    font-family: 'Joti One', serif;
     font-size: 18px;
     font-weight: 600;
     color: #fff;
@@ -91,6 +93,7 @@
 }
 
 .kealoa-game__title {
+    font-family: 'Joti One', serif;
     font-size: 32px;
     color: var(--driftwood-dark);
     margin: 0 0 16px 0;
@@ -599,6 +602,7 @@
 }
 
 .kealoa-game__play-again-label {
+    font-family: 'Joti One', serif;
     font-size: 20px;
     font-weight: 600;
     color: var(--driftwood-dark);
