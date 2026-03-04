@@ -1137,18 +1137,32 @@ class Kealoa_Shortcodes {
             if ($clue_giver_streaks) {
                 $badge_metrics['host_streak'] = (int) $clue_giver_streaks->best_correct_streak;
             }
+            $badge_metrics['host_accuracy'] = (int) $clue_giver_stats->total_guesses > 0
+                ? round((int) $clue_giver_stats->correct_guesses / (int) $clue_giver_stats->total_guesses * 100, 1)
+                : 0.0;
         }
         if ($is_player && $stats) {
             $badge_metrics['player_rounds']   = (int) $stats->rounds_played;
-            $badge_metrics['player_streak']   = (int) $stats->best_streak;
-            $badge_metrics['player_correct']  = (int) $stats->max_correct;
             $badge_metrics['player_accuracy'] = (float) $stats->overall_percentage;
+            $badge_metrics['player_correct']  = (int) $stats->max_correct;
+            $badge_metrics['player_streak']   = (int) $stats->best_streak;
         }
         if ($is_constructor && $constructor_stats) {
-            $badge_metrics['constructor_puzzles'] = (int) $constructor_stats->puzzle_count;
+            $badge_metrics['constructor_puzzles']  = (int) $constructor_stats->puzzle_count;
+            $badge_metrics['constructor_clues']    = (int) $constructor_stats->clue_count;
+            $badge_metrics['constructor_accuracy'] = (int) $constructor_stats->total_guesses > 0
+                ? round((int) $constructor_stats->correct_guesses / (int) $constructor_stats->total_guesses * 100, 1)
+                : 0.0;
         }
         if ($is_editor && $editor_stats) {
-            $badge_metrics['editor_puzzles'] = (int) $editor_stats->puzzle_count;
+            $badge_metrics['editor_puzzles']  = (int) $editor_stats->puzzle_count;
+            $badge_metrics['editor_accuracy'] = (int) $editor_stats->total_guesses > 0
+                ? round((int) $editor_stats->correct_guesses / (int) $editor_stats->total_guesses * 100, 1)
+                : 0.0;
+        }
+        // Add player accuracy badge for non-player roles that also have player stats
+        if (!$is_player && $stats && !empty($stats->overall_percentage)) {
+            $badge_metrics['player_accuracy'] = (float) $stats->overall_percentage;
         }
         $person_badges = Kealoa_Badges::compute_badges($badge_metrics);
 
