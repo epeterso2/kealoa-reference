@@ -747,12 +747,12 @@ class Kealoa_DB {
         ];
         $args = wp_parse_args($args, $defaults);
 
-        $allowed_orderby = ['id', 'round_date', 'episode_number', 'created_at'];
+        $allowed_orderby = ['id', 'game_number', 'round_date', 'episode_number', 'created_at'];
         $orderby = in_array($args['orderby'], $allowed_orderby) ? $args['orderby'] : 'round_date';
         $order = strtoupper($args['order']) === 'ASC' ? 'ASC' : 'DESC';
 
-        // Add secondary sort by round_number when ordering by date
-        $secondary_sort = ($orderby === 'round_date') ? ', r.round_number ASC' : '';
+        // Add secondary sort by round_number when ordering by date or game_number
+        $secondary_sort = in_array($orderby, ['round_date', 'game_number']) ? ', r.round_number ASC' : '';
 
         $limit_clause = '';
         if ((int) $args['limit'] > 0) {

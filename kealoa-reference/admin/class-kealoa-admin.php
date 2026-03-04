@@ -1315,6 +1315,7 @@ class Kealoa_Admin {
     private function render_rounds_list(): void {
         $rounds = $this->db->get_rounds([
             'limit' => 0,
+            'orderby' => 'game_number',
         ]);
         ?>
         <h1 class="wp-heading-inline"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></h1>
