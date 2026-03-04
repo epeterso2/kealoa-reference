@@ -2,7 +2,7 @@
 
 A WordPress plugin for managing and displaying KEALOA quiz game data from the [Fill Me In](https://bemoresmarter.libsyn.com) podcast.
 
-**Version:** 2.1.47 &bull; **DB Version:** 2.1.2 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+**Version:** 2.1.82 &bull; **DB Version:** 2.1.3 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 ---
 
@@ -99,7 +99,7 @@ All shortcode output is cached via WordPress transients (24-hour TTL) with a ver
 | `[kealoa_rounds_table]` | `limit`, `order` | Tabbed view: rounds table (sortable/filterable) and stats (overview grid, yearly stats, clue-number frequency matrices) |
 | `[kealoa_round]` | `id` (required) | Round detail: meta, episode link, solution words, host, players with scores, person photos, alternation metric, evenness metric, average clue age, clue table with guesses, social sharing bar |
 | `[kealoa_rounds_stats]` | — | Statistics grid: total players, rounds, puzzles, constructors, clues, guesses, correct answers, accuracy |
-| `[kealoa_person]` | `id` (required) | Person profile with tabbed interface: achievement badges, role-specific statistics (player, constructor, editor, host), alternation vs accuracy breakdown, round history, co-players, performance charts, person images |
+| `[kealoa_person]` | `id` (required) | Person profile with tabbed interface: achievement badges, role-specific statistics (player, constructor, editor, host with Rounds/Stats/Streaks subtabs), alternation vs accuracy breakdown, round history, co-players, performance charts, person images |
 | `[kealoa_persons_table]` | — | Table of all players with rounds played, clues guessed, and accuracy |
 | `[kealoa_constructors_table]` | — | Table of all constructors with puzzle count and statistics |
 | `[kealoa_editors_table]` | — | Table of all editors with puzzle count and statistics |
@@ -123,7 +123,7 @@ The plugin registers 15 blocks under the `kealoa` namespace. Each block renders 
 | `editor-view` | KEALOA Editor View | `edit` | **Deprecated:** use Person View instead. Displays a person's KEALOA statistics and history |
 | `editors-table` | KEALOA Editors Table | `edit` | Table of all editors with statistics |
 | `hosts-table` | KEALOA Hosts Table | `microphone` | Table of all hosts with rounds, clues, players, and accuracy |
-| `person-view` | KEALOA Person View | `admin-users` | Person profile with achievement badges, statistics, round history, and performance metrics |
+| `person-view` | KEALOA Person View | `admin-users` | Person profile with achievement badges, statistics, host streaks table, round history, and performance metrics |
 | `persons-table` | KEALOA Players Table | `groups` | Table of all players with rounds played, clues guessed, and accuracy |
 | `play-game` | KEALOA Play Game | `games` | An interactive KEALOA game that lets visitors play a random round |
 | `puzzle-view` | KEALOA Puzzle View | `grid-view` | Single puzzle with person images, clue details, and round information |
@@ -440,19 +440,23 @@ When Yoast SEO is active, a `<sitemap>` entry for `/kealoa-sitemap.xml` is added
 
 The person view header displays achievement badges earned across four roles. Each badge is a pill-shaped element showing an SVG icon, the tier threshold value, and a short label (e.g., "200 HOSTED"). Badge background color matches the role's primary tab color; foreground is white.
 
-Badges are computed by the `Kealoa_Badges` class based on the person's metrics. A person earns the first badge at the minimum threshold and advances a tier for each increment. Only the highest achieved tier is shown. The tooltip displays the person's actual metric value and tier number.
+Badges are computed by the `Kealoa_Badges` class based on the person's metrics. Each badge displays the person's actual metric value. A badge is shown for every role the person holds.
 
-| Role | Metric | Min | Increment | Max | Tiers |
-|---|---|---:|---:|---:|---:|
-| Host | Rounds Hosted | 25 | 25 | 200 | 8 |
-| Host | Players in a Single Round | 2 | 1 | 10 | 9 |
-| Host | Correct Streak | 10 | 10 | 100 | 10 |
-| Player | Rounds Played | 25 | 25 | 200 | 8 |
-| Player | Best Streak | 5 | 1 | 10 | 6 |
-| Player | Best Correct | 5 | 1 | 10 | 6 |
-| Player | Overall Accuracy | 50% | 10% | 100% | 6 |
-| Constructor | Puzzles Used | 5 | 5 | 50 | 10 |
-| Editor | Puzzles Edited | 25 | 25 | 1,000 | 40 |
+| Role | Badge | Metric | Unit |
+|---|---|---|---|
+| Host | Rounds Hosted | Total rounds as clue giver | count |
+| Host | Unique Players Hosted | Distinct players across all hosted rounds | count |
+| Host | Host Correct Streak | Longest consecutive correct clues | count |
+| Host | Host Accuracy | Correct guesses / total guesses across hosted rounds | % |
+| Player | Rounds Played | Total rounds as guesser | count |
+| Player | Overall Accuracy | Correct guesses / total guesses | % |
+| Player | Best Correct | Most correct guesses in a single round | count |
+| Player | Best Streak | Longest correct-guess streak within a round | count |
+| Constructor | Puzzles Used | Puzzles used as clues in rounds | count |
+| Constructor | Clues Used | Total clues sourced from constructor's puzzles | count |
+| Constructor | Constructor Accuracy | Correct guesses on constructor's clues | % |
+| Editor | Puzzles Edited | Puzzles edited that were used as clues | count |
+| Editor | Editor Accuracy | Correct guesses on editor's puzzles | % |
 
 ### Table Sorting
 
@@ -464,7 +468,7 @@ Rich filtering system with: text search (multi-column), exact-match select, mini
 
 ### Tabbed Navigation
 
-Nested tab UI with primary and secondary tabs. URL hash activation via `#kealoa-tab=primary&kealoa-subtab=secondary` for deep-linkable tab state.
+Nested tab UI with primary and secondary tabs. URL hash activation via `#kealoa-tab=primary&kealoa-subtab=secondary` for deep-linkable tab state. The Host primary tab has three subtabs: Rounds, Stats, and Streaks.
 
 ### Interactive Game
 
@@ -553,7 +557,7 @@ kealoa-reference/
 │   │   ├── kealoa-game.css           Play-game interactive styles
 │   │   └── kealoa-palette.css        Color palette CSS custom properties
 │   ├── images/
-│   │   └── badges/                   SVG badge icons (9 files, one per metric)
+│   │   └── badges/                   SVG badge icons (10 files; accuracy roles share one icon)
 │   └── js/
 │       ├── blocks-editor.js          Gutenberg block editor registrations
 │       ├── kealoa-admin.js           Admin page JavaScript
