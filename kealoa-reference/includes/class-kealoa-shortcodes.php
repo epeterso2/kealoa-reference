@@ -666,6 +666,7 @@ class Kealoa_Shortcodes {
                             <span><?php echo esc_html($round->description2); ?></span>
                         </p>
                     <?php endif; ?>
+                    <?php if (!empty($clues)): ?>
                     <?php
                     $alternation_pct = $this->db->get_round_alternation_pct($round_id);
                     ?>
@@ -701,14 +702,18 @@ class Kealoa_Shortcodes {
                             $full_counts[$word] = $answer_counts[$word] ?? 0;
                         }
                         $n_total = array_sum($full_counts);
-                        $h_prime = 0.0;
-                        foreach ($full_counts as $count) {
-                            $p_i = $count / $n_total;
-                            if ($p_i > 0) {
-                                $h_prime -= $p_i * log($p_i);
+                        if ($n_total === 0) {
+                            $evenness_pct = 100.0;
+                        } else {
+                            $h_prime = 0.0;
+                            foreach ($full_counts as $count) {
+                                $p_i = $count / $n_total;
+                                if ($p_i > 0) {
+                                    $h_prime -= $p_i * log($p_i);
+                                }
                             }
+                            $evenness_pct = ($h_prime / log($s_count)) * 100;
                         }
-                        $evenness_pct = ($h_prime / log($s_count)) * 100;
                     }
                     ?>
                     <p>
@@ -747,6 +752,7 @@ class Kealoa_Shortcodes {
                         ?></span>
                     </p>
                     <?php endif; ?>
+                    <?php endif; /* !empty($clues) */ ?>
                 </div>
 
                 <?php
