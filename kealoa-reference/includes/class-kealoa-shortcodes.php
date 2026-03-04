@@ -1278,29 +1278,53 @@ class Kealoa_Shortcodes {
 
             <?php if (!empty($round_history)): ?>
                 <div class="kealoa-score-distribution-section">
-                    <h2><?php esc_html_e('Score Distribution', 'kealoa-reference'); ?></h2>
+                    <h2><?php esc_html_e('Accuracy Distribution', 'kealoa-reference'); ?></h2>
                     <div class="kealoa-chart-container">
                         <canvas id="kealoa-score-distribution-chart"></canvas>
                     </div>
                     <?php
-                    // Build score distribution: count rounds per score (0-10)
+                    // Build score distribution: count rounds per accuracy bucket (0%, 10%, ..., 100%)
                     $score_counts = array_fill(0, 11, 0);
                     foreach ($round_history as $rh) {
-                        $score = min(10, max(0, (int) $rh->correct_count));
-                        $score_counts[$score]++;
+                        $total = (int) $rh->total_clues;
+                        $correct = (int) $rh->correct_count;
+                        $pct = $total > 0 ? ($correct / $total) * 100 : 0;
+                        $bucket = min(10, (int) floor($pct / 10));
+                        // 100% goes into the 100% bucket (index 10)
+                        if ($pct >= 100) {
+                            $bucket = 10;
+                        }
+                        $score_counts[$bucket]++;
                     }
-                    $score_labels = array_map('strval', range(10, 0, -1));
+                    // Labels from 100% down to 0% (Y-axis top to bottom)
+                    $score_labels = [];
+                    for ($i = 100; $i >= 0; $i -= 10) {
+                        $score_labels[] = $i . '%';
+                    }
                     $score_data = array_reverse(array_values($score_counts));
 
-                    // Build round picker data per score (10→0 order matching labels)
+                    // Build round picker data per bucket (100%→0% order matching labels)
+                    // Group round IDs by accuracy bucket
+                    $rounds_by_bucket = array_fill(0, 11, []);
+                    foreach ($round_history as $rh) {
+                        $rid = (int) $rh->round_id;
+                        $total = (int) $rh->total_clues;
+                        $correct = (int) $rh->correct_count;
+                        $pct = $total > 0 ? ($correct / $total) * 100 : 0;
+                        $bucket = min(10, (int) floor($pct / 10));
+                        if ($pct >= 100) {
+                            $bucket = 10;
+                        }
+                        $rounds_by_bucket[$bucket][] = $rid;
+                    }
                     $score_rounds_json = [];
-                    for ($s = 10; $s >= 0; $s--) {
-                        $rids = $rounds_by_score[$s] ?? [];
-                        $rounds_for_score = [];
+                    for ($b = 10; $b >= 0; $b--) {
+                        $rids = $rounds_by_bucket[$b] ?? [];
+                        $rounds_for_bucket = [];
                         foreach ($rids as $rid) {
                             if (isset($round_info[$rid])) {
                                 $ri = $round_info[$rid];
-                                $rounds_for_score[] = [
+                                $rounds_for_bucket[] = [
                                     'url' => $ri['url'],
                                     'date' => $ri['date'],
                                     'words' => $ri['words'],
@@ -1308,7 +1332,7 @@ class Kealoa_Shortcodes {
                                 ];
                             }
                         }
-                        $score_rounds_json[] = $rounds_for_score;
+                        $score_rounds_json[] = $rounds_for_bucket;
                     }
                     ?>
                     <script>
@@ -1372,7 +1396,7 @@ class Kealoa_Shortcodes {
                                         y: {
                                             title: {
                                                 display: true,
-                                                text: <?php echo wp_json_encode(__('Correct Answers', 'kealoa-reference')); ?>
+                                                text: <?php echo wp_json_encode(__('Accuracy', 'kealoa-reference')); ?>
                                             },
                                             ticks: {
                                                 autoSkip: false
@@ -1406,7 +1430,7 @@ class Kealoa_Shortcodes {
 
             <?php if (!empty($round_history)): ?>
                 <div class="kealoa-accuracy-chart-section">
-                    <h2><?php esc_html_e('Score by Round', 'kealoa-reference'); ?></h2>
+                    <h2><?php esc_html_e('Accuracy by Round', 'kealoa-reference'); ?></h2>
                     <div class="kealoa-chart-container">
                         <canvas id="kealoa-accuracy-chart"></canvas>
                     </div>
@@ -1421,7 +1445,9 @@ class Kealoa_Shortcodes {
                         $rid = (int) $ch->round_id;
                         $ri = $round_info[$rid] ?? null;
                         $chart_labels[] = Kealoa_Formatter::format_date($ch->round_date);
-                        $chart_data[] = (int) $ch->correct_count;
+                        $total = (int) $ch->total_clues;
+                        $correct = (int) $ch->correct_count;
+                        $chart_data[] = $total > 0 ? round(($correct / $total) * 100, 1) : 0;
                         $chart_words[] = $ri ? $ri['words'] : '';
                         $chart_urls[] = $ri ? $ri['url'] : home_url('/kealoa/round/' . $rid . '/');
                     }
@@ -1460,14 +1486,15 @@ class Kealoa_Shortcodes {
                                         y: {
                                             title: {
                                                 display: true,
-                                                text: <?php echo wp_json_encode(__('Correct', 'kealoa-reference')); ?>
+                                                text: <?php echo wp_json_encode(__('Accuracy', 'kealoa-reference')); ?>
                                             },
                                             min: 0,
-                                            max: 10,
+                                            max: 100,
                                             ticks: {
-                                                stepSize: 2,
+                                                stepSize: 10,
                                                 precision: 0,
-                                                autoSkip: false
+                                                autoSkip: false,
+                                                callback: function(value) { return value + '%'; }
                                             }
                                         }
                                     },
@@ -1485,7 +1512,7 @@ class Kealoa_Shortcodes {
                                                     return '';
                                                 },
                                                 label: function(item) {
-                                                    return item.parsed.y + ' correct';
+                                                    return item.parsed.y + '% accuracy';
                                                 }
                                             }
                                         }

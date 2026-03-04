@@ -1387,23 +1387,7 @@ class Kealoa_Admin {
                 <?php endif; ?>
             </tbody>
         </table>
-
-        <?php if ($total_pages > 1): ?>
-            <div class="tablenav bottom">
-                <div class="tablenav-pages">
-                    <?php
-                    echo paginate_links([
-                        'base' => add_query_arg('paged', '%#%'),
-                        'format' => '',
-                        'prev_text' => '&laquo;',
-                        'next_text' => '&raquo;',
-                        'total' => $total_pages,
-                        'current' => $paged,
-                    ]);
-                    ?>
-                </div>
-            </div>
-        <?php endif;
+        <?php
     }
 
     /**
@@ -1448,8 +1432,9 @@ class Kealoa_Admin {
                     <th><label for="game_number"><?php esc_html_e('Game Number', 'kealoa-reference'); ?></label></th>
                     <td>
                         <?php
-                        $game_number_value = $round->game_number
-                            ?? ($_GET['game_number'] ?? '');
+                        $game_number_value = $is_edit
+                            ? ($round->game_number ?? '')
+                            : ($_GET['game_number'] ?? '');
                         ?>
                         <input type="number" name="game_number" id="game_number" min="1"
                                value="<?php echo esc_attr($game_number_value); ?>" />
