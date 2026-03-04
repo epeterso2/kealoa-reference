@@ -45,7 +45,7 @@ class Kealoa_Badges {
         [
             'key'   => 'host_players',
             'role'  => 'host',
-            'label' => 'Players in a Single Round',
+            'label' => 'Unique Players Hosted',
             'short' => 'Players',
             'unit'  => '',
             'icon'  => 'host-players.svg',

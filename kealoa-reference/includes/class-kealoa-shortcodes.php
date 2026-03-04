@@ -993,7 +993,7 @@ class Kealoa_Shortcodes {
         $clue_giver_stats_by_guesser = $is_clue_giver ? $this->db->get_clue_giver_stats_by_guesser($person_id) : [];
         $clue_giver_rounds = $is_clue_giver ? $this->db->get_clue_giver_rounds($person_id) : [];
         $clue_giver_streaks = $is_clue_giver ? $this->db->get_clue_giver_streaks($person_id) : null;
-        $clue_giver_max_players = $is_clue_giver ? $this->db->get_clue_giver_max_players_per_round($person_id) : 0;
+        $clue_giver_unique_players = $is_clue_giver ? $this->db->get_clue_giver_unique_players($person_id) : 0;
 
         $person_puzzles = $is_player ? $this->db->get_person_puzzles($person_id) : [];
         $clue_number_results = $this->db->get_person_results_by_clue_number($person_id);
@@ -1140,7 +1140,7 @@ class Kealoa_Shortcodes {
         $badge_metrics = [];
         if ($is_clue_giver && $clue_giver_stats) {
             $badge_metrics['host_rounds']  = (int) $clue_giver_stats->round_count;
-            $badge_metrics['host_players'] = $clue_giver_max_players;
+            $badge_metrics['host_players'] = $clue_giver_unique_players;
             if ($clue_giver_streaks) {
                 $badge_metrics['host_streak'] = (int) $clue_giver_streaks->best_correct_streak;
             }

@@ -2757,18 +2757,14 @@ class Kealoa_DB {
     }
 
     /**
-     * Get the maximum number of players (guessers) in any single round hosted by a person
+     * Get the total number of unique players (guessers) across all rounds hosted by a person
      */
-    public function get_clue_giver_max_players_per_round(int $person_id): int {
+    public function get_clue_giver_unique_players(int $person_id): int {
         $sql = $this->wpdb->prepare(
-            "SELECT COALESCE(MAX(player_count), 0) as max_players
-            FROM (
-                SELECT COUNT(DISTINCT rg.person_id) as player_count
-                FROM {$this->round_guessers_table} rg
-                INNER JOIN {$this->rounds_table} r ON r.id = rg.round_id
-                WHERE r.clue_giver_id = %d
-                GROUP BY rg.round_id
-            ) sub",
+            "SELECT COUNT(DISTINCT rg.person_id)
+            FROM {$this->round_guessers_table} rg
+            INNER JOIN {$this->rounds_table} r ON r.id = rg.round_id
+            WHERE r.clue_giver_id = %d",
             $person_id
         );
 
