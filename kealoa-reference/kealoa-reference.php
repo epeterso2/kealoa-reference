@@ -33,7 +33,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '2.1.77');
+define('KEALOA_VERSION', '2.1.79');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -218,18 +218,20 @@ add_action('plugins_loaded', __NAMESPACE__ . '\\kealoa_init');
  * Enqueue frontend assets
  */
 function kealoa_enqueue_frontend_assets(): void {
+    $asset_version = KEALOA_VERSION . '.' . get_option('kealoa_cache_version', '1');
+
     wp_enqueue_style(
         'kealoa-palette',
         KEALOA_PLUGIN_URL . 'assets/css/kealoa-palette.css',
         [],
-        KEALOA_VERSION
+        $asset_version
     );
 
     wp_enqueue_style(
         'kealoa-frontend',
         KEALOA_PLUGIN_URL . 'assets/css/kealoa-frontend.css',
         ['kealoa-palette'],
-        KEALOA_VERSION
+        $asset_version
     );
 
     wp_enqueue_script(
@@ -244,7 +246,7 @@ function kealoa_enqueue_frontend_assets(): void {
         'kealoa-frontend',
         KEALOA_PLUGIN_URL . 'assets/js/kealoa-frontend.js',
         ['chartjs'],
-        KEALOA_VERSION,
+        $asset_version,
         true
     );
 
@@ -252,14 +254,14 @@ function kealoa_enqueue_frontend_assets(): void {
         'kealoa-game',
         KEALOA_PLUGIN_URL . 'assets/css/kealoa-game.css',
         ['kealoa-palette'],
-        KEALOA_VERSION
+        $asset_version
     );
 
     wp_enqueue_script(
         'kealoa-game',
         KEALOA_PLUGIN_URL . 'assets/js/kealoa-game.js',
         [],
-        KEALOA_VERSION,
+        $asset_version,
         true
     );
 }

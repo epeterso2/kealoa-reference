@@ -149,11 +149,13 @@ class Kealoa_Blocks {
      * Enqueue editor assets
      */
     public function enqueue_editor_assets(): void {
+        $asset_version = KEALOA_VERSION . '.' . get_option('kealoa_cache_version', '1');
+
         wp_enqueue_script(
             'kealoa-blocks-editor',
             KEALOA_PLUGIN_URL . 'assets/js/blocks-editor.js',
             ['wp-blocks', 'wp-element', 'wp-editor', 'wp-components', 'wp-i18n', 'wp-block-editor', 'wp-server-side-render'],
-            KEALOA_VERSION,
+            $asset_version,
             true
         );
 
@@ -182,7 +184,7 @@ class Kealoa_Blocks {
             'kealoa-blocks-editor',
             KEALOA_PLUGIN_URL . 'assets/css/blocks-editor.css',
             ['wp-edit-blocks'],
-            KEALOA_VERSION
+            $asset_version
         );
     }
 

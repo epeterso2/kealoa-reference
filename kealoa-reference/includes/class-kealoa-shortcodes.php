@@ -1056,6 +1056,33 @@ class Kealoa_Shortcodes {
             }
         }
 
+        // Build clue giver round info lookup for round picker links
+        $cg_round_info = [];
+        foreach ($clue_giver_rounds as $cgr) {
+            $cgr_id = (int) $cgr->round_id;
+            $cgr_solutions = $bulk_solutions_map[$cgr_id] ?? [];
+            $cgr_pct = (int) $cgr->total_guesses > 0
+                ? ((int) $cgr->correct_guesses / (int) $cgr->total_guesses) * 100
+                : 0;
+            $cg_round_info[$cgr_id] = [
+                'url'   => home_url('/kealoa/round/' . $cgr_id . '/'),
+                'date'  => Kealoa_Formatter::format_date($cgr->round_date),
+                'words' => Kealoa_Formatter::format_solution_words($cgr_solutions),
+                'score' => round($cgr_pct, 1) . '%',
+            ];
+        }
+
+        // Helper: build JSON for clue giver round picker
+        $build_cg_picker_json = function(array $round_ids) use ($cg_round_info): string {
+            $rounds = [];
+            foreach ($round_ids as $rid) {
+                if (isset($cg_round_info[$rid])) {
+                    $rounds[] = $cg_round_info[$rid];
+                }
+            }
+            return esc_attr(wp_json_encode($rounds));
+        };
+
         // Build round info lookup: round_id => {url, date, words, score}
         $round_info = [];
         foreach ($round_history as $rh) {
@@ -2377,11 +2404,11 @@ class Kealoa_Shortcodes {
                         <h2><?php esc_html_e('Streaks', 'kealoa-reference'); ?></h2>
                         <div class="kealoa-stats-grid">
                             <div class="kealoa-stat-card">
-                                <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $clue_giver_streaks->best_correct_streak)); ?></span>
+                                <span class="kealoa-stat-value"><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_cg_picker_json($clue_giver_streaks->best_correct_streak_rounds); ?>"><?php echo esc_html(number_format_i18n((int) $clue_giver_streaks->best_correct_streak)); ?></a></span>
                                 <span class="kealoa-stat-label"><?php esc_html_e('Longest Correct Streak', 'kealoa-reference'); ?></span>
                             </div>
                             <div class="kealoa-stat-card">
-                                <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n((int) $clue_giver_streaks->best_incorrect_streak)); ?></span>
+                                <span class="kealoa-stat-value"><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_cg_picker_json($clue_giver_streaks->best_incorrect_streak_rounds); ?>"><?php echo esc_html(number_format_i18n((int) $clue_giver_streaks->best_incorrect_streak)); ?></a></span>
                                 <span class="kealoa-stat-label"><?php esc_html_e('Longest Incorrect Streak', 'kealoa-reference'); ?></span>
                             </div>
                         </div>

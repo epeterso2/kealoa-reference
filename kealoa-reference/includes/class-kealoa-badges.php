@@ -187,6 +187,7 @@ class Kealoa_Badges {
         }
 
         $badges_url = KEALOA_PLUGIN_URL . 'assets/images/badges/';
+        $asset_version = KEALOA_VERSION . '.' . get_option('kealoa_cache_version', '1');
         $html = '<div class="kealoa-person-badges">';
 
         // Group badges by role to render each role on its own line
@@ -219,7 +220,7 @@ class Kealoa_Badges {
                     . '</div>',
                     esc_attr($badge['role']),
                     esc_attr($tooltip),
-                    esc_url($badges_url . $badge['icon']),
+                    esc_url($badges_url . $badge['icon'] . '?ver=' . $asset_version),
                     esc_attr($badge['label']),
                     esc_html($display_value),
                     esc_html($badge['short'])

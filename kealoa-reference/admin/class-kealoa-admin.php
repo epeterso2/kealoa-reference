@@ -282,25 +282,27 @@ class Kealoa_Admin {
 
         wp_enqueue_media();
 
+        $asset_version = KEALOA_VERSION . '.' . get_option('kealoa_cache_version', '1');
+
         wp_enqueue_style(
             'kealoa-palette',
             KEALOA_PLUGIN_URL . 'assets/css/kealoa-palette.css',
             [],
-            KEALOA_VERSION
+            $asset_version
         );
 
         wp_enqueue_style(
             'kealoa-admin',
             KEALOA_PLUGIN_URL . 'assets/css/kealoa-admin.css',
             ['kealoa-palette'],
-            KEALOA_VERSION
+            $asset_version
         );
 
         wp_enqueue_script(
             'kealoa-admin',
             KEALOA_PLUGIN_URL . 'assets/js/kealoa-admin.js',
             ['jquery'],
-            KEALOA_VERSION,
+            $asset_version,
             true
         );
 

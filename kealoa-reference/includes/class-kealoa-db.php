@@ -2923,26 +2923,39 @@ class Kealoa_DB {
         $best_incorrect = 0;
         $correct_streak   = 0;
         $incorrect_streak = 0;
+        $correct_round_ids   = [];
+        $incorrect_round_ids = [];
+        $best_correct_round_ids   = [];
+        $best_incorrect_round_ids = [];
 
         foreach ($rows as $row) {
+            $rid = (int) $row->round_id;
             if ((int) $row->correct_count > 0) {
                 $correct_streak++;
+                $correct_round_ids[$rid] = true;
                 $incorrect_streak = 0;
+                $incorrect_round_ids = [];
                 if ($correct_streak > $best_correct) {
                     $best_correct = $correct_streak;
+                    $best_correct_round_ids = array_keys($correct_round_ids);
                 }
             } else {
                 $incorrect_streak++;
+                $incorrect_round_ids[$rid] = true;
                 $correct_streak = 0;
+                $correct_round_ids = [];
                 if ($incorrect_streak > $best_incorrect) {
                     $best_incorrect = $incorrect_streak;
+                    $best_incorrect_round_ids = array_keys($incorrect_round_ids);
                 }
             }
         }
 
         return (object) [
-            'best_correct_streak'   => $best_correct,
-            'best_incorrect_streak' => $best_incorrect,
+            'best_correct_streak'          => $best_correct,
+            'best_incorrect_streak'        => $best_incorrect,
+            'best_correct_streak_rounds'   => $best_correct_round_ids,
+            'best_incorrect_streak_rounds' => $best_incorrect_round_ids,
         ];
     }
 
