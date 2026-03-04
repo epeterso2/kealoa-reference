@@ -235,6 +235,31 @@ class Kealoa_REST_API {
             'callback'            => [$this, 'get_leaderboard_streaks'],
             'permission_callback' => '__return_true',
         ]);
+
+        // =====================================================================
+        // Bug Report
+        // =====================================================================
+
+        register_rest_route(self::NAMESPACE, '/bug-report', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'submit_bug_report'],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'image' => [
+                    'required'          => true,
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'url' => [
+                    'required'          => true,
+                    'sanitize_callback' => 'sanitize_url',
+                ],
+                'message' => [
+                    'required'          => false,
+                    'default'           => '',
+                    'sanitize_callback' => 'sanitize_textarea_field',
+                ],
+            ],
+        ]);
     }
 
     // =========================================================================
@@ -865,5 +890,69 @@ class Kealoa_REST_API {
         $response->header('X-WP-TotalPages', (string) $total_pages);
 
         return $response;
+    }
+
+    // =========================================================================
+    // BUG REPORT
+    // =========================================================================
+
+    /**
+     * Handle a bug report submission with attached screenshot.
+     */
+    public function submit_bug_report(WP_REST_Request $request): WP_REST_Response {
+        $image_data = $request->get_param('image');
+        $page_url   = $request->get_param('url');
+        $message    = $request->get_param('message');
+
+        // Validate base64 PNG image data
+        if (!preg_match('/^data:image\/png;base64,/', $image_data)) {
+            return new WP_REST_Response(['message' => 'Invalid image data.'], 400);
+        }
+
+        // Decode image
+        $base64 = preg_replace('/^data:image\/png;base64,/', '', $image_data);
+        $decoded = base64_decode($base64, true);
+        if ($decoded === false || strlen($decoded) < 100) {
+            return new WP_REST_Response(['message' => 'Could not decode image.'], 400);
+        }
+
+        // Limit image size to 5 MB
+        if (strlen($decoded) > 5 * 1024 * 1024) {
+            return new WP_REST_Response(['message' => 'Screenshot too large.'], 400);
+        }
+
+        // Write to a temp file
+        $tmp_dir = get_temp_dir();
+        $filename = 'kealoa-bug-' . date('Ymd-His') . '-' . wp_generate_password(6, false) . '.png';
+        $tmp_path = $tmp_dir . $filename;
+
+        if (file_put_contents($tmp_path, $decoded) === false) {
+            return new WP_REST_Response(['message' => 'Could not save screenshot.'], 500);
+        }
+
+        // Build email
+        $to      = 'eric@puzzlehead.org';
+        $subject = 'KEALOA Bug Report';
+        $body    = "Bug report from KEALOA Reference plugin.\n\n";
+        $body   .= "Page: " . $page_url . "\n";
+        $body   .= "Date: " . current_time('mysql') . "\n";
+        $body   .= "User Agent: " . ($_SERVER['HTTP_USER_AGENT'] ?? 'Unknown') . "\n\n";
+        if (!empty($message)) {
+            $body .= "Message:\n" . $message . "\n";
+        }
+
+        $headers     = ['Content-Type: text/plain; charset=UTF-8'];
+        $attachments = [$tmp_path];
+
+        $sent = wp_mail($to, $subject, $body, $headers, $attachments);
+
+        // Clean up temp file
+        @unlink($tmp_path);
+
+        if (!$sent) {
+            return new WP_REST_Response(['message' => 'Failed to send email. Please try again later.'], 500);
+        }
+
+        return new WP_REST_Response(['message' => 'Bug report sent successfully. Thank you!'], 200);
     }
 }

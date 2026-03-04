@@ -3,9 +3,9 @@
 Read-only REST API for KEALOA Reference data.
 
 **Base URL:** `/wp-json/kealoa/v1`
-**Version:** 2.1.83
+**Version:** 2.1.85
 
-All endpoints use the `GET` method and are publicly accessible (`permission_callback: __return_true`). All responses are JSON.
+All endpoints are publicly accessible (`permission_callback: __return_true`). All responses are JSON. Most endpoints use `GET`; the bug-report endpoint uses `POST`.
 
 ---
 
@@ -45,6 +45,8 @@ All endpoints use the `GET` method and are publicly accessible (`permission_call
 8. [Leaderboards](#leaderboards)
    - [GET /leaderboard/scores](#get-leaderboardscores)
    - [GET /leaderboard/streaks](#get-leaderboardstreaks)
+9. [Bug Report](#bug-report)
+   - [POST /bug-report](#post-bug-report)
 
 ---
 
@@ -880,4 +882,30 @@ Returns all persons ranked by their longest correct-guess streak across all roun
 **Query parameters:** None
 
 **Response: 200 OK** — Array of objects with person identity fields and streak data.
+
+---
+
+## Bug Report
+
+### POST /bug-report
+
+Submits a bug report with an attached screenshot. The screenshot and message are emailed to the plugin maintainer.
+
+**Request body (JSON):**
+
+| Field     | Type   | Required | Description                                      |
+|-----------|--------|----------|--------------------------------------------------|
+| `image`   | string | Yes      | Base64-encoded PNG data URI (`data:image/png;base64,...`) |
+| `url`     | string | Yes      | The page URL where the bug was encountered       |
+| `message` | string | No       | User-provided description of the issue            |
+
+**Response: 200 OK**
+
+```json
+{ "message": "Bug report sent successfully. Thank you!" }
+```
+
+**Response: 400 Bad Request** — when image data is missing or invalid.
+
+**Response: 500 Internal Server Error** — when the email could not be sent.
 

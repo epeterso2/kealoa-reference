@@ -947,4 +947,126 @@
     } else {
         initYearTabLinks();
     }
+
+    // =========================================================================
+    // BUG REPORT — floating button with screenshot capture
+    // =========================================================================
+
+    function initBugReport() {
+        var btn     = document.querySelector('.kealoa-bug-report-btn');
+        var overlay = document.querySelector('.kealoa-bug-report-overlay');
+        if (!btn || !overlay) return;
+
+        var modal   = overlay.querySelector('.kealoa-bug-report-modal');
+        var msgEl   = overlay.querySelector('.kealoa-bug-report-message');
+        var submit  = overlay.querySelector('.kealoa-bug-report-submit');
+        var cancel  = overlay.querySelector('.kealoa-bug-report-cancel');
+        var status  = overlay.querySelector('.kealoa-bug-report-status');
+        var config  = window.kealoaBugReport || {};
+        var sending = false;
+
+        function showOverlay() {
+            overlay.style.display = 'flex';
+            msgEl.value = '';
+            status.style.display = 'none';
+            status.textContent = '';
+            submit.disabled = false;
+            msgEl.focus();
+        }
+
+        function hideOverlay() {
+            if (sending) return;
+            overlay.style.display = 'none';
+        }
+
+        function showStatus(text, isError) {
+            status.style.display = 'block';
+            status.textContent = text;
+            status.className = 'kealoa-bug-report-status' + (isError ? ' kealoa-bug-report-error' : ' kealoa-bug-report-success');
+        }
+
+        btn.addEventListener('click', showOverlay);
+        cancel.addEventListener('click', hideOverlay);
+
+        // Close on backdrop click
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) hideOverlay();
+        });
+
+        // Close on Escape
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && overlay.style.display === 'flex') hideOverlay();
+        });
+
+        submit.addEventListener('click', function () {
+            if (sending || !config.restUrl) return;
+            sending = true;
+            submit.disabled = true;
+            showStatus('Capturing screenshot…', false);
+
+            // Hide the bug-report UI before capturing
+            btn.style.visibility = 'hidden';
+            overlay.style.display = 'none';
+
+            // Use html2canvas if available
+            if (typeof html2canvas !== 'function') {
+                showStatus('Screenshot library not loaded.', true);
+                btn.style.visibility = '';
+                overlay.style.display = 'flex';
+                sending = false;
+                submit.disabled = false;
+                return;
+            }
+
+            html2canvas(document.body, {
+                useCORS: true,
+                logging: false,
+                windowWidth: document.documentElement.scrollWidth,
+                windowHeight: document.documentElement.scrollHeight
+            }).then(function (canvas) {
+                btn.style.visibility = '';
+                overlay.style.display = 'flex';
+                showStatus('Sending report…', false);
+
+                var imageData = canvas.toDataURL('image/png');
+
+                return fetch(config.restUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': config.nonce
+                    },
+                    body: JSON.stringify({
+                        image:   imageData,
+                        url:     window.location.href,
+                        message: msgEl.value.trim()
+                    })
+                });
+            }).then(function (resp) {
+                return resp.json().then(function (data) {
+                    if (resp.ok) {
+                        showStatus(data.message || 'Report sent!', false);
+                        submit.disabled = true;
+                        setTimeout(hideOverlay, 2500);
+                    } else {
+                        showStatus(data.message || 'Failed to send report.', true);
+                        submit.disabled = false;
+                    }
+                    sending = false;
+                });
+            }).catch(function (err) {
+                btn.style.visibility = '';
+                overlay.style.display = 'flex';
+                showStatus('Error: ' + (err.message || 'Unknown error'), true);
+                submit.disabled = false;
+                sending = false;
+            });
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initBugReport);
+    } else {
+        initBugReport();
+    }
 })();

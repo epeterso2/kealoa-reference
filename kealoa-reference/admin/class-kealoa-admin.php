@@ -2739,6 +2739,7 @@ class Kealoa_Admin {
      */
     public function render_settings_page(): void {
         $debug_mode = get_option('kealoa_debug_mode', false);
+        $bug_report_enabled = get_option('kealoa_bug_report_enabled', true);
         $saved = isset($_GET['kealoa_saved']);
         ?>
         <div class="wrap kealoa-admin-wrap">
@@ -2773,6 +2774,23 @@ class Kealoa_Admin {
                                 </p>
                             </td>
                         </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="kealoa_bug_report_enabled">
+                                    <?php esc_html_e('Bug Report Button', 'kealoa-reference'); ?>
+                                </label>
+                            </th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" id="kealoa_bug_report_enabled" name="bug_report_enabled" value="1"
+                                        <?php checked($bug_report_enabled); ?>>
+                                    <?php esc_html_e('Show floating bug report button', 'kealoa-reference'); ?>
+                                </label>
+                                <p class="description">
+                                    <?php esc_html_e('When enabled, a floating bug icon appears on all frontend pages allowing visitors to submit a bug report with a screenshot.', 'kealoa-reference'); ?>
+                                </p>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
 
@@ -2788,6 +2806,9 @@ class Kealoa_Admin {
     private function handle_save_settings(): void {
         $debug_mode = !empty($_POST['debug_mode']);
         update_option('kealoa_debug_mode', $debug_mode);
+
+        $bug_report_enabled = !empty($_POST['bug_report_enabled']);
+        update_option('kealoa_bug_report_enabled', $bug_report_enabled);
 
         Kealoa_Shortcodes::flush_all_caches();
         wp_redirect(admin_url('admin.php?page=kealoa-settings&kealoa_saved=1'));
