@@ -3935,4 +3935,33 @@ class Kealoa_DB {
 
         return $deleted;
     }
+
+    /**
+     * Get puzzles where a constructor is also the editor.
+     *
+     * Returns puzzle rows where at least one constructor's person_id matches
+     * the puzzle's editor_id, with round info for each puzzle.
+     *
+     * @return array Array of puzzle objects.
+     */
+    public function get_puzzles_same_constructor_editor(): array {
+        $sql = "SELECT
+                pz.id,
+                pz.publication_date,
+                p.id AS person_id,
+                p.full_name AS person_name,
+                GROUP_CONCAT(DISTINCT rs.word ORDER BY rs.position ASC SEPARATOR ', ') AS solution_words,
+                r.round_date,
+                r.game_number
+            FROM {$this->puzzles_table} pz
+            INNER JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
+            INNER JOIN {$this->persons_table} p ON pc.person_id = p.id AND pz.editor_id = p.id
+            LEFT JOIN {$this->clues_table} c ON pz.id = c.puzzle_id
+            LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
+            LEFT JOIN {$this->round_solutions_table} rs ON r.id = rs.round_id
+            GROUP BY pz.id, pz.publication_date, p.id, p.full_name, r.round_date, r.game_number
+            ORDER BY pz.publication_date DESC";
+
+        return $this->wpdb->get_results($sql) ?: [];
+    }
 }

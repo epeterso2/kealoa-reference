@@ -3909,6 +3909,7 @@ class Kealoa_Shortcodes {
 
         $puzzles = $this->db->get_all_puzzles_with_details();
         $multi_round_puzzles = $this->db->get_puzzles_used_in_multiple_rounds();
+        $same_constructor_editor_puzzles = $this->db->get_puzzles_same_constructor_editor();
 
         ob_start();
         ?>
@@ -4079,7 +4080,7 @@ class Kealoa_Shortcodes {
         <?php endif; ?>
             </div><!-- end kealoa-puzzles-tab-all -->
             <div class="kealoa-tab-panel" id="kealoa-puzzles-tab-curiosities" data-tab="kealoa-puzzles-tab-curiosities" role="tabpanel">
-                <?php $this->render_curiosities_panel($multi_round_puzzles); ?>
+                <?php $this->render_curiosities_panel($multi_round_puzzles, $same_constructor_editor_puzzles); ?>
             </div><!-- end kealoa-puzzles-tab-curiosities -->
         </div><!-- end kealoa-tabs -->
         </div><!-- end kealoa-puzzles-page -->
@@ -4090,20 +4091,21 @@ class Kealoa_Shortcodes {
     }
 
     /**
-     * Render the Curiosities tab panel — puzzles used in more than one round.
+     * Render the Curiosities tab panel — stacked sections.
      *
-     * @param array $puzzles     Array of puzzle objects with round_count.
+     * @param array $multi_round_puzzles              Puzzles used in more than one round.
+     * @param array $same_constructor_editor_puzzles   Puzzles where constructor = editor.
      */
-    private function render_curiosities_panel(array $puzzles): void {
-        if (empty($puzzles)): ?>
+    private function render_curiosities_panel(array $multi_round_puzzles, array $same_constructor_editor_puzzles): void {
+        if (empty($multi_round_puzzles) && empty($same_constructor_editor_puzzles)): ?>
             <p class="kealoa-no-data"><?php esc_html_e('No curiosities found yet.', 'kealoa-reference'); ?></p>
         <?php return; endif;
 
-        if (!empty($puzzles)):
+        if (!empty($multi_round_puzzles)):
 
         // Pre-fetch solutions and per-date round counts for all rounds across all puzzles
         $cur_all_rids = [];
-        foreach ($puzzles as $puzzle) {
+        foreach ($multi_round_puzzles as $puzzle) {
             if (!empty($puzzle->round_ids)) {
                 foreach (explode(',', $puzzle->round_ids) as $rid) {
                     $rid = (int) $rid;
@@ -4133,7 +4135,7 @@ class Kealoa_Shortcodes {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($puzzles as $puzzle): ?>
+                        <?php foreach ($multi_round_puzzles as $puzzle): ?>
                             <?php
                             $constructor_ids   = !empty($puzzle->constructor_ids)   ? explode(',', $puzzle->constructor_ids)   : [];
                             $constructor_names = !empty($puzzle->constructor_names) ? explode(', ', $puzzle->constructor_names) : [];
@@ -4198,7 +4200,47 @@ class Kealoa_Shortcodes {
         </div>
         </div>
 
-        <?php endif; // end if (!empty($puzzles)) ?>
+        <?php endif; // end if (!empty($multi_round_puzzles)) ?>
+
+        <?php if (!empty($same_constructor_editor_puzzles)): ?>
+        <div class="kealoa-curiosities-section">
+        <h2><?php esc_html_e('Same Constructor & Editor', 'kealoa-reference'); ?></h2>
+        <div class="kealoa-puzzles-table-wrapper">
+            <div class="kealoa-table-scroll">
+                <table class="kealoa-table kealoa-puzzles-table" id="kealoa-puzzles-curiosities-same-ce-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
+                            <th data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
+                            <th data-sort="text"><?php esc_html_e('Person', 'kealoa-reference'); ?></th>
+                            <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                            <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($same_constructor_editor_puzzles as $sce_puzzle): ?>
+                            <tr>
+                                <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($sce_puzzle->publication_date)); ?></td>
+                                <td><?php echo Kealoa_Formatter::format_puzzle_date_link($sce_puzzle->publication_date); ?></td>
+                                <td><?php echo Kealoa_Formatter::format_person_link((int) $sce_puzzle->person_id, $sce_puzzle->person_name); ?></td>
+                                <td class="kealoa-round-words"><?php echo esc_html($sce_puzzle->solution_words ?? '&mdash;'); ?></td>
+                                <td class="kealoa-round-date">
+                                    <?php
+                                    if (!empty($sce_puzzle->game_number)) {
+                                        echo Kealoa_Formatter::format_round_date_link((int) $sce_puzzle->game_number, $sce_puzzle->round_date);
+                                    } else {
+                                        echo '&mdash;';
+                                    }
+                                    ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </div>
+        <?php endif; // end if (!empty($same_constructor_editor_puzzles)) ?>
         <?php
     }
 
