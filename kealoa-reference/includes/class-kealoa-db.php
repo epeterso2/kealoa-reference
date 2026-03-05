@@ -3941,6 +3941,8 @@ class Kealoa_DB {
      *
      * Returns puzzle rows where at least one constructor's person_id matches
      * the puzzle's editor_id, with round info for each puzzle.
+     * Special case: treats constructor "Alex Eaton-Salners" and editor
+     * "Will Shortz" as the same person.
      *
      * @return array Array of puzzle objects.
      */
@@ -3948,20 +3950,29 @@ class Kealoa_DB {
         $sql = "SELECT
                 pz.id,
                 pz.publication_date,
-                p.id AS person_id,
-                p.full_name AS person_name,
+                con.id AS person_id,
+                con.full_name AS person_name,
                 GROUP_CONCAT(DISTINCT rs.word ORDER BY rs.position ASC SEPARATOR ', ') AS solution_words,
                 r.round_date,
                 r.game_number
             FROM {$this->puzzles_table} pz
             INNER JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
-            INNER JOIN {$this->persons_table} p ON pc.person_id = p.id AND pz.editor_id = p.id
+            INNER JOIN {$this->persons_table} con ON pc.person_id = con.id
+            LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             LEFT JOIN {$this->clues_table} c ON pz.id = c.puzzle_id
             LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
             LEFT JOIN {$this->round_solutions_table} rs ON r.id = rs.round_id
-            GROUP BY pz.id, pz.publication_date, p.id, p.full_name, r.round_date, r.game_number
+            WHERE pz.editor_id = con.id
+               OR (con.full_name = 'Alex Eaton-Salners' AND ed.full_name = 'Will Shortz')
+            GROUP BY pz.id, pz.publication_date, con.id, con.full_name, r.round_date, r.game_number
             ORDER BY pz.publication_date DESC";
 
-        return $this->wpdb->get_results($sql) ?: [];
+        $results = $this->wpdb->get_results($sql);
+
+        if ($results === null && !empty($this->wpdb->last_error)) {
+            error_log('KEALOA same_constructor_editor query error: ' . $this->wpdb->last_error);
+        }
+
+        return $results ?: [];
     }
 }
