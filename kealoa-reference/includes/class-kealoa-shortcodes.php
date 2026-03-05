@@ -368,7 +368,7 @@ class Kealoa_Shortcodes {
 
             <?php $alt_by_clue = $this->db->get_alternation_by_clue_number(); ?>
             <?php if (!empty($alt_by_clue)): ?>
-            <h3><?php esc_html_e('Alternation by Clue Number', 'kealoa-reference'); ?></h3>
+            <h3><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('by Clue Number', 'kealoa-reference'); ?></h3>
             <div class="kealoa-table-scroll">
             <table class="kealoa-table">
                 <thead>
@@ -2670,7 +2670,7 @@ class Kealoa_Shortcodes {
                     <?php $host_alt_by_clue = $this->db->get_alternation_by_clue_number($person_id); ?>
                     <?php if (!empty($host_alt_by_clue)): ?>
                     <div class="kealoa-clue-giver-alt-by-clue">
-                        <h2><?php esc_html_e('Alternation by Clue Number', 'kealoa-reference'); ?></h2>
+                        <h2><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('by Clue Number', 'kealoa-reference'); ?></h2>
                         <div class="kealoa-table-scroll">
                         <table class="kealoa-table">
                             <thead>
