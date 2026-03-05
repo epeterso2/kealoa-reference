@@ -6,7 +6,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://github.com/epeterso2/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 2.1.95
+ * Version: 2.1.99
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -33,7 +33,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '2.1.95');
+define('KEALOA_VERSION', '2.1.99');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -286,7 +286,7 @@ function kealoa_render_bug_report_button(): void {
     }
     ?>
     <button class="kealoa-bug-report-btn" type="button" title="<?php esc_attr_e('Report a Bug', 'kealoa-reference'); ?>">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l1.88 1.88M14.12 3.88L16 2"/><path d="M9 7.13v-1a3.003 3.003 0 116 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 014-4h4a4 4 0 014 4v3c0 3.3-2.7 6-6 6z"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg>
+        <img src="<?php echo esc_url(KEALOA_PLUGIN_URL . 'assets/images/bug-report.svg'); ?>" alt="<?php esc_attr_e('Report a Bug', 'kealoa-reference'); ?>" width="24" height="24">
     </button>
     <div class="kealoa-bug-report-overlay" style="display:none;">
         <div class="kealoa-bug-report-modal">
