@@ -2807,7 +2807,7 @@ class Kealoa_Admin {
         $debug_mode = !empty($_POST['debug_mode']);
         update_option('kealoa_debug_mode', $debug_mode);
 
-        $bug_report_enabled = !empty($_POST['bug_report_enabled']);
+        $bug_report_enabled = !empty($_POST['bug_report_enabled']) ? '1' : '0';
         update_option('kealoa_bug_report_enabled', $bug_report_enabled);
 
         Kealoa_Shortcodes::flush_all_caches();
