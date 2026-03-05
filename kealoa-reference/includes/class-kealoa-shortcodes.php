@@ -366,6 +366,39 @@ class Kealoa_Shortcodes {
             </div>
             <?php endif; ?>
 
+            <?php $alt_by_clue = $this->db->get_alternation_by_clue_number(); ?>
+            <?php if (!empty($alt_by_clue)): ?>
+            <h3><?php esc_html_e('Alternation by Clue Number', 'kealoa-reference'); ?></h3>
+            <div class="kealoa-table-scroll">
+            <table class="kealoa-table">
+                <thead>
+                    <tr>
+                        <th data-sort="number"><?php esc_html_e('Clue', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Chances', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Taken', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('%', 'kealoa-reference'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($alt_by_clue as $row):
+                        $alt_pct = (int) $row->chances > 0
+                            ? ((int) $row->taken / (int) $row->chances) * 100
+                            : 0;
+                    ?>
+                        <tr>
+                            <td><?php echo esc_html((int) $row->clue_number); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $row->chances)); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $row->taken)); ?></td>
+                            <td data-value="<?php echo esc_attr(number_format((float) $alt_pct, 2, '.', '')); ?>">
+                                <?php echo Kealoa_Formatter::format_percentage($alt_pct); ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            </div>
+            <?php endif; ?>
+
                 </div><!-- end Summary Stats tab -->
 
                 <div class="kealoa-tab-panel" data-tab="detailed-stats">
@@ -2625,6 +2658,41 @@ class Kealoa_Shortcodes {
                                         <td><?php echo esc_html(number_format_i18n((int) $cgg->correct_guesses)); ?></td>
                                         <td data-value="<?php echo esc_attr(number_format((float) $cgg_pct, 2, '.', '')); ?>">
                                             <?php echo Kealoa_Formatter::format_percentage($cgg_pct); ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php $host_alt_by_clue = $this->db->get_alternation_by_clue_number($person_id); ?>
+                    <?php if (!empty($host_alt_by_clue)): ?>
+                    <div class="kealoa-clue-giver-alt-by-clue">
+                        <h2><?php esc_html_e('Alternation by Clue Number', 'kealoa-reference'); ?></h2>
+                        <div class="kealoa-table-scroll">
+                        <table class="kealoa-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="number"><?php esc_html_e('Clue', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Chances', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Taken', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('%', 'kealoa-reference'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($host_alt_by_clue as $row):
+                                    $alt_pct = (int) $row->chances > 0
+                                        ? ((int) $row->taken / (int) $row->chances) * 100
+                                        : 0;
+                                ?>
+                                    <tr>
+                                        <td><?php echo esc_html((int) $row->clue_number); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $row->chances)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $row->taken)); ?></td>
+                                        <td data-value="<?php echo esc_attr(number_format((float) $alt_pct, 2, '.', '')); ?>">
+                                            <?php echo Kealoa_Formatter::format_percentage($alt_pct); ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

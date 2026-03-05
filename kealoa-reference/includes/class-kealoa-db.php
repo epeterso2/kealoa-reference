@@ -1862,6 +1862,41 @@ class Kealoa_DB {
     }
 
     /**
+     * Get alternation statistics broken down by clue number.
+     *
+     * For each clue number 2–10, returns the number of rounds that had
+     * that clue ("chances") and the number of times the answer differed
+     * from the previous clue's answer ("taken").
+     *
+     * @param int|null $clue_giver_id  Optional host person ID to filter rounds.
+     * @return array<int, object{clue_number: int, chances: int, taken: int}>
+     */
+    public function get_alternation_by_clue_number(?int $clue_giver_id = null): array {
+        $host_join  = '';
+        $host_where = '';
+        if ($clue_giver_id !== null) {
+            $host_join  = "INNER JOIN {$this->rounds_table} r ON c2.round_id = r.id";
+            $host_where = $this->wpdb->prepare("AND r.clue_giver_id = %d", $clue_giver_id);
+        }
+
+        $sql = "SELECT
+                    c2.clue_number,
+                    COUNT(*) AS chances,
+                    SUM(CASE WHEN c2.correct_answer != c1.correct_answer THEN 1 ELSE 0 END) AS taken
+                FROM {$this->clues_table} c2
+                INNER JOIN {$this->clues_table} c1
+                    ON c1.round_id = c2.round_id
+                    AND c1.clue_number = c2.clue_number - 1
+                {$host_join}
+                WHERE c2.clue_number BETWEEN 2 AND 10
+                {$host_where}
+                GROUP BY c2.clue_number
+                ORDER BY c2.clue_number ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get the mean and standard deviation of clue ages for a round.
      *
      * Clue age is the number of days between the round date and the
