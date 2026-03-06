@@ -266,6 +266,11 @@
     width: 1%;
 }
 
+/* Constructor names may be long — allow wrapping */
+.kealoa-clues-table .kealoa-constructors {
+    white-space: normal;
+}
+
 .kealoa-round-nav {
     display: flex;
     justify-content: space-between;
