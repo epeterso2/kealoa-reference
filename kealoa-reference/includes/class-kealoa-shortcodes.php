@@ -4203,6 +4203,23 @@ class Kealoa_Shortcodes {
         <?php endif; // end if (!empty($multi_round_puzzles)) ?>
 
         <?php if (!empty($same_constructor_editor_puzzles)): ?>
+        <?php
+        // Pre-fetch solutions for all rounds across same-constructor-editor puzzles
+        $sce_all_rids = [];
+        foreach ($same_constructor_editor_puzzles as $sce_puzzle) {
+            if (!empty($sce_puzzle->round_ids)) {
+                foreach (explode(',', $sce_puzzle->round_ids) as $rid) {
+                    $rid = (int) $rid;
+                    if ($rid) {
+                        $sce_all_rids[] = $rid;
+                    }
+                }
+            }
+        }
+        $sce_all_rids = array_unique($sce_all_rids);
+        $sce_solutions_cache = !empty($sce_all_rids) ? $this->db->get_round_solutions_bulk($sce_all_rids) : [];
+        $sce_rounds_per_date = $this->db->get_rounds_per_date_counts();
+        ?>
         <div class="kealoa-curiosities-section">
         <h2><?php esc_html_e('Same Constructor & Editor', 'kealoa-reference'); ?></h2>
         <div class="kealoa-puzzles-table-wrapper">
@@ -4212,27 +4229,70 @@ class Kealoa_Shortcodes {
                         <tr>
                             <th data-sort="weekday"><?php esc_html_e('Day', 'kealoa-reference'); ?></th>
                             <th data-sort="date"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
-                            <th data-sort="text"><?php esc_html_e('Person', 'kealoa-reference'); ?></th>
-                            <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                            <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
+                            <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
                             <th data-sort="date"><?php esc_html_e('Round Date', 'kealoa-reference'); ?></th>
+                            <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($same_constructor_editor_puzzles as $sce_puzzle): ?>
+                            <?php
+                            $constructor_ids   = !empty($sce_puzzle->constructor_ids)   ? explode(',', $sce_puzzle->constructor_ids)   : [];
+                            $constructor_names = !empty($sce_puzzle->constructor_names) ? explode(', ', $sce_puzzle->constructor_names) : [];
+                            $round_ids         = !empty($sce_puzzle->round_ids)         ? explode(',', $sce_puzzle->round_ids)         : [];
+                            $round_dates       = !empty($sce_puzzle->round_dates)       ? explode(',', $sce_puzzle->round_dates)       : [];
+                            $round_numbers     = !empty($sce_puzzle->round_numbers)     ? explode(',', $sce_puzzle->round_numbers)     : [];
+                            $round_game_numbers = !empty($sce_puzzle->round_game_numbers) ? explode(',', $sce_puzzle->round_game_numbers) : [];
+
+                            $round_words_parts = [];
+                            $round_date_parts  = [];
+                            foreach ($round_ids as $idx => $rid) {
+                                $rid    = (int) $rid;
+                                $rdate  = $round_dates[$idx]  ?? '';
+                                $rnum   = $round_numbers[$idx] ?? '';
+                                $gn     = (int) ($round_game_numbers[$idx] ?? $rid);
+                                $round_words_parts[] = isset($sce_solutions_cache[$rid])
+                                    ? Kealoa_Formatter::format_solution_words_link($gn, $sce_solutions_cache[$rid])
+                                    : '';
+                                $date_cell = Kealoa_Formatter::format_round_date_link($gn, $rdate);
+                                if (!empty($rnum) && ($sce_rounds_per_date[$rdate] ?? 1) > 1) {
+                                    $date_cell .= ' <span class="kealoa-round-number">(#' . esc_html($rnum) . ')</span>';
+                                }
+                                $round_date_parts[] = $date_cell;
+                            }
+                            ?>
                             <tr>
                                 <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($sce_puzzle->publication_date)); ?></td>
                                 <td><?php echo Kealoa_Formatter::format_puzzle_date_link($sce_puzzle->publication_date); ?></td>
-                                <td><?php echo Kealoa_Formatter::format_person_link((int) $sce_puzzle->person_id, $sce_puzzle->person_name); ?></td>
-                                <td class="kealoa-round-words"><?php echo esc_html($sce_puzzle->solution_words ?? '&mdash;'); ?></td>
-                                <td class="kealoa-round-date">
+                                <td>
                                     <?php
-                                    if (!empty($sce_puzzle->game_number)) {
-                                        echo Kealoa_Formatter::format_round_date_link((int) $sce_puzzle->game_number, $sce_puzzle->round_date);
+                                    if (!empty($constructor_ids)) {
+                                        $links = [];
+                                        for ($i = 0; $i < count($constructor_ids); $i++) {
+                                            $cid   = (int) $constructor_ids[$i];
+                                            $cname = $constructor_names[$i] ?? '';
+                                            if ($cid && $cname) {
+                                                $links[] = Kealoa_Formatter::format_constructor_link($cid, $cname);
+                                            }
+                                        }
+                                        echo Kealoa_Formatter::format_list_with_and($links);
                                     } else {
                                         echo '&mdash;';
                                     }
                                     ?>
                                 </td>
+                                <td>
+                                    <?php
+                                    if (!empty($sce_puzzle->editor_id)) {
+                                        echo Kealoa_Formatter::format_editor_link((int) $sce_puzzle->editor_id, $sce_puzzle->editor_name);
+                                    } else {
+                                        echo '&mdash;';
+                                    }
+                                    ?>
+                                </td>
+                                <td class="kealoa-round-date"><?php echo !empty($round_date_parts) ? implode('<br>', $round_date_parts) : '&mdash;'; ?></td>
+                                <td class="kealoa-round-words"><?php echo !empty($round_words_parts) ? implode('<br>', $round_words_parts) : '&mdash;'; ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

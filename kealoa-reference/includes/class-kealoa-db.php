@@ -3950,21 +3950,32 @@ class Kealoa_DB {
         $sql = "SELECT
                 pz.id,
                 pz.publication_date,
-                con.id AS person_id,
-                con.full_name AS person_name,
-                GROUP_CONCAT(DISTINCT rs.word ORDER BY rs.word_order ASC SEPARATOR ', ') AS solution_words,
-                r.round_date,
-                r.game_number
+                GROUP_CONCAT(DISTINCT con.full_name ORDER BY pc.constructor_order ASC SEPARATOR ', ') AS constructor_names,
+                GROUP_CONCAT(DISTINCT con.id ORDER BY pc.constructor_order ASC) AS constructor_ids,
+                COALESCE(ed.full_name, '') AS editor_name,
+                ed.id AS editor_id,
+                rd.round_ids,
+                rd.round_dates,
+                rd.round_numbers,
+                rd.round_game_numbers
             FROM {$this->puzzles_table} pz
             INNER JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
             INNER JOIN {$this->persons_table} con ON pc.person_id = con.id
             LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
-            LEFT JOIN {$this->clues_table} c ON pz.id = c.puzzle_id
-            LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
-            LEFT JOIN {$this->round_solutions_table} rs ON r.id = rs.round_id
+            LEFT JOIN (
+                SELECT
+                    dc.puzzle_id,
+                    GROUP_CONCAT(dc.round_id ORDER BY r.round_date ASC, r.round_number ASC) AS round_ids,
+                    GROUP_CONCAT(r.round_date ORDER BY r.round_date ASC, r.round_number ASC) AS round_dates,
+                    GROUP_CONCAT(r.round_number ORDER BY r.round_date ASC, r.round_number ASC) AS round_numbers,
+                    GROUP_CONCAT(r.game_number ORDER BY r.round_date ASC, r.round_number ASC) AS round_game_numbers
+                FROM (SELECT DISTINCT puzzle_id, round_id FROM {$this->clues_table}) dc
+                INNER JOIN {$this->rounds_table} r ON r.id = dc.round_id
+                GROUP BY dc.puzzle_id
+            ) rd ON rd.puzzle_id = pz.id
             WHERE pz.editor_id = con.id
                OR (con.full_name = 'Alex Eaton-Salners' AND ed.full_name = 'Will Shortz')
-            GROUP BY pz.id, pz.publication_date, con.id, con.full_name, r.round_date, r.game_number
+            GROUP BY pz.id, pz.publication_date, ed.full_name, ed.id, rd.round_ids, rd.round_dates, rd.round_numbers, rd.round_game_numbers
             ORDER BY pz.publication_date DESC";
 
         $results = $this->wpdb->get_results($sql);
