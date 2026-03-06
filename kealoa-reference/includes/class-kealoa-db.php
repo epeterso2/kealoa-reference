@@ -3952,7 +3952,7 @@ class Kealoa_DB {
                 pz.publication_date,
                 con.id AS person_id,
                 con.full_name AS person_name,
-                GROUP_CONCAT(DISTINCT rs.word ORDER BY rs.position ASC SEPARATOR ', ') AS solution_words,
+                GROUP_CONCAT(DISTINCT rs.word ORDER BY rs.word_order ASC SEPARATOR ', ') AS solution_words,
                 r.round_date,
                 r.game_number
             FROM {$this->puzzles_table} pz
