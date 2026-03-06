@@ -262,6 +262,108 @@ class Kealoa_DB {
         return $result !== false;
     }
 
+    /**
+     * Merge one or more source persons into a single target person.
+     *
+     * Reassigns all foreign-key references from each source person to the
+     * target, handling UNIQUE constraints on junction tables by deleting
+     * duplicate links rather than creating conflicts.  After reassignment,
+     * deletes the source person records.
+     *
+     * @param int   $target_id  The person ID to keep.
+     * @param int[] $source_ids Person IDs to merge into the target.
+     * @return int Number of source persons successfully merged and deleted.
+     */
+    public function merge_persons(int $target_id, array $source_ids): int {
+        if (empty($source_ids) || !$target_id) {
+            return 0;
+        }
+
+        // Remove target from sources if accidentally included
+        $source_ids = array_filter($source_ids, fn($id) => (int) $id !== $target_id);
+        if (empty($source_ids)) {
+            return 0;
+        }
+
+        $merged = 0;
+
+        foreach ($source_ids as $source_id) {
+            $source_id = (int) $source_id;
+
+            // 1. puzzles.editor_id — simple FK, just update
+            $this->wpdb->update(
+                $this->puzzles_table,
+                ['editor_id' => $target_id],
+                ['editor_id' => $source_id],
+                ['%d'],
+                ['%d']
+            );
+
+            // 2. rounds.clue_giver_id — simple FK, just update
+            $this->wpdb->update(
+                $this->rounds_table,
+                ['clue_giver_id' => $target_id],
+                ['clue_giver_id' => $source_id],
+                ['%d'],
+                ['%d']
+            );
+
+            // 3. guesses.guesser_person_id — simple FK, just update
+            $this->wpdb->update(
+                $this->guesses_table,
+                ['guesser_person_id' => $target_id],
+                ['guesser_person_id' => $source_id],
+                ['%d'],
+                ['%d']
+            );
+
+            // 4. puzzle_constructors — UNIQUE(puzzle_id, person_id)
+            //    Delete source rows that would conflict, then update the rest.
+            $this->wpdb->query($this->wpdb->prepare(
+                "DELETE pc_source FROM {$this->puzzle_constructors_table} pc_source
+                 INNER JOIN {$this->puzzle_constructors_table} pc_target
+                    ON pc_source.puzzle_id = pc_target.puzzle_id
+                    AND pc_target.person_id = %d
+                 WHERE pc_source.person_id = %d",
+                $target_id,
+                $source_id
+            ));
+            $this->wpdb->update(
+                $this->puzzle_constructors_table,
+                ['person_id' => $target_id],
+                ['person_id' => $source_id],
+                ['%d'],
+                ['%d']
+            );
+
+            // 5. round_guessers — UNIQUE(round_id, person_id)
+            //    Delete source rows that would conflict, then update the rest.
+            $this->wpdb->query($this->wpdb->prepare(
+                "DELETE rg_source FROM {$this->round_guessers_table} rg_source
+                 INNER JOIN {$this->round_guessers_table} rg_target
+                    ON rg_source.round_id = rg_target.round_id
+                    AND rg_target.person_id = %d
+                 WHERE rg_source.person_id = %d",
+                $target_id,
+                $source_id
+            ));
+            $this->wpdb->update(
+                $this->round_guessers_table,
+                ['person_id' => $target_id],
+                ['person_id' => $source_id],
+                ['%d'],
+                ['%d']
+            );
+
+            // 6. Delete the source person record
+            if ($this->delete_person($source_id)) {
+                $merged++;
+            }
+        }
+
+        return $merged;
+    }
+
     // =========================================================================
     // PUZZLES CRUD
     // =========================================================================

@@ -333,6 +333,7 @@ class Kealoa_Admin {
             'create_person' => $this->handle_create_person(),
             'update_person' => $this->handle_update_person(),
             'delete_person' => $this->handle_delete_person(),
+            'merge_persons' => $this->handle_merge_persons(),
             'create_puzzle' => $this->handle_create_puzzle(),
             'update_puzzle' => $this->handle_update_puzzle(),
             'delete_puzzle' => $this->handle_delete_puzzle(),
@@ -865,6 +866,7 @@ class Kealoa_Admin {
         match($action) {
             'add' => $this->render_person_form(),
             'edit' => $this->render_person_form($id),
+            'merge' => $this->render_persons_merge(),
             default => $this->render_persons_list(),
         };
 
@@ -892,6 +894,9 @@ class Kealoa_Admin {
         <h1 class="wp-heading-inline"><?php esc_html_e('Persons', 'kealoa-reference'); ?></h1>
         <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons&action=add')); ?>" class="page-title-action">
             <?php esc_html_e('Add New', 'kealoa-reference'); ?>
+        </a>
+        <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons&action=merge')); ?>" class="page-title-action">
+            <?php esc_html_e('Merge Persons', 'kealoa-reference'); ?>
         </a>
 
         <form method="get" class="kealoa-search-form">
@@ -1084,6 +1089,141 @@ class Kealoa_Admin {
                        value="<?php echo $is_edit ? esc_attr__('Update Person', 'kealoa-reference') : esc_attr__('Add Person', 'kealoa-reference'); ?>" />
             </p>
         </form>
+        <?php
+    }
+
+    /**
+     * Render persons merge page
+     *
+     * Displays a form allowing the admin to select two or more persons,
+     * designate one as the target (to keep), and merge the others into it.
+     * All foreign-key references are reassigned to the target person.
+     */
+    private function render_persons_merge(): void {
+        $persons = $this->db->get_persons(['limit' => 9999, 'orderby' => 'full_name', 'order' => 'ASC']);
+        ?>
+        <h1><?php esc_html_e('Merge Persons', 'kealoa-reference'); ?></h1>
+
+        <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons')); ?>" class="button">
+            &larr; <?php esc_html_e('Back to Persons', 'kealoa-reference'); ?>
+        </a>
+
+        <div class="kealoa-merge-info" style="margin: 20px 0; padding: 12px 16px; background: #fff; border-left: 4px solid var(--kealoa-info, #2271b1);">
+            <p><strong><?php esc_html_e('How merging works:', 'kealoa-reference'); ?></strong></p>
+            <ul style="list-style: disc; margin-left: 20px;">
+                <li><?php esc_html_e('Select two or more persons from the list below.', 'kealoa-reference'); ?></li>
+                <li><?php esc_html_e('Choose which person to keep (the target). The target person\'s name and profile data are preserved.', 'kealoa-reference'); ?></li>
+                <li><?php esc_html_e('All rounds, puzzles, clues, and guesses linked to the other (source) persons are reassigned to the target.', 'kealoa-reference'); ?></li>
+                <li><?php esc_html_e('The source persons are then deleted.', 'kealoa-reference'); ?></li>
+                <li><strong><?php esc_html_e('This action cannot be undone.', 'kealoa-reference'); ?></strong></li>
+            </ul>
+        </div>
+
+        <form method="post" class="kealoa-form" id="kealoa-merge-form">
+            <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
+            <input type="hidden" name="kealoa_action" value="merge_persons" />
+
+            <table class="form-table">
+                <tr>
+                    <th>
+                        <label><?php esc_html_e('Persons to Merge', 'kealoa-reference'); ?> *</label>
+                        <p class="description" style="font-weight: normal;">
+                            <?php esc_html_e('Select two or more persons.', 'kealoa-reference'); ?>
+                        </p>
+                    </th>
+                    <td>
+                        <select name="person_ids[]" id="merge-person-ids" multiple="multiple" size="15" style="min-width: 350px;" required>
+                            <?php foreach ($persons as $person): ?>
+                                <option value="<?php echo esc_attr($person->id); ?>">
+                                    <?php echo esc_html($person->full_name); ?> (ID: <?php echo esc_html($person->id); ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="description">
+                            <?php esc_html_e('Hold Ctrl (Cmd on Mac) to select multiple persons.', 'kealoa-reference'); ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <label for="merge-target-id"><?php esc_html_e('Person to Keep (Target)', 'kealoa-reference'); ?> *</label>
+                        <p class="description" style="font-weight: normal;">
+                            <?php esc_html_e('This person\'s record is preserved. All others are merged into it and deleted.', 'kealoa-reference'); ?>
+                        </p>
+                    </th>
+                    <td>
+                        <select name="target_id" id="merge-target-id" style="min-width: 350px;" required>
+                            <option value=""><?php esc_html_e('— Select persons above first —', 'kealoa-reference'); ?></option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+
+            <p class="submit">
+                <input type="submit" id="merge-submit" class="button button-primary" value="<?php esc_attr_e('Merge Persons', 'kealoa-reference'); ?>" disabled />
+            </p>
+        </form>
+
+        <script>
+        (function() {
+            const personSelect = document.getElementById('merge-person-ids');
+            const targetSelect = document.getElementById('merge-target-id');
+            const submitBtn    = document.getElementById('merge-submit');
+
+            personSelect.addEventListener('change', function() {
+                const selected = Array.from(this.selectedOptions);
+                const currentTarget = targetSelect.value;
+
+                // Clear target options except placeholder
+                targetSelect.innerHTML = '';
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = selected.length < 2
+                    ? '<?php echo esc_js(__('— Select at least 2 persons above —', 'kealoa-reference')); ?>'
+                    : '<?php echo esc_js(__('— Choose the person to keep —', 'kealoa-reference')); ?>';
+                targetSelect.appendChild(placeholder);
+
+                // Populate target dropdown with selected persons
+                selected.forEach(function(opt) {
+                    const option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.textContent.trim();
+                    if (opt.value === currentTarget) {
+                        option.selected = true;
+                    }
+                    targetSelect.appendChild(option);
+                });
+
+                updateSubmitState();
+            });
+
+            targetSelect.addEventListener('change', updateSubmitState);
+
+            function updateSubmitState() {
+                const selectedCount = personSelect.selectedOptions.length;
+                const hasTarget = targetSelect.value !== '';
+                submitBtn.disabled = selectedCount < 2 || !hasTarget;
+            }
+
+            // Confirm before submit
+            document.getElementById('kealoa-merge-form').addEventListener('submit', function(e) {
+                const selected = Array.from(personSelect.selectedOptions);
+                const targetName = targetSelect.selectedOptions[0]?.textContent.trim() || '';
+                const sourceNames = selected
+                    .filter(opt => opt.value !== targetSelect.value)
+                    .map(opt => opt.textContent.trim());
+
+                const msg = '<?php echo esc_js(__('Are you sure you want to merge the following persons into', 'kealoa-reference')); ?> '
+                    + targetName + '?\n\n'
+                    + sourceNames.join('\n')
+                    + '\n\n<?php echo esc_js(__('This action cannot be undone.', 'kealoa-reference')); ?>';
+
+                if (!confirm(msg)) {
+                    e.preventDefault();
+                }
+            });
+        })();
+        </script>
         <?php
     }
 
@@ -2036,6 +2176,31 @@ class Kealoa_Admin {
         $id = (int) ($_POST['id'] ?? 0);
         $this->db->delete_person($id);
         $this->redirect_with_message('kealoa-persons', 'Person deleted.');
+    }
+
+    /**
+     * Handle merge persons
+     */
+    private function handle_merge_persons(): void {
+        $target_id  = (int) ($_POST['target_id'] ?? 0);
+        $person_ids = array_map('intval', (array) ($_POST['person_ids'] ?? []));
+
+        // Source IDs = all selected persons except the target
+        $source_ids = array_filter($person_ids, fn($id) => $id !== $target_id);
+
+        if (!$target_id || count($source_ids) < 1) {
+            $this->redirect_with_message('kealoa-persons', 'Please select at least two persons and a target.', 'error', ['action' => 'merge']);
+            return;
+        }
+
+        $merged = $this->db->merge_persons($target_id, $source_ids);
+
+        $message = sprintf(
+            _n('%d person merged successfully.', '%d persons merged successfully.', $merged, 'kealoa-reference'),
+            $merged
+        );
+
+        $this->redirect_with_message('kealoa-persons', $message, 'success', ['action' => 'edit', 'id' => $target_id]);
     }
 
     /**
