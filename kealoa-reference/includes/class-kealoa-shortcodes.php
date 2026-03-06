@@ -1084,49 +1084,52 @@ class Kealoa_Shortcodes {
             return '<p class="kealoa-error">' . esc_html__('Person not found.', 'kealoa-reference') . '</p>';
         }
 
-        return $this->get_cached_or_render('person_' . $person_id, function () use ($person_id, $person) {
+        // Resolve alias group — merged persons share data in the detail view
+        $person_ids = $this->db->get_alias_person_ids($person_id);
 
-        $stats = $this->db->get_person_stats($person_id);
+        return $this->get_cached_or_render('person_' . $person_id . '_m' . implode('_', $person_ids), function () use ($person_id, $person_ids, $person) {
+
+        $stats = $this->db->get_person_stats($person_ids);
 
         // Check roles via unified persons schema
-        $roles = $this->db->get_person_roles($person_id);
+        $roles = $this->db->get_person_roles($person_ids);
         $is_player = in_array('player', $roles, true);
         $is_constructor = in_array('constructor', $roles, true);
         $is_editor = in_array('editor', $roles, true);
 
         // Constructor/editor role data (loaded lazily)
-        $constructor_stats = $is_constructor ? $this->db->get_person_constructor_stats($person_id) : null;
-        $constructor_puzzles = $is_constructor ? $this->db->get_person_constructor_puzzles($person_id) : [];
-        $constructor_player_results = $is_constructor ? $this->db->get_person_constructor_player_results($person_id) : [];
-        $constructor_editor_results = $is_constructor ? $this->db->get_person_constructor_editor_results($person_id) : [];
-        $editor_stats = $is_editor ? $this->db->get_person_editor_stats($person_id) : null;
-        $editor_puzzles = $is_editor ? $this->db->get_person_editor_puzzles($person_id) : [];
-        $editor_player_results = $is_editor ? $this->db->get_person_editor_player_results($person_id) : [];
-        $editor_constructor_results = $is_editor ? $this->db->get_person_editor_constructor_results($person_id) : [];
+        $constructor_stats = $is_constructor ? $this->db->get_person_constructor_stats($person_ids) : null;
+        $constructor_puzzles = $is_constructor ? $this->db->get_person_constructor_puzzles($person_ids) : [];
+        $constructor_player_results = $is_constructor ? $this->db->get_person_constructor_player_results($person_ids) : [];
+        $constructor_editor_results = $is_constructor ? $this->db->get_person_constructor_editor_results($person_ids) : [];
+        $editor_stats = $is_editor ? $this->db->get_person_editor_stats($person_ids) : null;
+        $editor_puzzles = $is_editor ? $this->db->get_person_editor_puzzles($person_ids) : [];
+        $editor_player_results = $is_editor ? $this->db->get_person_editor_player_results($person_ids) : [];
+        $editor_constructor_results = $is_editor ? $this->db->get_person_editor_constructor_results($person_ids) : [];
 
         $is_clue_giver = in_array('clue_giver', $roles, true);
-        $clue_giver_stats = $is_clue_giver ? $this->db->get_clue_giver_stats($person_id) : null;
-        $clue_giver_stats_by_year = $is_clue_giver ? $this->db->get_clue_giver_stats_by_year($person_id) : [];
-        $clue_giver_stats_by_day = $is_clue_giver ? $this->db->get_clue_giver_stats_by_day($person_id) : [];
-        $clue_giver_stats_by_guesser = $is_clue_giver ? $this->db->get_clue_giver_stats_by_guesser($person_id) : [];
-        $clue_giver_rounds = $is_clue_giver ? $this->db->get_clue_giver_rounds($person_id) : [];
-        $clue_giver_streaks = $is_clue_giver ? $this->db->get_clue_giver_streaks($person_id) : null;
-        $clue_giver_unique_players = $is_clue_giver ? $this->db->get_clue_giver_unique_players($person_id) : 0;
+        $clue_giver_stats = $is_clue_giver ? $this->db->get_clue_giver_stats($person_ids) : null;
+        $clue_giver_stats_by_year = $is_clue_giver ? $this->db->get_clue_giver_stats_by_year($person_ids) : [];
+        $clue_giver_stats_by_day = $is_clue_giver ? $this->db->get_clue_giver_stats_by_day($person_ids) : [];
+        $clue_giver_stats_by_guesser = $is_clue_giver ? $this->db->get_clue_giver_stats_by_guesser($person_ids) : [];
+        $clue_giver_rounds = $is_clue_giver ? $this->db->get_clue_giver_rounds($person_ids) : [];
+        $clue_giver_streaks = $is_clue_giver ? $this->db->get_clue_giver_streaks($person_ids) : null;
+        $clue_giver_unique_players = $is_clue_giver ? $this->db->get_clue_giver_unique_players($person_ids) : 0;
 
-        $person_puzzles = $is_player ? $this->db->get_person_puzzles($person_id) : [];
-        $clue_number_results = $this->db->get_person_results_by_clue_number($person_id);
-        $answer_length_results = $this->db->get_person_results_by_answer_length($person_id);
-        $answer_word_count_results = $this->db->get_person_results_by_answer_word_count($person_id);
-        $direction_results = $this->db->get_person_results_by_direction($person_id);
-        $day_of_week_results = $this->db->get_person_results_by_day_of_week($person_id);
-        $decade_results = $this->db->get_person_results_by_decade($person_id);
-        $year_results = $this->db->get_person_results_by_year($person_id);
-        $best_streaks_by_year = $this->db->get_person_best_streaks_by_year($person_id);
-        $constructor_results = $this->db->get_person_results_by_constructor($person_id);
-        $editor_results = $this->db->get_person_results_by_editor($person_id);
-        $round_history = $this->db->get_person_round_history($person_id);
-        $streak_per_round = $this->db->get_person_streak_per_round($person_id);
-        $correct_clue_rounds = $this->db->get_person_correct_clue_rounds($person_id);
+        $person_puzzles = $is_player ? $this->db->get_person_puzzles($person_ids) : [];
+        $clue_number_results = $this->db->get_person_results_by_clue_number($person_ids);
+        $answer_length_results = $this->db->get_person_results_by_answer_length($person_ids);
+        $answer_word_count_results = $this->db->get_person_results_by_answer_word_count($person_ids);
+        $direction_results = $this->db->get_person_results_by_direction($person_ids);
+        $day_of_week_results = $this->db->get_person_results_by_day_of_week($person_ids);
+        $decade_results = $this->db->get_person_results_by_decade($person_ids);
+        $year_results = $this->db->get_person_results_by_year($person_ids);
+        $best_streaks_by_year = $this->db->get_person_best_streaks_by_year($person_ids);
+        $constructor_results = $this->db->get_person_results_by_constructor($person_ids);
+        $editor_results = $this->db->get_person_results_by_editor($person_ids);
+        $round_history = $this->db->get_person_round_history($person_ids);
+        $streak_per_round = $this->db->get_person_streak_per_round($person_ids);
+        $correct_clue_rounds = $this->db->get_person_correct_clue_rounds($person_ids);
 
         // Collect ALL round IDs needed across all tabs for bulk pre-fetching
         $all_person_round_ids = array_map(function ($rh) { return (int) $rh->round_id; }, $round_history);
@@ -1164,7 +1167,7 @@ class Kealoa_Shortcodes {
         // Bulk pre-fetch co-constructors for constructor puzzles
         $con_puzzle_ids = array_map(function ($p) { return (int) $p->puzzle_id; }, $constructor_puzzles);
         $bulk_co_constructors_map = !empty($con_puzzle_ids)
-            ? $this->db->get_puzzle_co_constructors_bulk($con_puzzle_ids, $person_id)
+            ? $this->db->get_puzzle_co_constructors_bulk($con_puzzle_ids, $person_ids)
             : [];
         $has_co_constructors = false;
         foreach ($bulk_co_constructors_map as $co_list) {
@@ -2354,8 +2357,8 @@ class Kealoa_Shortcodes {
                 $has_co_players = false;
                 foreach ($round_history as $rh_check) {
                     $rh_guessers = $bulk_guessers_map[(int) $rh_check->round_id] ?? [];
-                    $co_players = array_filter($rh_guessers, function($g) use ($person_id) {
-                        return (int) $g->id !== $person_id;
+                    $co_players = array_filter($rh_guessers, function($g) use ($person_ids) {
+                        return !in_array((int) $g->id, $person_ids, true);
                     });
                     $round_co_players[(int) $rh_check->round_id] = $co_players;
                     if (!empty($co_players)) {
@@ -2667,7 +2670,7 @@ class Kealoa_Shortcodes {
                     </div>
                     <?php endif; ?>
 
-                    <?php $host_alt_by_clue = $this->db->get_alternation_by_clue_number($person_id); ?>
+                    <?php $host_alt_by_clue = $this->db->get_alternation_by_clue_number($person_ids); ?>
                     <?php if (!empty($host_alt_by_clue)): ?>
                     <div class="kealoa-clue-giver-alt-by-clue">
                         <h2><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('by Clue Number', 'kealoa-reference'); ?></h2>

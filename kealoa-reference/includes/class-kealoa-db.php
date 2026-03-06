@@ -27,6 +27,19 @@ if (!defined('ABSPATH')) {
  */
 class Kealoa_DB {
 
+    /**
+     * Groups of person names whose data should be merged in person detail views.
+     *
+     * Each inner array lists full_name values that should be treated as a
+     * single person for display purposes. DB records remain distinct.
+     */
+    private const PERSON_ALIASES = [
+        ['Alex Eaton-Salners', 'Will Shortz'],
+    ];
+
+    /** @var array<int, int[]>|null Resolved alias map (person_id => all IDs in group), lazily built. */
+    private ?array $alias_id_map = null;
+
     private \wpdb $wpdb;
     private string $persons_table;
     private string $puzzles_table;
@@ -52,6 +65,77 @@ class Kealoa_DB {
         $this->round_guessers_table = $wpdb->prefix . 'kealoa_round_guessers';
         $this->clues_table = $wpdb->prefix . 'kealoa_clues';
         $this->guesses_table = $wpdb->prefix . 'kealoa_guesses';
+    }
+
+    // =========================================================================
+    // PERSON ALIAS HELPERS
+    // =========================================================================
+
+    /**
+     * Resolve the alias map from PERSON_ALIASES (lazily, once per request).
+     *
+     * Builds a map of person_id => sorted array of all person IDs in the same
+     * alias group. Non-aliased persons are not in the map.
+     */
+    private function resolve_alias_map(): void {
+        if ($this->alias_id_map !== null) {
+            return;
+        }
+        $this->alias_id_map = [];
+        foreach (self::PERSON_ALIASES as $group) {
+            $ids = [];
+            foreach ($group as $name) {
+                $person = $this->get_person_by_name($name);
+                if ($person) {
+                    $ids[] = (int) $person->id;
+                }
+            }
+            if (count($ids) > 1) {
+                sort($ids);
+                foreach ($ids as $id) {
+                    $this->alias_id_map[$id] = $ids;
+                }
+            }
+        }
+    }
+
+    /**
+     * Get all person IDs in the alias group for the given person.
+     *
+     * If the person is not aliased, returns [$person_id].
+     *
+     * @param int $person_id
+     * @return int[] Sorted array of person IDs (always at least one element).
+     */
+    public function get_alias_person_ids(int $person_id): array {
+        $this->resolve_alias_map();
+        return $this->alias_id_map[$person_id] ?? [$person_id];
+    }
+
+    /**
+     * Build a SQL WHERE clause fragment for a column that may match one or
+     * more person IDs.
+     *
+     * When $person_ids contains a single value the fragment is:
+     *   column = 42
+     * When it contains multiple values:
+     *   column IN (5, 42)
+     *
+     * Values are cast to int for safety; no wpdb::prepare() wrapper is needed.
+     *
+     * @param string    $column     Fully-qualified column name (e.g. "g.guesser_person_id").
+     * @param int|int[] $person_ids One ID or an array of IDs.
+     * @return string SQL fragment (no leading AND/WHERE).
+     */
+    public function prepare_person_id_clause(string $column, int|array $person_ids): string {
+        if (is_int($person_ids)) {
+            $person_ids = [$person_ids];
+        }
+        $safe = array_map('intval', $person_ids);
+        if (count($safe) === 1) {
+            return "{$column} = {$safe[0]}";
+        }
+        return "{$column} IN (" . implode(', ', $safe) . ')';
     }
 
     // =========================================================================
@@ -1970,15 +2054,15 @@ class Kealoa_DB {
      * that clue ("chances") and the number of times the answer differed
      * from the previous clue's answer ("taken").
      *
-     * @param int|null $clue_giver_id  Optional host person ID to filter rounds.
+     * @param int|int[]|null $clue_giver_id  Optional host person ID(s) to filter rounds.
      * @return array<int, object{clue_number: int, chances: int, taken: int}>
      */
-    public function get_alternation_by_clue_number(?int $clue_giver_id = null): array {
+    public function get_alternation_by_clue_number(int|array|null $clue_giver_id = null): array {
         $host_join  = '';
         $host_where = '';
         if ($clue_giver_id !== null) {
             $host_join  = "INNER JOIN {$this->rounds_table} r ON c2.round_id = r.id";
-            $host_where = $this->wpdb->prepare("AND r.clue_giver_id = %d", $clue_giver_id);
+            $host_where = 'AND ' . $this->prepare_person_id_clause('r.clue_giver_id', $clue_giver_id);
         }
 
         $sql = "SELECT
@@ -2111,18 +2195,17 @@ class Kealoa_DB {
     /**
      * Get person statistics
      */
-    public function get_person_stats(int $person_id): object {
+    public function get_person_stats(int|array $person_ids): object {
+        $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
         // Single query fetches per-clue data; everything else is derived in PHP
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $clue_rows = $this->wpdb->get_results(
-            $this->wpdb->prepare(
                 "SELECT c.round_id, c.clue_number, g.is_correct
                 FROM {$this->guesses_table} g
                 INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
                 INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
-                WHERE g.guesser_person_id = %d
-                ORDER BY c.round_id ASC, c.clue_number ASC",
-                $person_id
-            )
+                WHERE {$clause}
+                ORDER BY c.round_id ASC, c.clue_number ASC"
         );
 
         // Derive aggregate stats from clue-level data
@@ -2206,20 +2289,19 @@ class Kealoa_DB {
     /**
      * Get person results by clue number
      */
-    public function get_person_results_by_clue_number(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_results_by_clue_number(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 c.clue_number,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
-            WHERE g.guesser_person_id = %d
+            WHERE {$clause}
             GROUP BY c.clue_number
-            ORDER BY c.clue_number ASC",
-            $person_id
-        );
+            ORDER BY c.clue_number ASC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2227,20 +2309,19 @@ class Kealoa_DB {
     /**
      * Get person results grouped by answer length (alphanumeric characters only)
      */
-    public function get_person_results_by_answer_length(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_results_by_answer_length(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 CHAR_LENGTH(REGEXP_REPLACE(c.correct_answer, '[^A-Za-z0-9]', '')) as answer_length,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
-            WHERE g.guesser_person_id = %d
+            WHERE {$clause}
             GROUP BY CHAR_LENGTH(REGEXP_REPLACE(c.correct_answer, '[^A-Za-z0-9]', ''))
-            ORDER BY CHAR_LENGTH(REGEXP_REPLACE(c.correct_answer, '[^A-Za-z0-9]', '')) ASC",
-            $person_id
-        );
+            ORDER BY CHAR_LENGTH(REGEXP_REPLACE(c.correct_answer, '[^A-Za-z0-9]', '')) ASC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2248,9 +2329,10 @@ class Kealoa_DB {
     /**
      * Get person results grouped by the number of answer words in the round
      */
-    public function get_person_results_by_answer_word_count(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_results_by_answer_word_count(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 rs_count.word_count as answer_word_count,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
@@ -2262,11 +2344,9 @@ class Kealoa_DB {
                 FROM {$this->round_solutions_table}
                 GROUP BY round_id
             ) rs_count ON rs_count.round_id = c.round_id
-            WHERE g.guesser_person_id = %d
+            WHERE {$clause}
             GROUP BY rs_count.word_count
-            ORDER BY rs_count.word_count ASC",
-            $person_id
-        );
+            ORDER BY rs_count.word_count ASC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2274,20 +2354,19 @@ class Kealoa_DB {
     /**
      * Get person results by clue direction (Across vs Down)
      */
-    public function get_person_results_by_direction(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_results_by_direction(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 c.puzzle_clue_direction as direction,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
-            WHERE g.guesser_person_id = %d
+            WHERE {$clause}
             GROUP BY c.puzzle_clue_direction
-            ORDER BY c.puzzle_clue_direction ASC",
-            $person_id
-        );
+            ORDER BY c.puzzle_clue_direction ASC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2295,9 +2374,10 @@ class Kealoa_DB {
     /**
      * Get person results by puzzle day of week
      */
-    public function get_person_results_by_day_of_week(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_results_by_day_of_week(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 DAYOFWEEK(pz.publication_date) as day_of_week,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
@@ -2305,11 +2385,9 @@ class Kealoa_DB {
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
-            WHERE g.guesser_person_id = %d
+            WHERE {$clause}
             GROUP BY DAYOFWEEK(pz.publication_date)
-            ORDER BY MOD(DAYOFWEEK(pz.publication_date) + 5, 7) ASC",
-            $person_id
-        );
+            ORDER BY MOD(DAYOFWEEK(pz.publication_date) + 5, 7) ASC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2317,9 +2395,10 @@ class Kealoa_DB {
     /**
      * Get person results by puzzle publication decade
      */
-    public function get_person_results_by_decade(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_results_by_decade(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 FLOOR(YEAR(pz.publication_date) / 10) * 10 as decade,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
@@ -2327,11 +2406,9 @@ class Kealoa_DB {
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
-            WHERE g.guesser_person_id = %d
+            WHERE {$clause}
             GROUP BY FLOOR(YEAR(pz.publication_date) / 10) * 10
-            ORDER BY decade ASC",
-            $person_id
-        );
+            ORDER BY decade ASC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2339,9 +2416,11 @@ class Kealoa_DB {
     /**
      * Get person results by year of round
      */
-    public function get_person_results_by_year(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_results_by_year(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
+        $sub_clause = $this->prepare_person_id_clause('g2.guesser_person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 YEAR(r.round_date) as year,
                 COUNT(DISTINCT r.id) as rounds_played,
                 COUNT(g.id) as total_answered,
@@ -2356,15 +2435,12 @@ class Kealoa_DB {
                 FROM {$this->guesses_table} g2
                 INNER JOIN {$this->clues_table} c2 ON g2.clue_id = c2.id
                 INNER JOIN {$this->round_guessers_table} rg2 ON rg2.round_id = c2.round_id AND rg2.person_id = g2.guesser_person_id
-                WHERE g2.guesser_person_id = %d
+                WHERE {$sub_clause}
                 GROUP BY g2.guesser_person_id, c2.round_id
             ) rs ON rs.round_id = r.id AND rs.guesser_person_id = g.guesser_person_id
-            WHERE g.guesser_person_id = %d
+            WHERE {$clause}
             GROUP BY YEAR(r.round_date)
-            ORDER BY year ASC",
-            $person_id,
-            $person_id
-        );
+            ORDER BY year ASC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2374,17 +2450,16 @@ class Kealoa_DB {
      *
      * @return array<int, int> Keyed by year
      */
-    public function get_person_best_streaks_by_year(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT c.round_id, YEAR(r.round_date) as year, c.clue_number, g.is_correct
+    public function get_person_best_streaks_by_year(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT c.round_id, YEAR(r.round_date) as year, c.clue_number, g.is_correct
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
-            WHERE g.guesser_person_id = %d
-            ORDER BY year ASC, c.round_id ASC, c.clue_number ASC",
-            $person_id
-        );
+            WHERE {$clause}
+            ORDER BY year ASC, c.round_id ASC, c.clue_number ASC";
 
         $rows = $this->wpdb->get_results($sql);
         $map = [];
@@ -2416,9 +2491,10 @@ class Kealoa_DB {
     /**
      * Get person results by constructor
      */
-    public function get_person_results_by_constructor(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_results_by_constructor(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 con.id as constructor_id,
                 con.full_name,
                 con.xwordinfo_profile_name,
@@ -2429,11 +2505,9 @@ class Kealoa_DB {
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->puzzle_constructors_table} pc ON c.puzzle_id = pc.puzzle_id
             INNER JOIN {$this->persons_table} con ON pc.person_id = con.id
-            WHERE g.guesser_person_id = %d
+            WHERE {$clause}
             GROUP BY con.id, con.full_name, con.xwordinfo_profile_name
-            ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC",
-            $person_id
-        );
+            ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2441,9 +2515,10 @@ class Kealoa_DB {
     /**
      * Get person's results grouped by puzzle editor
      */
-    public function get_person_results_by_editor(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_results_by_editor(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 ed.id as editor_id,
                 COALESCE(ed.full_name, 'Unknown') as editor_name,
                 COUNT(*) as total_answered,
@@ -2453,11 +2528,9 @@ class Kealoa_DB {
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->puzzles_table} p ON c.puzzle_id = p.id
             LEFT JOIN {$this->persons_table} ed ON p.editor_id = ed.id
-            WHERE g.guesser_person_id = %d
+            WHERE {$clause}
             GROUP BY ed.id, ed.full_name
-            ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC",
-            $person_id
-        );
+            ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2467,16 +2540,15 @@ class Kealoa_DB {
      *
      * @return array<int, int> Keyed by round_id => best streak in that round
      */
-    public function get_person_streak_per_round(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT c.round_id, c.clue_number, g.is_correct
+    public function get_person_streak_per_round(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT c.round_id, c.clue_number, g.is_correct
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
-            WHERE g.guesser_person_id = %d
-            ORDER BY c.round_id ASC, c.clue_number ASC",
-            $person_id
-        );
+            WHERE {$clause}
+            ORDER BY c.round_id ASC, c.clue_number ASC";
 
         $rows = $this->wpdb->get_results($sql);
         $map = [];
@@ -2509,16 +2581,15 @@ class Kealoa_DB {
      *
      * @return array<int, array<int>> Keyed by clue_number => [round_id, ...]
      */
-    public function get_person_correct_clue_rounds(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT c.clue_number, c.round_id
+    public function get_person_correct_clue_rounds(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT c.clue_number, c.round_id
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
-            WHERE g.guesser_person_id = %d AND g.is_correct = 1
-            ORDER BY c.clue_number ASC, c.round_id ASC",
-            $person_id
-        );
+            WHERE {$clause} AND g.is_correct = 1
+            ORDER BY c.clue_number ASC, c.round_id ASC";
 
         $rows = $this->wpdb->get_results($sql);
         $map = [];
@@ -2533,9 +2604,11 @@ class Kealoa_DB {
     /**
      * Get person's round history
      */
-    public function get_person_round_history(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_round_history(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('rg.person_id', $person_ids);
+        $guess_clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 r.id as round_id,
                 r.game_number,
                 r.round_date,
@@ -2548,12 +2621,10 @@ class Kealoa_DB {
             FROM {$this->rounds_table} r
             INNER JOIN {$this->round_guessers_table} rg ON r.id = rg.round_id
             INNER JOIN {$this->clues_table} c ON r.id = c.round_id
-            LEFT JOIN {$this->guesses_table} g ON c.id = g.clue_id AND g.guesser_person_id = rg.person_id
-            WHERE rg.person_id = %d
+            LEFT JOIN {$this->guesses_table} g ON c.id = g.clue_id AND {$guess_clause}
+            WHERE {$clause}
             GROUP BY r.id, r.game_number, r.round_date, r.round_number, r.episode_number, r.episode_url, r.episode_start_seconds
-            ORDER BY r.round_date DESC, r.round_number DESC",
-            $person_id
-        );
+            ORDER BY r.round_date DESC, r.round_number DESC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2561,9 +2632,10 @@ class Kealoa_DB {
     /**
      * Get all puzzles from rounds a person has played
      */
-    public function get_person_puzzles(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_puzzles(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('rg.person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 pz.id as puzzle_id,
                 pz.publication_date,
                 pz.editor_id,
@@ -2581,11 +2653,9 @@ class Kealoa_DB {
             LEFT JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
             LEFT JOIN {$this->persons_table} con ON pc.person_id = con.id
             LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
-            WHERE rg.person_id = %d
+            WHERE {$clause}
             GROUP BY pz.id, pz.publication_date, ed.full_name
-            ORDER BY pz.publication_date DESC",
-            $person_id
-        );
+            ORDER BY pz.publication_date DESC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2641,9 +2711,10 @@ class Kealoa_DB {
     /**
      * Get aggregate stats for a person's constructor role
      */
-    public function get_person_constructor_stats(int $person_id): ?object {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_constructor_stats(int|array $person_ids): ?object {
+        $clause = $this->prepare_person_id_clause('pc.person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 COUNT(DISTINCT pc.puzzle_id) as puzzle_count,
                 COUNT(DISTINCT c.id) as clue_count,
                 COUNT(DISTINCT g.guesser_person_id) as player_count,
@@ -2652,9 +2723,7 @@ class Kealoa_DB {
             FROM {$this->puzzle_constructors_table} pc
             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
-            WHERE pc.person_id = %d",
-            $person_id
-        );
+            WHERE {$clause}";
 
         return $this->wpdb->get_row($sql);
     }
@@ -2662,9 +2731,10 @@ class Kealoa_DB {
     /**
      * Get puzzles for a person's constructor role with round info
      */
-    public function get_person_constructor_puzzles(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_constructor_puzzles(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('pc.person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 pz.id as puzzle_id,
                 pz.publication_date,
                 pz.editor_id,
@@ -2678,11 +2748,9 @@ class Kealoa_DB {
             LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
             LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
-            WHERE pc.person_id = %d
+            WHERE {$clause}
             GROUP BY pz.id, pz.publication_date, ed.full_name
-            ORDER BY pz.publication_date DESC",
-            $person_id
-        );
+            ORDER BY pz.publication_date DESC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2690,9 +2758,10 @@ class Kealoa_DB {
     /**
      * Get player results for all clues by a person's constructor role
      */
-    public function get_person_constructor_player_results(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_constructor_player_results(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('pc.person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 p.id as person_id,
                 p.full_name,
                 COUNT(*) as total_answered,
@@ -2702,11 +2771,9 @@ class Kealoa_DB {
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->puzzle_constructors_table} pc ON c.puzzle_id = pc.puzzle_id
             INNER JOIN {$this->persons_table} p ON g.guesser_person_id = p.id
-            WHERE pc.person_id = %d
+            WHERE {$clause}
             GROUP BY p.id, p.full_name
-            ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC",
-            $person_id
-        );
+            ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2714,9 +2781,10 @@ class Kealoa_DB {
     /**
      * Get editor results for a person's constructor puzzles
      */
-    public function get_person_constructor_editor_results(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_constructor_editor_results(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('pc.person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 ed.id as editor_id,
                 COALESCE(ed.full_name, 'Unknown') as editor_name,
                 COUNT(DISTINCT pz.id) as puzzle_count,
@@ -2728,11 +2796,9 @@ class Kealoa_DB {
             LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
-            WHERE pc.person_id = %d
+            WHERE {$clause}
             GROUP BY ed.id, ed.full_name
-            ORDER BY puzzle_count DESC, ed.full_name ASC",
-            $person_id
-        );
+            ORDER BY puzzle_count DESC, ed.full_name ASC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2762,9 +2828,10 @@ class Kealoa_DB {
     /**
      * Get player results for all clues under a person's editor role
      */
-    public function get_person_editor_player_results(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_editor_player_results(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('pz.editor_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 p.id as person_id,
                 p.full_name,
                 COUNT(*) as total_answered,
@@ -2774,11 +2841,9 @@ class Kealoa_DB {
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
             INNER JOIN {$this->persons_table} p ON g.guesser_person_id = p.id
-            WHERE pz.editor_id = %d
+            WHERE {$clause}
             GROUP BY p.id, p.full_name
-            ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC",
-            $person_id
-        );
+            ORDER BY (SUM(g.is_correct) / COUNT(*)) DESC, COUNT(*) DESC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2786,9 +2851,10 @@ class Kealoa_DB {
     /**
      * Get constructor results for all puzzles under a person's editor role
      */
-    public function get_person_editor_constructor_results(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_editor_constructor_results(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('pz.editor_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 con.id as constructor_id,
                 con.full_name,
                 COUNT(DISTINCT pz.id) as puzzle_count,
@@ -2800,11 +2866,9 @@ class Kealoa_DB {
             INNER JOIN {$this->persons_table} con ON pc.person_id = con.id
             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
-            WHERE pz.editor_id = %d
+            WHERE {$clause}
             GROUP BY con.id, con.full_name
-            ORDER BY puzzle_count DESC, con.full_name ASC",
-            $person_id
-        );
+            ORDER BY puzzle_count DESC, con.full_name ASC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2812,9 +2876,10 @@ class Kealoa_DB {
     /**
      * Get aggregate stats for a person's editor role
      */
-    public function get_person_editor_stats(int $person_id): ?object {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_editor_stats(int|array $person_ids): ?object {
+        $clause = $this->prepare_person_id_clause('p.editor_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 COUNT(DISTINCT p.id) as puzzle_count,
                 COUNT(DISTINCT c.id) as clue_count,
                 COUNT(DISTINCT g.guesser_person_id) as player_count,
@@ -2823,9 +2888,7 @@ class Kealoa_DB {
             FROM {$this->puzzles_table} p
             INNER JOIN {$this->clues_table} c ON c.puzzle_id = p.id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
-            WHERE p.editor_id = %d",
-            $person_id
-        );
+            WHERE {$clause}";
 
         return $this->wpdb->get_row($sql);
     }
@@ -2833,9 +2896,10 @@ class Kealoa_DB {
     /**
      * Get puzzles for a person's editor role, with constructor and round info
      */
-    public function get_person_editor_puzzles(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_person_editor_puzzles(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('pz.editor_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 pz.id as puzzle_id,
                 pz.publication_date,
                 GROUP_CONCAT(DISTINCT con.full_name ORDER BY pc.constructor_order ASC SEPARATOR ', ') as constructor_names,
@@ -2849,11 +2913,9 @@ class Kealoa_DB {
             LEFT JOIN {$this->persons_table} con ON pc.person_id = con.id
             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
             LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
-            WHERE pz.editor_id = %d
+            WHERE {$clause}
             GROUP BY pz.id, pz.publication_date
-            ORDER BY pz.publication_date DESC",
-            $person_id
-        );
+            ORDER BY pz.publication_date DESC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2889,15 +2951,17 @@ class Kealoa_DB {
     /**
      * Get overall stats for a person's clue giver role
      */
-    public function get_clue_giver_stats(int $person_id): ?object {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_clue_giver_stats(int|array $person_ids): ?object {
+        $sub_clause = $this->prepare_person_id_clause('r2.clue_giver_id', $person_ids);
+        $clause = $this->prepare_person_id_clause('r.clue_giver_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 COUNT(DISTINCT r.id) as round_count,
                 COUNT(DISTINCT c.id) as clue_count,
                 (SELECT COUNT(DISTINCT rg.person_id)
                     FROM {$this->round_guessers_table} rg
                     INNER JOIN {$this->rounds_table} r2 ON r2.id = rg.round_id
-                    WHERE r2.clue_giver_id = %d
+                    WHERE {$sub_clause}
                 ) as guesser_count,
                 COUNT(CASE WHEN grg.id IS NOT NULL THEN g.id END) as total_guesses,
                 COALESCE(SUM(CASE WHEN grg.id IS NOT NULL THEN g.is_correct END), 0) as correct_guesses
@@ -2905,10 +2969,7 @@ class Kealoa_DB {
             LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
             LEFT JOIN {$this->round_guessers_table} grg ON grg.round_id = r.id AND grg.person_id = g.guesser_person_id
-            WHERE r.clue_giver_id = %d",
-            $person_id,
-            $person_id
-        );
+            WHERE {$clause}";
 
         return $this->wpdb->get_row($sql);
     }
@@ -2916,14 +2977,13 @@ class Kealoa_DB {
     /**
      * Get the total number of unique players (guessers) across all rounds hosted by a person
      */
-    public function get_clue_giver_unique_players(int $person_id): int {
-        $sql = $this->wpdb->prepare(
-            "SELECT COUNT(DISTINCT rg.person_id)
+    public function get_clue_giver_unique_players(int|array $person_ids): int {
+        $clause = $this->prepare_person_id_clause('r.clue_giver_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT COUNT(DISTINCT rg.person_id)
             FROM {$this->round_guessers_table} rg
             INNER JOIN {$this->rounds_table} r ON r.id = rg.round_id
-            WHERE r.clue_giver_id = %d",
-            $person_id
-        );
+            WHERE {$clause}";
 
         return (int) $this->wpdb->get_var($sql);
     }
@@ -2931,9 +2991,10 @@ class Kealoa_DB {
     /**
      * Get clue giver stats grouped by year
      */
-    public function get_clue_giver_stats_by_year(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_clue_giver_stats_by_year(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('r.clue_giver_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 YEAR(r.round_date) as year,
                 COUNT(DISTINCT r.id) as round_count,
                 COUNT(DISTINCT c.id) as clue_count,
@@ -2943,11 +3004,9 @@ class Kealoa_DB {
             LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
             LEFT JOIN {$this->round_guessers_table} grg ON grg.round_id = r.id AND grg.person_id = g.guesser_person_id
-            WHERE r.clue_giver_id = %d
+            WHERE {$clause}
             GROUP BY YEAR(r.round_date)
-            ORDER BY year DESC",
-            $person_id
-        );
+            ORDER BY year DESC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2955,9 +3014,10 @@ class Kealoa_DB {
     /**
      * Get clue giver stats grouped by day of week (of the round date)
      */
-    public function get_clue_giver_stats_by_day(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_clue_giver_stats_by_day(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('r.clue_giver_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 DAYOFWEEK(pz.publication_date) as day_of_week,
                 COUNT(DISTINCT r.id) as round_count,
                 COUNT(DISTINCT c.id) as clue_count,
@@ -2968,12 +3028,10 @@ class Kealoa_DB {
             LEFT JOIN {$this->puzzles_table} pz ON pz.id = c.puzzle_id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
             LEFT JOIN {$this->round_guessers_table} grg ON grg.round_id = r.id AND grg.person_id = g.guesser_person_id
-            WHERE r.clue_giver_id = %d
+            WHERE {$clause}
               AND pz.publication_date IS NOT NULL
             GROUP BY DAYOFWEEK(pz.publication_date)
-            ORDER BY MOD(DAYOFWEEK(pz.publication_date) + 5, 7) ASC",
-            $person_id
-        );
+            ORDER BY MOD(DAYOFWEEK(pz.publication_date) + 5, 7) ASC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -2981,9 +3039,10 @@ class Kealoa_DB {
     /**
      * Get clue giver stats broken down per guesser
      */
-    public function get_clue_giver_stats_by_guesser(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_clue_giver_stats_by_guesser(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('r.clue_giver_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 p.id as person_id,
                 p.full_name,
                 COUNT(g.id) as total_guesses,
@@ -2993,11 +3052,9 @@ class Kealoa_DB {
             INNER JOIN {$this->guesses_table} g ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = r.id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->persons_table} p ON p.id = g.guesser_person_id
-            WHERE r.clue_giver_id = %d
+            WHERE {$clause}
             GROUP BY p.id, p.full_name
-            ORDER BY (COALESCE(SUM(g.is_correct), 0) / COUNT(g.id)) DESC, COUNT(g.id) DESC",
-            $person_id
-        );
+            ORDER BY (COALESCE(SUM(g.is_correct), 0) / COUNT(g.id)) DESC, COUNT(g.id) DESC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -3005,9 +3062,10 @@ class Kealoa_DB {
     /**
      * Get rounds for a person's clue giver role with aggregate stats
      */
-    public function get_clue_giver_rounds(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_clue_giver_rounds(int|array $person_ids): array {
+        $clause = $this->prepare_person_id_clause('r.clue_giver_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 r.id as round_id,
                 r.game_number,
                 r.round_date,
@@ -3043,10 +3101,8 @@ class Kealoa_DB {
                 LEFT JOIN {$this->persons_table} p ON p.id = rg.person_id
                 GROUP BY rg.round_id
             ) gi ON gi.round_id = r.id
-            WHERE r.clue_giver_id = %d
-            ORDER BY r.round_date DESC, r.round_number DESC",
-            $person_id
-        );
+            WHERE {$clause}
+            ORDER BY r.round_date DESC, r.round_number DESC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -3062,9 +3118,10 @@ class Kealoa_DB {
      *   - best_incorrect_streak (int)
      *   - streaks (array of objects with type, length, round_ids, start_date, end_date)
      */
-    public function get_clue_giver_streaks(int $person_id): object {
-        $sql = $this->wpdb->prepare(
-            "SELECT
+    public function get_clue_giver_streaks(int|array $person_ids): object {
+        $clause = $this->prepare_person_id_clause('r.clue_giver_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
                 c.id,
                 c.round_id,
                 c.clue_number,
@@ -3075,11 +3132,9 @@ class Kealoa_DB {
             INNER JOIN {$this->clues_table} c ON c.round_id = r.id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
             LEFT JOIN {$this->round_guessers_table} grg ON grg.round_id = r.id AND grg.person_id = g.guesser_person_id
-            WHERE r.clue_giver_id = %d
+            WHERE {$clause}
             GROUP BY c.id, c.round_id, c.clue_number, r.round_date, r.round_number
-            ORDER BY r.round_date ASC, r.round_number ASC, c.clue_number ASC",
-            $person_id
-        );
+            ORDER BY r.round_date ASC, r.round_number ASC, c.clue_number ASC";
 
         $rows = $this->wpdb->get_results($sql);
 
@@ -3155,22 +3210,24 @@ class Kealoa_DB {
     // =========================================================================
 
     /**
-     * Get all active roles for a person
+     * Get all active roles for a person (or merged alias group)
      *
+     * @param int|int[] $person_ids One person ID or array of aliased IDs.
      * @return string[] Array of role names: 'player', 'constructor', 'editor', 'clue_giver'
      */
-    public function get_person_roles(int $person_id): array {
-        $sql = $this->wpdb->prepare(
-            "SELECT
-                (SELECT 1 FROM {$this->round_guessers_table} WHERE person_id = %d LIMIT 1) as is_player,
-                (SELECT 1 FROM {$this->puzzle_constructors_table} WHERE person_id = %d LIMIT 1) as is_constructor,
-                (SELECT 1 FROM {$this->puzzles_table} WHERE editor_id = %d LIMIT 1) as is_editor,
-                (SELECT 1 FROM {$this->rounds_table} WHERE clue_giver_id = %d LIMIT 1) as is_clue_giver",
-            $person_id,
-            $person_id,
-            $person_id,
-            $person_id
-        );
+    public function get_person_roles(int|array $person_ids): array {
+        $player_clause      = $this->prepare_person_id_clause('person_id', $person_ids);
+        $constructor_clause = $this->prepare_person_id_clause('person_id', $person_ids);
+        $editor_clause      = $this->prepare_person_id_clause('editor_id', $person_ids);
+        $clue_giver_clause  = $this->prepare_person_id_clause('clue_giver_id', $person_ids);
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
+                (SELECT 1 FROM {$this->round_guessers_table} WHERE {$player_clause} LIMIT 1) as is_player,
+                (SELECT 1 FROM {$this->puzzle_constructors_table} WHERE {$constructor_clause} LIMIT 1) as is_constructor,
+                (SELECT 1 FROM {$this->puzzles_table} WHERE {$editor_clause} LIMIT 1) as is_editor,
+                (SELECT 1 FROM {$this->rounds_table} WHERE {$clue_giver_clause} LIMIT 1) as is_clue_giver";
+
         $row = $this->wpdb->get_row($sql);
         $roles = [];
         if ($row->is_player) {
@@ -3286,7 +3343,7 @@ class Kealoa_DB {
      * @param int   $exclude_person_id Person ID to exclude (the main constructor).
      * @return array<int, array> Map of puzzle_id => array of co-constructor objects.
      */
-    public function get_puzzle_co_constructors_bulk(array $puzzle_ids, int $exclude_person_id): array {
+    public function get_puzzle_co_constructors_bulk(array $puzzle_ids, int|array $exclude_person_ids): array {
         $map = [];
         foreach ($puzzle_ids as $pid) {
             $map[(int) $pid] = [];
@@ -3295,14 +3352,14 @@ class Kealoa_DB {
             return $map;
         }
         $in = $this->ids_in_clause($puzzle_ids);
-        $sql = $this->wpdb->prepare(
-            "SELECT pc.puzzle_id, p.id, p.full_name, p.xwordinfo_profile_name
+        $exclude_ids = is_int($exclude_person_ids) ? [$exclude_person_ids] : $exclude_person_ids;
+        $not_in = implode(', ', array_map('intval', $exclude_ids));
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT pc.puzzle_id, p.id, p.full_name, p.xwordinfo_profile_name
             FROM {$this->persons_table} p
             INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.person_id
-            WHERE pc.puzzle_id IN ({$in}) AND p.id != %d
-            ORDER BY pc.puzzle_id, pc.constructor_order ASC",
-            $exclude_person_id
-        );
+            WHERE pc.puzzle_id IN ({$in}) AND p.id NOT IN ({$not_in})
+            ORDER BY pc.puzzle_id, pc.constructor_order ASC";
         $rows = $this->wpdb->get_results($sql);
         foreach ($rows as $row) {
             $map[(int) $row->puzzle_id][] = $row;
