@@ -746,6 +746,11 @@
     color: var(--driftwood-dark);
 }
 
+.kealoa-curiosities-section .kealoa-table th,
+.kealoa-curiosities-section .kealoa-table td {
+    white-space: nowrap;
+}
+
 .kealoa-chart-container {
     position: relative;
     width: 100%;
