@@ -3917,6 +3917,7 @@ class Kealoa_DB {
             'guesses'              => $this->guesses_table,
             'round_guessers'       => $this->round_guessers_table,
             'round_solutions'      => $this->round_solutions_table,
+            'persons'              => $this->persons_table,
         ];
 
         if (!isset($table_map[$table_key]) || empty($ids)) {
@@ -3934,6 +3935,91 @@ class Kealoa_DB {
         }
 
         return $deleted;
+    }
+
+    /**
+     * Clear clue_giver_id on specified rounds (set to NULL).
+     *
+     * @param int[] $round_ids Array of round IDs.
+     * @return int Number of rows updated.
+     */
+    public function clear_round_clue_givers(array $round_ids): int {
+        if (empty($round_ids)) {
+            return 0;
+        }
+        $updated = 0;
+        foreach ($round_ids as $id) {
+            $result = $this->wpdb->update(
+                $this->rounds_table,
+                ['clue_giver_id' => null],
+                ['id' => (int) $id],
+                [null],
+                ['%d']
+            );
+            if ($result !== false) {
+                $updated++;
+            }
+        }
+        return $updated;
+    }
+
+    /**
+     * Clear editor_id on specified puzzles (set to NULL).
+     *
+     * @param int[] $puzzle_ids Array of puzzle IDs.
+     * @return int Number of rows updated.
+     */
+    public function clear_puzzle_editors(array $puzzle_ids): int {
+        if (empty($puzzle_ids)) {
+            return 0;
+        }
+        $updated = 0;
+        foreach ($puzzle_ids as $id) {
+            $result = $this->wpdb->update(
+                $this->puzzles_table,
+                ['editor_id' => null],
+                ['id' => (int) $id],
+                [null],
+                ['%d']
+            );
+            if ($result !== false) {
+                $updated++;
+            }
+        }
+        return $updated;
+    }
+
+    /**
+     * Renumber all game_numbers to be contiguous starting at 1.
+     *
+     * Orders rounds by round_date ASC, round_number ASC, then assigns
+     * game_number = 1, 2, 3, ... sequentially.
+     *
+     * @return int Number of rows updated.
+     */
+    public function renumber_game_numbers(): int {
+        $rounds = $this->wpdb->get_results(
+            "SELECT id, game_number FROM {$this->rounds_table} ORDER BY round_date ASC, round_number ASC"
+        );
+        if (empty($rounds)) {
+            return 0;
+        }
+        $updated = 0;
+        $expected = 1;
+        foreach ($rounds as $round) {
+            if ((int) $round->game_number !== $expected) {
+                $this->wpdb->update(
+                    $this->rounds_table,
+                    ['game_number' => $expected],
+                    ['id' => (int) $round->id],
+                    ['%d'],
+                    ['%d']
+                );
+                $updated++;
+            }
+            $expected++;
+        }
+        return $updated;
     }
 
     /**

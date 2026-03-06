@@ -347,6 +347,9 @@ class Kealoa_Admin {
             'repair_delete_puzzles' => $this->handle_repair_delete_puzzles(),
             'repair_delete_rounds' => $this->handle_repair_delete_rounds(),
             'repair_delete_orphans' => $this->handle_repair_delete_orphans(),
+            'repair_clear_clue_givers' => $this->handle_repair_clear_clue_givers(),
+            'repair_clear_editors' => $this->handle_repair_clear_editors(),
+            'repair_renumber_games' => $this->handle_repair_renumber_games(),
             'save_settings' => $this->handle_save_settings(),
             default => null,
         };
@@ -2520,29 +2523,34 @@ class Kealoa_Admin {
             ],
             'orphan_round_clue_givers' => [
                 'label'       => 'Rounds With Missing Clue Givers',
-                'description' => 'Rounds whose clue_giver_id references a person that no longer exists.',
-                'action'      => null,
+                'description' => 'Rounds whose clue_giver_id references a person that no longer exists. Clearing sets the clue giver to empty.',
+                'action'      => 'repair_clear_clue_givers',
+                'button_label' => 'Clear Selected',
                 'columns'     => ['Round ID', 'Date', 'Round #', 'Clue Giver ID'],
                 'fields'      => ['id', 'round_date', 'round_number', 'clue_giver_id'],
             ],
             'orphan_puzzle_editors' => [
                 'label'       => 'Puzzles With Missing Editor',
-                'description' => 'Puzzles whose editor_id references a person that no longer exists.',
-                'action'      => null,
+                'description' => 'Puzzles whose editor_id references a person that no longer exists. Clearing sets the editor to empty.',
+                'action'      => 'repair_clear_editors',
+                'button_label' => 'Clear Selected',
                 'columns'     => ['Puzzle ID', 'Puzzle Date', 'Editor ID'],
                 'fields'      => ['id', 'publication_date', 'editor_id'],
             ],
             'orphan_persons' => [
                 'label'       => 'Orphan Persons',
                 'description' => 'Persons not referenced by any role (player, constructor, or editor).',
-                'action'      => null,
+                'action'      => 'repair_delete_orphans',
+                'table_key'   => 'persons',
                 'columns'     => ['ID', 'Full Name'],
                 'fields'      => ['id', 'full_name'],
             ],
             'non_contiguous_game_numbers' => [
                 'label'       => 'Non-Contiguous Game Numbers',
-                'description' => 'Game numbers should be contiguous integers starting at 1 with no gaps or duplicates.',
-                'action'      => null,
+                'description' => 'Game numbers should be contiguous integers starting at 1 with no gaps or duplicates. Renumbers all rounds sequentially.',
+                'action'      => 'repair_renumber_games',
+                'button_label' => 'Renumber All',
+                'no_selection' => true,
                 'columns'     => ['Expected', 'Actual', 'Issue'],
                 'fields'      => ['expected_game_number', 'actual_game_number', 'issue'],
             ],
@@ -2555,7 +2563,7 @@ class Kealoa_Admin {
         if (isset($_GET['kealoa_repaired'])) {
             $count = (int) $_GET['kealoa_repaired'];
             echo '<div class="notice notice-success is-dismissible"><p>'
-                . sprintf(esc_html__('Repair complete: %d record(s) removed.', 'kealoa-reference'), $count)
+                . sprintf(esc_html__('Repair complete: %d record(s) affected.', 'kealoa-reference'), $count)
                 . '</p></div>';
         }
 
@@ -2585,10 +2593,14 @@ class Kealoa_Admin {
             echo '<h2>' . esc_html($meta['label']) . ' (' . count($rows) . ')</h2>';
             echo '<p class="description">' . esc_html($meta['description']) . '</p>';
 
+            $needs_selection = !isset($meta['no_selection']) || !$meta['no_selection'];
+
             // Results table
             echo '<table class="widefat striped" style="max-width:800px;">';
             echo '<thead><tr>';
-            echo '<th style="width:30px;"><input type="checkbox" class="kealoa-check-all" data-group="' . esc_attr($check_key) . '"></th>';
+            if ($needs_selection) {
+                echo '<th style="width:30px;"><input type="checkbox" class="kealoa-check-all" data-group="' . esc_attr($check_key) . '"></th>';
+            }
             foreach ($meta['columns'] as $col) {
                 echo '<th>' . esc_html($col) . '</th>';
             }
@@ -2597,7 +2609,9 @@ class Kealoa_Admin {
             foreach ($rows as $row) {
                 $row_id = $row->{$meta['fields'][0]};
                 echo '<tr>';
-                echo '<td><input type="checkbox" name="ids[]" value="' . esc_attr($row_id) . '" class="kealoa-check-item" data-group="' . esc_attr($check_key) . '"></td>';
+                if ($needs_selection) {
+                    echo '<td><input type="checkbox" name="ids[]" value="' . esc_attr($row_id) . '" class="kealoa-check-item" data-group="' . esc_attr($check_key) . '"></td>';
+                }
                 foreach ($meta['fields'] as $field) {
                     echo '<td>' . esc_html($row->$field ?? '') . '</td>';
                 }
@@ -2615,10 +2629,12 @@ class Kealoa_Admin {
                 if (isset($meta['table_key'])) {
                     echo '<input type="hidden" name="table_key" value="' . esc_attr($meta['table_key']) . '">';
                 }
-                // Hidden field populated by JS with selected IDs
-                echo '<input type="hidden" name="selected_ids" value="" class="kealoa-selected-ids" data-group="' . esc_attr($check_key) . '">';
+                if ($needs_selection) {
+                    // Hidden field populated by JS with selected IDs
+                    echo '<input type="hidden" name="selected_ids" value="" class="kealoa-selected-ids" data-group="' . esc_attr($check_key) . '">';
+                }
                 echo '<button type="submit" class="button button-secondary kealoa-repair-btn" data-group="' . esc_attr($check_key) . '">'
-                    . esc_html__('Delete Selected', 'kealoa-reference')
+                    . esc_html($meta['button_label'] ?? __('Delete Selected', 'kealoa-reference'))
                     . '</button>';
                 echo '</form>';
             }
@@ -2643,17 +2659,24 @@ class Kealoa_Admin {
             document.querySelectorAll(".kealoa-repair-btn").forEach(function(btn) {
                 btn.closest("form").addEventListener("submit", function(e) {
                     var group = btn.dataset.group;
+                    var action = btn.textContent.trim();
+                    var idsField = this.querySelector(".kealoa-selected-ids[data-group=\"" + group + "\"]");
                     var ids = [];
                     document.querySelectorAll(".kealoa-check-item[data-group=\"" + group + "\"]:checked").forEach(function(cb) {
                         ids.push(cb.value);
                     });
-                    if (ids.length === 0) {
-                        e.preventDefault();
-                        alert("No rows selected.");
-                        return;
+                    if (idsField) {
+                        if (ids.length === 0) {
+                            e.preventDefault();
+                            alert("No rows selected.");
+                            return;
+                        }
+                        idsField.value = ids.join(",");
                     }
-                    this.querySelector(".kealoa-selected-ids[data-group=\"" + group + "\"]").value = ids.join(",");
-                    if (!confirm("Delete " + ids.length + " selected record(s)? This cannot be undone.")) {
+                    var msg = ids.length > 0
+                        ? action + " " + ids.length + " record(s)? This cannot be undone."
+                        : action + "? This cannot be undone.";
+                    if (!confirm(msg)) {
                         e.preventDefault();
                     }
                 });
@@ -2714,6 +2737,41 @@ class Kealoa_Admin {
 
         Kealoa_Shortcodes::flush_all_caches();
         wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $deleted));
+        exit;
+    }
+
+    /**
+     * Clear clue_giver_id on selected rounds (set to NULL).
+     */
+    private function handle_repair_clear_clue_givers(): void {
+        $ids = $this->parse_selected_ids();
+        $cleared = $this->db->clear_round_clue_givers($ids);
+
+        Kealoa_Shortcodes::flush_all_caches();
+        wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $cleared));
+        exit;
+    }
+
+    /**
+     * Clear editor_id on selected puzzles (set to NULL).
+     */
+    private function handle_repair_clear_editors(): void {
+        $ids = $this->parse_selected_ids();
+        $cleared = $this->db->clear_puzzle_editors($ids);
+
+        Kealoa_Shortcodes::flush_all_caches();
+        wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $cleared));
+        exit;
+    }
+
+    /**
+     * Renumber all game numbers to be contiguous starting at 1.
+     */
+    private function handle_repair_renumber_games(): void {
+        $renumbered = $this->db->renumber_game_numbers();
+
+        Kealoa_Shortcodes::flush_all_caches();
+        wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $renumbered));
         exit;
     }
 
