@@ -106,6 +106,15 @@ class Kealoa_Admin {
 
         add_submenu_page(
             'kealoa-reference',
+            __('Aliases', 'kealoa-reference'),
+            __('Aliases', 'kealoa-reference'),
+            'manage_options',
+            'kealoa-aliases',
+            [$this, 'render_aliases_page']
+        );
+
+        add_submenu_page(
+            'kealoa-reference',
             __('Puzzles', 'kealoa-reference'),
             __('Puzzles', 'kealoa-reference'),
             'manage_options',
@@ -189,6 +198,13 @@ class Kealoa_Admin {
             'parent' => 'kealoa-reference',
             'title'  => __('Persons', 'kealoa-reference'),
             'href'   => admin_url('admin.php?page=kealoa-persons'),
+        ]);
+
+        $wp_admin_bar->add_node([
+            'id'     => 'kealoa-aliases',
+            'parent' => 'kealoa-reference',
+            'title'  => __('Aliases', 'kealoa-reference'),
+            'href'   => admin_url('admin.php?page=kealoa-aliases'),
         ]);
 
         $wp_admin_bar->add_node([
@@ -352,6 +368,9 @@ class Kealoa_Admin {
             'repair_clear_editors' => $this->handle_repair_clear_editors(),
             'repair_renumber_games' => $this->handle_repair_renumber_games(),
             'save_settings' => $this->handle_save_settings(),
+            'create_alias' => $this->handle_create_alias(),
+            'update_alias' => $this->handle_update_alias(),
+            'delete_alias' => $this->handle_delete_alias(),
             default => null,
         };
 
@@ -2951,6 +2970,315 @@ class Kealoa_Admin {
             return [];
         }
         return array_map('intval', explode(',', $raw));
+    }
+
+    // =========================================================================
+    // ALIASES
+    // =========================================================================
+
+    /**
+     * Render the Aliases page (dispatcher).
+     */
+    public function render_aliases_page(): void {
+        $action = $_GET['action'] ?? 'list';
+        $index  = isset($_GET['group']) ? (int) $_GET['group'] : null;
+
+        echo '<div class="wrap kealoa-admin-wrap">';
+        match($action) {
+            'add'  => $this->render_alias_form(),
+            'edit' => $this->render_alias_form($index),
+            default => $this->render_aliases_list(),
+        };
+        echo '</div>';
+    }
+
+    /**
+     * Render the aliases list view.
+     */
+    private function render_aliases_list(): void {
+        $groups = $this->db->get_all_alias_groups();
+        $saved   = isset($_GET['kealoa_saved']);
+        $deleted = isset($_GET['kealoa_deleted']);
+        ?>
+        <h1 class="wp-heading-inline"><?php esc_html_e('Person Aliases', 'kealoa-reference'); ?></h1>
+
+        <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-aliases&action=add')); ?>" class="page-title-action">
+            <?php esc_html_e('Add New Alias Group', 'kealoa-reference'); ?>
+        </a>
+        <hr class="wp-header-end">
+
+        <?php if ($saved): ?>
+            <div class="notice notice-success is-dismissible">
+                <p><?php esc_html_e('Alias group saved.', 'kealoa-reference'); ?></p>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($deleted): ?>
+            <div class="notice notice-success is-dismissible">
+                <p><?php esc_html_e('Alias group deleted.', 'kealoa-reference'); ?></p>
+            </div>
+        <?php endif; ?>
+
+        <div class="kealoa-alias-info" style="margin: 20px 0; padding: 12px 16px; background: #fff; border-left: 4px solid var(--kealoa-info, #2271b1);">
+            <p><strong><?php esc_html_e('How aliases work:', 'kealoa-reference'); ?></strong></p>
+            <ul style="list-style: disc; margin-left: 20px;">
+                <li><?php esc_html_e('An alias group links two or more persons so their data is merged in person detail views.', 'kealoa-reference'); ?></li>
+                <li><?php esc_html_e('Each person\'s page will show the combined data of all persons in the group.', 'kealoa-reference'); ?></li>
+                <li><?php esc_html_e('Database records remain separate — no data is permanently changed.', 'kealoa-reference'); ?></li>
+                <li><?php esc_html_e('Each person may only belong to one alias group.', 'kealoa-reference'); ?></li>
+            </ul>
+        </div>
+
+        <?php if (empty($groups)): ?>
+            <p><?php esc_html_e('No alias groups have been created yet.', 'kealoa-reference'); ?></p>
+        <?php else: ?>
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th scope="col" style="width: 60px;"><?php esc_html_e('#', 'kealoa-reference'); ?></th>
+                        <th scope="col"><?php esc_html_e('Persons in Group', 'kealoa-reference'); ?></th>
+                        <th scope="col" style="width: 150px;"><?php esc_html_e('Actions', 'kealoa-reference'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($groups as $index => $persons): ?>
+                        <tr>
+                            <td><?php echo esc_html($index + 1); ?></td>
+                            <td>
+                                <?php
+                                $names = array_map(fn($p) => esc_html($p->full_name) . ' <span class="description">(ID: ' . esc_html($p->id) . ')</span>', $persons);
+                                echo implode(', ', $names);
+                                ?>
+                            </td>
+                            <td>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-aliases&action=edit&group=' . $index)); ?>">
+                                    <?php esc_html_e('Edit', 'kealoa-reference'); ?>
+                                </a>
+                                |
+                                <a href="#" class="kealoa-delete-link" data-delete-alias="<?php echo esc_attr($index); ?>">
+                                    <?php esc_html_e('Delete', 'kealoa-reference'); ?>
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+
+        <form id="kealoa-delete-alias-form" method="post" style="display: none;">
+            <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
+            <input type="hidden" name="kealoa_action" value="delete_alias" />
+            <input type="hidden" name="group_index" id="delete-alias-group-index" value="" />
+        </form>
+        <?php
+    }
+
+    /**
+     * Render the alias add/edit form.
+     *
+     * @param int|null $group_index Group index to edit, or null for a new group.
+     */
+    private function render_alias_form(?int $group_index = null): void {
+        $is_edit = $group_index !== null;
+        $selected_ids = [];
+
+        if ($is_edit) {
+            $groups = get_option('kealoa_person_aliases', []);
+            if (isset($groups[$group_index]) && is_array($groups[$group_index])) {
+                $selected_ids = array_map('intval', $groups[$group_index]);
+            }
+        }
+
+        $persons = $this->db->get_persons(['limit' => 9999, 'orderby' => 'full_name', 'order' => 'ASC']);
+
+        // Determine which person IDs are already in OTHER alias groups
+        $all_groups = get_option('kealoa_person_aliases', []);
+        $taken_ids = [];
+        foreach ($all_groups as $idx => $group) {
+            if ($is_edit && $idx === $group_index) {
+                continue; // Skip the group being edited
+            }
+            if (is_array($group)) {
+                foreach ($group as $pid) {
+                    $taken_ids[] = (int) $pid;
+                }
+            }
+        }
+        ?>
+        <h1>
+            <?php echo $is_edit
+                ? esc_html__('Edit Alias Group', 'kealoa-reference')
+                : esc_html__('Add Alias Group', 'kealoa-reference'); ?>
+        </h1>
+
+        <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-aliases')); ?>" class="button">
+            &larr; <?php esc_html_e('Back to Aliases', 'kealoa-reference'); ?>
+        </a>
+
+        <div class="kealoa-alias-info" style="margin: 20px 0; padding: 12px 16px; background: #fff; border-left: 4px solid var(--kealoa-info, #2271b1);">
+            <p>
+                <?php esc_html_e('Select two or more persons to group as aliases. Their data will be merged in person detail views.', 'kealoa-reference'); ?>
+            </p>
+            <p class="description">
+                <?php esc_html_e('Persons already assigned to another alias group are shown as disabled.', 'kealoa-reference'); ?>
+            </p>
+        </div>
+
+        <form method="post" class="kealoa-form" id="kealoa-alias-form">
+            <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
+            <input type="hidden" name="kealoa_action" value="<?php echo $is_edit ? 'update_alias' : 'create_alias'; ?>" />
+            <?php if ($is_edit): ?>
+                <input type="hidden" name="group_index" value="<?php echo esc_attr($group_index); ?>" />
+            <?php endif; ?>
+
+            <table class="form-table">
+                <tr>
+                    <th>
+                        <label><?php esc_html_e('Persons in Group', 'kealoa-reference'); ?> *</label>
+                        <p class="description" style="font-weight: normal;">
+                            <?php esc_html_e('Select two or more persons.', 'kealoa-reference'); ?>
+                        </p>
+                    </th>
+                    <td>
+                        <select name="person_ids[]" id="alias-person-ids" multiple="multiple" size="15" style="min-width: 350px;" required>
+                            <?php foreach ($persons as $person): ?>
+                                <?php
+                                $pid = (int) $person->id;
+                                $is_taken = in_array($pid, $taken_ids, true);
+                                $is_selected = in_array($pid, $selected_ids, true);
+                                ?>
+                                <option value="<?php echo esc_attr($pid); ?>"
+                                    <?php selected($is_selected); ?>
+                                    <?php disabled($is_taken); ?>>
+                                    <?php echo esc_html($person->full_name); ?> (ID: <?php echo esc_html($pid); ?>)<?php
+                                    if ($is_taken) { echo ' — ' . esc_html__('in another group', 'kealoa-reference'); } ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="description">
+                            <?php esc_html_e('Hold Ctrl (Cmd on Mac) to select multiple persons.', 'kealoa-reference'); ?>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+
+            <p class="submit">
+                <input type="submit" id="alias-submit" class="button button-primary"
+                    value="<?php echo $is_edit
+                        ? esc_attr__('Update Alias Group', 'kealoa-reference')
+                        : esc_attr__('Create Alias Group', 'kealoa-reference'); ?>"
+                    disabled />
+            </p>
+        </form>
+        <?php
+    }
+
+    /**
+     * Handle creating a new alias group.
+     */
+    private function handle_create_alias(): void {
+        $person_ids = array_map('intval', (array) ($_POST['person_ids'] ?? []));
+        $person_ids = array_filter($person_ids, fn($id) => $id > 0);
+
+        if (count($person_ids) < 2) {
+            set_transient('kealoa_admin_message', [
+                'type'    => 'error',
+                'message' => __('An alias group must contain at least two persons.', 'kealoa-reference'),
+            ], 30);
+            wp_redirect(admin_url('admin.php?page=kealoa-aliases&action=add'));
+            exit;
+        }
+
+        // Check for conflicts with existing groups
+        $groups = get_option('kealoa_person_aliases', []);
+        if (!is_array($groups)) {
+            $groups = [];
+        }
+
+        foreach ($groups as $group) {
+            $overlap = array_intersect($person_ids, array_map('intval', (array) $group));
+            if (!empty($overlap)) {
+                set_transient('kealoa_admin_message', [
+                    'type'    => 'error',
+                    'message' => __('One or more selected persons already belong to another alias group.', 'kealoa-reference'),
+                ], 30);
+                wp_redirect(admin_url('admin.php?page=kealoa-aliases&action=add'));
+                exit;
+            }
+        }
+
+        $groups[] = $person_ids;
+        $this->db->save_alias_groups($groups);
+
+        Kealoa_Shortcodes::flush_all_caches();
+        wp_redirect(admin_url('admin.php?page=kealoa-aliases&kealoa_saved=1'));
+        exit;
+    }
+
+    /**
+     * Handle updating an existing alias group.
+     */
+    private function handle_update_alias(): void {
+        $group_index = (int) ($_POST['group_index'] ?? -1);
+        $person_ids  = array_map('intval', (array) ($_POST['person_ids'] ?? []));
+        $person_ids  = array_filter($person_ids, fn($id) => $id > 0);
+
+        if (count($person_ids) < 2) {
+            set_transient('kealoa_admin_message', [
+                'type'    => 'error',
+                'message' => __('An alias group must contain at least two persons.', 'kealoa-reference'),
+            ], 30);
+            wp_redirect(admin_url('admin.php?page=kealoa-aliases&action=edit&group=' . $group_index));
+            exit;
+        }
+
+        $groups = get_option('kealoa_person_aliases', []);
+        if (!is_array($groups)) {
+            $groups = [];
+        }
+
+        // Check for conflicts with OTHER groups (skip current)
+        foreach ($groups as $idx => $group) {
+            if ($idx === $group_index) {
+                continue;
+            }
+            $overlap = array_intersect($person_ids, array_map('intval', (array) $group));
+            if (!empty($overlap)) {
+                set_transient('kealoa_admin_message', [
+                    'type'    => 'error',
+                    'message' => __('One or more selected persons already belong to another alias group.', 'kealoa-reference'),
+                ], 30);
+                wp_redirect(admin_url('admin.php?page=kealoa-aliases&action=edit&group=' . $group_index));
+                exit;
+            }
+        }
+
+        $groups[$group_index] = $person_ids;
+        $this->db->save_alias_groups($groups);
+
+        Kealoa_Shortcodes::flush_all_caches();
+        wp_redirect(admin_url('admin.php?page=kealoa-aliases&kealoa_saved=1'));
+        exit;
+    }
+
+    /**
+     * Handle deleting an alias group.
+     */
+    private function handle_delete_alias(): void {
+        $group_index = (int) ($_POST['group_index'] ?? -1);
+        $groups = get_option('kealoa_person_aliases', []);
+        if (!is_array($groups)) {
+            $groups = [];
+        }
+
+        if (isset($groups[$group_index])) {
+            unset($groups[$group_index]);
+            $this->db->save_alias_groups(array_values($groups));
+        }
+
+        Kealoa_Shortcodes::flush_all_caches();
+        wp_redirect(admin_url('admin.php?page=kealoa-aliases&kealoa_deleted=1'));
+        exit;
     }
 
     // =========================================================================

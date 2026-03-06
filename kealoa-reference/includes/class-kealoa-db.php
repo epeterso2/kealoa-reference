@@ -27,16 +27,6 @@ if (!defined('ABSPATH')) {
  */
 class Kealoa_DB {
 
-    /**
-     * Groups of person names whose data should be merged in person detail views.
-     *
-     * Each inner array lists full_name values that should be treated as a
-     * single person for display purposes. DB records remain distinct.
-     */
-    private const PERSON_ALIASES = [
-        ['Alex Eaton-Salners', 'Will Shortz'],
-    ];
-
     /** @var array<int, int[]>|null Resolved alias map (person_id => all IDs in group), lazily built. */
     private ?array $alias_id_map = null;
 
@@ -72,7 +62,10 @@ class Kealoa_DB {
     // =========================================================================
 
     /**
-     * Resolve the alias map from PERSON_ALIASES (lazily, once per request).
+     * Resolve the alias map from the kealoa_person_aliases option (lazily, once per request).
+     *
+     * The option stores an array of arrays, where each inner array is a list
+     * of person IDs that should be treated as a single person in detail views.
      *
      * Builds a map of person_id => sorted array of all person IDs in the same
      * alias group. Non-aliased persons are not in the map.
@@ -82,21 +75,81 @@ class Kealoa_DB {
             return;
         }
         $this->alias_id_map = [];
-        foreach (self::PERSON_ALIASES as $group) {
-            $ids = [];
-            foreach ($group as $name) {
-                $person = $this->get_person_by_name($name);
-                if ($person) {
-                    $ids[] = (int) $person->id;
-                }
+        $groups = get_option('kealoa_person_aliases', []);
+        if (!is_array($groups)) {
+            return;
+        }
+        foreach ($groups as $group) {
+            if (!is_array($group) || count($group) < 2) {
+                continue;
             }
-            if (count($ids) > 1) {
-                sort($ids);
-                foreach ($ids as $id) {
-                    $this->alias_id_map[$id] = $ids;
-                }
+            $ids = array_map('intval', $group);
+            sort($ids);
+            foreach ($ids as $id) {
+                $this->alias_id_map[$id] = $ids;
             }
         }
+    }
+
+    /**
+     * Invalidate the cached alias map so it is rebuilt on next access.
+     *
+     * Call this after saving alias groups via the admin panel.
+     */
+    public function flush_alias_map(): void {
+        $this->alias_id_map = null;
+    }
+
+    /**
+     * Get all stored alias groups with person details.
+     *
+     * Returns an array of arrays, each containing person objects for one alias group.
+     *
+     * @return array<int, array<object>> Indexed by group position (0-based).
+     */
+    public function get_all_alias_groups(): array {
+        $groups = get_option('kealoa_person_aliases', []);
+        if (!is_array($groups)) {
+            return [];
+        }
+        $result = [];
+        foreach ($groups as $index => $group) {
+            if (!is_array($group) || count($group) < 2) {
+                continue;
+            }
+            $persons = [];
+            foreach ($group as $person_id) {
+                $person = $this->get_person((int) $person_id);
+                if ($person) {
+                    $persons[] = $person;
+                }
+            }
+            if (count($persons) >= 2) {
+                $result[$index] = $persons;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Save alias groups to the database option.
+     *
+     * Expects an array of arrays of person IDs.
+     *
+     * @param array<array<int>> $groups
+     */
+    public function save_alias_groups(array $groups): void {
+        // Normalize: sort each group, filter out empty/single-element groups.
+        $clean = [];
+        foreach ($groups as $group) {
+            $ids = array_values(array_unique(array_map('intval', (array) $group)));
+            if (count($ids) >= 2) {
+                sort($ids);
+                $clean[] = $ids;
+            }
+        }
+        update_option('kealoa_person_aliases', $clean);
+        $this->flush_alias_map();
     }
 
     /**

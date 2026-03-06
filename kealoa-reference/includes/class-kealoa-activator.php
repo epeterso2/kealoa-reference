@@ -440,5 +440,51 @@ class Kealoa_Activator {
                 add_option($option, $value);
             }
         }
+
+        // Seed the person aliases option on first install or upgrade from
+        // the hardcoded PERSON_ALIASES constant (v2.2.9 and earlier).
+        // add_option() will not overwrite an existing value.
+        if (get_option('kealoa_person_aliases') === false) {
+            self::seed_person_aliases();
+        }
+    }
+
+    /**
+     * Seed person aliases from the previously hardcoded alias groups.
+     *
+     * Resolves person names to IDs via direct DB query so the activator
+     * does not depend on the Kealoa_DB class.
+     */
+    private static function seed_person_aliases(): void {
+        global $wpdb;
+        $persons_table = $wpdb->prefix . 'kealoa_persons';
+
+        // These were the hardcoded aliases in PERSON_ALIASES (v2.2.9).
+        $seed_groups = [
+            ['Alex Eaton-Salners', 'Will Shortz'],
+        ];
+
+        $alias_groups = [];
+        foreach ($seed_groups as $name_group) {
+            $ids = [];
+            foreach ($name_group as $name) {
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                $id = $wpdb->get_var(
+                    $wpdb->prepare(
+                        "SELECT id FROM {$persons_table} WHERE full_name = %s LIMIT 1",
+                        $name
+                    )
+                );
+                if ($id !== null) {
+                    $ids[] = (int) $id;
+                }
+            }
+            if (count($ids) >= 2) {
+                sort($ids);
+                $alias_groups[] = $ids;
+            }
+        }
+
+        add_option('kealoa_person_aliases', $alias_groups);
     }
 }

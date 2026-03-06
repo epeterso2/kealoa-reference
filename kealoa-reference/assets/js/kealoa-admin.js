@@ -398,6 +398,46 @@
             $button.hide();
         });
 
+        // =================================================================
+        // ALIAS GROUP FORM — enable/disable submit based on selection count
+        // =================================================================
+
+        var $aliasSelect = $('#alias-person-ids');
+        var $aliasSubmit = $('#alias-submit');
+
+        if ($aliasSelect.length) {
+            $aliasSelect.on('change', function () {
+                var count = $aliasSelect.find('option:selected').length;
+                $aliasSubmit.prop('disabled', count < 2);
+            });
+
+            // Initial state check
+            $aliasSubmit.prop('disabled', $aliasSelect.find('option:selected').length < 2);
+        }
+
+        // Alias form submit validation
+        $('#kealoa-alias-form').on('submit', function (e) {
+            var count = $aliasSelect.find('option:selected').length;
+            if (count < 2) {
+                e.preventDefault();
+                alert('Please select at least two persons for the alias group.');
+            }
+        });
+
+        // =================================================================
+        // ALIAS GROUP LIST — delete confirmation
+        // =================================================================
+
+        $(document).on('click', '[data-delete-alias]', function (e) {
+            e.preventDefault();
+            var groupIndex = $(this).data('delete-alias');
+            if (!confirm('Are you sure you want to delete this alias group?')) {
+                return;
+            }
+            $('#delete-alias-group-index').val(groupIndex);
+            $('#kealoa-delete-alias-form').submit();
+        });
+
     });
 
 })(jQuery);
