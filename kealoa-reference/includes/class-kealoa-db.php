@@ -2411,6 +2411,39 @@ class Kealoa_DB {
     }
 
     /**
+     * Get average clue age by clue position (clue number).
+     *
+     * Groups all clues by their clue_number and computes the average
+     * age (in days, = round_date − publication_date) at each position.
+     * Optionally filtered by clue-giver (host) person ID(s).
+     *
+     * @param int|int[]|null $clue_giver_id  Optional host person ID(s).
+     * @return array<int, object{clue_number: int, rounds: int, avg_age: float, min_age: int, max_age: int}>
+     */
+    public function get_avg_clue_age_by_position(int|array|null $clue_giver_id = null): array {
+        $host_where = '';
+        if ($clue_giver_id !== null) {
+            $host_where = 'AND ' . $this->prepare_person_id_clause('r.clue_giver_id', $clue_giver_id);
+        }
+
+        $sql = "SELECT
+                    c.clue_number,
+                    COUNT(*) AS rounds,
+                    AVG(DATEDIFF(r.round_date, p.publication_date)) AS avg_age,
+                    MIN(DATEDIFF(r.round_date, p.publication_date)) AS min_age,
+                    MAX(DATEDIFF(r.round_date, p.publication_date)) AS max_age
+                FROM {$this->clues_table} c
+                INNER JOIN {$this->rounds_table} r ON r.id = c.round_id
+                INNER JOIN {$this->puzzles_table} p ON p.id = c.puzzle_id
+                WHERE 1=1
+                {$host_where}
+                GROUP BY c.clue_number
+                ORDER BY c.clue_number ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get rounds where no clue has a linked puzzle.
      *
      * Returns round objects with clue_giver_name, ordered by round_date DESC.

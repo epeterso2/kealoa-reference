@@ -499,6 +499,41 @@ class Kealoa_Shortcodes {
             </div>
             <?php endif; ?>
 
+            <?php $age_by_pos = $this->db->get_avg_clue_age_by_position(); ?>
+            <?php if (!empty($age_by_pos)): ?>
+            <h3><?php esc_html_e('Clue Position', 'kealoa-reference'); ?> <?php esc_html_e('vs Average Clue Age', 'kealoa-reference'); ?></h3>
+            <div class="kealoa-table-scroll">
+            <table class="kealoa-table">
+                <thead>
+                    <tr>
+                        <th data-sort="number"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Clues', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Avg Age', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Min', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Max', 'kealoa-reference'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($age_by_pos as $ap): ?>
+                        <tr>
+                            <td><?php echo esc_html((int) $ap->clue_number); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $ap->rounds)); ?></td>
+                            <td data-value="<?php echo esc_attr(number_format((float) $ap->avg_age, 1, '.', '')); ?>">
+                                <?php echo esc_html(number_format_i18n((float) $ap->avg_age, 1)); ?> <?php esc_html_e('days', 'kealoa-reference'); ?>
+                            </td>
+                            <td data-value="<?php echo esc_attr((int) $ap->min_age); ?>">
+                                <?php echo esc_html(number_format_i18n((int) $ap->min_age)); ?>
+                            </td>
+                            <td data-value="<?php echo esc_attr((int) $ap->max_age); ?>">
+                                <?php echo esc_html(number_format_i18n((int) $ap->max_age)); ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            </div>
+            <?php endif; ?>
+
                 </div><!-- end Summary Stats tab -->
 
                 <div class="kealoa-tab-panel" data-tab="detailed-stats">
