@@ -3008,41 +3008,6 @@ class Kealoa_Shortcodes {
                     </div>
                     <?php endif; ?>
 
-                    <?php $host_guess_alt_by_clue = $this->db->get_guess_alternation_by_clue_number($person_ids); ?>
-                    <?php if (!empty($host_guess_alt_by_clue)): ?>
-                    <div class="kealoa-clue-giver-alt-by-clue">
-                        <h2><?php esc_html_e('Guess Alternation', 'kealoa-reference'); ?> <?php esc_html_e('by Clue Number', 'kealoa-reference'); ?></h2>
-                        <div class="kealoa-table-scroll">
-                        <table class="kealoa-table">
-                            <thead>
-                                <tr>
-                                    <th data-sort="number"><?php esc_html_e('Clue', 'kealoa-reference'); ?></th>
-                                    <th data-sort="number"><?php esc_html_e('Chances', 'kealoa-reference'); ?></th>
-                                    <th data-sort="number"><?php esc_html_e('Taken', 'kealoa-reference'); ?></th>
-                                    <th data-sort="number"><?php esc_html_e('%', 'kealoa-reference'); ?></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($host_guess_alt_by_clue as $grow):
-                                    $galt_pct = (int) $grow->chances > 0
-                                        ? ((int) $grow->taken / (int) $grow->chances) * 100
-                                        : 0;
-                                ?>
-                                    <tr>
-                                        <td><?php echo esc_html((int) $grow->clue_number); ?></td>
-                                        <td><?php echo esc_html(number_format_i18n((int) $grow->chances)); ?></td>
-                                        <td><?php echo esc_html(number_format_i18n((int) $grow->taken)); ?></td>
-                                        <td data-value="<?php echo esc_attr(number_format((float) $galt_pct, 2, '.', '')); ?>">
-                                            <?php echo Kealoa_Formatter::format_percentage($galt_pct); ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-
                 </div><!-- end host-stats sub-tab -->
 
                 <div class="kealoa-tab-panel" data-tab="host-streaks">
