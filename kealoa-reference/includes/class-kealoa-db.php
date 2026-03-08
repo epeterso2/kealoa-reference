@@ -1883,6 +1883,237 @@ class Kealoa_DB {
     }
 
     /**
+     * Get per-player guess alternation for a single round.
+     *
+     * For each guesser in the round, orders their guessed_word values
+     * by clue_number and computes the Wald-Wolfowitz run-count metric
+     * on the guess sequence.  This mirrors get_round_alternation_pct()
+     * but operates on guesses instead of correct answers.
+     *
+     * @param int $round_id The round ID.
+     * @return array Array of objects with person_id, full_name, alternation_pct.
+     */
+    public function get_round_guess_alternation_per_player(int $round_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT g.guesser_person_id, p.full_name, g.guessed_word, c.clue_number
+             FROM {$this->guesses_table} g
+             INNER JOIN {$this->clues_table} c ON c.id = g.clue_id
+             INNER JOIN {$this->persons_table} p ON p.id = g.guesser_person_id
+             WHERE c.round_id = %d
+             ORDER BY g.guesser_person_id, c.clue_number ASC",
+            $round_id
+        );
+        $rows = $this->wpdb->get_results($sql);
+
+        // Group guessed words by person
+        $words_by_person = [];
+        $names = [];
+        foreach ($rows as $row) {
+            $pid = (int) $row->guesser_person_id;
+            $words_by_person[$pid][] = $row->guessed_word;
+            $names[$pid] = $row->full_name;
+        }
+
+        $results = [];
+        foreach ($words_by_person as $pid => $words) {
+            $n = count($words);
+            if ($n < 2) {
+                $alt_pct = 0.0;
+            } else {
+                $runs = 1;
+                for ($i = 1; $i < $n; $i++) {
+                    if ($words[$i] !== $words[$i - 1]) {
+                        $runs++;
+                    }
+                }
+                $alt_pct = (($runs - 1) / ($n - 1)) * 100;
+            }
+            $results[] = (object) [
+                'person_id'       => $pid,
+                'full_name'       => $names[$pid],
+                'alternation_pct' => $alt_pct,
+            ];
+        }
+        return $results;
+    }
+
+    /**
+     * Get per-player guess alternation for multiple rounds in a single query.
+     *
+     * Bulk version of get_round_guess_alternation_per_player().
+     *
+     * @param int[] $round_ids Array of round IDs.
+     * @return array<int, array> Map of round_id => [objects with person_id, alternation_pct].
+     */
+    public function get_round_guess_alternation_per_player_bulk(array $round_ids): array {
+        $map = [];
+        foreach ($round_ids as $rid) {
+            $map[(int) $rid] = [];
+        }
+        if (empty($round_ids)) {
+            return $map;
+        }
+        $in = $this->ids_in_clause($round_ids);
+        $sql = "SELECT c.round_id, g.guesser_person_id, g.guessed_word, c.clue_number
+                FROM {$this->guesses_table} g
+                INNER JOIN {$this->clues_table} c ON c.id = g.clue_id
+                WHERE c.round_id IN ({$in})
+                ORDER BY c.round_id, g.guesser_person_id, c.clue_number ASC";
+        $rows = $this->wpdb->get_results($sql);
+
+        // Group guessed words by (round_id, person_id)
+        $words_by_round_person = [];
+        foreach ($rows as $row) {
+            $rid = (int) $row->round_id;
+            $pid = (int) $row->guesser_person_id;
+            $words_by_round_person[$rid][$pid][] = $row->guessed_word;
+        }
+
+        // Compute alternation per player per round
+        foreach ($words_by_round_person as $rid => $by_person) {
+            foreach ($by_person as $pid => $words) {
+                $n = count($words);
+                if ($n < 2) {
+                    $alt_pct = 0.0;
+                } else {
+                    $runs = 1;
+                    for ($i = 1; $i < $n; $i++) {
+                        if ($words[$i] !== $words[$i - 1]) {
+                            $runs++;
+                        }
+                    }
+                    $alt_pct = (($runs - 1) / ($n - 1)) * 100;
+                }
+                $map[$rid][] = (object) [
+                    'person_id'       => $pid,
+                    'alternation_pct' => $alt_pct,
+                ];
+            }
+        }
+        return $map;
+    }
+
+    /**
+     * Get per-player guess evenness for multiple rounds in a single query.
+     *
+     * For each guesser in each round, computes Pielou's Evenness Index
+     * on the distribution of their guessed_word values among the round's
+     * solution words.  This mirrors get_round_evenness_bulk() but
+     * operates on guesses instead of correct answers.
+     *
+     * @param int[] $round_ids Array of round IDs.
+     * @return array<int, array> Map of round_id => [objects with person_id, evenness_pct].
+     */
+    public function get_round_guess_evenness_per_player_bulk(array $round_ids): array {
+        $map = [];
+        foreach ($round_ids as $rid) {
+            $map[(int) $rid] = [];
+        }
+        if (empty($round_ids)) {
+            return $map;
+        }
+        $in = $this->ids_in_clause($round_ids);
+
+        // Get the number of solution words per round
+        $sol_sql = "SELECT round_id, COUNT(*) as word_count
+                    FROM {$this->round_solutions_table}
+                    WHERE round_id IN ({$in})
+                    GROUP BY round_id";
+        $sol_rows = $this->wpdb->get_results($sol_sql);
+        $solution_counts = [];
+        foreach ($sol_rows as $sr) {
+            $solution_counts[(int) $sr->round_id] = (int) $sr->word_count;
+        }
+
+        // Count how many guesses each player gave for each guessed_word, per round
+        $sql = "SELECT c.round_id, g.guesser_person_id, g.guessed_word, COUNT(*) as cnt
+                FROM {$this->guesses_table} g
+                INNER JOIN {$this->clues_table} c ON c.id = g.clue_id
+                WHERE c.round_id IN ({$in})
+                GROUP BY c.round_id, g.guesser_person_id, g.guessed_word";
+        $rows = $this->wpdb->get_results($sql);
+
+        // Group counts by (round_id, person_id)
+        $counts_by_round_person = [];
+        foreach ($rows as $row) {
+            $rid = (int) $row->round_id;
+            $pid = (int) $row->guesser_person_id;
+            $counts_by_round_person[$rid][$pid][] = (int) $row->cnt;
+        }
+
+        // Compute Pielou's Evenness per player per round
+        foreach ($counts_by_round_person as $rid => $by_person) {
+            $s_count = $solution_counts[$rid] ?? 0;
+            foreach ($by_person as $pid => $counts) {
+                // Add zero-count entries for solution words not guessed
+                $missing = $s_count - count($counts);
+                for ($i = 0; $i < $missing; $i++) {
+                    $counts[] = 0;
+                }
+                if ($s_count <= 1) {
+                    $evenness = 100.0;
+                } else {
+                    $n_total = array_sum($counts);
+                    $h_prime = 0.0;
+                    foreach ($counts as $count) {
+                        $p_i = $count / $n_total;
+                        if ($p_i > 0) {
+                            $h_prime -= $p_i * log($p_i);
+                        }
+                    }
+                    $evenness = ($h_prime / log($s_count)) * 100;
+                }
+                $map[$rid][] = (object) [
+                    'person_id'    => $pid,
+                    'evenness_pct' => $evenness,
+                ];
+            }
+        }
+        return $map;
+    }
+
+    /**
+     * Get guess alternation statistics broken down by clue number.
+     *
+     * For each clue number 2–10, returns the number of player-clue pairs
+     * ("chances") and the number of times a player's guess differed from
+     * their guess on the previous clue ("taken").  This mirrors
+     * get_alternation_by_clue_number() but compares guessed_word
+     * instead of correct_answer.
+     *
+     * @param int|int[]|null $clue_giver_id  Optional host person ID(s) to filter rounds.
+     * @return array<int, object{clue_number: int, chances: int, taken: int}>
+     */
+    public function get_guess_alternation_by_clue_number(int|array|null $clue_giver_id = null): array {
+        $host_join  = '';
+        $host_where = '';
+        if ($clue_giver_id !== null) {
+            $host_join  = "INNER JOIN {$this->rounds_table} r ON c2.round_id = r.id";
+            $host_where = 'AND ' . $this->prepare_person_id_clause('r.clue_giver_id', $clue_giver_id);
+        }
+
+        $sql = "SELECT
+                    c2.clue_number,
+                    COUNT(*) AS chances,
+                    SUM(CASE WHEN g2.guessed_word != g1.guessed_word THEN 1 ELSE 0 END) AS taken
+                FROM {$this->guesses_table} g2
+                INNER JOIN {$this->clues_table} c2 ON c2.id = g2.clue_id
+                INNER JOIN {$this->clues_table} c1
+                    ON c1.round_id = c2.round_id
+                    AND c1.clue_number = c2.clue_number - 1
+                INNER JOIN {$this->guesses_table} g1
+                    ON g1.clue_id = c1.id
+                    AND g1.guesser_person_id = g2.guesser_person_id
+                {$host_join}
+                WHERE c2.clue_number BETWEEN 2 AND 10
+                {$host_where}
+                GROUP BY c2.clue_number
+                ORDER BY c2.clue_number ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get Pielou's Evenness Index for multiple rounds in a single query.
      *
      * Evenness measures how evenly the correct answers are distributed

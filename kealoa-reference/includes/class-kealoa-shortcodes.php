@@ -331,12 +331,12 @@ class Kealoa_Shortcodes {
             ksort($alternation_buckets);
             ?>
             <?php if (!empty($alternation_buckets)): ?>
-            <h3><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('vs Accuracy', 'kealoa-reference'); ?></h3>
+            <h3><?php esc_html_e('Answer Alternation', 'kealoa-reference'); ?> <?php esc_html_e('vs Accuracy', 'kealoa-reference'); ?></h3>
             <div class="kealoa-table-scroll">
             <table class="kealoa-table kealoa-alternation-table">
                 <thead>
                     <tr>
-                        <th data-sort="text"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></th>
+                        <th data-sort="text"><?php esc_html_e('Answer Alternation', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
@@ -366,9 +366,76 @@ class Kealoa_Shortcodes {
             </div>
             <?php endif; ?>
 
+            <?php
+            // Build Guess Alternation vs Accuracy table (per-player)
+            $all_guess_alt = $this->db->get_round_guess_alternation_per_player_bulk($all_rgs_ids);
+            $guess_alt_buckets = [];
+            foreach ($round_guess_stats as $rgs) {
+                $rid = (int) $rgs->round_id;
+                $player_alts = $all_guess_alt[$rid] ?? [];
+                if (empty($player_alts)) {
+                    continue;
+                }
+                // Each player-in-a-round is one data point
+                // We need per-player guess counts, so fetch guesser results
+                $rgs_total = (int) $rgs->total_guesses;
+                $rgs_correct = (int) $rgs->correct_guesses;
+                $n_players = count($player_alts);
+                foreach ($player_alts as $pa) {
+                    $bucket = (int) floor($pa->alternation_pct / 10) * 10;
+                    if ($bucket >= 100) {
+                        $bucket = 90;
+                    }
+                    if (!isset($guess_alt_buckets[$bucket])) {
+                        $guess_alt_buckets[$bucket] = ['entries' => 0, 'guesses' => 0, 'correct' => 0];
+                    }
+                    $guess_alt_buckets[$bucket]['entries']++;
+                    // Approximate: distribute round guesses evenly among players
+                    $guess_alt_buckets[$bucket]['guesses'] += (int) round($rgs_total / $n_players);
+                    $guess_alt_buckets[$bucket]['correct'] += (int) round($rgs_correct / $n_players);
+                }
+            }
+            ksort($guess_alt_buckets);
+            ?>
+            <?php if (!empty($guess_alt_buckets)): ?>
+            <h3><?php esc_html_e('Guess Alternation', 'kealoa-reference'); ?> <?php esc_html_e('vs Accuracy', 'kealoa-reference'); ?></h3>
+            <div class="kealoa-table-scroll">
+            <table class="kealoa-table kealoa-alternation-table">
+                <thead>
+                    <tr>
+                        <th data-sort="text"><?php esc_html_e('Guess Alternation', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Players×Rounds', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($guess_alt_buckets as $bucket => $gstats): ?>
+                        <?php
+                        $bucket_label = $bucket . '%–' . ($bucket + 10) . '%';
+                        $gbucket_acc = $gstats['guesses'] > 0
+                            ? ($gstats['correct'] / $gstats['guesses']) * 100
+                            : 0;
+                        ?>
+                        <tr>
+                            <td><?php echo esc_html($bucket_label); ?></td>
+                            <td><?php echo esc_html(number_format_i18n($gstats['entries'])); ?></td>
+                            <td><?php echo esc_html(number_format_i18n($gstats['guesses'])); ?></td>
+                            <td><?php echo esc_html(number_format_i18n($gstats['correct'])); ?></td>
+                            <td data-value="<?php echo esc_attr(number_format((float) $gbucket_acc, 2, '.', '')); ?>">
+                                <?php echo Kealoa_Formatter::format_percentage($gbucket_acc); ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            </div>
+            <?php endif; ?>
+
             <?php $alt_by_clue = $this->db->get_alternation_by_clue_number(); ?>
             <?php if (!empty($alt_by_clue)): ?>
-            <h3><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('by Clue Number', 'kealoa-reference'); ?></h3>
+            <h3><?php esc_html_e('Answer Alternation', 'kealoa-reference'); ?> <?php esc_html_e('by Clue Number', 'kealoa-reference'); ?></h3>
             <div class="kealoa-table-scroll">
             <table class="kealoa-table">
                 <thead>
@@ -391,6 +458,39 @@ class Kealoa_Shortcodes {
                             <td><?php echo esc_html(number_format_i18n((int) $row->taken)); ?></td>
                             <td data-value="<?php echo esc_attr(number_format((float) $alt_pct, 2, '.', '')); ?>">
                                 <?php echo Kealoa_Formatter::format_percentage($alt_pct); ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            </div>
+            <?php endif; ?>
+
+            <?php $guess_alt_by_clue = $this->db->get_guess_alternation_by_clue_number(); ?>
+            <?php if (!empty($guess_alt_by_clue)): ?>
+            <h3><?php esc_html_e('Guess Alternation', 'kealoa-reference'); ?> <?php esc_html_e('by Clue Number', 'kealoa-reference'); ?></h3>
+            <div class="kealoa-table-scroll">
+            <table class="kealoa-table">
+                <thead>
+                    <tr>
+                        <th data-sort="number"><?php esc_html_e('Clue', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Chances', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Taken', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('%', 'kealoa-reference'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($guess_alt_by_clue as $grow):
+                        $galt_pct = (int) $grow->chances > 0
+                            ? ((int) $grow->taken / (int) $grow->chances) * 100
+                            : 0;
+                    ?>
+                        <tr>
+                            <td><?php echo esc_html((int) $grow->clue_number); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $grow->chances)); ?></td>
+                            <td><?php echo esc_html(number_format_i18n((int) $grow->taken)); ?></td>
+                            <td data-value="<?php echo esc_attr(number_format((float) $galt_pct, 2, '.', '')); ?>">
+                                <?php echo Kealoa_Formatter::format_percentage($galt_pct); ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -425,7 +525,7 @@ class Kealoa_Shortcodes {
                 </div>
                 <div class="kealoa-filter-row">
                     <div class="kealoa-filter-group">
-                        <label for="kealoa-ds-alt-min"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('Range', 'kealoa-reference'); ?></label>
+                        <label for="kealoa-ds-alt-min"><?php esc_html_e('Ans. Alternation', 'kealoa-reference'); ?> <?php esc_html_e('Range', 'kealoa-reference'); ?></label>
                         <div class="kealoa-filter-range">
                             <input type="number" id="kealoa-ds-alt-min" class="kealoa-filter-input" data-filter="range-min" data-col="2" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
                             <span class="kealoa-filter-range-sep">&ndash;</span>
@@ -433,19 +533,37 @@ class Kealoa_Shortcodes {
                         </div>
                     </div>
                     <div class="kealoa-filter-group">
-                        <label for="kealoa-ds-even-min"><a href="/faq#definition-evenness"><?php esc_html_e('Evenness', 'kealoa-reference'); ?></a> <?php esc_html_e('Range', 'kealoa-reference'); ?></label>
+                        <label for="kealoa-ds-even-min"><?php esc_html_e('Ans. Evenness', 'kealoa-reference'); ?> <?php esc_html_e('Range', 'kealoa-reference'); ?></label>
                         <div class="kealoa-filter-range">
                             <input type="number" id="kealoa-ds-even-min" class="kealoa-filter-input" data-filter="range-min" data-col="3" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
                             <span class="kealoa-filter-range-sep">&ndash;</span>
                             <input type="number" id="kealoa-ds-even-max" class="kealoa-filter-input" data-filter="range-max" data-col="3" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
                         </div>
                     </div>
+                </div>
+                <div class="kealoa-filter-row">
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ds-galt-min"><?php esc_html_e('Guess Alt.', 'kealoa-reference'); ?> <?php esc_html_e('Range', 'kealoa-reference'); ?></label>
+                        <div class="kealoa-filter-range">
+                            <input type="number" id="kealoa-ds-galt-min" class="kealoa-filter-input" data-filter="range-min" data-col="4" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
+                            <span class="kealoa-filter-range-sep">&ndash;</span>
+                            <input type="number" id="kealoa-ds-galt-max" class="kealoa-filter-input" data-filter="range-max" data-col="4" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
+                        </div>
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-ds-geven-min"><?php esc_html_e('Guess Even.', 'kealoa-reference'); ?> <?php esc_html_e('Range', 'kealoa-reference'); ?></label>
+                        <div class="kealoa-filter-range">
+                            <input type="number" id="kealoa-ds-geven-min" class="kealoa-filter-input" data-filter="range-min" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('0%', 'kealoa-reference'); ?>">
+                            <span class="kealoa-filter-range-sep">&ndash;</span>
+                            <input type="number" id="kealoa-ds-geven-max" class="kealoa-filter-input" data-filter="range-max" data-col="5" min="0" max="100" placeholder="<?php esc_attr_e('100%', 'kealoa-reference'); ?>">
+                        </div>
+                    </div>
                     <div class="kealoa-filter-group">
                         <label for="kealoa-ds-age-min"><?php esc_html_e('Clue Age Range', 'kealoa-reference'); ?></label>
                         <div class="kealoa-filter-range">
-                            <input type="number" id="kealoa-ds-age-min" class="kealoa-filter-input" data-filter="range-min" data-col="4" min="0" placeholder="<?php esc_attr_e('Min days', 'kealoa-reference'); ?>">
+                            <input type="number" id="kealoa-ds-age-min" class="kealoa-filter-input" data-filter="range-min" data-col="6" min="0" placeholder="<?php esc_attr_e('Min days', 'kealoa-reference'); ?>">
                             <span class="kealoa-filter-range-sep">&ndash;</span>
-                            <input type="number" id="kealoa-ds-age-max" class="kealoa-filter-input" data-filter="range-max" data-col="4" min="0" placeholder="<?php esc_attr_e('Max days', 'kealoa-reference'); ?>">
+                            <input type="number" id="kealoa-ds-age-max" class="kealoa-filter-input" data-filter="range-max" data-col="6" min="0" placeholder="<?php esc_attr_e('Max days', 'kealoa-reference'); ?>">
                         </div>
                     </div>
                 </div>
@@ -456,8 +574,10 @@ class Kealoa_Shortcodes {
                     <tr>
                         <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
                         <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Evenness', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Ans. Alt.', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Ans. Even.', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Guess Alt.', 'kealoa-reference'); ?></th>
+                        <th data-sort="number"><?php esc_html_e('Guess Even.', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Avg Clue Age', 'kealoa-reference'); ?></th>
                     </tr>
                 </thead>
@@ -468,6 +588,8 @@ class Kealoa_Shortcodes {
                     $ds_solutions = $this->db->get_round_solutions_bulk($ds_round_ids);
                     $ds_alternation = $this->db->get_round_alternation_pcts_bulk($ds_round_ids);
                     $ds_evenness = $this->db->get_round_evenness_bulk($ds_round_ids);
+                    $ds_guess_alt = $this->db->get_round_guess_alternation_per_player_bulk($ds_round_ids);
+                    $ds_guess_even = $this->db->get_round_guess_evenness_per_player_bulk($ds_round_ids);
                     $ds_clue_ages = $this->db->get_round_clue_age_stats_bulk($ds_round_ids);
                     $ds_rounds_per_date = $rounds_per_date ?? $this->db->get_rounds_per_date_counts();
                     ?>
@@ -478,6 +600,26 @@ class Kealoa_Shortcodes {
                         $alt_pct = $ds_alternation[$rid] ?? 0.0;
                         $even_pct = $ds_evenness[$rid] ?? 0.0;
                         $age_stats = $ds_clue_ages[$rid] ?? null;
+                        // Compute average guess alternation across players
+                        $ds_galt_players = $ds_guess_alt[$rid] ?? [];
+                        $ds_galt_avg = 0.0;
+                        if (!empty($ds_galt_players)) {
+                            $ds_galt_sum = 0.0;
+                            foreach ($ds_galt_players as $dgp) {
+                                $ds_galt_sum += $dgp->alternation_pct;
+                            }
+                            $ds_galt_avg = $ds_galt_sum / count($ds_galt_players);
+                        }
+                        // Compute average guess evenness across players
+                        $ds_geven_players = $ds_guess_even[$rid] ?? [];
+                        $ds_geven_avg = 0.0;
+                        if (!empty($ds_geven_players)) {
+                            $ds_geven_sum = 0.0;
+                            foreach ($ds_geven_players as $dgep) {
+                                $ds_geven_sum += $dgep->evenness_pct;
+                            }
+                            $ds_geven_avg = $ds_geven_sum / count($ds_geven_players);
+                        }
                         $round_num = (int) ($round->round_number ?? 1);
                         $date_count = $ds_rounds_per_date[$round->round_date] ?? 1;
                         ?>
@@ -498,6 +640,12 @@ class Kealoa_Shortcodes {
                             </td>
                             <td data-value="<?php echo esc_attr(number_format($even_pct, 2, '.', '')); ?>">
                                 <?php echo Kealoa_Formatter::format_percentage($even_pct, 0); ?>
+                            </td>
+                            <td data-value="<?php echo esc_attr(number_format($ds_galt_avg, 2, '.', '')); ?>">
+                                <?php echo !empty($ds_galt_players) ? Kealoa_Formatter::format_percentage($ds_galt_avg, 0) : '—'; ?>
+                            </td>
+                            <td data-value="<?php echo esc_attr(number_format($ds_geven_avg, 2, '.', '')); ?>">
+                                <?php echo !empty($ds_geven_players) ? Kealoa_Formatter::format_percentage($ds_geven_avg, 0) : '—'; ?>
                             </td>
                             <td data-value="<?php echo esc_attr($age_stats ? number_format($age_stats->mean, 0, '.', '') : ''); ?>">
                                 <?php echo $age_stats ? esc_html(number_format_i18n($age_stats->mean, 0) . ' days') : '—'; ?>
@@ -783,7 +931,7 @@ class Kealoa_Shortcodes {
                     $alternation_pct = $this->db->get_round_alternation_pct($round_id);
                     ?>
                     <p>
-                        <strong class="kealoa-meta-label"><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a></strong>
+                        <strong class="kealoa-meta-label"><?php esc_html_e('Answer Alternation', 'kealoa-reference'); ?></strong>
                         <span><?php
                         echo Kealoa_Formatter::format_percentage($alternation_pct, 0);
                         $n_clues = count($clues);
@@ -800,6 +948,50 @@ class Kealoa_Shortcodes {
                         );
                         ?></span>
                     </p>
+                    <?php
+                    // Per-player guess alternation — compute total guess changes
+                    $guess_alt_per_player = $this->db->get_round_guess_alternation_per_player($round_id);
+                    if (!empty($guess_alt_per_player)):
+                        $guess_alt_sum = 0.0;
+                        foreach ($guess_alt_per_player as $gap) {
+                            $guess_alt_sum += $gap->alternation_pct;
+                        }
+                        $guess_alt_avg = $guess_alt_sum / count($guess_alt_per_player);
+
+                        // Compute total guess changes across all players from raw guesses
+                        $clue_ids_for_meta = array_map(fn($c) => (int) $c->id, $clues);
+                        $meta_guesses_map = !empty($clue_ids_for_meta) ? $this->db->get_clue_guesses_bulk($clue_ids_for_meta) : [];
+                        // Build per-player guess sequences ordered by clue_number
+                        $guess_sequences = [];
+                        foreach ($clues as $ci => $clue) {
+                            $cid = (int) $clue->id;
+                            $cg_list = $meta_guesses_map[$cid] ?? [];
+                            foreach ($cg_list as $cg) {
+                                $pid = (int) $cg->guesser_person_id;
+                                $guess_sequences[$pid][] = $cg->guessed_word;
+                            }
+                        }
+                        $total_guess_changes = 0;
+                        foreach ($guess_sequences as $seq) {
+                            for ($gi = 1, $gn = count($seq); $gi < $gn; $gi++) {
+                                if ($seq[$gi] !== $seq[$gi - 1]) {
+                                    $total_guess_changes++;
+                                }
+                            }
+                        }
+                    ?>
+                    <p>
+                        <strong class="kealoa-meta-label"><?php esc_html_e('Guess Alternation', 'kealoa-reference'); ?></strong>
+                        <span><?php
+                        echo Kealoa_Formatter::format_percentage($guess_alt_avg, 0);
+                        /* translators: %d = number of guess changes */
+                        echo ' ' . sprintf(
+                            esc_html(_n('(%d guess change)', '(%d guess changes)', $total_guess_changes, 'kealoa-reference')),
+                            $total_guess_changes
+                        );
+                        ?></span>
+                    </p>
+                    <?php endif; ?>
                     <?php
                     // Pielou's Evenness Index: J' = H' / ln(S), scaled to 0-100%
                     // S = number of solution words (from round_solutions), not just those used as clue answers
@@ -829,7 +1021,7 @@ class Kealoa_Shortcodes {
                     }
                     ?>
                     <p>
-                        <strong class="kealoa-meta-label"><a href="/faq#definition-evenness"><?php esc_html_e('Evenness', 'kealoa-reference'); ?></a></strong>
+                        <strong class="kealoa-meta-label"><?php esc_html_e('Answer Evenness', 'kealoa-reference'); ?></strong>
                         <span><?php
                         echo Kealoa_Formatter::format_percentage($evenness_pct, 0);
                         $word_parts = [];
@@ -841,6 +1033,47 @@ class Kealoa_Shortcodes {
                         echo ' (' . implode(', ', $word_parts) . ')';
                         ?></span>
                     </p>
+                    <?php
+                    // Per-player guess evenness — compute aggregate guess word distribution
+                    $guess_even_map = $this->db->get_round_guess_evenness_per_player_bulk([$round_id]);
+                    $guess_even_per_player = $guess_even_map[$round_id] ?? [];
+                    if (!empty($guess_even_per_player)):
+                        $guess_even_sum = 0.0;
+                        foreach ($guess_even_per_player as $gep) {
+                            $guess_even_sum += $gep->evenness_pct;
+                        }
+                        $guess_even_avg = $guess_even_sum / count($guess_even_per_player);
+
+                        // Build aggregate guess word distribution from raw guesses
+                        if (!isset($meta_guesses_map)) {
+                            $clue_ids_for_meta = array_map(fn($c) => (int) $c->id, $clues);
+                            $meta_guesses_map = !empty($clue_ids_for_meta) ? $this->db->get_clue_guesses_bulk($clue_ids_for_meta) : [];
+                        }
+                        $guess_word_counts = [];
+                        foreach ($solutions as $s) {
+                            $guess_word_counts[strtoupper($s->word)] = 0;
+                        }
+                        foreach ($meta_guesses_map as $cg_list) {
+                            foreach ($cg_list as $cg) {
+                                $gw = strtoupper($cg->guessed_word);
+                                $guess_word_counts[$gw] = ($guess_word_counts[$gw] ?? 0) + 1;
+                            }
+                        }
+                    ?>
+                    <p>
+                        <strong class="kealoa-meta-label"><?php esc_html_e('Guess Evenness', 'kealoa-reference'); ?></strong>
+                        <span><?php
+                        echo Kealoa_Formatter::format_percentage($guess_even_avg, 0);
+                        $gword_parts = [];
+                        foreach ($solutions as $s) {
+                            $gword = strtoupper($s->word);
+                            $gcount = $guess_word_counts[$gword] ?? 0;
+                            $gword_parts[] = esc_html($gword) . ': ' . $gcount;
+                        }
+                        echo ' (' . implode(', ', $gword_parts) . ')';
+                        ?></span>
+                    </p>
+                    <?php endif; ?>
                     <?php
                     $clue_age_stats = $this->db->get_round_clue_age_stats($round_id);
                     if ($clue_age_stats): ?>
@@ -1151,6 +1384,7 @@ class Kealoa_Shortcodes {
         $bulk_solutions_map = $this->db->get_round_solutions_bulk($every_round_id);
         $rounds_per_date_map = $this->db->get_rounds_per_date_counts();
         $bulk_alternation_map = $this->db->get_round_alternation_pcts_bulk($every_round_id);
+        $bulk_guess_alt_map = $this->db->get_round_guess_alternation_per_player_bulk($all_person_round_ids);
         // Bulk pre-fetch guessers for round history co-players
         $bulk_guessers_map = $this->db->get_round_guessers_bulk($all_person_round_ids);
 
@@ -1850,13 +2084,13 @@ class Kealoa_Shortcodes {
                 ?>
                 <?php if (!empty($player_alternation_buckets)): ?>
                 <div class="kealoa-alternation-accuracy-section">
-                    <h2><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('vs Accuracy', 'kealoa-reference'); ?></h2>
+                    <h2><?php esc_html_e('Answer Alternation', 'kealoa-reference'); ?> <?php esc_html_e('vs Accuracy', 'kealoa-reference'); ?></h2>
 
                     <div class="kealoa-table-scroll">
                     <table class="kealoa-table kealoa-alternation-table">
                         <thead>
                             <tr>
-                                <th data-sort="text"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></th>
+                                <th data-sort="text"><?php esc_html_e('Answer Alternation', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                                 <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
@@ -1878,6 +2112,75 @@ class Kealoa_Shortcodes {
                                     <td><?php echo esc_html(number_format_i18n($mbstats['correct'])); ?></td>
                                     <td data-value="<?php echo esc_attr(number_format((float) $bucket_acc, 2, '.', '')); ?>">
                                         <?php echo Kealoa_Formatter::format_percentage($bucket_acc); ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <?php
+                // Build Guess Alternation vs Accuracy table for this player
+                $player_guess_alt_buckets = [];
+                foreach ($round_history as $rh) {
+                    $rid = (int) $rh->round_id;
+                    $player_alts = $bulk_guess_alt_map[$rid] ?? [];
+                    // Find this player's guess alternation for the round
+                    $my_alt = null;
+                    foreach ($player_alts as $pa) {
+                        if (in_array((int) $pa->person_id, $person_ids, true)) {
+                            $my_alt = $pa->alternation_pct;
+                            break;
+                        }
+                    }
+                    if ($my_alt === null) {
+                        continue;
+                    }
+                    $bucket = (int) floor($my_alt / 10) * 10;
+                    if ($bucket >= 100) {
+                        $bucket = 90;
+                    }
+                    if (!isset($player_guess_alt_buckets[$bucket])) {
+                        $player_guess_alt_buckets[$bucket] = ['rounds' => 0, 'guesses' => 0, 'correct' => 0];
+                    }
+                    $player_guess_alt_buckets[$bucket]['rounds']++;
+                    $player_guess_alt_buckets[$bucket]['guesses'] += (int) $rh->total_clues;
+                    $player_guess_alt_buckets[$bucket]['correct'] += (int) $rh->correct_count;
+                }
+                ksort($player_guess_alt_buckets);
+                ?>
+                <?php if (!empty($player_guess_alt_buckets)): ?>
+                <div class="kealoa-alternation-accuracy-section">
+                    <h2><?php esc_html_e('Guess Alternation', 'kealoa-reference'); ?> <?php esc_html_e('vs Accuracy', 'kealoa-reference'); ?></h2>
+
+                    <div class="kealoa-table-scroll">
+                    <table class="kealoa-table kealoa-alternation-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="text"><?php esc_html_e('Guess Alternation', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
+                                <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($player_guess_alt_buckets as $bucket => $gmbstats): ?>
+                                <?php
+                                $bucket_label = $bucket . '%–' . ($bucket + 10) . '%';
+                                $gbucket_acc = $gmbstats['guesses'] > 0
+                                    ? ($gmbstats['correct'] / $gmbstats['guesses']) * 100
+                                    : 0;
+                                ?>
+                                <tr>
+                                    <td><?php echo esc_html($bucket_label); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n($gmbstats['rounds'])); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n($gmbstats['guesses'])); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n($gmbstats['correct'])); ?></td>
+                                    <td data-value="<?php echo esc_attr(number_format((float) $gbucket_acc, 2, '.', '')); ?>">
+                                        <?php echo Kealoa_Formatter::format_percentage($gbucket_acc); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -2673,7 +2976,7 @@ class Kealoa_Shortcodes {
                     <?php $host_alt_by_clue = $this->db->get_alternation_by_clue_number($person_ids); ?>
                     <?php if (!empty($host_alt_by_clue)): ?>
                     <div class="kealoa-clue-giver-alt-by-clue">
-                        <h2><a href="/faq#definition-alternation"><?php esc_html_e('Alternation', 'kealoa-reference'); ?></a> <?php esc_html_e('by Clue Number', 'kealoa-reference'); ?></h2>
+                        <h2><?php esc_html_e('Answer Alternation', 'kealoa-reference'); ?> <?php esc_html_e('by Clue Number', 'kealoa-reference'); ?></h2>
                         <div class="kealoa-table-scroll">
                         <table class="kealoa-table">
                             <thead>
@@ -2696,6 +2999,41 @@ class Kealoa_Shortcodes {
                                         <td><?php echo esc_html(number_format_i18n((int) $row->taken)); ?></td>
                                         <td data-value="<?php echo esc_attr(number_format((float) $alt_pct, 2, '.', '')); ?>">
                                             <?php echo Kealoa_Formatter::format_percentage($alt_pct); ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php $host_guess_alt_by_clue = $this->db->get_guess_alternation_by_clue_number($person_ids); ?>
+                    <?php if (!empty($host_guess_alt_by_clue)): ?>
+                    <div class="kealoa-clue-giver-alt-by-clue">
+                        <h2><?php esc_html_e('Guess Alternation', 'kealoa-reference'); ?> <?php esc_html_e('by Clue Number', 'kealoa-reference'); ?></h2>
+                        <div class="kealoa-table-scroll">
+                        <table class="kealoa-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="number"><?php esc_html_e('Clue', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Chances', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('Taken', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number"><?php esc_html_e('%', 'kealoa-reference'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($host_guess_alt_by_clue as $grow):
+                                    $galt_pct = (int) $grow->chances > 0
+                                        ? ((int) $grow->taken / (int) $grow->chances) * 100
+                                        : 0;
+                                ?>
+                                    <tr>
+                                        <td><?php echo esc_html((int) $grow->clue_number); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $grow->chances)); ?></td>
+                                        <td><?php echo esc_html(number_format_i18n((int) $grow->taken)); ?></td>
+                                        <td data-value="<?php echo esc_attr(number_format((float) $galt_pct, 2, '.', '')); ?>">
+                                            <?php echo Kealoa_Formatter::format_percentage($galt_pct); ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

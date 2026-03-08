@@ -222,7 +222,7 @@
 }
 
 .kealoa-round-meta strong {
-    min-width: 140px;
+    min-width: 170px;
     flex-shrink: 0;
     color: var(--pumice);
 }
@@ -821,8 +821,13 @@
 }
 
 .kealoa-meta-label {
-    min-width: 140px;
+    min-width: 170px;
     flex-shrink: 0;
+    color: var(--pumice);
+}
+
+.kealoa-guess-metrics {
+    font-size: 0.9em;
     color: var(--pumice);
 }
 
