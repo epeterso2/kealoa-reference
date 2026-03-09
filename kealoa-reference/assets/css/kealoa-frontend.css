@@ -752,6 +752,11 @@
     white-space: nowrap;
 }
 
+.kealoa-curiosities-section .kealoa-table .kealoa-solutions-cell,
+.kealoa-curiosities-section .kealoa-table .kealoa-description-cell {
+    white-space: normal;
+}
+
 .kealoa-chart-container {
     position: relative;
     width: 100%;
