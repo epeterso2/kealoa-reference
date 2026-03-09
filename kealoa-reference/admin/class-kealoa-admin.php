@@ -285,6 +285,15 @@ class Kealoa_Admin {
                 ]);
                 break;
 
+            case 'puzzle':
+                $wp_admin_bar->add_node([
+                    'id'    => 'edit',
+                    'title' => __('Edit Puzzle', 'kealoa-reference'),
+                    'href'  => admin_url('admin.php?page=kealoa-puzzles&action=edit&id=' . $object_id),
+                    'meta'  => ['title' => __('Edit this puzzle', 'kealoa-reference')],
+                ]);
+                break;
+
         }
     }
 
