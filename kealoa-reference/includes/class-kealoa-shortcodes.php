@@ -982,6 +982,20 @@ class Kealoa_Shortcodes {
             <div class="kealoa-round-header">
 
                 <div class="kealoa-round-meta">
+                    <?php if (!empty($solutions)): ?>
+                    <p>
+                        <strong class="kealoa-meta-label"><?php esc_html_e('Words', 'kealoa-reference'); ?></strong>
+                        <span><?php
+                        $word_links = [];
+                        foreach ($solutions as $s) {
+                            $word = $s->word;
+                            $finder_word = str_replace(' ', '', $word);
+                            $word_links[] = '<a href="' . esc_url('https://xwordinfo.com/Finder?word=' . rawurlencode($finder_word)) . '" target="_blank" rel="noopener noreferrer">' . esc_html(strtoupper($word)) . '</a>';
+                        }
+                        echo implode(', ', $word_links);
+                        ?></span>
+                    </p>
+                    <?php endif; ?>
                     <p>
                         <strong class="kealoa-meta-label"><?php esc_html_e('Date', 'kealoa-reference'); ?></strong>
                         <span><?php
