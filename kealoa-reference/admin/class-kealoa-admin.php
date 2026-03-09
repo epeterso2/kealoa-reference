@@ -2538,9 +2538,12 @@ class Kealoa_Admin {
         $clue_id = (int) ($_POST['clue_id'] ?? 0);
         $guesses = $_POST['guesses'] ?? [];
 
+        // Fetch correct answer once for all guesses on the same clue
+        $correct_answer = $this->db->get_clue_correct_answer($clue_id);
+
         foreach ($guesses as $guesser_id => $guessed_word) {
             if (!empty($guessed_word)) {
-                $this->db->set_guess($clue_id, (int) $guesser_id, $guessed_word);
+                $this->db->set_guess($clue_id, (int) $guesser_id, $guessed_word, $correct_answer);
             } else {
                 $this->db->delete_guess($clue_id, (int) $guesser_id);
             }

@@ -30,6 +30,9 @@ class Kealoa_DB {
     /** @var array<int, int[]>|null Resolved alias map (person_id => all IDs in group), lazily built. */
     private ?array $alias_id_map = null;
 
+    /** @var array<string, int>|null Cached rounds-per-date counts for request-level memoization. */
+    private ?array $rounds_per_date_cache = null;
+
     private \wpdb $wpdb;
     private string $persons_table;
     private string $puzzles_table;
@@ -1154,6 +1157,7 @@ class Kealoa_DB {
             $format
         );
 
+        $this->rounds_per_date_cache = null;
         return $result ? $this->wpdb->insert_id : false;
     }
 
@@ -1225,6 +1229,7 @@ class Kealoa_DB {
             ['%d']
         );
 
+        $this->rounds_per_date_cache = null;
         return $result !== false;
     }
 
@@ -1275,6 +1280,7 @@ class Kealoa_DB {
             );
         }
 
+        $this->rounds_per_date_cache = null;
         return $result !== false;
     }
 
@@ -1388,6 +1394,18 @@ class Kealoa_DB {
     // =========================================================================
     // CLUES CRUD
     // =========================================================================
+
+    /**
+     * Get only the correct_answer for a clue (lightweight, no JOINs).
+     */
+    public function get_clue_correct_answer(int $clue_id): ?string {
+        return $this->wpdb->get_var(
+            $this->wpdb->prepare(
+                "SELECT correct_answer FROM {$this->clues_table} WHERE id = %d",
+                $clue_id
+            )
+        );
+    }
 
     /**
      * Get a clue by ID
@@ -1537,16 +1555,22 @@ class Kealoa_DB {
 
     /**
      * Set or update a guess
+     *
+     * @param int         $clue_id           Clue ID.
+     * @param int         $guesser_person_id Person ID of the guesser.
+     * @param string      $guessed_word      The guessed word.
+     * @param string|null $correct_answer     Pre-fetched correct answer to avoid re-querying.
      */
-    public function set_guess(int $clue_id, int $guesser_person_id, string $guessed_word): bool {
-        // Get the clue to determine if the guess is correct
-        $clue = $this->get_clue($clue_id);
-        if (!$clue) {
-            return false;
+    public function set_guess(int $clue_id, int $guesser_person_id, string $guessed_word, ?string $correct_answer = null): bool {
+        if ($correct_answer === null) {
+            $correct_answer = $this->get_clue_correct_answer($clue_id);
+            if ($correct_answer === null) {
+                return false;
+            }
         }
 
         $guessed_word = strtoupper(sanitize_text_field($guessed_word));
-        $is_correct = ($guessed_word === $clue->correct_answer) ? 1 : 0;
+        $is_correct = ($guessed_word === $correct_answer) ? 1 : 0;
 
         // Check if guess exists
         $existing = $this->wpdb->get_row(
@@ -1796,6 +1820,10 @@ class Kealoa_DB {
      * @return array<string, int> Map of date string => round count.
      */
     public function get_rounds_per_date_counts(): array {
+        if ($this->rounds_per_date_cache !== null) {
+            return $this->rounds_per_date_cache;
+        }
+
         $sql = "SELECT round_date, COUNT(*) as cnt
                 FROM {$this->rounds_table}
                 GROUP BY round_date";
@@ -1804,6 +1832,8 @@ class Kealoa_DB {
         foreach ($rows as $row) {
             $map[$row->round_date] = (int) $row->cnt;
         }
+
+        $this->rounds_per_date_cache = $map;
         return $map;
     }
 
@@ -4401,16 +4431,10 @@ class Kealoa_DB {
         }
 
         $table = $table_map[$table_key];
-        $deleted = 0;
+        $int_ids = array_map('intval', $ids);
+        $in = implode(',', $int_ids);
 
-        foreach ($ids as $id) {
-            $result = $this->wpdb->delete($table, ['id' => (int) $id], ['%d']);
-            if ($result) {
-                $deleted++;
-            }
-        }
-
-        return $deleted;
+        return (int) $this->wpdb->query("DELETE FROM {$table} WHERE id IN ({$in})");
     }
 
     /**
@@ -4423,20 +4447,12 @@ class Kealoa_DB {
         if (empty($round_ids)) {
             return 0;
         }
-        $updated = 0;
-        foreach ($round_ids as $id) {
-            $result = $this->wpdb->update(
-                $this->rounds_table,
-                ['clue_giver_id' => null],
-                ['id' => (int) $id],
-                [null],
-                ['%d']
-            );
-            if ($result !== false) {
-                $updated++;
-            }
-        }
-        return $updated;
+        $int_ids = array_map('intval', $round_ids);
+        $in = implode(',', $int_ids);
+
+        return (int) $this->wpdb->query(
+            "UPDATE {$this->rounds_table} SET clue_giver_id = NULL WHERE id IN ({$in})"
+        );
     }
 
     /**
@@ -4449,20 +4465,12 @@ class Kealoa_DB {
         if (empty($puzzle_ids)) {
             return 0;
         }
-        $updated = 0;
-        foreach ($puzzle_ids as $id) {
-            $result = $this->wpdb->update(
-                $this->puzzles_table,
-                ['editor_id' => null],
-                ['id' => (int) $id],
-                [null],
-                ['%d']
-            );
-            if ($result !== false) {
-                $updated++;
-            }
-        }
-        return $updated;
+        $int_ids = array_map('intval', $puzzle_ids);
+        $in = implode(',', $int_ids);
+
+        return (int) $this->wpdb->query(
+            "UPDATE {$this->puzzles_table} SET editor_id = NULL WHERE id IN ({$in})"
+        );
     }
 
     /**
