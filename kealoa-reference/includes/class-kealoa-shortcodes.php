@@ -260,7 +260,7 @@ class Kealoa_Shortcodes {
             <?php foreach ($by_solution_count as $sol_count => $sc_data): ?>
             <h3><?php echo esc_html(sprintf(
                 /* translators: %d = number of answer words */
-                __('Frequency of Answer Num by Clue Num for %d-Answer Rounds', 'kealoa-reference'),
+                __('Answer Frequency (%d Possible Answers)', 'kealoa-reference'),
                 $sol_count
             )); ?></h3>
             <div class="kealoa-table-scroll">
@@ -407,7 +407,6 @@ class Kealoa_Shortcodes {
                 <thead>
                     <tr>
                         <th data-sort="text"><?php esc_html_e('Guess Alternation', 'kealoa-reference'); ?></th>
-                        <th data-sort="number"><?php esc_html_e('Players×Rounds', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Guesses', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Correct', 'kealoa-reference'); ?></th>
                         <th data-sort="number"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></th>
@@ -423,7 +422,6 @@ class Kealoa_Shortcodes {
                         ?>
                         <tr>
                             <td><?php echo esc_html($bucket_label); ?></td>
-                            <td><?php echo esc_html(number_format_i18n($gstats['entries'])); ?></td>
                             <td><?php echo esc_html(number_format_i18n($gstats['guesses'])); ?></td>
                             <td><?php echo esc_html(number_format_i18n($gstats['correct'])); ?></td>
                             <td data-value="<?php echo esc_attr(number_format((float) $gbucket_acc, 2, '.', '')); ?>">
