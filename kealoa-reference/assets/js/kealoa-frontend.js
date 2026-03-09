@@ -270,6 +270,9 @@
 
         for (var t = 0; t < tables.length; t++) {
             var table = tables[t];
+            if (table.classList.contains('kealoa-show-empty-cols')) {
+                continue;
+            }
             var headers = table.querySelectorAll('thead th');
             var rows = table.querySelectorAll('tbody tr');
 

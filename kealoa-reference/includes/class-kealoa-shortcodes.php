@@ -264,7 +264,7 @@ class Kealoa_Shortcodes {
                 $sol_count
             )); ?></h3>
             <div class="kealoa-table-scroll">
-            <table class="kealoa-table">
+            <table class="kealoa-table kealoa-show-empty-cols">
                 <thead>
                     <tr>
                         <th data-sort="number"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
@@ -302,10 +302,29 @@ class Kealoa_Shortcodes {
                                 $count = $matrix[$cn][$an] ?? 0;
                                 $freq = $row_total > 0 ? ($count / $row_total) * 100 : 0;
                             ?>
-                                <td data-value="<?php echo esc_attr(number_format((float) $freq, 2, '.', '')); ?>"><?php echo $count > 0 ? Kealoa_Formatter::format_percentage($freq) : '—'; ?></td>
+                                <td data-value="<?php echo esc_attr(number_format((float) $freq, 2, '.', '')); ?>"><?php echo $count > 0 ? Kealoa_Formatter::format_percentage($freq, 0) : '—'; ?></td>
                             <?php endfor; ?>
                         </tr>
                     <?php endforeach; ?>
+                    <?php
+                    $col_totals = [];
+                    $grand_total = 0;
+                    for ($an = 1; $an <= $sol_count; $an++) {
+                        $col_totals[$an] = 0;
+                        foreach (array_keys($clue_numbers) as $cn) {
+                            $col_totals[$an] += $matrix[$cn][$an] ?? 0;
+                        }
+                        $grand_total += $col_totals[$an];
+                    }
+                    ?>
+                    <tr>
+                        <td><strong><?php esc_html_e('All', 'kealoa-reference'); ?></strong></td>
+                        <?php for ($an = 1; $an <= $sol_count; $an++):
+                            $all_freq = $grand_total > 0 ? ($col_totals[$an] / $grand_total) * 100 : 0;
+                        ?>
+                            <td data-value="<?php echo esc_attr(number_format((float) $all_freq, 2, '.', '')); ?>"><strong><?php echo $col_totals[$an] > 0 ? Kealoa_Formatter::format_percentage($all_freq, 0) : '—'; ?></strong></td>
+                        <?php endfor; ?>
+                    </tr>
                 </tbody>
             </table>
             </div>
