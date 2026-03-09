@@ -4548,4 +4548,28 @@ class Kealoa_DB {
 
         return $results ?: [];
     }
+
+    /**
+     * Get rounds where at least one solution word was never used as a correct answer.
+     *
+     * Returns round data plus a comma-separated list of unused words.
+     *
+     * @return array Array of objects with round fields + unused_words.
+     */
+    public function get_rounds_with_unused_answers(): array {
+        $sql = "SELECT r.*, p.full_name AS clue_giver_name,
+                GROUP_CONCAT(rs.word ORDER BY rs.word_order SEPARATOR ', ') AS unused_words
+            FROM {$this->rounds_table} r
+            INNER JOIN {$this->round_solutions_table} rs ON rs.round_id = r.id
+            LEFT JOIN {$this->persons_table} p ON r.clue_giver_id = p.id
+            WHERE NOT EXISTS (
+                SELECT 1 FROM {$this->clues_table} c
+                WHERE c.round_id = r.id
+                    AND UPPER(c.correct_answer) = UPPER(rs.word)
+            )
+            GROUP BY r.id
+            ORDER BY r.round_date DESC, r.round_number ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
 }

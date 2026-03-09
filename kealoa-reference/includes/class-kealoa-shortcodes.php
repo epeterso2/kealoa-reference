@@ -781,10 +781,14 @@ class Kealoa_Shortcodes {
                 <div class="kealoa-tab-panel" data-tab="rounds-curiosities">
                 <?php
                 $rounds_without_puzzles = $this->db->get_rounds_without_puzzles();
-                if (empty($rounds_without_puzzles)):
+                $rounds_with_unused_answers = $this->db->get_rounds_with_unused_answers();
+                $has_curiosities = !empty($rounds_without_puzzles) || !empty($rounds_with_unused_answers);
+
+                if (!$has_curiosities):
                 ?>
                     <p class="kealoa-no-data"><?php esc_html_e('No curiosities found yet.', 'kealoa-reference'); ?></p>
                 <?php else: ?>
+                    <?php if (!empty($rounds_without_puzzles)): ?>
                     <?php
                     // Bulk pre-fetch for rounds without puzzles
                     $np_round_ids = array_map(fn($r) => (int) $r->id, $rounds_without_puzzles);
@@ -852,6 +856,83 @@ class Kealoa_Shortcodes {
                         </div>
                     </div>
                     </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($rounds_with_unused_answers)): ?>
+                    <?php
+                    // Bulk pre-fetch for rounds with unused answers
+                    $ua_round_ids = array_map(fn($r) => (int) $r->id, $rounds_with_unused_answers);
+                    $ua_solutions_map = $this->db->get_round_solutions_bulk($ua_round_ids);
+                    $ua_clue_counts_map = $this->db->get_round_clue_counts_bulk($ua_round_ids);
+                    $ua_guesser_results_map = $this->db->get_round_guesser_results_bulk($ua_round_ids);
+                    if (!isset($np_rounds_per_date)) {
+                        $np_rounds_per_date = $this->db->get_rounds_per_date_counts();
+                    }
+                    ?>
+                    <div class="kealoa-curiosities-section">
+                    <h2><?php esc_html_e('Rounds With Unused Answer Words', 'kealoa-reference'); ?></h2>
+                    <p class="kealoa-section-description"><?php esc_html_e('These rounds have at least one solution word that was never used as a correct answer for any clue.', 'kealoa-reference'); ?></p>
+                    <div class="kealoa-puzzles-table-wrapper">
+                        <div class="kealoa-table-scroll">
+                            <table class="kealoa-table kealoa-rounds-table" id="kealoa-rounds-curiosities-unused-answers-table">
+                                <thead>
+                                    <tr>
+                                        <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
+                                        <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                                        <th data-sort="text"><?php esc_html_e('Unused Words', 'kealoa-reference'); ?></th>
+                                        <th data-sort="text"><?php esc_html_e('Host', 'kealoa-reference'); ?></th>
+                                        <th><?php esc_html_e('Results', 'kealoa-reference'); ?></th>
+                                        <th data-sort="text"><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($rounds_with_unused_answers as $round):
+                                        $rid = (int) $round->id;
+                                        $gn = (int) $round->game_number;
+                                        $solutions = $ua_solutions_map[$rid] ?? [];
+                                        $clue_count = $ua_clue_counts_map[$rid] ?? 0;
+                                        $guesser_results = $ua_guesser_results_map[$rid] ?? [];
+                                        $round_num = (int) ($round->round_number ?? 1);
+                                        $date_count = $np_rounds_per_date[$round->round_date] ?? 1;
+                                    ?>
+                                    <tr>
+                                        <td class="kealoa-date-cell" data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($round->round_date)) * 100 + $round_num); ?>">
+                                            <?php
+                                            echo Kealoa_Formatter::format_round_date_link($gn, $round->round_date);
+                                            if ($date_count > 1) {
+                                                echo ' <span class="kealoa-round-number">(#' . esc_html($round_num) . ')</span>';
+                                            }
+                                            ?>
+                                        </td>
+                                        <td class="kealoa-solutions-cell">
+                                            <?php echo Kealoa_Formatter::format_solution_words_link($gn, $solutions); ?>
+                                        </td>
+                                        <td class="kealoa-unused-words-cell">
+                                            <?php echo esc_html($round->unused_words); ?>
+                                        </td>
+                                        <td>
+                                            <?php
+                                            if (!empty($round->clue_giver_id)) {
+                                                echo Kealoa_Formatter::format_person_link((int) $round->clue_giver_id, $round->clue_giver_name, 'host');
+                                            } else {
+                                                echo '&mdash;';
+                                            }
+                                            ?>
+                                        </td>
+                                        <td class="kealoa-results-cell">
+                                            <?php echo Kealoa_Formatter::format_guesser_results($guesser_results, $clue_count); ?>
+                                        </td>
+                                        <td class="kealoa-description-cell">
+                                            <?php echo esc_html($round->description ?? ''); ?>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    </div>
+                    <?php endif; ?>
                 <?php endif; ?>
                 </div><!-- end Rounds Curiosities tab -->
 
