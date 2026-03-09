@@ -794,8 +794,6 @@ class Kealoa_Shortcodes {
                     // Bulk pre-fetch for rounds without puzzles
                     $np_round_ids = array_map(fn($r) => (int) $r->id, $rounds_without_puzzles);
                     $np_solutions_map = $this->db->get_round_solutions_bulk($np_round_ids);
-                    $np_clue_counts_map = $this->db->get_round_clue_counts_bulk($np_round_ids);
-                    $np_guesser_results_map = $this->db->get_round_guesser_results_bulk($np_round_ids);
                     $np_rounds_per_date = $this->db->get_rounds_per_date_counts();
                     ?>
                     <div class="kealoa-curiosities-section">
@@ -808,8 +806,6 @@ class Kealoa_Shortcodes {
                                     <tr>
                                         <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
                                         <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
-                                        <th data-sort="text"><?php esc_html_e('Host', 'kealoa-reference'); ?></th>
-                                        <th><?php esc_html_e('Results', 'kealoa-reference'); ?></th>
                                         <th data-sort="text"><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
                                     </tr>
                                 </thead>
@@ -818,8 +814,6 @@ class Kealoa_Shortcodes {
                                         $rid = (int) $round->id;
                                         $gn = (int) $round->game_number;
                                         $solutions = $np_solutions_map[$rid] ?? [];
-                                        $clue_count = $np_clue_counts_map[$rid] ?? 0;
-                                        $guesser_results = $np_guesser_results_map[$rid] ?? [];
                                         $round_num = (int) ($round->round_number ?? 1);
                                         $date_count = $np_rounds_per_date[$round->round_date] ?? 1;
                                     ?>
@@ -834,18 +828,6 @@ class Kealoa_Shortcodes {
                                         </td>
                                         <td class="kealoa-solutions-cell">
                                             <?php echo Kealoa_Formatter::format_solution_words_link($gn, $solutions); ?>
-                                        </td>
-                                        <td>
-                                            <?php
-                                            if (!empty($round->clue_giver_id)) {
-                                                echo Kealoa_Formatter::format_person_link((int) $round->clue_giver_id, $round->clue_giver_name, 'host');
-                                            } else {
-                                                echo '&mdash;';
-                                            }
-                                            ?>
-                                        </td>
-                                        <td class="kealoa-results-cell">
-                                            <?php echo Kealoa_Formatter::format_guesser_results($guesser_results, $clue_count); ?>
                                         </td>
                                         <td class="kealoa-description-cell">
                                             <?php echo esc_html($round->description ?? ''); ?>
@@ -864,8 +846,6 @@ class Kealoa_Shortcodes {
                     // Bulk pre-fetch for rounds with unused answers
                     $ua_round_ids = array_map(fn($r) => (int) $r->id, $rounds_with_unused_answers);
                     $ua_solutions_map = $this->db->get_round_solutions_bulk($ua_round_ids);
-                    $ua_clue_counts_map = $this->db->get_round_clue_counts_bulk($ua_round_ids);
-                    $ua_guesser_results_map = $this->db->get_round_guesser_results_bulk($ua_round_ids);
                     if (!isset($np_rounds_per_date)) {
                         $np_rounds_per_date = $this->db->get_rounds_per_date_counts();
                     }
@@ -881,8 +861,6 @@ class Kealoa_Shortcodes {
                                         <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
                                         <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
                                         <th data-sort="text"><?php esc_html_e('Unused Words', 'kealoa-reference'); ?></th>
-                                        <th data-sort="text"><?php esc_html_e('Host', 'kealoa-reference'); ?></th>
-                                        <th><?php esc_html_e('Results', 'kealoa-reference'); ?></th>
                                         <th data-sort="text"><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
                                     </tr>
                                 </thead>
@@ -891,8 +869,6 @@ class Kealoa_Shortcodes {
                                         $rid = (int) $round->id;
                                         $gn = (int) $round->game_number;
                                         $solutions = $ua_solutions_map[$rid] ?? [];
-                                        $clue_count = $ua_clue_counts_map[$rid] ?? 0;
-                                        $guesser_results = $ua_guesser_results_map[$rid] ?? [];
                                         $round_num = (int) ($round->round_number ?? 1);
                                         $date_count = $np_rounds_per_date[$round->round_date] ?? 1;
                                     ?>
@@ -910,18 +886,6 @@ class Kealoa_Shortcodes {
                                         </td>
                                         <td class="kealoa-unused-words-cell">
                                             <?php echo esc_html($round->unused_words); ?>
-                                        </td>
-                                        <td>
-                                            <?php
-                                            if (!empty($round->clue_giver_id)) {
-                                                echo Kealoa_Formatter::format_person_link((int) $round->clue_giver_id, $round->clue_giver_name, 'host');
-                                            } else {
-                                                echo '&mdash;';
-                                            }
-                                            ?>
-                                        </td>
-                                        <td class="kealoa-results-cell">
-                                            <?php echo Kealoa_Formatter::format_guesser_results($guesser_results, $clue_count); ?>
                                         </td>
                                         <td class="kealoa-description-cell">
                                             <?php echo esc_html($round->description ?? ''); ?>

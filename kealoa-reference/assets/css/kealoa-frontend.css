@@ -747,8 +747,8 @@
     color: var(--driftwood-dark);
 }
 
-.kealoa-curiosities-section .kealoa-table th,
-.kealoa-curiosities-section .kealoa-table td {
+.kealoa-curiosities-section .kealoa-table .kealoa-date-cell,
+.kealoa-curiosities-section .kealoa-table .kealoa-unused-words-cell {
     white-space: nowrap;
 }
 
