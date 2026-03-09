@@ -169,10 +169,6 @@
     text-decoration: underline;
 }
 
-.kealoa-episode-link {
-    font-weight: normal;
-}
-
 /* ==========================================================================
    Guesses
    ========================================================================== */
@@ -1892,7 +1888,7 @@
 }
 
 .kealoa-bug-report-btn:hover {
-    background: var(--coral-reef);
+    background: var(--volcanic-ember);
     transform: scale(1.1);
 }
 
@@ -1972,7 +1968,7 @@
 }
 
 .kealoa-bug-report-submit:hover:not(:disabled) {
-    background: var(--coral-reef);
+    background: var(--tropical-teal);
 }
 
 .kealoa-bug-report-submit:disabled {

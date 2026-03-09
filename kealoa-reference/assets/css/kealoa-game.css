@@ -24,7 +24,7 @@
 .kealoa-game__welcome--inline {
     padding: 20px 30px;
     background: linear-gradient(135deg, var(--cloud-white) 0%, var(--pale-sand) 100%);
-    border: 1px solid var(--driftwood-light);
+    border: 1px solid var(--sandy-shore);
     border-radius: 12px;
 }
 
@@ -50,7 +50,7 @@
     text-align: center;
     padding: 20px 30px;
     background: linear-gradient(135deg, var(--cloud-white) 0%, var(--pale-sand) 100%);
-    border: 1px solid var(--driftwood-light);
+    border: 1px solid var(--sandy-shore);
     border-radius: 12px;
 }
 
