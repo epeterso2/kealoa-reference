@@ -3,7 +3,7 @@
 Read-only REST API for KEALOA Reference data.
 
 **Base URL:** `/wp-json/kealoa/v1`
-**Version:** 2.1.85
+**Version:** 2.2.34
 
 All endpoints are publicly accessible (`permission_callback: __return_true`). All responses are JSON. Most endpoints use `GET`; the bug-report endpoint uses `POST`.
 
@@ -120,6 +120,7 @@ Returns the complete payload needed by the **KEALOA Play Game** Gutenberg block 
 ```json
 {
   "round_id": 1,
+  "game_number": 1,
   "round_url": "https://example.com/kealoa/round/1/",
   "description": "Optional description of the round",
   "description2": "Optional secondary description",
@@ -205,6 +206,7 @@ Supports [pagination parameters](#pagination) plus:
   "items": [
     {
       "id": 1,
+      "game_number": 1,
       "round_date": "2024-03-15",
       "round_number": 1,
       "episode_number": 100,
@@ -252,6 +254,7 @@ Returns full detail for a single round, including all clues, all guesses, player
 ```json
 {
   "id": 1,
+  "game_number": 1,
   "round_date": "2024-03-15",
   "round_number": 1,
   "episode_number": 100,

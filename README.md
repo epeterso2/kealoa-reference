@@ -2,7 +2,7 @@
 
 A WordPress plugin for managing and displaying KEALOA quiz game data from the [Fill Me In](https://bemoresmarter.libsyn.com) podcast.
 
-**Version:** 2.1.82 &bull; **DB Version:** 2.1.3 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+**Version:** 2.2.34 &bull; **DB Version:** 2.1.3 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 ---
 
@@ -64,11 +64,12 @@ The plugin adds a **KEALOA** top-level menu to the WordPress admin sidebar with 
 | Dashboard   | Summary statistics (rounds, persons, puzzles), lists available shortcodes and blocks |
 | Rounds      | Browse, create, edit, and delete game rounds with full clue and guess management |
 | Persons     | Manage persons — players, constructors, editors, and hosts in a unified list with photo support |
+| Aliases     | Manage person alias groups for matching alternate names during import |
 | Puzzles     | Browse, create, edit, and delete crossword puzzles with editor and constructor assignments |
 | Import      | Import data from CSV files or a ZIP archive; auto-populate editors from puzzle dates |
 | Export      | Export data as individual CSV files or a single ZIP archive |
-| Data Check  | 16 data consistency checks with repair tools for orphaned records |
-| Settings    | Plugin configuration (debug mode toggle) |
+| Data Check  | 18 data consistency checks with repair tools for orphaned records |
+| Settings    | Plugin configuration (debug mode toggle, bug report button toggle) |
 
 ### Person Edit Form
 
@@ -78,13 +79,14 @@ The person edit form includes fields for name, nicknames, homepage URL, XWordInf
 
 On the frontend, a KEALOA dropdown in the WordPress admin toolbar provides quick links to all admin pages. When viewing a KEALOA virtual page (person, round, or puzzle), the default "Edit" link is overridden to point to the appropriate admin edit form.
 
-### Data Check (16 consistency checks)
+### Data Check (18 consistency checks)
 
 | Category | Checks |
 |---|---|
 | Orphaned records | Unreferenced puzzles, persons, puzzle-constructor links, clues, guesses, round-guesser links, round solutions |
 | Missing references | Clues pointing to missing rounds or puzzles; guesses pointing to missing clues or persons; rounds with missing clue givers; puzzles with missing editors |
 | Incomplete data | Rounds with no clues, no solution words, or no guessers |
+| Numbering | Non-contiguous game numbers |
 
 Repairable checks offer a "Delete Selected" button. Information-only checks display the data without repair options.
 
@@ -96,7 +98,7 @@ All shortcode output is cached via WordPress transients (24-hour TTL) with a ver
 
 | Shortcode | Attributes | Description |
 |---|---|---|
-| `[kealoa_rounds_table]` | `limit`, `order` | Tabbed view: rounds table (sortable/filterable) and stats (overview grid, yearly stats, clue-number frequency matrices) |
+| `[kealoa_rounds_table]` | `limit`, `order` | Tabbed view: rounds table (sortable/filterable) and stats (overview grid, yearly stats, answer frequency matrices with aggregate "All" row) |
 | `[kealoa_round]` | `id` (required) | Round detail: meta, episode link, solution words, host, players with scores, person photos, alternation metric, evenness metric, average clue age, clue table with guesses, social sharing bar |
 | `[kealoa_rounds_stats]` | — | Statistics grid: total players, rounds, puzzles, constructors, clues, guesses, correct answers, accuracy |
 | `[kealoa_person]` | `id` (required) | Person profile with tabbed interface: achievement badges, role-specific statistics (player, constructor, editor, host with Rounds/Stats/Streaks subtabs), alternation vs accuracy breakdown, round history, co-players, performance charts, person images |
@@ -293,6 +295,7 @@ The plugin creates eight custom tables. All table names are prefixed with the Wo
 | Column | Type | Notes |
 |---|---|---|
 | `id` | `bigint(20) UNSIGNED AUTO_INCREMENT` | PK |
+| `game_number` | `int(10) UNSIGNED DEFAULT NULL` | Unique index; sequential round number |
 | `round_date` | `date NOT NULL` | Unique with `round_number` |
 | `round_number` | `tinyint(3) UNSIGNED NOT NULL DEFAULT 1` | For multi-round episodes |
 | `episode_number` | `int(10) UNSIGNED NOT NULL` | Indexed |
@@ -362,7 +365,7 @@ The **Export** admin page generates individual CSV files or a single ZIP archive
 |---|---|
 | Persons | `full_name`, `nicknames`, `home_page_url`, `image_url`, `hide_xwordinfo`, `xwordinfo_profile_name`, `xwordinfo_image_url`, `media_id` |
 | Puzzles | `publication_date`, `editor_name`, `constructors` |
-| Rounds | `round_date`, `round_number`, `episode_number`, `episode_id`, `episode_url`, `episode_start_seconds`, `clue_giver`, `guessers`, `solution_words`, `description`, `description2` |
+| Rounds | `game_number`, `round_date`, `round_number`, `episode_number`, `episode_id`, `episode_url`, `episode_start_seconds`, `clue_giver`, `guessers`, `solution_words`, `description`, `description2` |
 | Clues | `round_date`, `round_number`, `clue_number`, `puzzle_date`, `constructors`, `puzzle_clue_number`, `puzzle_clue_direction`, `clue_text`, `correct_answer` |
 | Guesses | `round_date`, `round_number`, `clue_number`, `guesser`, `guessed_word`, `is_correct` |
 
@@ -394,7 +397,6 @@ Downloadable templates are available on the Import admin page:
 
 | Template | Headers |
 |---|---|
-| `constructors.csv` | `full_name`, `xwordinfo_profile_name`, `xwordinfo_image_url`, `media_id` |
 | `persons.csv` | `full_name`, `nicknames`, `home_page_url`, `image_url`, `hide_xwordinfo`, `xwordinfo_profile_name`, `xwordinfo_image_url`, `media_id` |
 | `puzzles.csv` | `publication_date`, `editor_name`, `constructors` |
 | `rounds.csv` | `round_date`, `round_number`, `episode_number`, `episode_id`, `episode_url`, `episode_start_seconds`, `clue_giver`, `guessers`, `solution_words`, `description`, `description2` |
@@ -460,7 +462,7 @@ Badges are computed by the `Kealoa_Badges` class based on the person's metrics. 
 
 ### Table Sorting
 
-All `.kealoa-table` columns with a `data-sort` attribute support click-to-sort with ascending/descending toggle. Sort types: `date`, `number`, `text` (locale-aware), `clue` (e.g. "42D"), and `weekday`. Supports `data-default-sort` and `data-sort-value` overrides. Empty columns are automatically hidden.
+All `.kealoa-table` columns with a `data-sort` attribute support click-to-sort with ascending/descending toggle. Sort types: `date`, `number`, `text` (locale-aware), `clue` (e.g. "42D"), and `weekday`. Supports `data-default-sort` and `data-sort-value` overrides. Empty columns are automatically hidden unless the table has the `kealoa-show-empty-cols` class.
 
 ### Table Filtering
 
@@ -483,6 +485,10 @@ The Play Game block provides a fully client-side KEALOA quiz:
 - Clue-by-clue review table
 - Share results via `navigator.share()` with emoji grid and clipboard fallback
 - Spoiler descriptions revealed only after game completion
+
+### Bug Report
+
+A floating bug-report button appears on all frontend pages (can be toggled in Settings). Clicking it opens a modal where the user can describe the issue. A screenshot of the current page is captured automatically via html2canvas and submitted along with the message to the `POST /bug-report` REST endpoint, which emails the report to the plugin maintainer.
 
 ### Social Sharing
 
@@ -557,11 +563,12 @@ kealoa-reference/
 │   │   ├── kealoa-game.css           Play-game interactive styles
 │   │   └── kealoa-palette.css        Color palette CSS custom properties
 │   ├── images/
-│   │   └── badges/                   SVG badge icons (10 files; accuracy roles share one icon)
+│   │   ├── badges/                   SVG badge icons (10 files; accuracy roles share one icon)
+│   │   └── bug-report.svg            Bug report button icon
 │   └── js/
 │       ├── blocks-editor.js          Gutenberg block editor registrations
 │       ├── kealoa-admin.js           Admin page JavaScript
-│       ├── kealoa-frontend.js        Frontend table sorting, filtering, tabs, sharing
+│       ├── kealoa-frontend.js        Frontend table sorting, filtering, tabs, sharing, bug report
 │       └── kealoa-game.js            Interactive KEALOA game logic
 ├── blocks/
 │   ├── clue-givers-table/            block.json + render.php
