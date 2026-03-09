@@ -259,7 +259,8 @@ class Kealoa_Shortcodes {
             ?>
             <?php foreach ($by_solution_count as $sol_count => $sc_data): ?>
             <h3><?php echo esc_html(sprintf(
-                _n('%d-Answer Rounds', '%d-Answer Rounds', $sol_count, 'kealoa-reference'),
+                /* translators: %d = number of answer words */
+                __('Frequency of Answer Num by Clue Num for %d-Answer Rounds', 'kealoa-reference'),
                 $sol_count
             )); ?></h3>
             <div class="kealoa-table-scroll">
@@ -268,8 +269,11 @@ class Kealoa_Shortcodes {
                     <tr>
                         <th data-sort="number"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
                         <?php for ($an = 1; $an <= $sol_count; $an++): ?>
-                            <th data-sort="number"><?php echo esc_html('Answer #' . $an); ?></th>
-                            <th data-sort="number"><?php esc_html_e('Frequency', 'kealoa-reference'); ?></th>
+                            <th data-sort="number"><?php echo esc_html(sprintf(
+                                /* translators: %d = answer number */
+                                __('Answer %d', 'kealoa-reference'),
+                                $an
+                            )); ?></th>
                         <?php endfor; ?>
                     </tr>
                 </thead>
@@ -298,8 +302,7 @@ class Kealoa_Shortcodes {
                                 $count = $matrix[$cn][$an] ?? 0;
                                 $freq = $row_total > 0 ? ($count / $row_total) * 100 : 0;
                             ?>
-                                <td><?php echo $count > 0 ? esc_html($count) : '—'; ?></td>
-                                <td><?php echo $count > 0 ? Kealoa_Formatter::format_percentage($freq) : '—'; ?></td>
+                                <td data-value="<?php echo esc_attr(number_format((float) $freq, 2, '.', '')); ?>"><?php echo $count > 0 ? Kealoa_Formatter::format_percentage($freq) : '—'; ?></td>
                             <?php endfor; ?>
                         </tr>
                     <?php endforeach; ?>
