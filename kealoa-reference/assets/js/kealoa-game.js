@@ -470,7 +470,7 @@
                     el('td', { className: 'kealoa-num', textContent: String(rank) }),
                     el('td', { textContent: s.name + (s.isUser ? ' \u2b50' : '') }),
                     el('td', { className: 'kealoa-num', textContent: s.correct + '/' + s.total }),
-                    el('td', { className: 'kealoa-num', textContent: s.pct.toFixed(1) + '%' })
+                    el('td', { className: 'kealoa-num', textContent: Math.round(s.pct) + '%' })
                 ])
             );
         });

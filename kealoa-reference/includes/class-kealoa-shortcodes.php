@@ -302,7 +302,7 @@ class Kealoa_Shortcodes {
                                 $count = $matrix[$cn][$an] ?? 0;
                                 $freq = $row_total > 0 ? ($count / $row_total) * 100 : 0;
                             ?>
-                                <td data-value="<?php echo esc_attr(number_format((float) $freq, 2, '.', '')); ?>"><?php echo $count > 0 ? Kealoa_Formatter::format_percentage($freq, 0) : '—'; ?></td>
+                                <td data-value="<?php echo esc_attr(number_format((float) $freq, 2, '.', '')); ?>"><?php echo $count > 0 ? Kealoa_Formatter::format_percentage($freq) : '—'; ?></td>
                             <?php endfor; ?>
                         </tr>
                     <?php endforeach; ?>
@@ -322,7 +322,7 @@ class Kealoa_Shortcodes {
                         <?php for ($an = 1; $an <= $sol_count; $an++):
                             $all_freq = $grand_total > 0 ? ($col_totals[$an] / $grand_total) * 100 : 0;
                         ?>
-                            <td data-value="<?php echo esc_attr(number_format((float) $all_freq, 2, '.', '')); ?>"><strong><?php echo $col_totals[$an] > 0 ? Kealoa_Formatter::format_percentage($all_freq, 0) : '—'; ?></strong></td>
+                            <td data-value="<?php echo esc_attr(number_format((float) $all_freq, 2, '.', '')); ?>"><strong><?php echo $col_totals[$an] > 0 ? Kealoa_Formatter::format_percentage($all_freq) : '—'; ?></strong></td>
                         <?php endfor; ?>
                     </tr>
                 </tbody>
@@ -691,16 +691,16 @@ class Kealoa_Shortcodes {
                                 <?php echo Kealoa_Formatter::format_solution_words_link((int) $round->game_number, $solutions); ?>
                             </td>
                             <td data-value="<?php echo esc_attr(number_format($alt_pct, 2, '.', '')); ?>">
-                                <?php echo Kealoa_Formatter::format_percentage($alt_pct, 0); ?>
+                                <?php echo Kealoa_Formatter::format_percentage($alt_pct); ?>
                             </td>
                             <td data-value="<?php echo esc_attr(number_format($even_pct, 2, '.', '')); ?>">
-                                <?php echo Kealoa_Formatter::format_percentage($even_pct, 0); ?>
+                                <?php echo Kealoa_Formatter::format_percentage($even_pct); ?>
                             </td>
                             <td data-value="<?php echo esc_attr(number_format($ds_galt_avg, 2, '.', '')); ?>">
-                                <?php echo !empty($ds_galt_players) ? Kealoa_Formatter::format_percentage($ds_galt_avg, 0) : '—'; ?>
+                                <?php echo !empty($ds_galt_players) ? Kealoa_Formatter::format_percentage($ds_galt_avg) : '—'; ?>
                             </td>
                             <td data-value="<?php echo esc_attr(number_format($ds_geven_avg, 2, '.', '')); ?>">
-                                <?php echo !empty($ds_geven_players) ? Kealoa_Formatter::format_percentage($ds_geven_avg, 0) : '—'; ?>
+                                <?php echo !empty($ds_geven_players) ? Kealoa_Formatter::format_percentage($ds_geven_avg) : '—'; ?>
                             </td>
                             <td data-value="<?php echo esc_attr($age_stats ? number_format($age_stats->mean, 0, '.', '') : ''); ?>">
                                 <?php echo $age_stats ? esc_html(number_format_i18n($age_stats->mean, 0) . ' days') : '—'; ?>
@@ -1047,7 +1047,7 @@ class Kealoa_Shortcodes {
                     <p>
                         <strong class="kealoa-meta-label"><?php esc_html_e('Answer Alternation', 'kealoa-reference'); ?></strong>
                         <span><?php
-                        echo Kealoa_Formatter::format_percentage($alternation_pct, 0);
+                        echo Kealoa_Formatter::format_percentage($alternation_pct);
                         $n_clues = count($clues);
                         $answer_changes = 0;
                         for ($i = 1; $i < $n_clues; $i++) {
@@ -1097,7 +1097,7 @@ class Kealoa_Shortcodes {
                     <p>
                         <strong class="kealoa-meta-label"><?php esc_html_e('Guess Alternation', 'kealoa-reference'); ?></strong>
                         <span><?php
-                        echo Kealoa_Formatter::format_percentage($guess_alt_avg, 0);
+                        echo Kealoa_Formatter::format_percentage($guess_alt_avg);
                         /* translators: %d = number of guess changes */
                         echo ' ' . sprintf(
                             esc_html(_n('(%d guess change)', '(%d guess changes)', $total_guess_changes, 'kealoa-reference')),
@@ -1137,7 +1137,7 @@ class Kealoa_Shortcodes {
                     <p>
                         <strong class="kealoa-meta-label"><?php esc_html_e('Answer Evenness', 'kealoa-reference'); ?></strong>
                         <span><?php
-                        echo Kealoa_Formatter::format_percentage($evenness_pct, 0);
+                        echo Kealoa_Formatter::format_percentage($evenness_pct);
                         $word_parts = [];
                         foreach ($solutions as $s) {
                             $word = strtoupper($s->word);
@@ -1177,7 +1177,7 @@ class Kealoa_Shortcodes {
                     <p>
                         <strong class="kealoa-meta-label"><?php esc_html_e('Guess Evenness', 'kealoa-reference'); ?></strong>
                         <span><?php
-                        echo Kealoa_Formatter::format_percentage($guess_even_avg, 0);
+                        echo Kealoa_Formatter::format_percentage($guess_even_avg);
                         $gword_parts = [];
                         foreach ($solutions as $s) {
                             $gword = strtoupper($s->word);

@@ -387,7 +387,7 @@ class Kealoa_Formatter {
      * @param int $decimals Number of decimal places
      * @return string Formatted percentage with % symbol
      */
-    public static function format_percentage(float $value, int $decimals = 1): string {
+    public static function format_percentage(float $value, int $decimals = 0): string {
         return number_format($value, $decimals) . '%';
     }
 
