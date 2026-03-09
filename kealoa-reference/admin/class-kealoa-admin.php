@@ -370,6 +370,7 @@ class Kealoa_Admin {
             'update_clue' => $this->handle_update_clue(),
             'delete_clue' => $this->handle_delete_clue(),
             'save_guesses' => $this->handle_save_guesses(),
+            'enter_round_data' => $this->handle_enter_round_data(),
             'repair_delete_puzzles' => $this->handle_repair_delete_puzzles(),
             'repair_delete_rounds' => $this->handle_repair_delete_rounds(),
             'repair_delete_orphans' => $this->handle_repair_delete_orphans(),
@@ -1476,6 +1477,7 @@ class Kealoa_Admin {
             'edit' => $this->render_round_form($id),
             'clues' => $this->render_round_clues_page($id),
             'edit_clue' => $this->render_edit_clue_form($id, $clue_id),
+            'enter_data' => $this->render_enter_round_data_page($id),
             default => $this->render_rounds_list(),
         };
 
@@ -1539,6 +1541,9 @@ class Kealoa_Admin {
                                 </a> |
                                 <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $round->id)); ?>">
                                     <?php esc_html_e('Clues', 'kealoa-reference'); ?>
+                                </a> |
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds&action=enter_data&id=' . $round->id)); ?>">
+                                    <?php esc_html_e('Enter Data', 'kealoa-reference'); ?>
                                 </a> |
                                 <a href="<?php echo esc_url(home_url('/kealoa/round/' . ($round->game_number ?? $round->id) . '/')); ?>" target="_blank">
                                     <?php esc_html_e('View', 'kealoa-reference'); ?>
@@ -3379,6 +3384,515 @@ class Kealoa_Admin {
 
         Kealoa_Shortcodes::flush_all_caches();
         wp_redirect(admin_url('admin.php?page=kealoa-settings&kealoa_saved=1'));
+        exit;
+    }
+
+    // =========================================================================
+    // ENTER ROUND DATA
+    // =========================================================================
+
+    /**
+     * Render the Enter Round Data page.
+     *
+     * Provides a grid form for entering clues, answers, and guesses for a round
+     * matching the round_data.csv format.
+     */
+    private function render_enter_round_data_page(int $round_id): void {
+        $round = $this->db->get_round($round_id);
+        if (!$round) {
+            echo '<div class="notice notice-error"><p>' . esc_html__('Round not found.', 'kealoa-reference') . '</p></div>';
+            return;
+        }
+
+        $solutions = $this->db->get_round_solutions($round_id);
+        $guessers = $this->db->get_round_guessers($round_id);
+        $clues = $this->db->get_round_clues($round_id);
+
+        // Build existing data map for pre-filling
+        $clue_ids = array_map(fn($c) => (int) $c->id, $clues);
+        $bulk_guesses = !empty($clue_ids) ? $this->db->get_clue_guesses_bulk($clue_ids) : [];
+
+        $existing_data = [];
+        foreach ($clues as $clue) {
+            $cn = (int) $clue->clue_number;
+            $existing_data[$cn] = [
+                'puzzle_date' => $clue->puzzle_date ?? '',
+                'constructors' => '',
+                'puzzle_clue_number' => $clue->puzzle_clue_number ?? '',
+                'puzzle_clue_direction' => $clue->puzzle_clue_direction ?? '',
+                'clue_text' => $clue->clue_text ?? '',
+                'correct_answer' => $clue->correct_answer ?? '',
+                'guesses' => [],
+            ];
+
+            // Build constructor string
+            if (!empty($clue->puzzle_id)) {
+                $constructors = $this->db->get_puzzle_constructors((int) $clue->puzzle_id);
+                $names = array_map(fn($c) => $c->full_name, $constructors);
+                $existing_data[$cn]['constructors'] = implode(', ', $names);
+            }
+
+            // Map guesses
+            $clue_guesses = $bulk_guesses[(int) $clue->id] ?? [];
+            foreach ($clue_guesses as $g) {
+                $existing_data[$cn]['guesses'][(int) $g->guesser_person_id] = $g->guessed_word;
+            }
+        }
+
+        // Default row count: max of existing clues or 5
+        $num_rows = max(count($clues), 10);
+
+        $message = sanitize_text_field($_GET['message'] ?? '');
+        ?>
+        <h1><?php printf(
+            esc_html__('Enter Data for Round #%s — %s', 'kealoa-reference'),
+            esc_html($round->game_number ?? $round_id),
+            esc_html(Kealoa_Formatter::format_date($round->round_date))
+        ); ?></h1>
+
+        <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds')); ?>" class="button">
+            &larr; <?php esc_html_e('Back to Rounds', 'kealoa-reference'); ?>
+        </a>
+        <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $round_id)); ?>" class="button">
+            <?php esc_html_e('Manage Clues', 'kealoa-reference'); ?>
+        </a>
+        <a href="<?php echo esc_url(home_url('/kealoa/round/' . ($round->game_number ?? $round_id) . '/')); ?>" class="button" target="_blank" rel="noopener">
+            <?php esc_html_e('View', 'kealoa-reference'); ?> &nearr;
+        </a>
+
+        <?php if ($message === 'round_data_saved'): ?>
+            <div class="notice notice-success is-dismissible">
+                <p>
+                    <?php
+                    $imported = (int) ($_GET['imported'] ?? 0);
+                    $skipped = (int) ($_GET['skipped'] ?? 0);
+                    printf(
+                        esc_html__('Round data saved. %d imported, %d skipped.', 'kealoa-reference'),
+                        $imported,
+                        $skipped
+                    );
+                    ?>
+                </p>
+            </div>
+        <?php elseif ($message === 'round_data_errors'): ?>
+            <div class="notice notice-error is-dismissible">
+                <p><?php esc_html_e('Some errors occurred while saving round data. Check the details below.', 'kealoa-reference'); ?></p>
+            </div>
+        <?php endif; ?>
+
+        <?php
+        // Show any stored errors from the last submission
+        $stored_errors = get_transient('kealoa_enter_data_errors_' . $round_id);
+        if ($stored_errors) {
+            delete_transient('kealoa_enter_data_errors_' . $round_id);
+            echo '<div class="notice notice-warning"><ul>';
+            foreach ($stored_errors as $err) {
+                echo '<li>' . esc_html($err) . '</li>';
+            }
+            echo '</ul></div>';
+        }
+        ?>
+
+        <div class="kealoa-round-info">
+            <p>
+                <strong><?php esc_html_e('Solution Words:', 'kealoa-reference'); ?></strong>
+                <?php echo esc_html(Kealoa_Formatter::format_solution_words($solutions)); ?>
+            </p>
+            <p>
+                <strong><?php esc_html_e('Players:', 'kealoa-reference'); ?></strong>
+                <?php
+                $guesser_names = array_map(fn($g) => $g->full_name, $guessers);
+                echo esc_html(Kealoa_Formatter::format_list_with_and($guesser_names));
+                ?>
+            </p>
+        </div>
+
+        <form method="post" class="kealoa-form">
+            <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
+            <input type="hidden" name="kealoa_action" value="enter_round_data" />
+            <input type="hidden" name="round_id" value="<?php echo esc_attr($round_id); ?>" />
+
+            <div style="overflow-x: auto;">
+            <table class="wp-list-table widefat fixed striped" id="kealoa-enter-data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;"><?php esc_html_e('Clue #', 'kealoa-reference'); ?></th>
+                        <th style="width: 120px;"><?php esc_html_e('Puzzle Date', 'kealoa-reference'); ?></th>
+                        <th style="width: 160px;"><?php esc_html_e('Constructor(s)', 'kealoa-reference'); ?></th>
+                        <th style="width: 70px;"><?php esc_html_e('Puz #', 'kealoa-reference'); ?></th>
+                        <th style="width: 60px;"><?php esc_html_e('Dir', 'kealoa-reference'); ?></th>
+                        <th><?php esc_html_e('Clue Text', 'kealoa-reference'); ?></th>
+                        <th style="width: 120px;"><?php esc_html_e('Answer', 'kealoa-reference'); ?></th>
+                        <?php foreach ($guessers as $guesser): ?>
+                            <th style="width: 120px;"><?php echo esc_html($guesser->full_name); ?></th>
+                        <?php endforeach; ?>
+                        <th style="width: 30px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php for ($row = 1; $row <= $num_rows; $row++):
+                        $data = $existing_data[$row] ?? [];
+                    ?>
+                        <tr>
+                            <td>
+                                <strong><?php echo esc_html($row); ?></strong>
+                                <input type="hidden" name="rows[<?php echo $row; ?>][clue_number]" value="<?php echo $row; ?>" />
+                            </td>
+                            <td>
+                                <input type="date" name="rows[<?php echo $row; ?>][puzzle_date]" style="width: 100%;"
+                                       value="<?php echo esc_attr($data['puzzle_date'] ?? ''); ?>" />
+                            </td>
+                            <td>
+                                <input type="text" name="rows[<?php echo $row; ?>][constructor_name]" style="width: 100%;"
+                                       value="<?php echo esc_attr($data['constructors'] ?? ''); ?>"
+                                       placeholder="<?php esc_attr_e('Name, Name', 'kealoa-reference'); ?>" />
+                            </td>
+                            <td>
+                                <input type="number" name="rows[<?php echo $row; ?>][puzzle_clue_number]" min="1" style="width: 100%;"
+                                       value="<?php echo esc_attr($data['puzzle_clue_number'] ?? ''); ?>" />
+                            </td>
+                            <td>
+                                <select name="rows[<?php echo $row; ?>][clue_direction]" style="width: 100%;">
+                                    <option value=""></option>
+                                    <option value="A" <?php selected($data['puzzle_clue_direction'] ?? '', 'A'); ?>>A</option>
+                                    <option value="D" <?php selected($data['puzzle_clue_direction'] ?? '', 'D'); ?>>D</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" name="rows[<?php echo $row; ?>][clue_text]" style="width: 100%;"
+                                       value="<?php echo esc_attr($data['clue_text'] ?? ''); ?>" />
+                            </td>
+                            <td>
+                                <select name="rows[<?php echo $row; ?>][correct_answer]" style="width: 100%;">
+                                    <option value=""></option>
+                                    <?php foreach ($solutions as $sol): ?>
+                                        <option value="<?php echo esc_attr($sol->word); ?>"
+                                            <?php selected($data['correct_answer'] ?? '', $sol->word); ?>>
+                                            <?php echo esc_html($sol->word); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                            <?php foreach ($guessers as $guesser): ?>
+                                <td>
+                                    <select name="rows[<?php echo $row; ?>][guesses][<?php echo esc_attr($guesser->id); ?>]" style="width: 100%;">
+                                        <option value=""></option>
+                                        <?php foreach ($solutions as $sol): ?>
+                                            <option value="<?php echo esc_attr($sol->word); ?>"
+                                                <?php selected($data['guesses'][(int) $guesser->id] ?? '', $sol->word); ?>>
+                                                <?php echo esc_html($sol->word); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </td>
+                            <?php endforeach; ?>
+                            <td>
+                                <button type="button" class="button kealoa-delete-row" title="<?php esc_attr_e('Delete row', 'kealoa-reference'); ?>">&times;</button>
+                            </td>
+                        </tr>
+                    <?php endfor; ?>
+                </tbody>
+            </table>
+            </div>
+
+            <p>
+                <button type="button" class="button" id="kealoa-add-row">
+                    <?php esc_html_e('+ Add Row', 'kealoa-reference'); ?>
+                </button>
+            </p>
+
+            <p>
+                <label>
+                    <input type="checkbox" name="overwrite" value="1" checked />
+                    <?php esc_html_e('Overwrite existing clues and guesses', 'kealoa-reference'); ?>
+                </label>
+            </p>
+
+            <p class="submit">
+                <input type="submit" class="button button-primary" value="<?php esc_attr_e('Save Round Data', 'kealoa-reference'); ?>" />
+            </p>
+        </form>
+
+        <script>
+        (function() {
+            var addBtn = document.getElementById('kealoa-add-row');
+            if (!addBtn) return;
+            addBtn.addEventListener('click', function() {
+                var tbody = document.querySelector('#kealoa-enter-data-table tbody');
+                var lastRow = tbody.querySelector('tr:last-child');
+                var newRow = lastRow.cloneNode(true);
+                var rowNum = tbody.querySelectorAll('tr').length + 1;
+
+                // Update row number label
+                var strong = newRow.querySelector('strong');
+                if (strong) strong.textContent = rowNum;
+
+                // Update all name attributes and clear values
+                var inputs = newRow.querySelectorAll('input, select');
+                for (var i = 0; i < inputs.length; i++) {
+                    var el = inputs[i];
+                    if (el.name) {
+                        el.name = el.name.replace(/rows\[\d+\]/, 'rows[' + rowNum + ']');
+                    }
+                    if (el.type === 'hidden' && el.name.indexOf('[clue_number]') !== -1) {
+                        el.value = rowNum;
+                    } else if (el.tagName === 'SELECT') {
+                        el.selectedIndex = 0;
+                    } else if (el.type !== 'hidden') {
+                        el.value = '';
+                    }
+                }
+
+                tbody.appendChild(newRow);
+            });
+
+            // Delete row
+            document.getElementById('kealoa-enter-data-table').addEventListener('click', function(e) {
+                if (!e.target.classList.contains('kealoa-delete-row')) return;
+                var tbody = document.querySelector('#kealoa-enter-data-table tbody');
+                if (tbody.querySelectorAll('tr').length <= 1) return;
+                e.target.closest('tr').remove();
+
+                // Renumber rows
+                var rows = tbody.querySelectorAll('tr');
+                for (var r = 0; r < rows.length; r++) {
+                    var num = r + 1;
+                    var strong = rows[r].querySelector('strong');
+                    if (strong) strong.textContent = num;
+                    var inputs = rows[r].querySelectorAll('input, select');
+                    for (var i = 0; i < inputs.length; i++) {
+                        if (inputs[i].name) {
+                            inputs[i].name = inputs[i].name.replace(/rows\[\d+\]/, 'rows[' + num + ']');
+                        }
+                        if (inputs[i].type === 'hidden' && inputs[i].name.indexOf('[clue_number]') !== -1) {
+                            inputs[i].value = num;
+                        }
+                    }
+                }
+            });
+        })();
+        </script>
+        <?php
+    }
+
+    /**
+     * Handle the Enter Round Data form submission.
+     *
+     * Processes the grid form data, creating/updating clues and guesses
+     * for the round using the same logic as the round_data CSV import.
+     */
+    private function handle_enter_round_data(): void {
+        $round_id = (int) ($_POST['round_id'] ?? 0);
+        $round = $this->db->get_round($round_id);
+
+        if (!$round) {
+            return;
+        }
+
+        $overwrite = !empty($_POST['overwrite']);
+        $rows = $_POST['rows'] ?? [];
+        $imported = 0;
+        $skipped = 0;
+        $errors = [];
+
+        $solutions = $this->db->get_round_solutions($round_id);
+        $solution_words = array_map(fn($s) => strtoupper($s->word), $solutions);
+
+        $guessers = $this->db->get_round_guessers($round_id);
+        $guesser_map = [];
+        foreach ($guessers as $g) {
+            $guesser_map[(int) $g->id] = $g;
+        }
+
+        foreach ($rows as $row_num => $row) {
+            $clue_number = (int) ($row['clue_number'] ?? $row_num);
+            $correct_answer = strtoupper(sanitize_text_field(trim($row['correct_answer'] ?? '')));
+            $clue_text = sanitize_text_field(trim($row['clue_text'] ?? ''));
+            $puzzle_date = sanitize_text_field(trim($row['puzzle_date'] ?? ''));
+            $constructor_name = sanitize_text_field(trim($row['constructor_name'] ?? ''));
+            $puzzle_clue_number = sanitize_text_field(trim($row['puzzle_clue_number'] ?? ''));
+            $clue_direction = sanitize_text_field(trim($row['clue_direction'] ?? ''));
+            $guesses = $row['guesses'] ?? [];
+
+            // Skip entirely empty rows
+            if ($correct_answer === '' && $clue_text === '' && $puzzle_date === '') {
+                $has_guesses = false;
+                foreach ($guesses as $gw) {
+                    if (trim($gw) !== '') {
+                        $has_guesses = true;
+                        break;
+                    }
+                }
+                if (!$has_guesses) {
+                    continue;
+                }
+            }
+
+            // Validate required: correct_answer
+            if ($correct_answer === '') {
+                $errors[] = sprintf(
+                    __('Row %d: Correct answer is required.', 'kealoa-reference'),
+                    $clue_number
+                );
+                $skipped++;
+                continue;
+            }
+            if (!in_array($correct_answer, $solution_words, true)) {
+                $errors[] = sprintf(
+                    __('Row %d: "%s" is not one of the solution words.', 'kealoa-reference'),
+                    $clue_number,
+                    $correct_answer
+                );
+                $skipped++;
+                continue;
+            }
+
+            // --- Puzzle find-or-create ---
+            $puzzle_id = null;
+            if ($puzzle_date !== '') {
+                $existing_puzzle = $this->db->get_puzzle_by_date($puzzle_date);
+                if ($existing_puzzle) {
+                    $puzzle_id = (int) $existing_puzzle->id;
+                } else {
+                    $create_data = ['publication_date' => $puzzle_date];
+                    $editor_name = Kealoa_DB::get_editor_for_date($puzzle_date);
+                    if (!empty($editor_name)) {
+                        $editor = $this->db->get_person_by_name($editor_name);
+                        if (!$editor) {
+                            $editor_id = $this->db->create_person(['full_name' => $editor_name]);
+                            if ($editor_id) {
+                                $create_data['editor_id'] = $editor_id;
+                            }
+                        } else {
+                            $create_data['editor_id'] = (int) $editor->id;
+                        }
+                    }
+                    $new_puzzle_id = $this->db->create_puzzle($create_data);
+                    if ($new_puzzle_id) {
+                        $puzzle_id = $new_puzzle_id;
+                    }
+                }
+
+                // Set constructors if provided
+                if ($puzzle_id && $constructor_name !== '') {
+                    $constructor_names = preg_split('/,|\band\b/iu', $constructor_name);
+                    $constructor_ids = [];
+                    foreach ($constructor_names as $cname) {
+                        $cname = trim($cname);
+                        if ($cname === '') {
+                            continue;
+                        }
+                        $person = $this->db->get_person_by_name($cname);
+                        if (!$person) {
+                            $pid = $this->db->create_person([
+                                'full_name' => $cname,
+                                'xwordinfo_image_url' => Kealoa_Formatter::xwordinfo_image_url_from_name($cname),
+                            ]);
+                            if ($pid) {
+                                $constructor_ids[] = $pid;
+                            }
+                        } else {
+                            $constructor_ids[] = (int) $person->id;
+                        }
+                    }
+                    if (!empty($constructor_ids)) {
+                        $this->db->set_puzzle_constructors($puzzle_id, $constructor_ids);
+                    }
+                }
+            }
+
+            // --- Clue find-or-create ---
+            $clue_data = [
+                'correct_answer' => $correct_answer,
+            ];
+            if ($clue_text !== '') {
+                $clue_data['clue_text'] = $clue_text;
+            }
+            if ($puzzle_id !== null) {
+                $clue_data['puzzle_id'] = $puzzle_id;
+            }
+            if ($puzzle_clue_number !== '' && ctype_digit($puzzle_clue_number)) {
+                $clue_data['puzzle_clue_number'] = (int) $puzzle_clue_number;
+            }
+            if ($clue_direction !== '' && in_array($clue_direction, ['A', 'D'], true)) {
+                $clue_data['puzzle_clue_direction'] = $clue_direction;
+            }
+
+            $existing_clue = null;
+            $round_clues = $this->db->get_round_clues($round_id);
+            foreach ($round_clues as $rc) {
+                if ((int) $rc->clue_number === $clue_number) {
+                    $existing_clue = $rc;
+                    break;
+                }
+            }
+
+            $clue_id = null;
+            if (!$existing_clue) {
+                $clue_data['round_id'] = $round_id;
+                $clue_data['clue_number'] = $clue_number;
+                if (!isset($clue_data['clue_text'])) {
+                    $clue_data['clue_text'] = '';
+                }
+                $new_clue_id = $this->db->create_clue($clue_data);
+                if (!$new_clue_id) {
+                    $errors[] = sprintf(
+                        __('Row %d: Could not create clue.', 'kealoa-reference'),
+                        $clue_number
+                    );
+                    $skipped++;
+                    continue;
+                }
+                $clue_id = $new_clue_id;
+            } else {
+                $clue_id = (int) $existing_clue->id;
+                if ($overwrite) {
+                    $this->db->update_clue($clue_id, $clue_data);
+                }
+            }
+
+            // --- Guesses ---
+            foreach ($guesses as $guesser_id => $guessed_word) {
+                $guesser_id = (int) $guesser_id;
+                $guessed_word = strtoupper(sanitize_text_field(trim($guessed_word)));
+                if ($guessed_word === '') {
+                    if ($overwrite && $existing_clue) {
+                        $this->db->delete_guess($clue_id, $guesser_id);
+                    }
+                    continue;
+                }
+                if (!isset($guesser_map[$guesser_id])) {
+                    continue;
+                }
+
+                $existing_guesses = $this->db->get_clue_guesses($clue_id);
+                $guess_exists = false;
+                foreach ($existing_guesses as $g) {
+                    if ((int) $g->guesser_person_id === $guesser_id) {
+                        $guess_exists = true;
+                        break;
+                    }
+                }
+
+                if ($guess_exists && !$overwrite) {
+                    $skipped++;
+                    continue;
+                }
+
+                $this->db->set_guess($clue_id, $guesser_id, $guessed_word);
+                $imported++;
+            }
+        }
+
+        Kealoa_Shortcodes::flush_all_caches();
+
+        if (!empty($errors)) {
+            set_transient('kealoa_enter_data_errors_' . $round_id, $errors, 60);
+        }
+
+        $msg = empty($errors) ? 'round_data_saved' : 'round_data_errors';
+        wp_redirect(admin_url('admin.php?page=kealoa-rounds&action=enter_data&id=' . $round_id
+            . '&message=' . $msg . '&imported=' . $imported . '&skipped=' . $skipped));
         exit;
     }
 }
