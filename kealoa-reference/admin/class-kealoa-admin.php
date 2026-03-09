@@ -2447,6 +2447,7 @@ class Kealoa_Admin {
                 }
             }
 
+            Kealoa_Shortcodes::flush_all_caches();
             wp_redirect(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $round_id . '&message=clue_created'));
             exit;
         } else {
@@ -2509,6 +2510,7 @@ class Kealoa_Admin {
             }
         }
 
+        Kealoa_Shortcodes::flush_all_caches();
         wp_redirect(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $clue->round_id . '&message=clue_updated'));
         exit;
     }
@@ -2523,6 +2525,7 @@ class Kealoa_Admin {
         if ($clue) {
             $round_id = $clue->round_id;
             $this->db->delete_clue($id);
+            Kealoa_Shortcodes::flush_all_caches();
             wp_redirect(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $round_id . '&message=clue_deleted'));
             exit;
         }
@@ -2588,6 +2591,7 @@ class Kealoa_Admin {
             wp_send_json_error('Invalid entity ID');
         }
         $this->db->update_person($id, ['media_id' => $media_id ?: null]);
+        Kealoa_Shortcodes::flush_all_caches();
 
         $image_url = '';
         if ($media_id > 0) {
