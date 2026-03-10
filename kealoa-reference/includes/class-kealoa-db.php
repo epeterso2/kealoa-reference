@@ -4580,4 +4580,25 @@ class Kealoa_DB {
 
         return $this->wpdb->get_results($sql);
     }
+
+    /**
+     * Get rounds that have more than one player (guesser).
+     *
+     * Returns round data plus the number of players and a comma-separated
+     * list of player names.
+     *
+     * @return array Array of objects with round fields + player_count, player_names.
+     */
+    public function get_rounds_with_multiple_players(): array {
+        $sql = "SELECT r.*, COUNT(rg.person_id) AS player_count,
+                GROUP_CONCAT(p2.full_name ORDER BY p2.full_name SEPARATOR ', ') AS player_names
+            FROM {$this->rounds_table} r
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = r.id
+            INNER JOIN {$this->persons_table} p2 ON p2.id = rg.person_id
+            GROUP BY r.id
+            HAVING player_count > 1
+            ORDER BY player_count DESC, r.round_date DESC, r.round_number ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
 }

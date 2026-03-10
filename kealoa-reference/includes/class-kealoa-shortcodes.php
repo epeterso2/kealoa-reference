@@ -802,7 +802,8 @@ class Kealoa_Shortcodes {
                 <?php
                 $rounds_without_puzzles = $this->db->get_rounds_without_puzzles();
                 $rounds_with_unused_answers = $this->db->get_rounds_with_unused_answers();
-                $has_curiosities = !empty($rounds_without_puzzles) || !empty($rounds_with_unused_answers);
+                $rounds_with_multiple_players = $this->db->get_rounds_with_multiple_players();
+                $has_curiosities = !empty($rounds_without_puzzles) || !empty($rounds_with_unused_answers) || !empty($rounds_with_multiple_players);
 
                 if (!$has_curiosities):
                 ?>
@@ -906,6 +907,64 @@ class Kealoa_Shortcodes {
                                         <td class="kealoa-unused-words-cell">
                                             <?php echo esc_html($round->unused_words); ?>
                                         </td>
+                                        <td class="kealoa-description-cell">
+                                            <?php echo esc_html($round->description ?? ''); ?>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($rounds_with_multiple_players)): ?>
+                    <?php
+                    // Bulk pre-fetch for rounds with multiple players
+                    $mp_round_ids = array_map(fn($r) => (int) $r->id, $rounds_with_multiple_players);
+                    $mp_solutions_map = $this->db->get_round_solutions_bulk($mp_round_ids);
+                    if (!isset($np_rounds_per_date)) {
+                        $np_rounds_per_date = $this->db->get_rounds_per_date_counts();
+                    }
+                    ?>
+                    <div class="kealoa-curiosities-section">
+                    <h3><?php esc_html_e('Rounds with Multiple Players', 'kealoa-reference'); ?></h3>
+                    <p class="kealoa-section-description"><?php esc_html_e('These rounds had more than one player guessing answers.', 'kealoa-reference'); ?></p>
+                    <div class="kealoa-puzzles-table-wrapper">
+                        <div class="kealoa-table-scroll">
+                            <table class="kealoa-table kealoa-rounds-table" id="kealoa-rounds-curiosities-multiple-players-table">
+                                <thead>
+                                    <tr>
+                                        <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
+                                        <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                                        <th data-sort="number"><?php esc_html_e('Players', 'kealoa-reference'); ?></th>
+                                        <th data-sort="text"><?php esc_html_e('Player Names', 'kealoa-reference'); ?></th>
+                                        <th data-sort="text"><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($rounds_with_multiple_players as $round):
+                                        $rid = (int) $round->id;
+                                        $gn = (int) $round->game_number;
+                                        $solutions = $mp_solutions_map[$rid] ?? [];
+                                        $round_num = (int) ($round->round_number ?? 1);
+                                        $date_count = $np_rounds_per_date[$round->round_date] ?? 1;
+                                    ?>
+                                    <tr>
+                                        <td class="kealoa-date-cell" data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($round->round_date)) * 100 + $round_num); ?>">
+                                            <?php
+                                            echo Kealoa_Formatter::format_round_date_link($gn, $round->round_date);
+                                            if ($date_count > 1) {
+                                                echo ' <span class="kealoa-round-number">(#' . esc_html($round_num) . ')</span>';
+                                            }
+                                            ?>
+                                        </td>
+                                        <td class="kealoa-solutions-cell">
+                                            <?php echo Kealoa_Formatter::format_solution_words_link($gn, $solutions); ?>
+                                        </td>
+                                        <td><?php echo esc_html($round->player_count); ?></td>
+                                        <td><?php echo esc_html($round->player_names); ?></td>
                                         <td class="kealoa-description-cell">
                                             <?php echo esc_html($round->description ?? ''); ?>
                                         </td>
