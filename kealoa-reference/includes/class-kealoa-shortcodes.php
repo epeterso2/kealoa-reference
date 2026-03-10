@@ -4520,6 +4520,7 @@ class Kealoa_Shortcodes {
         ?>
         <div class="kealoa-curiosities-section">
         <h3><?php esc_html_e('Puzzles Used in Multiple Rounds', 'kealoa-reference'); ?></h3>
+        <p class="kealoa-section-description"><?php esc_html_e('These puzzles were featured as clues in more than one round.', 'kealoa-reference'); ?></p>
         <div class="kealoa-puzzles-table-wrapper">
             <div class="kealoa-table-scroll">
                 <table class="kealoa-table kealoa-puzzles-table" id="kealoa-puzzles-curiosities-table">
@@ -4621,6 +4622,7 @@ class Kealoa_Shortcodes {
         ?>
         <div class="kealoa-curiosities-section">
         <h3><?php esc_html_e('Same Constructor & Editor', 'kealoa-reference'); ?></h3>
+        <p class="kealoa-section-description"><?php esc_html_e('These puzzles have the same person listed as both constructor and editor.', 'kealoa-reference'); ?></p>
         <div class="kealoa-puzzles-table-wrapper">
             <div class="kealoa-table-scroll">
                 <table class="kealoa-table kealoa-puzzles-table" id="kealoa-puzzles-curiosities-same-ce-table">
