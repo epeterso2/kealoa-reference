@@ -4596,8 +4596,8 @@ class Kealoa_DB {
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = r.id
             INNER JOIN {$this->persons_table} p2 ON p2.id = rg.person_id
             GROUP BY r.id
-            HAVING player_count > 1
-            ORDER BY player_count DESC, r.round_date DESC, r.round_number ASC";
+            HAVING COUNT(rg.person_id) > 1
+            ORDER BY COUNT(rg.person_id) DESC, r.round_date DESC, r.round_number ASC";
 
         return $this->wpdb->get_results($sql);
     }
