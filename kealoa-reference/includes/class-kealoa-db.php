@@ -4601,4 +4601,27 @@ class Kealoa_DB {
 
         return $this->wpdb->get_results($sql);
     }
+
+    /**
+     * Get rounds where a single constructor has more than one puzzle.
+     *
+     * Returns round data plus the constructor name and the number of
+     * distinct puzzles they constructed in that round.
+     *
+     * @return array Array of objects with round fields + constructor_name, puzzle_count.
+     */
+    public function get_rounds_with_repeated_constructor(): array {
+        $sql = "SELECT r.*, p.full_name AS constructor_name,
+                COUNT(DISTINCT c.puzzle_id) AS puzzle_count
+            FROM {$this->rounds_table} r
+            INNER JOIN {$this->clues_table} c ON c.round_id = r.id
+            INNER JOIN {$this->puzzle_constructors_table} pc ON pc.puzzle_id = c.puzzle_id
+            INNER JOIN {$this->persons_table} p ON p.id = pc.person_id
+            WHERE c.puzzle_id IS NOT NULL
+            GROUP BY r.id, pc.person_id
+            HAVING COUNT(DISTINCT c.puzzle_id) > 1
+            ORDER BY COUNT(DISTINCT c.puzzle_id) DESC, r.round_date DESC, r.round_number ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
 }
