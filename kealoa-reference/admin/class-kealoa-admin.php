@@ -3747,13 +3747,42 @@ class Kealoa_Admin {
                 continue;
             }
 
-            // --- Puzzle find-or-create ---
+            // --- Find existing clue for this row ---
+            $existing_clue = null;
+            $round_clues = $this->db->get_round_clues($round_id);
+            foreach ($round_clues as $rc) {
+                if ((int) $rc->clue_number === $clue_number) {
+                    $existing_clue = $rc;
+                    break;
+                }
+            }
+
+            // --- Puzzle find-or-create-or-update ---
             $puzzle_id = null;
             if ($puzzle_date !== '') {
                 $existing_puzzle = $this->db->get_puzzle_by_date($puzzle_date);
                 if ($existing_puzzle) {
+                    // A puzzle already exists with this date — use it
                     $puzzle_id = (int) $existing_puzzle->id;
+                } elseif ($overwrite && $existing_clue && !empty($existing_clue->puzzle_id)) {
+                    // Date changed on an existing clue — update the existing puzzle's date
+                    $puzzle_id = (int) $existing_clue->puzzle_id;
+                    $update_data = ['publication_date' => $puzzle_date];
+                    $editor_name = Kealoa_DB::get_editor_for_date($puzzle_date);
+                    if (!empty($editor_name)) {
+                        $editor = $this->db->get_person_by_name($editor_name);
+                        if (!$editor) {
+                            $editor_id = $this->db->create_person(['full_name' => $editor_name]);
+                            if ($editor_id) {
+                                $update_data['editor_id'] = $editor_id;
+                            }
+                        } else {
+                            $update_data['editor_id'] = (int) $editor->id;
+                        }
+                    }
+                    $this->db->update_puzzle($puzzle_id, $update_data);
                 } else {
+                    // No existing puzzle — create a new one
                     $create_data = ['publication_date' => $puzzle_date];
                     $editor_name = Kealoa_DB::get_editor_for_date($puzzle_date);
                     if (!empty($editor_name)) {
@@ -3816,15 +3845,6 @@ class Kealoa_Admin {
             }
             if ($clue_direction !== '' && in_array($clue_direction, ['A', 'D'], true)) {
                 $clue_data['puzzle_clue_direction'] = $clue_direction;
-            }
-
-            $existing_clue = null;
-            $round_clues = $this->db->get_round_clues($round_id);
-            foreach ($round_clues as $rc) {
-                if ((int) $rc->clue_number === $clue_number) {
-                    $existing_clue = $rc;
-                    break;
-                }
             }
 
             $clue_id = null;
