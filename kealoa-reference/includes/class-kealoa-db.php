@@ -3552,6 +3552,92 @@ class Kealoa_DB {
         ];
     }
 
+    /**
+     * Get streaks of consecutive correct/incorrect guesses for a player.
+     *
+     * @param int|int[] $person_ids Person ID or array of aliased IDs.
+     * @return object Object with best_correct_streak, best_incorrect_streak, and streaks array.
+     */
+    public function get_player_streaks(int|array $person_ids): object {
+        $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT
+                g.id,
+                c.round_id,
+                c.clue_number,
+                r.round_date,
+                g.is_correct
+            FROM {$this->guesses_table} g
+            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->rounds_table} r ON r.id = c.round_id
+            INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
+            WHERE {$clause}
+            ORDER BY r.round_date ASC, r.round_number ASC, c.clue_number ASC";
+
+        $rows = $this->wpdb->get_results($sql);
+
+        $best_correct   = 0;
+        $best_incorrect = 0;
+        $all_streaks    = [];
+
+        $current_type   = null;
+        $current_length = 0;
+        $current_round_ids  = [];
+        $current_start_date = null;
+        $current_end_date   = null;
+
+        $finish_streak = function () use (&$all_streaks, &$current_type, &$current_length, &$current_round_ids, &$current_start_date, &$current_end_date) {
+            if ($current_type !== null && $current_length >= 2) {
+                $all_streaks[] = (object) [
+                    'type'       => $current_type,
+                    'length'     => $current_length,
+                    'round_ids'  => array_keys($current_round_ids),
+                    'start_date' => $current_start_date,
+                    'end_date'   => $current_end_date,
+                ];
+            }
+        };
+
+        foreach ($rows as $row) {
+            $rid  = (int) $row->round_id;
+            $date = $row->round_date;
+            $is_correct = (int) $row->is_correct;
+            $type = $is_correct ? 'correct' : 'incorrect';
+
+            if ($type === $current_type) {
+                $current_length++;
+                $current_round_ids[$rid] = true;
+                $current_end_date = $date;
+            } else {
+                $finish_streak();
+                $current_type   = $type;
+                $current_length = 1;
+                $current_round_ids  = [$rid => true];
+                $current_start_date = $date;
+                $current_end_date   = $date;
+            }
+
+            if ($is_correct && $current_length > $best_correct) {
+                $best_correct = $current_length;
+            }
+            if (!$is_correct && $current_length > $best_incorrect) {
+                $best_incorrect = $current_length;
+            }
+        }
+
+        $finish_streak();
+
+        usort($all_streaks, function ($a, $b) {
+            return $b->length <=> $a->length;
+        });
+
+        return (object) [
+            'best_correct_streak'   => $best_correct,
+            'best_incorrect_streak' => $best_incorrect,
+            'streaks'               => $all_streaks,
+        ];
+    }
+
     // =========================================================================
     // ROLE INFERENCE
     // =========================================================================
