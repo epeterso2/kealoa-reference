@@ -1097,39 +1097,28 @@ class Kealoa_Shortcodes {
                     <p>
                         <strong class="kealoa-meta-label"><?php esc_html_e('Guess Alternation', 'kealoa-reference'); ?></strong>
                         <span><?php
-                        echo Kealoa_Formatter::format_percentage($guess_alt_avg);
-                        /* translators: %d = number of guess changes */
-                        echo ' ' . sprintf(
-                            esc_html(_n('(%d guess change)', '(%d guess changes)', $total_guess_changes, 'kealoa-reference')),
-                            $total_guess_changes
-                        );
-                        ?></span>
-                    </p>
-                    <?php
-                    // Per-player guess alternation detail
-                    foreach ($guess_alt_per_player as $gap):
-                        $player_pid = (int) $gap->person_id;
-                        $player_changes = 0;
-                        $player_seq = $guess_sequences[$player_pid] ?? [];
-                        for ($gi = 1, $gn = count($player_seq); $gi < $gn; $gi++) {
-                            if ($player_seq[$gi] !== $player_seq[$gi - 1]) {
-                                $player_changes++;
+                        // Per-player guess alternation detail
+                        $first_alt = true;
+                        foreach ($guess_alt_per_player as $gap):
+                            $player_pid = (int) $gap->person_id;
+                            $player_changes = 0;
+                            $player_seq = $guess_sequences[$player_pid] ?? [];
+                            for ($gi = 1, $gn = count($player_seq); $gi < $gn; $gi++) {
+                                if ($player_seq[$gi] !== $player_seq[$gi - 1]) {
+                                    $player_changes++;
+                                }
                             }
-                        }
-                    ?>
-                    <p>
-                        <strong class="kealoa-meta-label"><?php
-                            printf(esc_html__('%s Alternation', 'kealoa-reference'), esc_html($gap->full_name));
-                        ?></strong>
-                        <span><?php
-                        echo Kealoa_Formatter::format_percentage($gap->alternation_pct);
-                        echo ' ' . sprintf(
-                            esc_html(_n('(%d guess change)', '(%d guess changes)', $player_changes, 'kealoa-reference')),
-                            $player_changes
-                        );
+                            if (!$first_alt) echo '<br>';
+                            $first_alt = false;
+                            echo esc_html($gap->full_name) . ': ';
+                            echo Kealoa_Formatter::format_percentage($gap->alternation_pct);
+                            echo ' ' . sprintf(
+                                esc_html(_n('(%d guess change)', '(%d guess changes)', $player_changes, 'kealoa-reference')),
+                                $player_changes
+                            );
+                        endforeach;
                         ?></span>
                     </p>
-                    <?php endforeach; ?>
                     <?php endif; ?>
                     <?php
                     // Pielou's Evenness Index: J' = H' / ln(S), scaled to 0-100%
@@ -1202,59 +1191,44 @@ class Kealoa_Shortcodes {
                     <p>
                         <strong class="kealoa-meta-label"><?php esc_html_e('Guess Evenness', 'kealoa-reference'); ?></strong>
                         <span><?php
-                        echo Kealoa_Formatter::format_percentage($guess_even_avg);
-                        $gword_parts = [];
-                        foreach ($solutions as $s) {
-                            $gword = strtoupper($s->word);
-                            $gcount = $guess_word_counts[$gword] ?? 0;
-                            $gword_parts[] = esc_html($gword) . ': ' . $gcount;
+                        // Per-player guess evenness detail
+                        $guesser_name_map = [];
+                        foreach ($guessers as $g) {
+                            $guesser_name_map[(int) $g->id] = $g->full_name;
                         }
-                        echo ' (' . implode(', ', $gword_parts) . ')';
-                        ?></span>
-                    </p>
-                    <?php
-                    // Per-player guess evenness detail
-                    // Build a name lookup from guessers
-                    $guesser_name_map = [];
-                    foreach ($guessers as $g) {
-                        $guesser_name_map[(int) $g->id] = $g->full_name;
-                    }
-                    // Build per-player guess word counts
-                    $per_player_guess_counts = [];
-                    foreach ($meta_guesses_map as $cg_list) {
-                        foreach ($cg_list as $cg) {
-                            $ppid = (int) $cg->guesser_person_id;
-                            $gw = strtoupper($cg->guessed_word);
-                            if (!isset($per_player_guess_counts[$ppid])) {
-                                $per_player_guess_counts[$ppid] = [];
-                                foreach ($solutions as $s) {
-                                    $per_player_guess_counts[$ppid][strtoupper($s->word)] = 0;
+                        $per_player_guess_counts = [];
+                        foreach ($meta_guesses_map as $cg_list) {
+                            foreach ($cg_list as $cg) {
+                                $ppid = (int) $cg->guesser_person_id;
+                                $gw = strtoupper($cg->guessed_word);
+                                if (!isset($per_player_guess_counts[$ppid])) {
+                                    $per_player_guess_counts[$ppid] = [];
+                                    foreach ($solutions as $s) {
+                                        $per_player_guess_counts[$ppid][strtoupper($s->word)] = 0;
+                                    }
                                 }
+                                $per_player_guess_counts[$ppid][$gw] = ($per_player_guess_counts[$ppid][$gw] ?? 0) + 1;
                             }
-                            $per_player_guess_counts[$ppid][$gw] = ($per_player_guess_counts[$ppid][$gw] ?? 0) + 1;
                         }
-                    }
-                    foreach ($guess_even_per_player as $gep):
-                        $ppid = (int) $gep->person_id;
-                        $pp_name = $guesser_name_map[$ppid] ?? '?';
-                        $pp_counts = $per_player_guess_counts[$ppid] ?? [];
-                    ?>
-                    <p>
-                        <strong class="kealoa-meta-label"><?php
-                            printf(esc_html__('%s Evenness', 'kealoa-reference'), esc_html($pp_name));
-                        ?></strong>
-                        <span><?php
-                        echo Kealoa_Formatter::format_percentage($gep->evenness_pct);
-                        $pp_word_parts = [];
-                        foreach ($solutions as $s) {
-                            $ppword = strtoupper($s->word);
-                            $ppcount = $pp_counts[$ppword] ?? 0;
-                            $pp_word_parts[] = esc_html($ppword) . ': ' . $ppcount;
-                        }
-                        echo ' (' . implode(', ', $pp_word_parts) . ')';
+                        $first_even = true;
+                        foreach ($guess_even_per_player as $gep):
+                            $ppid = (int) $gep->person_id;
+                            $pp_name = $guesser_name_map[$ppid] ?? '?';
+                            $pp_counts = $per_player_guess_counts[$ppid] ?? [];
+                            if (!$first_even) echo '<br>';
+                            $first_even = false;
+                            echo esc_html($pp_name) . ': ';
+                            echo Kealoa_Formatter::format_percentage($gep->evenness_pct);
+                            $pp_word_parts = [];
+                            foreach ($solutions as $s) {
+                                $ppword = strtoupper($s->word);
+                                $ppcount = $pp_counts[$ppword] ?? 0;
+                                $pp_word_parts[] = esc_html($ppword) . ': ' . $ppcount;
+                            }
+                            echo ' (' . implode(', ', $pp_word_parts) . ')';
+                        endforeach;
                         ?></span>
                     </p>
-                    <?php endforeach; ?>
                     <?php endif; ?>
                     <?php
                     $clue_age_stats = $this->db->get_round_clue_age_stats($round_id);
