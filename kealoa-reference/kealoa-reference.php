@@ -6,7 +6,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://github.com/epeterso2/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 2.2.69
+ * Version: 2.2.70
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -33,7 +33,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '2.2.69');
+define('KEALOA_VERSION', '2.2.70');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -524,7 +524,7 @@ function kealoa_template_redirect(): void {
         $role_label = !empty($roles)
             ? implode(' / ', array_map(fn($r) => $role_display_names[$r] ?? ucfirst($r), $roles))
             : __('Person', 'kealoa-reference');
-        $title = sprintf(__('%s - %s', 'kealoa-reference'), $person->full_name, $role_label);
+        $title = $person->full_name;
         $content = $shortcodes->render_person(['id' => $person->id]);
         $is_kealoa = true;
         // Store object info for admin bar
@@ -540,7 +540,7 @@ function kealoa_template_redirect(): void {
         $shortcodes = new Kealoa_Shortcodes();
         $solutions = $db->get_round_solutions($round_id);
         $solution_text = Kealoa_Formatter::format_solution_words($solutions);
-        $title = sprintf(__('KEALOA #%d - %s - Round', 'kealoa-reference'), (int) $game_number, $solution_text);
+        $title = sprintf(__('KEALOA #%d - %s', 'kealoa-reference'), (int) $game_number, $solution_text);
         $content = $shortcodes->render_round(['id' => $round_id]);
         $is_kealoa = true;
         // Store object info for admin bar
@@ -555,7 +555,7 @@ function kealoa_template_redirect(): void {
         $shortcodes = new Kealoa_Shortcodes();
         $formatted_date = Kealoa_Formatter::format_date($puzzle->publication_date);
         $day_name = date('l', strtotime($puzzle->publication_date));
-        $title = sprintf(__('%s, %s - Puzzle', 'kealoa-reference'), $day_name, $formatted_date);
+        $title = sprintf(__('%s, %s', 'kealoa-reference'), $day_name, $formatted_date);
         $content = $shortcodes->render_puzzle(['date' => $puzzle->publication_date]);
         $is_kealoa = true;
         $GLOBALS['kealoa_object_type'] = 'puzzle';
