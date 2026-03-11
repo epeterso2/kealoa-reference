@@ -5454,9 +5454,9 @@ class Kealoa_Shortcodes {
             <thead>
                 <tr>
                     <th data-sort="text"><?php esc_html_e('Balance', 'kealoa-reference'); ?></th>
-                    <th data-sort="number"><?php esc_html_e('P(Answer 1)', 'kealoa-reference'); ?></th>
-                    <th data-sort="number"><?php esc_html_e('P(Answer 2)', 'kealoa-reference'); ?></th>
-                    <th data-sort="number"><?php esc_html_e('Observations', 'kealoa-reference'); ?></th>
+                    <th data-sort="number"><?php esc_html_e('Answer 1', 'kealoa-reference'); ?></th>
+                    <th data-sort="number"><?php esc_html_e('Answer 2', 'kealoa-reference'); ?></th>
+                    <th data-sort="number"><?php esc_html_e('Count', 'kealoa-reference'); ?></th>
                 </tr>
             </thead>
             <tbody>
