@@ -1118,6 +1118,71 @@ class Kealoa_DB {
     }
 
     /**
+     * Get answer-to-answer transition counts for consecutive clue positions.
+     *
+     * For each pair of consecutive clues in a round, records which solution
+     * word was the correct answer at position k-1 (from_answer) and which
+     * was correct at position k (to_answer), partitioned by solution count.
+     *
+     * @return array Array of objects with solution_count, to_clue_number, from_answer, to_answer, transition_count.
+     */
+    public function get_answer_transition_counts(): array {
+        $sql = "SELECT
+                sc.solution_count,
+                c2.clue_number AS to_clue_number,
+                rs1.word_order AS from_answer,
+                rs2.word_order AS to_answer,
+                COUNT(*) AS transition_count
+            FROM {$this->clues_table} c2
+            INNER JOIN {$this->clues_table} c1
+                ON c1.round_id = c2.round_id
+                AND c1.clue_number = c2.clue_number - 1
+            INNER JOIN {$this->round_solutions_table} rs1
+                ON rs1.round_id = c1.round_id
+                AND UPPER(rs1.word) = UPPER(c1.correct_answer)
+            INNER JOIN {$this->round_solutions_table} rs2
+                ON rs2.round_id = c2.round_id
+                AND UPPER(rs2.word) = UPPER(c2.correct_answer)
+            INNER JOIN (
+                SELECT round_id, COUNT(*) AS solution_count
+                FROM {$this->round_solutions_table}
+                GROUP BY round_id
+            ) sc ON sc.round_id = c1.round_id
+            GROUP BY sc.solution_count, c2.clue_number, rs1.word_order, rs2.word_order
+            ORDER BY sc.solution_count ASC, c2.clue_number ASC, rs1.word_order ASC, rs2.word_order ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get the full sequence of correct answers (as word_order) for every round.
+     *
+     * Returns rows ordered by solution count, round, and clue number so that
+     * consecutive rows for the same round form the complete answer sequence.
+     *
+     * @return array Array of objects with solution_count, round_id, clue_number, word_order.
+     */
+    public function get_round_clue_sequences(): array {
+        $sql = "SELECT
+                sc.solution_count,
+                c.round_id,
+                c.clue_number,
+                rs.word_order
+            FROM {$this->clues_table} c
+            INNER JOIN {$this->round_solutions_table} rs
+                ON rs.round_id = c.round_id
+                AND UPPER(rs.word) = UPPER(c.correct_answer)
+            INNER JOIN (
+                SELECT round_id, COUNT(*) AS solution_count
+                FROM {$this->round_solutions_table}
+                GROUP BY round_id
+            ) sc ON sc.round_id = c.round_id
+            ORDER BY sc.solution_count ASC, c.round_id ASC, c.clue_number ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Create a round
      */
     public function create_round(array $data): int|false {

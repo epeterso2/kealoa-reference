@@ -95,6 +95,10 @@ class Kealoa_Blocks {
             register_block_type(KEALOA_PLUGIN_DIR . 'blocks/rounds-stats');
         }
 
+        if (file_exists(KEALOA_PLUGIN_DIR . 'blocks/predictions/block.json')) {
+            register_block_type(KEALOA_PLUGIN_DIR . 'blocks/predictions');
+        }
+
         if (file_exists(KEALOA_PLUGIN_DIR . 'blocks/puzzles-table/block.json')) {
             register_block_type(KEALOA_PLUGIN_DIR . 'blocks/puzzles-table');
         }

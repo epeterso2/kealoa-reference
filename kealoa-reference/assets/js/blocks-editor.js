@@ -500,6 +500,29 @@
     });
 
     /**
+     * KEALOA Predictions Block
+     */
+    registerBlockType('kealoa/predictions', {
+        title: __('KEALOA Predictions', 'kealoa-reference'),
+        description: __('Displays the probability of each answer word conditioned on the previous answer and the running balance, for rounds with two possible answers. Uses Bayesian inference with Laplace smoothing.', 'kealoa-reference'),
+        icon: 'chart-line',
+        category: 'widgets',
+        keywords: [__('kealoa', 'kealoa-reference'), __('predictions', 'kealoa-reference'), __('probability', 'kealoa-reference'), __('bayesian', 'kealoa-reference')],
+        attributes: {},
+
+        edit: function (props) {
+            return createElement(ServerSideRender, {
+                block: 'kealoa/predictions',
+                attributes: props.attributes
+            });
+        },
+
+        save: function () {
+            return null;
+        }
+    });
+
+    /**
      * KEALOA Hosts Table Block
      */
     registerBlockType('kealoa/hosts-table', {

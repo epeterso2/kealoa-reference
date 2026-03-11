@@ -48,6 +48,7 @@ class Kealoa_Shortcodes {
         add_shortcode('kealoa_hosts_table', [$this, 'render_hosts_table']);
         add_shortcode('kealoa_puzzles_table', [$this, 'render_puzzles_table']);
         add_shortcode('kealoa_puzzle', [$this, 'render_puzzle']);
+        add_shortcode('kealoa_predictions', [$this, 'render_predictions']);
         add_shortcode('kealoa_version', [$this, 'render_version']);
     }
 
@@ -205,6 +206,92 @@ class Kealoa_Shortcodes {
                     <button class="kealoa-tab-button" data-tab="summary-stats"><?php esc_html_e('Summary Stats', 'kealoa-reference'); ?></button>
                     <button class="kealoa-tab-button" data-tab="rounds-curiosities"><?php esc_html_e('Curiosities', 'kealoa-reference'); ?></button>
                 </div>
+
+                <div class="kealoa-tab-panel active" data-tab="rounds-played">
+
+            <h3><?php esc_html_e('All Rounds', 'kealoa-reference'); ?></h3>
+            <p class="kealoa-section-description"><?php esc_html_e('Complete list of all rounds played with results and key statistics.', 'kealoa-reference'); ?></p>
+            <div class="kealoa-filter-controls" data-target="kealoa-rounds-table">
+                <div class="kealoa-filter-row">
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-rd-date-min"><?php esc_html_e('Date Range', 'kealoa-reference'); ?></label>
+                        <div class="kealoa-filter-range">
+                            <input type="date" id="kealoa-rd-date-min" class="kealoa-filter-input" data-filter="date-min" data-col="0">
+                            <span class="kealoa-filter-range-sep">&ndash;</span>
+                            <input type="date" id="kealoa-rd-date-max" class="kealoa-filter-input" data-filter="date-max" data-col="0">
+                        </div>
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-rd-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
+                        <input type="text" id="kealoa-rd-search" class="kealoa-filter-input" data-filter="search" data-col="1" placeholder="<?php esc_attr_e('Solution words...', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-rd-player"><?php esc_html_e('Player', 'kealoa-reference'); ?></label>
+                        <input type="text" id="kealoa-rd-player" class="kealoa-filter-input" data-filter="search" data-col="2" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group">
+                        <label for="kealoa-rd-desc"><?php esc_html_e('Description', 'kealoa-reference'); ?></label>
+                        <input type="text" id="kealoa-rd-desc" class="kealoa-filter-input" data-filter="search" data-col="3" placeholder="<?php esc_attr_e('Description...', 'kealoa-reference'); ?>">
+                    </div>
+                    <div class="kealoa-filter-group kealoa-filter-actions">
+                        <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
+                        <span class="kealoa-filter-count"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="kealoa-table-scroll">
+            <table class="kealoa-table kealoa-rounds-table" id="kealoa-rounds-table">
+                <thead>
+                    <tr>
+                        <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
+                        <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                        <th><?php esc_html_e('Results', 'kealoa-reference'); ?></th>
+                        <th data-sort="text"><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    // Bulk pre-fetch data for all rounds
+                    $all_round_ids = array_map(function ($r) { return (int) $r->id; }, $rounds);
+                    $bulk_solutions = $this->db->get_round_solutions_bulk($all_round_ids);
+                    $bulk_clue_counts = $this->db->get_round_clue_counts_bulk($all_round_ids);
+                    $bulk_guesser_results = $this->db->get_round_guesser_results_bulk($all_round_ids);
+                    $rounds_per_date = $this->db->get_rounds_per_date_counts();
+                    ?>
+                    <?php foreach ($rounds as $round): ?>
+                        <?php
+                        $rid = (int) $round->id;
+                        $solutions = $bulk_solutions[$rid] ?? [];
+                        $clue_count = $bulk_clue_counts[$rid] ?? 0;
+                        $guesser_results = $bulk_guesser_results[$rid] ?? [];
+                        $round_num = (int) ($round->round_number ?? 1);
+                        $date_count = $rounds_per_date[$round->round_date] ?? 1;
+                        ?>
+                        <tr>
+                            <td class="kealoa-date-cell" data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($round->round_date)) * 100 + $round_num); ?>">
+                                <?php
+                                echo Kealoa_Formatter::format_round_date_link((int) $round->game_number, $round->round_date);
+                                if ($date_count > 1) {
+                                    echo ' <span class="kealoa-round-number">(#' . esc_html($round_num) . ')</span>';
+                                }
+                                ?>
+                            </td>
+                            <td class="kealoa-solutions-cell">
+                                <?php echo Kealoa_Formatter::format_solution_words_link((int) $round->game_number, $solutions); ?>
+                            </td>
+                            <td class="kealoa-results-cell">
+                                <?php echo Kealoa_Formatter::format_guesser_results($guesser_results, $clue_count); ?>
+                            </td>
+                            <td class="kealoa-description-cell">
+                                <?php echo esc_html($round->description ?? ''); ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            </div>
+
+                </div><!-- end Rounds Played tab -->
 
                 <div class="kealoa-tab-panel" data-tab="summary-stats">
             <?php echo $this->render_rounds_stats_html($overview); ?>
@@ -720,92 +807,6 @@ class Kealoa_Shortcodes {
             </div>
 
                 </div><!-- end Detailed Stats tab -->
-
-                <div class="kealoa-tab-panel active" data-tab="rounds-played">
-
-            <h3><?php esc_html_e('All Rounds', 'kealoa-reference'); ?></h3>
-            <p class="kealoa-section-description"><?php esc_html_e('Complete list of all rounds played with results and key statistics.', 'kealoa-reference'); ?></p>
-            <div class="kealoa-filter-controls" data-target="kealoa-rounds-table">
-                <div class="kealoa-filter-row">
-                    <div class="kealoa-filter-group">
-                        <label for="kealoa-rd-date-min"><?php esc_html_e('Date Range', 'kealoa-reference'); ?></label>
-                        <div class="kealoa-filter-range">
-                            <input type="date" id="kealoa-rd-date-min" class="kealoa-filter-input" data-filter="date-min" data-col="0">
-                            <span class="kealoa-filter-range-sep">&ndash;</span>
-                            <input type="date" id="kealoa-rd-date-max" class="kealoa-filter-input" data-filter="date-max" data-col="0">
-                        </div>
-                    </div>
-                    <div class="kealoa-filter-group">
-                        <label for="kealoa-rd-search"><?php esc_html_e('Search', 'kealoa-reference'); ?></label>
-                        <input type="text" id="kealoa-rd-search" class="kealoa-filter-input" data-filter="search" data-col="1" placeholder="<?php esc_attr_e('Solution words...', 'kealoa-reference'); ?>">
-                    </div>
-                    <div class="kealoa-filter-group">
-                        <label for="kealoa-rd-player"><?php esc_html_e('Player', 'kealoa-reference'); ?></label>
-                        <input type="text" id="kealoa-rd-player" class="kealoa-filter-input" data-filter="search" data-col="2" placeholder="<?php esc_attr_e('Player name...', 'kealoa-reference'); ?>">
-                    </div>
-                    <div class="kealoa-filter-group">
-                        <label for="kealoa-rd-desc"><?php esc_html_e('Description', 'kealoa-reference'); ?></label>
-                        <input type="text" id="kealoa-rd-desc" class="kealoa-filter-input" data-filter="search" data-col="3" placeholder="<?php esc_attr_e('Description...', 'kealoa-reference'); ?>">
-                    </div>
-                    <div class="kealoa-filter-group kealoa-filter-actions">
-                        <button type="button" class="kealoa-filter-reset"><?php esc_html_e('Reset Filters', 'kealoa-reference'); ?></button>
-                        <span class="kealoa-filter-count"></span>
-                    </div>
-                </div>
-            </div>
-            <div class="kealoa-table-scroll">
-            <table class="kealoa-table kealoa-rounds-table" id="kealoa-rounds-table">
-                <thead>
-                    <tr>
-                        <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
-                        <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
-                        <th><?php esc_html_e('Results', 'kealoa-reference'); ?></th>
-                        <th data-sort="text"><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    // Bulk pre-fetch data for all rounds
-                    $all_round_ids = array_map(function ($r) { return (int) $r->id; }, $rounds);
-                    $bulk_solutions = $this->db->get_round_solutions_bulk($all_round_ids);
-                    $bulk_clue_counts = $this->db->get_round_clue_counts_bulk($all_round_ids);
-                    $bulk_guesser_results = $this->db->get_round_guesser_results_bulk($all_round_ids);
-                    $rounds_per_date = $this->db->get_rounds_per_date_counts();
-                    ?>
-                    <?php foreach ($rounds as $round): ?>
-                        <?php
-                        $rid = (int) $round->id;
-                        $solutions = $bulk_solutions[$rid] ?? [];
-                        $clue_count = $bulk_clue_counts[$rid] ?? 0;
-                        $guesser_results = $bulk_guesser_results[$rid] ?? [];
-                        $round_num = (int) ($round->round_number ?? 1);
-                        $date_count = $rounds_per_date[$round->round_date] ?? 1;
-                        ?>
-                        <tr>
-                            <td class="kealoa-date-cell" data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($round->round_date)) * 100 + $round_num); ?>">
-                                <?php
-                                echo Kealoa_Formatter::format_round_date_link((int) $round->game_number, $round->round_date);
-                                if ($date_count > 1) {
-                                    echo ' <span class="kealoa-round-number">(#' . esc_html($round_num) . ')</span>';
-                                }
-                                ?>
-                            </td>
-                            <td class="kealoa-solutions-cell">
-                                <?php echo Kealoa_Formatter::format_solution_words_link((int) $round->game_number, $solutions); ?>
-                            </td>
-                            <td class="kealoa-results-cell">
-                                <?php echo Kealoa_Formatter::format_guesser_results($guesser_results, $clue_count); ?>
-                            </td>
-                            <td class="kealoa-description-cell">
-                                <?php echo esc_html($round->description ?? ''); ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-            </div>
-
-                </div><!-- end Rounds Played tab -->
 
                 <div class="kealoa-tab-panel" data-tab="rounds-curiosities">
                 <?php
@@ -5126,6 +5127,203 @@ class Kealoa_Shortcodes {
         }); // end get_cached_or_render
     }
 
+
+    /**
+     * Render predictions shortcode
+     *
+     * [kealoa_predictions]
+     */
+    public function render_predictions(array $atts = []): string {
+        return $this->get_cached_or_render('predictions', function () {
+
+        // Fetch data for balance-conditioned predictions
+        $clue_sequences = $this->db->get_round_clue_sequences();
+
+        // Group rounds with 2 answers by round_id
+        $rounds = [];
+        foreach ($clue_sequences as $row) {
+            if ((int) $row->solution_count !== 2) {
+                continue;
+            }
+            $rid = (int) $row->round_id;
+            $rounds[$rid][] = (int) $row->word_order;
+        }
+
+        $sol_count = 2;
+
+        // Track marginals for clue 1
+        $bc_marginal = [];
+        $bc_marginal_total = 0;
+
+        // Track balance-conditioned transitions: bal_trans[prev][delta][outcome] = count
+        $bal_trans = [];
+
+        foreach ($rounds as $rid => $answers) {
+            $counts = [1 => 0, 2 => 0];
+            $prev = null;
+
+            foreach ($answers as $answer) {
+                if ($prev === null) {
+                    $bc_marginal[$answer] = ($bc_marginal[$answer] ?? 0) + 1;
+                    $bc_marginal_total++;
+                } else {
+                    $delta = $counts[1] - $counts[2];
+
+                    $bal_trans[$prev][$delta][$answer] = ($bal_trans[$prev][$delta][$answer] ?? 0) + 1;
+                    }
+
+                $counts[$answer]++;
+                $prev = $answer;
+            }
+        }
+
+        // Sort transitions by prev then delta
+        ksort($bal_trans);
+        foreach ($bal_trans as &$deltas) {
+            ksort($deltas);
+        }
+        unset($deltas);
+
+        // Simulate rounds using the model (deterministic: pick highest probability, tiebreaker Answer 1)
+        $sim_total = 0;
+        $sim_correct = 0;
+        $sim_rounds = count($rounds);
+        $bc_smoothed_total_sim = $bc_marginal_total + $sol_count;
+
+        foreach ($rounds as $rid => $answers) {
+            $sim_counts = [1 => 0, 2 => 0];
+            $sim_prev = null;
+
+            foreach ($answers as $actual) {
+                if ($sim_prev === null) {
+                    // Clue 1: use marginal probabilities
+                    $p1 = (($bc_marginal[1] ?? 0) + 1) / $bc_smoothed_total_sim;
+                    $p2 = (($bc_marginal[2] ?? 0) + 1) / $bc_smoothed_total_sim;
+                } else {
+                    // Subsequent clues: use balance-conditioned transitions
+                    $sim_delta = $sim_counts[1] - $sim_counts[2];
+                    $sim_outcomes = $bal_trans[$sim_prev][$sim_delta] ?? [];
+                    $sim_state_total = array_sum($sim_outcomes) + $sol_count;
+                    $p1 = (($sim_outcomes[1] ?? 0) + 1) / $sim_state_total;
+                    $p2 = (($sim_outcomes[2] ?? 0) + 1) / $sim_state_total;
+                }
+
+                $guess = ($p1 >= $p2) ? 1 : 2;
+                $sim_total++;
+                if ($guess === $actual) {
+                    $sim_correct++;
+                }
+
+                $sim_counts[$actual]++;
+                $sim_prev = $actual;
+            }
+        }
+
+        $sim_accuracy = $sim_total > 0 ? ($sim_correct / $sim_total) * 100 : 0;
+
+        ob_start();
+        ?>
+        <div class="kealoa-predictions-wrapper">
+
+        <p class="kealoa-section-description"><?php esc_html_e('Probability of each answer word given the previous answer and the running balance between the two answer words. Uses Bayesian inference with Laplace smoothing.', 'kealoa-reference'); ?></p>
+
+        <h3><?php esc_html_e('Model Simulation', 'kealoa-reference'); ?></h3>
+        <p class="kealoa-section-description"><?php esc_html_e('Results of replaying all rounds using the model to predict each answer. The model always picks the most probable answer.', 'kealoa-reference'); ?></p>
+        <div class="kealoa-stats-grid">
+            <div class="kealoa-stat-card">
+                <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n($sim_rounds)); ?></span>
+                <span class="kealoa-stat-label"><?php esc_html_e('Rounds', 'kealoa-reference'); ?></span>
+            </div>
+            <div class="kealoa-stat-card">
+                <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n($sim_total)); ?></span>
+                <span class="kealoa-stat-label"><?php esc_html_e('Clues', 'kealoa-reference'); ?></span>
+            </div>
+            <div class="kealoa-stat-card">
+                <span class="kealoa-stat-value"><?php echo esc_html(number_format_i18n($sim_correct)); ?></span>
+                <span class="kealoa-stat-label"><?php esc_html_e('Correct', 'kealoa-reference'); ?></span>
+            </div>
+            <div class="kealoa-stat-card">
+                <span class="kealoa-stat-value"><?php echo Kealoa_Formatter::format_percentage($sim_accuracy); ?></span>
+                <span class="kealoa-stat-label"><?php esc_html_e('Accuracy', 'kealoa-reference'); ?></span>
+            </div>
+        </div>
+
+        <?php
+        $bc_smoothed_total = $bc_marginal_total + $sol_count;
+
+        for ($prev_answer = 1; $prev_answer <= 2; $prev_answer++):
+        ?>
+        <h3><?php echo esc_html(sprintf(
+            /* translators: %d = answer number */
+            __('Previous Answer: Answer %d', 'kealoa-reference'),
+            $prev_answer
+        )); ?></h3>
+        <div class="kealoa-table-scroll">
+        <table class="kealoa-table kealoa-show-empty-cols">
+            <thead>
+                <tr>
+                    <th data-sort="text"><?php esc_html_e('Balance', 'kealoa-reference'); ?></th>
+                    <th data-sort="number"><?php esc_html_e('P(Answer 1)', 'kealoa-reference'); ?></th>
+                    <th data-sort="number"><?php esc_html_e('P(Answer 2)', 'kealoa-reference'); ?></th>
+                    <th data-sort="number"><?php esc_html_e('Observations', 'kealoa-reference'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><?php esc_html_e('Start', 'kealoa-reference'); ?></td>
+                    <?php for ($an = 1; $an <= 2; $an++):
+                        $count = ($bc_marginal[$an] ?? 0) + 1;
+                        $prob = $bc_smoothed_total > 0 ? ($count / $bc_smoothed_total) * 100 : 0;
+                    ?>
+                        <td data-value="<?php echo esc_attr(number_format($prob, 2, '.', '')); ?>"><?php echo Kealoa_Formatter::format_percentage($prob); ?></td>
+                    <?php endfor; ?>
+                    <td><?php echo esc_html(number_format_i18n($bc_marginal_total)); ?></td>
+                </tr>
+
+                <?php if (isset($bal_trans[$prev_answer])):
+                    foreach ($bal_trans[$prev_answer] as $delta => $outcomes):
+                        $state_total = array_sum($outcomes);
+                        $smoothed_total = $state_total + $sol_count;
+
+                        if ($delta > 0) {
+                            $balance_label = sprintf(
+                                /* translators: %d = lead amount */
+                                __('Answer 1 leads by %d', 'kealoa-reference'),
+                                $delta
+                            );
+                        } elseif ($delta < 0) {
+                            $balance_label = sprintf(
+                                /* translators: %d = lead amount */
+                                __('Answer 2 leads by %d', 'kealoa-reference'),
+                                abs($delta)
+                            );
+                        } else {
+                            $balance_label = __('Even', 'kealoa-reference');
+                        }
+                ?>
+                    <tr>
+                        <td><?php echo esc_html($balance_label); ?></td>
+                        <?php for ($an = 1; $an <= 2; $an++):
+                            $count = ($outcomes[$an] ?? 0) + 1;
+                            $prob = $smoothed_total > 0 ? ($count / $smoothed_total) * 100 : 0;
+                        ?>
+                            <td data-value="<?php echo esc_attr(number_format($prob, 2, '.', '')); ?>"><?php echo Kealoa_Formatter::format_percentage($prob); ?></td>
+                        <?php endfor; ?>
+                        <td><?php echo esc_html(number_format_i18n($state_total)); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+        </div>
+        <?php endfor; ?>
+
+        </div>
+        <?php
+        return ob_get_clean();
+
+        }); // end get_cached_or_render
+    }
 
     /**
      * Render version info shortcode
