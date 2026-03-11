@@ -1836,6 +1836,18 @@ class Kealoa_Shortcodes {
                 ? round((int) $editor_stats->correct_guesses / (int) $editor_stats->total_guesses * 100, 1)
                 : 0.0;
         }
+        if ($is_constructor) {
+            $con_day_count = $this->db->get_person_constructor_day_count($person_id);
+            if ($con_day_count === 7) {
+                $badge_metrics['constructor_cycle'] = $con_day_count;
+            }
+        }
+        if ($is_editor) {
+            $ed_day_count = $this->db->get_person_editor_day_count($person_id);
+            if ($ed_day_count === 7) {
+                $badge_metrics['editor_cycle'] = $ed_day_count;
+            }
+        }
         // Add player accuracy badge for non-player roles that also have player stats
         if (!$is_player && $stats && !empty($stats->overall_percentage)) {
             $badge_metrics['player_accuracy'] = (float) $stats->overall_percentage;
@@ -4181,9 +4193,20 @@ class Kealoa_Shortcodes {
             return '<p class="kealoa-no-data">' . esc_html__('No constructors found.', 'kealoa-reference') . '</p>';
         }
 
+        $cycle_constructors = $this->db->get_constructors_who_hit_for_cycle();
+
         ob_start();
         ?>
         <div class="kealoa-constructors-table-wrapper">
+
+            <div class="kealoa-tabs">
+                <div class="kealoa-tab-nav">
+                    <button class="kealoa-tab-button kealoa-tab-button--constructor active" data-tab="constructors"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button kealoa-tab-button--constructor" data-tab="constructors-curiosities"><?php esc_html_e('Curiosities', 'kealoa-reference'); ?></button>
+                </div>
+
+                <div class="kealoa-tab-panel active" data-tab="constructors">
+
             <div class="kealoa-filter-controls" data-target="kealoa-constructors-table">
                 <div class="kealoa-filter-row">
                     <div class="kealoa-filter-group">
@@ -4236,6 +4259,38 @@ class Kealoa_Shortcodes {
                 </tbody>
             </table>
             </div>
+
+                </div><!-- end Constructors tab -->
+
+                <div class="kealoa-tab-panel" data-tab="constructors-curiosities">
+                <?php if (empty($cycle_constructors)): ?>
+                    <p class="kealoa-no-data"><?php esc_html_e('No curiosities found yet.', 'kealoa-reference'); ?></p>
+                <?php else: ?>
+                    <div class="kealoa-curiosities-section">
+                    <h3><?php esc_html_e('Hit for the Cycle', 'kealoa-reference'); ?></h3>
+                    <p class="kealoa-section-description"><?php esc_html_e('Constructors whose puzzles have been used in rounds on all seven days of the week.', 'kealoa-reference'); ?></p>
+                    <div class="kealoa-table-scroll">
+                        <table class="kealoa-table" id="kealoa-constructors-cycle-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($cycle_constructors as $con): ?>
+                                <tr>
+                                    <td><?php echo Kealoa_Formatter::format_constructor_link((int) $con->id, $con->full_name, 'constructor'); ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+                <?php endif; ?>
+                </div><!-- end Curiosities tab -->
+
+            </div><!-- end kealoa-tabs -->
+
         </div>
         <?php
         return ob_get_clean();
@@ -4257,9 +4312,20 @@ class Kealoa_Shortcodes {
             return '<p class="kealoa-no-data">' . esc_html__('No editors found.', 'kealoa-reference') . '</p>';
         }
 
+        $cycle_editors = $this->db->get_editors_who_hit_for_cycle();
+
         ob_start();
         ?>
         <div class="kealoa-editors-table-wrapper">
+
+            <div class="kealoa-tabs">
+                <div class="kealoa-tab-nav">
+                    <button class="kealoa-tab-button kealoa-tab-button--editor active" data-tab="editors"><?php esc_html_e('Editors', 'kealoa-reference'); ?></button>
+                    <button class="kealoa-tab-button kealoa-tab-button--editor" data-tab="editors-curiosities"><?php esc_html_e('Curiosities', 'kealoa-reference'); ?></button>
+                </div>
+
+                <div class="kealoa-tab-panel active" data-tab="editors">
+
             <div class="kealoa-filter-controls" data-target="kealoa-editors-table">
                 <div class="kealoa-filter-row">
                     <div class="kealoa-filter-group">
@@ -4308,6 +4374,38 @@ class Kealoa_Shortcodes {
                 </tbody>
             </table>
             </div>
+
+                </div><!-- end Editors tab -->
+
+                <div class="kealoa-tab-panel" data-tab="editors-curiosities">
+                <?php if (empty($cycle_editors)): ?>
+                    <p class="kealoa-no-data"><?php esc_html_e('No curiosities found yet.', 'kealoa-reference'); ?></p>
+                <?php else: ?>
+                    <div class="kealoa-curiosities-section">
+                    <h3><?php esc_html_e('Hit for the Cycle', 'kealoa-reference'); ?></h3>
+                    <p class="kealoa-section-description"><?php esc_html_e('Editors whose puzzles have been used in rounds on all seven days of the week.', 'kealoa-reference'); ?></p>
+                    <div class="kealoa-table-scroll">
+                        <table class="kealoa-table" id="kealoa-editors-cycle-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($cycle_editors as $ed): ?>
+                                <tr>
+                                    <td><?php echo Kealoa_Formatter::format_editor_link((int) $ed->id, $ed->full_name, 'editor'); ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+                <?php endif; ?>
+                </div><!-- end Curiosities tab -->
+
+            </div><!-- end kealoa-tabs -->
+
         </div>
         <?php
         return ob_get_clean();

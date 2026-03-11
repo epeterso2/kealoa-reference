@@ -138,6 +138,22 @@ class Kealoa_Badges {
             'unit'  => '%',
             'icon'  => 'player-accuracy.svg',
         ],
+        [
+            'key'   => 'constructor_cycle',
+            'role'  => 'constructor',
+            'label' => 'Hit for the Cycle',
+            'short' => 'Cycle',
+            'unit'  => '',
+            'icon'  => 'hit-for-cycle.svg',
+        ],
+        [
+            'key'   => 'editor_cycle',
+            'role'  => 'editor',
+            'label' => 'Hit for the Cycle',
+            'short' => 'Cycle',
+            'unit'  => '',
+            'icon'  => 'hit-for-cycle.svg',
+        ],
     ];
 
     /**

@@ -3179,6 +3179,42 @@ class Kealoa_DB {
     }
 
     /**
+     * Get the count of distinct days of the week on which a constructor's
+     * puzzles have been used in rounds (0–7).
+     */
+    public function get_person_constructor_day_count(int|array $person_ids): int {
+        $clause = $this->prepare_person_id_clause('pc.person_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT COUNT(DISTINCT DAYOFWEEK(r.round_date)) as day_count
+            FROM {$this->puzzle_constructors_table} pc
+            INNER JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id
+            INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
+            WHERE {$clause}";
+
+        return (int) ($this->wpdb->get_var($sql) ?? 0);
+    }
+
+    /**
+     * Get all constructors who have "hit for the cycle" — their puzzles have
+     * been used in rounds on all seven days of the week.
+     */
+    public function get_constructors_who_hit_for_cycle(): array {
+        $sql = "SELECT
+                p.id,
+                p.full_name,
+                COUNT(DISTINCT DAYOFWEEK(r.round_date)) as day_count
+            FROM {$this->persons_table} p
+            INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.person_id
+            INNER JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id
+            INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
+            GROUP BY p.id, p.full_name
+            HAVING day_count = 7
+            ORDER BY p.full_name ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
      * Get persons who are editors, with aggregate guess stats
      */
     public function get_persons_who_are_editors(): array {
@@ -3291,6 +3327,42 @@ class Kealoa_DB {
             WHERE {$clause}
             GROUP BY pz.id, pz.publication_date
             ORDER BY pz.publication_date DESC";
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Get the count of distinct days of the week on which an editor's
+     * puzzles have been used in rounds (0–7).
+     */
+    public function get_person_editor_day_count(int|array $person_ids): int {
+        $clause = $this->prepare_person_id_clause('pz.editor_id', $person_ids);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = "SELECT COUNT(DISTINCT DAYOFWEEK(r.round_date)) as day_count
+            FROM {$this->puzzles_table} pz
+            INNER JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
+            INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
+            WHERE {$clause}";
+
+        return (int) ($this->wpdb->get_var($sql) ?? 0);
+    }
+
+    /**
+     * Get all editors who have "hit for the cycle" — their puzzles have
+     * been used in rounds on all seven days of the week.
+     */
+    public function get_editors_who_hit_for_cycle(): array {
+        $sql = "SELECT
+                ed.id,
+                ed.full_name,
+                COUNT(DISTINCT DAYOFWEEK(r.round_date)) as day_count
+            FROM {$this->persons_table} ed
+            INNER JOIN {$this->puzzles_table} pz ON pz.editor_id = ed.id
+            INNER JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
+            INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
+            GROUP BY ed.id, ed.full_name
+            HAVING day_count = 7
+            ORDER BY ed.full_name ASC";
 
         return $this->wpdb->get_results($sql);
     }
