@@ -1837,15 +1837,15 @@ class Kealoa_Shortcodes {
                 : 0.0;
         }
         if ($is_constructor) {
-            $con_day_count = $this->db->get_person_constructor_day_count($person_id);
-            if ($con_day_count === 7) {
-                $badge_metrics['constructor_cycle'] = $con_day_count;
+            $con_cycle_count = $this->db->get_person_constructor_cycle_count($person_ids);
+            if ($con_cycle_count > 0) {
+                $badge_metrics['constructor_cycle'] = $con_cycle_count;
             }
         }
         if ($is_editor) {
-            $ed_day_count = $this->db->get_person_editor_day_count($person_id);
-            if ($ed_day_count === 7) {
-                $badge_metrics['editor_cycle'] = $ed_day_count;
+            $ed_cycle_count = $this->db->get_person_editor_cycle_count($person_ids);
+            if ($ed_cycle_count > 0) {
+                $badge_metrics['editor_cycle'] = $ed_cycle_count;
             }
         }
         // Add player accuracy badge for non-player roles that also have player stats
@@ -4274,12 +4274,14 @@ class Kealoa_Shortcodes {
                             <thead>
                                 <tr>
                                     <th data-sort="text"><?php esc_html_e('Constructor', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number" data-default-sort="desc"><?php esc_html_e('Cycles', 'kealoa-reference'); ?></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($cycle_constructors as $con): ?>
                                 <tr>
                                     <td><?php echo Kealoa_Formatter::format_constructor_link((int) $con->id, $con->full_name, 'constructor'); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $con->cycle_count)); ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -4389,12 +4391,14 @@ class Kealoa_Shortcodes {
                             <thead>
                                 <tr>
                                     <th data-sort="text"><?php esc_html_e('Editor', 'kealoa-reference'); ?></th>
+                                    <th data-sort="number" data-default-sort="desc"><?php esc_html_e('Cycles', 'kealoa-reference'); ?></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($cycle_editors as $ed): ?>
                                 <tr>
                                     <td><?php echo Kealoa_Formatter::format_editor_link((int) $ed->id, $ed->full_name, 'editor'); ?></td>
+                                    <td><?php echo esc_html(number_format_i18n((int) $ed->cycle_count)); ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>

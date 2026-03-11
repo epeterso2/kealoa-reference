@@ -3179,37 +3179,56 @@ class Kealoa_DB {
     }
 
     /**
-     * Get the count of distinct days of the week on which a constructor's
-     * puzzles have been used in rounds (0–7).
+     * Get the constructor cycle count for a person — the minimum number of
+     * distinct puzzles constructed across all seven days of the week
+     * (by puzzle publication date). Returns 0 if any day is missing.
      */
-    public function get_person_constructor_day_count(int|array $person_ids): int {
+    public function get_person_constructor_cycle_count(int|array $person_ids): int {
         $clause = $this->prepare_person_id_clause('pc.person_id', $person_ids);
         // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        $sql = "SELECT COUNT(DISTINCT DAYOFWEEK(r.round_date)) as day_count
-            FROM {$this->puzzle_constructors_table} pc
-            INNER JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id
-            INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
-            WHERE {$clause}";
+        $sql = "SELECT MIN(day_puzzle_count) as cycle_count
+            FROM (
+                SELECT DAYOFWEEK(pz.publication_date) as dow,
+                       COUNT(DISTINCT pz.id) as day_puzzle_count
+                FROM {$this->puzzle_constructors_table} pc
+                INNER JOIN {$this->puzzles_table} pz ON pc.puzzle_id = pz.id
+                WHERE {$clause}
+                GROUP BY DAYOFWEEK(pz.publication_date)
+            ) day_counts
+            HAVING COUNT(*) = 7";
 
         return (int) ($this->wpdb->get_var($sql) ?? 0);
     }
 
     /**
-     * Get all constructors who have "hit for the cycle" — their puzzles have
-     * been used in rounds on all seven days of the week.
+     * Get all constructors who have "hit for the cycle" — they have
+     * constructed puzzles published on all seven days of the week. The
+     * cycle_count is the minimum number of distinct puzzles across the
+     * seven days.
      */
     public function get_constructors_who_hit_for_cycle(): array {
-        $sql = "SELECT
-                p.id,
-                p.full_name,
-                COUNT(DISTINCT DAYOFWEEK(r.round_date)) as day_count
-            FROM {$this->persons_table} p
-            INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.person_id
-            INNER JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id
-            INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
-            GROUP BY p.id, p.full_name
-            HAVING day_count = 7
-            ORDER BY p.full_name ASC";
+        $sql = "SELECT id, full_name, cycle_count
+            FROM (
+                SELECT
+                    p.id,
+                    p.full_name,
+                    COUNT(DISTINCT DAYOFWEEK(pz.publication_date)) as day_count,
+                    MIN(day_counts.day_puzzle_count) as cycle_count
+                FROM {$this->persons_table} p
+                INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.person_id
+                INNER JOIN {$this->puzzles_table} pz ON pc.puzzle_id = pz.id
+                INNER JOIN (
+                    SELECT pc2.person_id,
+                           DAYOFWEEK(pz2.publication_date) as dow,
+                           COUNT(DISTINCT pz2.id) as day_puzzle_count
+                    FROM {$this->puzzle_constructors_table} pc2
+                    INNER JOIN {$this->puzzles_table} pz2 ON pc2.puzzle_id = pz2.id
+                    GROUP BY pc2.person_id, DAYOFWEEK(pz2.publication_date)
+                ) day_counts ON day_counts.person_id = p.id
+                GROUP BY p.id, p.full_name
+                HAVING day_count = 7
+            ) cycle_data
+            ORDER BY cycle_count DESC, full_name ASC";
 
         return $this->wpdb->get_results($sql);
     }
@@ -3332,37 +3351,52 @@ class Kealoa_DB {
     }
 
     /**
-     * Get the count of distinct days of the week on which an editor's
-     * puzzles have been used in rounds (0–7).
+     * Get the editor cycle count for a person — the minimum number of
+     * distinct puzzles edited across all seven days of the week
+     * (by puzzle publication date). Returns 0 if any day is missing.
      */
-    public function get_person_editor_day_count(int|array $person_ids): int {
+    public function get_person_editor_cycle_count(int|array $person_ids): int {
         $clause = $this->prepare_person_id_clause('pz.editor_id', $person_ids);
         // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        $sql = "SELECT COUNT(DISTINCT DAYOFWEEK(r.round_date)) as day_count
-            FROM {$this->puzzles_table} pz
-            INNER JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
-            INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
-            WHERE {$clause}";
+        $sql = "SELECT MIN(day_puzzle_count) as cycle_count
+            FROM (
+                SELECT DAYOFWEEK(pz.publication_date) as dow,
+                       COUNT(DISTINCT pz.id) as day_puzzle_count
+                FROM {$this->puzzles_table} pz
+                WHERE {$clause}
+                GROUP BY DAYOFWEEK(pz.publication_date)
+            ) day_counts
+            HAVING COUNT(*) = 7";
 
         return (int) ($this->wpdb->get_var($sql) ?? 0);
     }
 
     /**
-     * Get all editors who have "hit for the cycle" — their puzzles have
-     * been used in rounds on all seven days of the week.
+     * Get all editors who have "hit for the cycle" — they have edited
+     * puzzles published on all seven days of the week. The cycle_count is
+     * the minimum number of distinct puzzles across the seven days.
      */
     public function get_editors_who_hit_for_cycle(): array {
-        $sql = "SELECT
-                ed.id,
-                ed.full_name,
-                COUNT(DISTINCT DAYOFWEEK(r.round_date)) as day_count
-            FROM {$this->persons_table} ed
-            INNER JOIN {$this->puzzles_table} pz ON pz.editor_id = ed.id
-            INNER JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
-            INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
-            GROUP BY ed.id, ed.full_name
-            HAVING day_count = 7
-            ORDER BY ed.full_name ASC";
+        $sql = "SELECT id, full_name, cycle_count
+            FROM (
+                SELECT
+                    ed.id,
+                    ed.full_name,
+                    COUNT(DISTINCT DAYOFWEEK(pz.publication_date)) as day_count,
+                    MIN(day_counts.day_puzzle_count) as cycle_count
+                FROM {$this->persons_table} ed
+                INNER JOIN {$this->puzzles_table} pz ON pz.editor_id = ed.id
+                INNER JOIN (
+                    SELECT pz2.editor_id,
+                           DAYOFWEEK(pz2.publication_date) as dow,
+                           COUNT(DISTINCT pz2.id) as day_puzzle_count
+                    FROM {$this->puzzles_table} pz2
+                    GROUP BY pz2.editor_id, DAYOFWEEK(pz2.publication_date)
+                ) day_counts ON day_counts.editor_id = ed.id
+                GROUP BY ed.id, ed.full_name
+                HAVING day_count = 7
+            ) cycle_data
+            ORDER BY cycle_count DESC, full_name ASC";
 
         return $this->wpdb->get_results($sql);
     }
