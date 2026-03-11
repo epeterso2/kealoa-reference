@@ -1043,7 +1043,7 @@ class Kealoa_DB {
                 (SELECT COUNT(*) FROM {$this->clues_table}) as total_clues,
                 (SELECT COUNT(DISTINCT puzzle_id) FROM {$this->clues_table} WHERE puzzle_id IS NOT NULL) as total_puzzles,
                 (SELECT COUNT(DISTINCT pc.person_id) FROM {$this->puzzle_constructors_table} pc
-                    INNER JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id) as total_constructors,
+                    WHERE pc.puzzle_id IN (SELECT DISTINCT puzzle_id FROM {$this->clues_table} WHERE puzzle_id IS NOT NULL)) as total_constructors,
                 (SELECT COUNT(*) FROM {$this->guesses_table}) as total_guesses,
                 (SELECT COALESCE(SUM(is_correct), 0) FROM {$this->guesses_table}) as total_correct"
         );
@@ -1100,7 +1100,7 @@ class Kealoa_DB {
             FROM {$this->clues_table} c
             INNER JOIN {$this->round_solutions_table} rs
                 ON rs.round_id = c.round_id
-                AND UPPER(rs.word) = UPPER(c.correct_answer)
+                AND rs.word = c.correct_answer
             INNER JOIN (
                 SELECT round_id, COUNT(*) AS solution_count
                 FROM {$this->round_solutions_table}
@@ -1134,7 +1134,7 @@ class Kealoa_DB {
             FROM {$this->clues_table} c
             INNER JOIN {$this->round_solutions_table} rs
                 ON rs.round_id = c.round_id
-                AND UPPER(rs.word) = UPPER(c.correct_answer)
+                AND rs.word = c.correct_answer
             INNER JOIN (
                 SELECT round_id, COUNT(*) AS solution_count
                 FROM {$this->round_solutions_table}
@@ -4687,7 +4687,7 @@ class Kealoa_DB {
             WHERE NOT EXISTS (
                 SELECT 1 FROM {$this->clues_table} c
                 WHERE c.round_id = r.id
-                    AND UPPER(c.correct_answer) = UPPER(rs.word)
+                    AND c.correct_answer = rs.word
             )
             GROUP BY r.id
             ORDER BY r.round_date DESC, r.round_number ASC";

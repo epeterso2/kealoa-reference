@@ -146,7 +146,7 @@ class Kealoa_Activator {
             word_order tinyint(3) UNSIGNED DEFAULT 1,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            KEY idx_round_id (round_id),
+            KEY idx_round_word (round_id, word),
             KEY idx_word (word)
         ) {$charset_collate};";
 
@@ -188,7 +188,8 @@ class Kealoa_Activator {
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             UNIQUE KEY idx_clue_guesser (clue_id, guesser_person_id),
-            KEY idx_guesser_clue (guesser_person_id, clue_id)
+            KEY idx_guesser_clue (guesser_person_id, clue_id),
+            KEY idx_correct_clue (is_correct, clue_id)
         ) {$charset_collate};";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -204,8 +205,9 @@ class Kealoa_Activator {
 
         // Drop superseded indexes that dbDelta won't remove
         $superseded = [
-            $clues_table   => ['idx_round_id', 'idx_clue_number'],
-            $guesses_table => ['idx_guesser_person_id', 'idx_is_correct'],
+            $clues_table           => ['idx_round_id', 'idx_clue_number'],
+            $guesses_table         => ['idx_guesser_person_id', 'idx_is_correct'],
+            $round_solutions_table => ['idx_round_id'],
         ];
         foreach ($superseded as $table => $indexes) {
             $existing = $wpdb->get_col("SHOW INDEX FROM {$table} WHERE Key_name != 'PRIMARY'", 2);
