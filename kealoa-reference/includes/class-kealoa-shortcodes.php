@@ -5462,11 +5462,17 @@ class Kealoa_Shortcodes {
             <tbody>
                 <tr>
                     <td><?php esc_html_e('Start', 'kealoa-reference'); ?></td>
-                    <?php for ($an = 1; $an <= 2; $an++):
-                        $count = ($bc_marginal[$an] ?? 0) + 1;
-                        $prob = $bc_smoothed_total > 0 ? ($count / $bc_smoothed_total) * 100 : 0;
+                    <?php
+                        $probs = [];
+                        for ($an = 1; $an <= 2; $an++) {
+                            $count = ($bc_marginal[$an] ?? 0) + 1;
+                            $probs[$an] = $bc_smoothed_total > 0 ? ($count / $bc_smoothed_total) * 100 : 0;
+                        }
+                        $max_prob = max($probs);
+                        for ($an = 1; $an <= 2; $an++):
+                            $class = ($probs[$an] >= $max_prob) ? 'kealoa-guess-correct' : 'kealoa-guess-incorrect';
                     ?>
-                        <td data-value="<?php echo esc_attr(number_format($prob, 2, '.', '')); ?>"><?php echo Kealoa_Formatter::format_percentage($prob); ?></td>
+                        <td data-value="<?php echo esc_attr(number_format($probs[$an], 2, '.', '')); ?>" class="<?php echo esc_attr($class); ?>"><?php echo Kealoa_Formatter::format_percentage($probs[$an]); ?></td>
                     <?php endfor; ?>
                     <td><?php echo esc_html(number_format_i18n($bc_marginal_total)); ?></td>
                 </tr>
@@ -5494,11 +5500,17 @@ class Kealoa_Shortcodes {
                 ?>
                     <tr>
                         <td><?php echo esc_html($balance_label); ?></td>
-                        <?php for ($an = 1; $an <= 2; $an++):
-                            $count = ($outcomes[$an] ?? 0) + 1;
-                            $prob = $smoothed_total > 0 ? ($count / $smoothed_total) * 100 : 0;
+                        <?php
+                            $probs = [];
+                            for ($an = 1; $an <= 2; $an++) {
+                                $count = ($outcomes[$an] ?? 0) + 1;
+                                $probs[$an] = $smoothed_total > 0 ? ($count / $smoothed_total) * 100 : 0;
+                            }
+                            $max_prob = max($probs);
+                            for ($an = 1; $an <= 2; $an++):
+                                $class = ($probs[$an] >= $max_prob) ? 'kealoa-guess-correct' : 'kealoa-guess-incorrect';
                         ?>
-                            <td data-value="<?php echo esc_attr(number_format($prob, 2, '.', '')); ?>"><?php echo Kealoa_Formatter::format_percentage($prob); ?></td>
+                            <td data-value="<?php echo esc_attr(number_format($probs[$an], 2, '.', '')); ?>" class="<?php echo esc_attr($class); ?>"><?php echo Kealoa_Formatter::format_percentage($probs[$an]); ?></td>
                         <?php endfor; ?>
                         <td><?php echo esc_html(number_format_i18n($state_total)); ?></td>
                     </tr>
