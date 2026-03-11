@@ -5,10 +5,10 @@
   <line x1="12" y1="22" x2="2" y2="12" fill="none"/>
   <line x1="2" y1="12" x2="12" y2="2" fill="none"/>
   <!-- Bases (45-degree rotated squares at corners) -->
-  <rect x="10.5" y="0.5" width="3" height="3" transform="rotate(45 12 2)" fill="currentColor" stroke="none"/>
-  <rect x="20.5" y="10.5" width="3" height="3" transform="rotate(45 22 12)" fill="currentColor" stroke="none"/>
-  <rect x="10.5" y="20.5" width="3" height="3" transform="rotate(45 12 22)" fill="currentColor" stroke="none"/>
-  <rect x="0.5" y="10.5" width="3" height="3" transform="rotate(45 2 12)" fill="currentColor" stroke="none"/>
+  <rect x="10" y="0.4" width="4" height="4" transform="rotate(45 12 2.4)" fill="currentColor" stroke="none"/>
+  <rect x="19.6" y="10" width="4" height="4" transform="rotate(45 21.6 12)" fill="currentColor" stroke="none"/>
+  <polygon points="10,17.5 14,17.5 14,21 12,23 10,21" fill="currentColor" stroke="none"/>
+  <rect x="0.4" y="10" width="4" height="4" transform="rotate(45 2.4 12)" fill="currentColor" stroke="none"/>
   <!-- Pitcher's mound -->
   <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
 </svg>
