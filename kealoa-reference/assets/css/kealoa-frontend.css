@@ -2002,7 +2002,11 @@
     color: #721c24;
 }
 
-/* Predictions table: prevent column wrapping */
+/* Predictions table */
+.kealoa-predictions-wrapper .kealoa-table {
+    width: auto;
+}
+
 .kealoa-predictions-wrapper .kealoa-table td,
 .kealoa-predictions-wrapper .kealoa-table th {
     white-space: nowrap;
