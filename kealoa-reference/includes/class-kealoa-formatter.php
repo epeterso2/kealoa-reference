@@ -502,4 +502,72 @@ class Kealoa_Formatter {
             . '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
             . '</button>'
             . '</div>';
-    }}
+    }
+
+    /**
+     * Classify a round's KEALOA type based on letter relationships between solution words.
+     *
+     * @param array $solutions Array of solution objects with word property.
+     * @return string 'true', 'near', 'free', or '' (if fewer than 2 words).
+     */
+    public static function classify_kealoa_type(array $solutions): string {
+        $words = array_map(fn($s) => strtoupper($s->word), $solutions);
+        $count = count($words);
+        if ($count < 2) {
+            return '';
+        }
+
+        $all_positional = true;
+        $all_share_any = true;
+
+        for ($i = 0; $i < $count - 1; $i++) {
+            for ($j = $i + 1; $j < $count; $j++) {
+                $a = $words[$i];
+                $b = $words[$j];
+                $min_len = min(strlen($a), strlen($b));
+
+                // Check positional match
+                $has_positional = false;
+                for ($k = 0; $k < $min_len; $k++) {
+                    if ($a[$k] === $b[$k]) {
+                        $has_positional = true;
+                        break;
+                    }
+                }
+                if (!$has_positional) {
+                    $all_positional = false;
+                }
+
+                // Check any common letter
+                $letters_a = array_unique(str_split($a));
+                $letters_b = array_unique(str_split($b));
+                if (empty(array_intersect($letters_a, $letters_b))) {
+                    $all_share_any = false;
+                }
+            }
+        }
+
+        if ($all_positional) {
+            return 'true';
+        }
+        if ($all_share_any) {
+            return 'near';
+        }
+        return 'free';
+    }
+
+    /**
+     * Format a KEALOA type value as a display label.
+     *
+     * @param string $type The type value ('true', 'near', 'free').
+     * @return string The display label.
+     */
+    public static function format_kealoa_type_label(string $type): string {
+        return match ($type) {
+            'true' => __('True', 'kealoa-reference'),
+            'near' => __('Near', 'kealoa-reference'),
+            'free' => __('Free', 'kealoa-reference'),
+            default => '',
+        };
+    }
+}
