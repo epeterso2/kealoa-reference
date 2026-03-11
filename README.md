@@ -2,7 +2,7 @@
 
 A WordPress plugin for managing and displaying KEALOA quiz game data from the [Fill Me In](https://bemoresmarter.libsyn.com) podcast.
 
-**Version:** 2.2.34 &bull; **DB Version:** 2.1.3 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+**Version:** 2.2.71 &bull; **DB Version:** 2.1.3 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 ---
 
@@ -33,6 +33,16 @@ A WordPress plugin for managing and displaying KEALOA quiz game data from the [F
 KEALOA is a word quiz game played on the Fill Me In podcast. For each round, a clue giver selects a set of words from NYT crossword puzzles that share similar lengths, spellings, and/or definitions. Players guess which word fits the given crossword clue.
 
 This plugin tracks every round played, every clue given, every guess made, and the puzzle metadata behind each clue. It also records each person's role — player, puzzle constructor, puzzle editor, or host — in a unified data model.
+
+### KEALOA Types
+
+Each round is classified into one of three types based on the letter relationships between its solution words:
+
+| Type | Description |
+|---|---|
+| **True** | Every pair of solution words shares at least one letter in the same position |
+| **Near** | Every pair of solution words shares at least one common letter, but not all pairs share a positional match |
+| **Free** | At least one pair of solution words shares no letters at all |
 
 ---
 
@@ -98,10 +108,10 @@ All shortcode output is cached via WordPress transients (24-hour TTL) with a ver
 
 | Shortcode | Attributes | Description |
 |---|---|---|
-| `[kealoa_rounds_table]` | `limit`, `order` | Tabbed view: rounds table (sortable/filterable) and stats (overview grid, yearly stats, answer frequency matrices with aggregate "All" row) |
-| `[kealoa_round]` | `id` (required) | Round detail: meta, episode link, solution words, host, players with scores, person photos, alternation metric, evenness metric, average clue age, clue table with guesses, social sharing bar |
+| `[kealoa_rounds_table]` | `limit`, `order` | Tabbed view: rounds table (sortable/filterable with KEALOA type column) and stats (overview grid, yearly stats, answer frequency matrices with aggregate "All" row) |
+| `[kealoa_round]` | `id` (required) | Round detail: meta, episode link, solution words with KEALOA type label, host, players with scores, person photos, alternation metric, evenness metric, average clue age, clue table with guesses, social sharing bar |
 | `[kealoa_rounds_stats]` | — | Statistics grid: total players, rounds, puzzles, constructors, clues, guesses, correct answers, accuracy |
-| `[kealoa_person]` | `id` (required) | Person profile with tabbed interface: achievement badges, role-specific statistics (player, constructor, editor, host with Rounds/Stats/Streaks subtabs), alternation vs accuracy breakdown, round history, co-players, performance charts, person images |
+| `[kealoa_person]` | `id` (required) | Person profile with tabbed interface: achievement badges, role-specific statistics (player, constructor, editor, host with Rounds/Stats/Streaks subtabs), results by KEALOA type, alternation vs accuracy breakdown, round history with type column, co-players, performance charts, person images |
 | `[kealoa_persons_table]` | — | Table of all players with rounds played, clues guessed, and accuracy |
 | `[kealoa_constructors_table]` | — | Table of all constructors with puzzle count and statistics |
 | `[kealoa_editors_table]` | — | Table of all editors with puzzle count and statistics |
@@ -593,7 +603,7 @@ kealoa-reference/
 │   ├── class-kealoa-db.php           Database query methods (CRUD, stats, search, bulk-fetch)
 │   ├── class-kealoa-deactivator.php  Plugin deactivation (flush rewrite rules)
 │   ├── class-kealoa-export.php       CSV/ZIP export logic
-│   ├── class-kealoa-formatter.php    Data formatting helpers (dates, links, images, sharing)
+│   ├── class-kealoa-formatter.php    Data formatting helpers (dates, links, images, sharing, KEALOA type classification)
 │   ├── class-kealoa-import.php       CSV/ZIP import logic with date normalization
 │   ├── class-kealoa-rest-api.php     REST API route registrations and callbacks
 │   ├── class-kealoa-shortcodes.php   Shortcode registrations and render callbacks
