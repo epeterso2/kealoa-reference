@@ -2579,35 +2579,36 @@ class Kealoa_Admin {
             $puzzle_date = sanitize_text_field($puzzle_data['date'] ?? '');
             $clue_text = sanitize_textarea_field($puzzle_data['clue_text'] ?? '');
             
-            if (empty($puzzle_date) || empty($clue_text)) {
+            if (empty($clue_text)) {
                 continue;
             }
 
-            // Get or create puzzle based on date
-            $existing_puzzle = $this->db->get_puzzle_by_date($puzzle_date);
-            if ($existing_puzzle) {
-                $puzzle_id = (int) $existing_puzzle->id;
-            } else {
-                $puzzle_id = $this->db->create_puzzle([
-                    'publication_date' => $puzzle_date,
-                ]);
+            $puzzle_id = null;
+            if (!empty($puzzle_date)) {
+                // Get or create puzzle based on date
+                $existing_puzzle = $this->db->get_puzzle_by_date($puzzle_date);
+                if ($existing_puzzle) {
+                    $puzzle_id = (int) $existing_puzzle->id;
+                } else {
+                    $puzzle_id = $this->db->create_puzzle([
+                        'publication_date' => $puzzle_date,
+                    ]);
 
-                // Set constructors if provided (only for newly created puzzles)
-                if ($puzzle_id && !empty($puzzle_data['constructors'])) {
-                    $constructor_ids = array_map('intval', $puzzle_data['constructors']);
-                    $this->db->set_puzzle_constructors($puzzle_id, $constructor_ids);
+                    // Set constructors if provided (only for newly created puzzles)
+                    if ($puzzle_id && !empty($puzzle_data['constructors'])) {
+                        $constructor_ids = array_map('intval', $puzzle_data['constructors']);
+                        $this->db->set_puzzle_constructors($puzzle_id, $constructor_ids);
+                    }
                 }
             }
 
-            if ($puzzle_id) {
-                $puzzle_refs[] = [
-                    'puzzle_id' => $puzzle_id,
-                    'puzzle_clue_number' => !empty($puzzle_data['clue_number']) ? (int) $puzzle_data['clue_number'] : null,
-                    'puzzle_clue_direction' => !empty($puzzle_data['direction']) ? sanitize_text_field($puzzle_data['direction']) : null,
-                    'clue_text' => $clue_text,
-                    'display_order' => (int) $idx + 1,
-                ];
-            }
+            $puzzle_refs[] = [
+                'puzzle_id' => $puzzle_id,
+                'puzzle_clue_number' => !empty($puzzle_data['clue_number']) ? (int) $puzzle_data['clue_number'] : null,
+                'puzzle_clue_direction' => !empty($puzzle_data['direction']) ? sanitize_text_field($puzzle_data['direction']) : null,
+                'clue_text' => $clue_text,
+                'display_order' => (int) $idx + 1,
+            ];
         }
 
         $this->db->set_clue_puzzles($clue_id, $puzzle_refs);
@@ -3530,7 +3531,9 @@ class Kealoa_Admin {
         $all_puzzle_ids = [];
         foreach ($bulk_clue_puzzles as $cps) {
             foreach ($cps as $cp) {
-                $all_puzzle_ids[] = (int) $cp->puzzle_id;
+                if ($cp->puzzle_id !== null) {
+                    $all_puzzle_ids[] = (int) $cp->puzzle_id;
+                }
             }
         }
         $all_puzzle_ids = array_unique($all_puzzle_ids);
@@ -3544,7 +3547,7 @@ class Kealoa_Admin {
             // Use first puzzle ref for pre-fill display (Enter Round Data is a grid form)
             $first_pz = $clue_pzs[0] ?? null;
             $constructors = '';
-            if ($first_pz) {
+            if ($first_pz && $first_pz->puzzle_id !== null) {
                 $cons = $bulk_constructors_map[(int) $first_pz->puzzle_id] ?? [];
                 $names = array_map(fn($c) => $c->full_name, $cons);
                 $constructors = implode(', ', $names);
@@ -3555,7 +3558,7 @@ class Kealoa_Admin {
                 'constructors' => $constructors,
                 'puzzle_clue_number' => $first_pz->puzzle_clue_number ?? '',
                 'puzzle_clue_direction' => $first_pz->puzzle_clue_direction ?? '',
-                'clue_text' => $clue->clue_text ?? '',
+                'clue_text' => $first_pz->clue_text ?? '',
                 'correct_answer' => $clue->correct_answer ?? '',
                 'guesses' => [],
             ];
@@ -3948,7 +3951,7 @@ class Kealoa_Admin {
 
             // Build puzzle ref for set_clue_puzzles
             $puzzle_refs = [];
-            if ($puzzle_id !== null && $clue_text !== '') {
+            if ($clue_text !== '') {
                 $ref = [
                     'puzzle_id' => $puzzle_id,
                     'clue_text' => $clue_text,

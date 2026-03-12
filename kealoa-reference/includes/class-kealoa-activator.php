@@ -48,6 +48,12 @@ class Kealoa_Activator {
             self::migrate_clue_puzzles();
         }
 
+        // Run v2.3.0→v2.3.2 migration (make puzzle_id nullable, backfill orphaned clues)
+        // Must run BEFORE clue_text migration so placeholder rows exist for orphaned clues
+        if (version_compare($installed_version, '2.3.2', '<')) {
+            self::migrate_clue_puzzles_nullable_puzzle_id();
+        }
+
         // Run v2.2→v2.3 migration (move clue_text from clues to clue_puzzles)
         if (version_compare($installed_version, '2.3.0', '<') && version_compare($installed_version, '2.2.0', '>=')) {
             self::migrate_clue_text_to_puzzles();
@@ -188,7 +194,7 @@ class Kealoa_Activator {
         $sql_clue_puzzles = "CREATE TABLE {$clue_puzzles_table} (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             clue_id bigint(20) UNSIGNED NOT NULL,
-            puzzle_id bigint(20) UNSIGNED NOT NULL,
+            puzzle_id bigint(20) UNSIGNED DEFAULT NULL,
             puzzle_clue_number smallint(5) UNSIGNED DEFAULT NULL,
             puzzle_clue_direction enum('A','D') DEFAULT NULL,
             clue_text text NOT NULL,
@@ -266,7 +272,7 @@ class Kealoa_Activator {
         dbDelta("CREATE TABLE {$clue_puzzles_table} (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             clue_id bigint(20) UNSIGNED NOT NULL,
-            puzzle_id bigint(20) UNSIGNED NOT NULL,
+            puzzle_id bigint(20) UNSIGNED DEFAULT NULL,
             puzzle_clue_number smallint(5) UNSIGNED DEFAULT NULL,
             puzzle_clue_direction enum('A','D') DEFAULT NULL,
             clue_text text NOT NULL,
@@ -283,6 +289,14 @@ class Kealoa_Activator {
              SELECT id, puzzle_id, puzzle_clue_number, puzzle_clue_direction, clue_text, 1
              FROM {$clues_table}
              WHERE puzzle_id IS NOT NULL"
+        );
+
+        // Preserve clue_text for orphaned clues (no puzzle reference)
+        $wpdb->query(
+            "INSERT INTO {$clue_puzzles_table} (clue_id, puzzle_id, clue_text, display_order)
+             SELECT id, NULL, clue_text, 1
+             FROM {$clues_table}
+             WHERE puzzle_id IS NULL"
         );
 
         // Drop the old columns from clues
@@ -331,6 +345,28 @@ class Kealoa_Activator {
 
         // Drop clue_text from clues table
         $wpdb->query("ALTER TABLE {$clues_table} DROP COLUMN clue_text");
+    }
+
+    /**
+     * Make puzzle_id nullable in clue_puzzles and create placeholder rows
+     * for orphaned clues (those with no clue_puzzles entries).
+     */
+    private static function migrate_clue_puzzles_nullable_puzzle_id(): void {
+        global $wpdb;
+
+        $clues_table = $wpdb->prefix . 'kealoa_clues';
+        $clue_puzzles_table = $wpdb->prefix . 'kealoa_clue_puzzles';
+
+        // Make puzzle_id nullable
+        $wpdb->query("ALTER TABLE {$clue_puzzles_table} MODIFY puzzle_id bigint(20) UNSIGNED DEFAULT NULL");
+
+        // Create placeholder rows for orphaned clues (those with no clue_puzzles entry)
+        $wpdb->query(
+            "INSERT INTO {$clue_puzzles_table} (clue_id, puzzle_id, clue_text, display_order)
+             SELECT c.id, NULL, '', 1
+             FROM {$clues_table} c
+             WHERE c.id NOT IN (SELECT DISTINCT cp.clue_id FROM {$clue_puzzles_table} cp)"
+        );
     }
 
     /**

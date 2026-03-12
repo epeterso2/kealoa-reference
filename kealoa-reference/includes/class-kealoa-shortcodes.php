@@ -1478,7 +1478,9 @@ class Kealoa_Shortcodes {
                 $all_puzzle_ids  = [];
                 foreach ($bulk_clue_puzzles as $cps) {
                     foreach ($cps as $cp) {
-                        $all_puzzle_ids[] = (int) $cp->puzzle_id;
+                        if ($cp->puzzle_id !== null) {
+                            $all_puzzle_ids[] = (int) $cp->puzzle_id;
+                        }
                     }
                 }
                 $all_puzzle_ids = array_unique($all_puzzle_ids);
@@ -1518,14 +1520,14 @@ class Kealoa_Shortcodes {
                                     <td class="kealoa-clue-number"><?php echo esc_html($clue->clue_number); ?></td>
                                     <td class="kealoa-day-cell"><?php
                                         if (!empty($clue_pzs)) {
-                                            echo implode('<br>', array_map(fn($cp) => esc_html(Kealoa_Formatter::format_day_abbrev($cp->puzzle_date)), $clue_pzs));
+                                            echo implode('<br>', array_map(fn($cp) => $cp->puzzle_id ? esc_html(Kealoa_Formatter::format_day_abbrev($cp->puzzle_date)) : '—', $clue_pzs));
                                         } else {
                                             echo '—';
                                         }
                                     ?></td>
                                     <td class="kealoa-puzzle-date"><?php
                                         if (!empty($clue_pzs)) {
-                                            echo implode('<br>', array_map(fn($cp) => Kealoa_Formatter::format_puzzle_date_link($cp->puzzle_date), $clue_pzs));
+                                            echo implode('<br>', array_map(fn($cp) => $cp->puzzle_id ? Kealoa_Formatter::format_puzzle_date_link($cp->puzzle_date) : '—', $clue_pzs));
                                         } else {
                                             echo '—';
                                         }
@@ -1534,8 +1536,12 @@ class Kealoa_Shortcodes {
                                         if (!empty($clue_pzs)) {
                                             $con_lines = [];
                                             foreach ($clue_pzs as $cp) {
-                                                $cons = $bulk_constructors_map[(int) $cp->puzzle_id] ?? [];
-                                                $con_lines[] = Kealoa_Formatter::format_constructor_list($cons);
+                                                if ($cp->puzzle_id) {
+                                                    $cons = $bulk_constructors_map[(int) $cp->puzzle_id] ?? [];
+                                                    $con_lines[] = Kealoa_Formatter::format_constructor_list($cons);
+                                                } else {
+                                                    $con_lines[] = '—';
+                                                }
                                             }
                                             echo implode('<br>', $con_lines);
                                         } else {
@@ -1546,7 +1552,7 @@ class Kealoa_Shortcodes {
                                         if (!empty($clue_pzs)) {
                                             $editor_lines = [];
                                             foreach ($clue_pzs as $cp) {
-                                                if (!empty($cp->editor_id)) {
+                                                if ($cp->puzzle_id && !empty($cp->editor_id)) {
                                                     $editor_lines[] = Kealoa_Formatter::format_editor_link((int) $cp->editor_id, $cp->editor_name);
                                                 } else {
                                                     $editor_lines[] = '—';
@@ -1559,7 +1565,7 @@ class Kealoa_Shortcodes {
                                     ?></td>
                                     <td class="kealoa-clue-ref"><?php
                                         if (!empty($clue_pzs)) {
-                                            echo implode('<br>', array_map(fn($cp) => esc_html(Kealoa_Formatter::format_clue_direction((int) $cp->puzzle_clue_number, $cp->puzzle_clue_direction)), $clue_pzs));
+                                            echo implode('<br>', array_map(fn($cp) => $cp->puzzle_id ? esc_html(Kealoa_Formatter::format_clue_direction((int) $cp->puzzle_clue_number, $cp->puzzle_clue_direction)) : '—', $clue_pzs));
                                         } else {
                                             echo '—';
                                         }

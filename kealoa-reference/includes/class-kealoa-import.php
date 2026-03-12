@@ -563,6 +563,16 @@ class Kealoa_Import {
                     'clue_text' => $row['clue_text'] ?? '',
                     'line' => $line,
                 ];
+            } elseif (!empty($row['clue_text']) && empty($grouped[$group_key]['puzzle_rows'])) {
+                // Text-only clue (no puzzle association)
+                $grouped[$group_key]['puzzle_rows'][] = [
+                    'puzzle_date' => '',
+                    'constructors' => '',
+                    'puzzle_clue_number' => '',
+                    'puzzle_clue_direction' => '',
+                    'clue_text' => $row['clue_text'],
+                    'line' => $line,
+                ];
             }
 
             // Collect guesser from this row (if present and first row for this clue)
@@ -589,6 +599,21 @@ class Kealoa_Import {
             $display_order = 1;
 
             foreach ($group['puzzle_rows'] as $pr) {
+                if (empty($pr['puzzle_date'])) {
+                    // Text-only clue — no puzzle association
+                    $clue_text = trim($pr['clue_text'] ?? '');
+                    if ($clue_text !== '') {
+                        $puzzle_refs[] = [
+                            'puzzle_id' => null,
+                            'puzzle_clue_number' => null,
+                            'puzzle_clue_direction' => null,
+                            'clue_text' => $clue_text,
+                            'display_order' => $display_order++,
+                        ];
+                    }
+                    continue;
+                }
+
                 $puzzle_date = $this->normalize_date($pr['puzzle_date']);
                 if (!$puzzle_date) {
                     $errors[] = "Line {$pr['line']}: Invalid puzzle_date format '{$pr['puzzle_date']}'";

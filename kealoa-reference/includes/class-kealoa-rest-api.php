@@ -332,7 +332,9 @@ class Kealoa_REST_API {
         $all_puzzle_ids = [];
         foreach ($bulk_clue_puzzles as $cps) {
             foreach ($cps as $cp) {
-                $all_puzzle_ids[] = (int) $cp->puzzle_id;
+                if ($cp->puzzle_id !== null) {
+                    $all_puzzle_ids[] = (int) $cp->puzzle_id;
+                }
             }
         }
         $all_puzzle_ids = array_unique($all_puzzle_ids);
@@ -343,10 +345,10 @@ class Kealoa_REST_API {
             $clue_pzs = $bulk_clue_puzzles[(int) $c->id] ?? [];
 
             $puzzles = array_map(function ($cp) use ($bulk_constructors_map) {
-                $pc = $bulk_constructors_map[(int) $cp->puzzle_id] ?? [];
+                $pc = $cp->puzzle_id !== null ? ($bulk_constructors_map[(int) $cp->puzzle_id] ?? []) : [];
                 $names = array_map(fn($con) => $con->full_name, $pc);
                 return [
-                    'puzzle_id'             => (int) $cp->puzzle_id,
+                    'puzzle_id'             => $cp->puzzle_id !== null ? (int) $cp->puzzle_id : null,
                     'puzzle_date'           => $cp->puzzle_date ?? '',
                     'constructors'          => implode(' & ', $names),
                     'editor'                => $cp->editor_name ?? '',
@@ -792,14 +794,14 @@ class Kealoa_REST_API {
         $clue_puzzle_refs = $this->db->get_clue_puzzles($id);
 
         // Build puzzles array with constructors
-        $puzzle_ids = array_map(fn($cp) => (int) $cp->puzzle_id, $clue_puzzle_refs);
+        $puzzle_ids = array_filter(array_map(fn($cp) => $cp->puzzle_id !== null ? (int) $cp->puzzle_id : null, $clue_puzzle_refs));
         $bulk_constructors = !empty($puzzle_ids) ? $this->db->get_puzzle_constructors_bulk($puzzle_ids) : [];
 
         $puzzles = array_map(function ($cp) use ($bulk_constructors) {
-            $pc = $bulk_constructors[(int) $cp->puzzle_id] ?? [];
+            $pc = $cp->puzzle_id !== null ? ($bulk_constructors[(int) $cp->puzzle_id] ?? []) : [];
             $names = array_map(fn($c) => $c->full_name, $pc);
             return [
-                'puzzle_id'             => (int) $cp->puzzle_id,
+                'puzzle_id'             => $cp->puzzle_id !== null ? (int) $cp->puzzle_id : null,
                 'puzzle_date'           => $cp->puzzle_date ?? '',
                 'constructors'          => implode(' & ', $names),
                 'editor'                => $cp->editor_name ?? '',

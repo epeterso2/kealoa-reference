@@ -263,7 +263,9 @@ class Kealoa_Export {
             $all_puzzle_ids = [];
             foreach ($bulk_clue_puzzles as $cps) {
                 foreach ($cps as $cp) {
-                    $all_puzzle_ids[] = (int) $cp->puzzle_id;
+                    if ($cp->puzzle_id !== null) {
+                        $all_puzzle_ids[] = (int) $cp->puzzle_id;
+                    }
                 }
             }
             $all_puzzle_ids = array_unique($all_puzzle_ids);
@@ -288,7 +290,7 @@ class Kealoa_Export {
                 } else {
                     // One row per puzzle reference
                     foreach ($clue_pzs as $cp) {
-                        $constructors = $bulk_constructors_map[(int) $cp->puzzle_id] ?? [];
+                        $constructors = $cp->puzzle_id !== null ? ($bulk_constructors_map[(int) $cp->puzzle_id] ?? []) : [];
                         $constructor_names = array_map(fn($c) => $c->full_name, $constructors);
 
                         fputcsv($output, [

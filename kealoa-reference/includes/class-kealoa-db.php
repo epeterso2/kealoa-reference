@@ -1553,7 +1553,7 @@ class Kealoa_DB {
         $sql = $this->wpdb->prepare(
             "SELECT cp.*, pz.publication_date AS puzzle_date, pz.editor_id, ed.full_name AS editor_name
             FROM {$this->clue_puzzles_table} cp
-            INNER JOIN {$this->puzzles_table} pz ON pz.id = cp.puzzle_id
+            LEFT JOIN {$this->puzzles_table} pz ON pz.id = cp.puzzle_id
             LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             WHERE cp.clue_id = %d
             ORDER BY cp.display_order ASC",
@@ -1575,17 +1575,18 @@ class Kealoa_DB {
 
         $order = 1;
         foreach ($puzzles as $puzzle) {
+            $puzzle_id = isset($puzzle['puzzle_id']) && $puzzle['puzzle_id'] !== null ? (int) $puzzle['puzzle_id'] : null;
             $this->wpdb->insert(
                 $this->clue_puzzles_table,
                 [
                     'clue_id'              => $clue_id,
-                    'puzzle_id'            => (int) $puzzle['puzzle_id'],
+                    'puzzle_id'            => $puzzle_id,
                     'puzzle_clue_number'   => !empty($puzzle['puzzle_clue_number']) ? (int) $puzzle['puzzle_clue_number'] : null,
                     'puzzle_clue_direction' => !empty($puzzle['puzzle_clue_direction']) ? sanitize_text_field($puzzle['puzzle_clue_direction']) : null,
                     'clue_text'            => sanitize_textarea_field($puzzle['clue_text'] ?? ''),
                     'display_order'        => $order,
                 ],
-                ['%d', '%d', '%d', '%s', '%s', '%d']
+                ['%d', $puzzle_id !== null ? '%d' : null, '%d', '%s', '%s', '%d']
             );
             $order++;
         }
@@ -1608,7 +1609,7 @@ class Kealoa_DB {
         $in = $this->ids_in_clause($clue_ids);
         $sql = "SELECT cp.*, pz.publication_date AS puzzle_date, pz.editor_id, ed.full_name AS editor_name
                 FROM {$this->clue_puzzles_table} cp
-                INNER JOIN {$this->puzzles_table} pz ON pz.id = cp.puzzle_id
+                LEFT JOIN {$this->puzzles_table} pz ON pz.id = cp.puzzle_id
                 LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
                 WHERE cp.clue_id IN ({$in})
                 ORDER BY cp.clue_id ASC, cp.display_order ASC";

@@ -3,7 +3,7 @@
 Read-only REST API for KEALOA Reference data.
 
 **Base URL:** `/wp-json/kealoa/v1`
-**Version:** 2.3.1
+**Version:** 2.3.2
 
 All endpoints are publicly accessible (`permission_callback: __return_true`). All responses are JSON. Most endpoints use `GET`; the bug-report endpoint uses `POST`.
 
@@ -840,7 +840,7 @@ Returns full detail for a single clue, including its puzzle references and all g
 }
 ```
 
-Note: Each clue can reference multiple puzzles. The `puzzles` array contains one entry per puzzle reference. Each puzzle entry includes `clue_text` (the clue as it appeared in that specific puzzle), `constructors`, and `editor` as plain string values.
+Note: Each clue can reference multiple puzzles. The `puzzles` array contains one entry per puzzle reference. Each puzzle entry includes `clue_text` (the clue as it appeared in that specific puzzle), `constructors`, and `editor` as plain string values. A clue may have text without an associated puzzle; in that case, `puzzle_id` is `null` and puzzle-specific fields (`puzzle_date`, `constructors`, `editor`, `puzzle_clue_number`, `puzzle_clue_direction`) are empty/null.
 
 **Response: 404 Not Found**
 
