@@ -78,7 +78,7 @@ The plugin adds a **KEALOA** top-level menu to the WordPress admin sidebar with 
 | Puzzles     | Browse, create, edit, and delete crossword puzzles with editor and constructor assignments |
 | Import      | Import data from CSV files or a ZIP archive |
 | Export      | Export data as individual CSV files or a single ZIP archive |
-| Data Check  | 19 data consistency checks with repair tools for orphaned records and auto-populate editors |
+| Data Check  | 23 data consistency checks with repair tools for orphaned records and auto-populate editors |
 | Settings    | Plugin configuration (debug mode toggle, bug report button toggle) |
 
 ### Person Edit Form
@@ -89,13 +89,14 @@ The person edit form includes fields for name, nicknames, homepage URL, XWordInf
 
 On the frontend, a KEALOA dropdown in the WordPress admin toolbar provides quick links to all admin pages. When viewing a KEALOA virtual page (person, round, or puzzle), the default "Edit" link is overridden to point to the appropriate admin edit form.
 
-### Data Check (19 consistency checks)
+### Data Check (23 consistency checks)
 
 | Category | Checks |
 |---|---|
-| Orphaned records | Unreferenced puzzles, persons, puzzle-constructor links, clues, guesses, round-guesser links, round solutions |
+| Orphaned records | Unreferenced puzzles, persons, puzzle-constructor links, clue-puzzle links, clues, guesses, round-guesser links, round solutions |
 | Missing references | Clues pointing to missing rounds or puzzles; guesses pointing to missing clues or persons; rounds with missing clue givers; puzzles with missing editors |
 | Incomplete data | Rounds with no clues, no solution words, or no guessers; puzzles without editors (includes auto-populate button) |
+| Data quality | Clues without puzzle links, useless clue-puzzle entries, duplicate clue-puzzle links, guesses from non-assigned guessers |
 | Numbering | Non-contiguous game numbers |
 
 Repairable checks offer a "Delete Selected" button. Information-only checks display the data without repair options.

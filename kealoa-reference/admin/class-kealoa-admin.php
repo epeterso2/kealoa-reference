@@ -374,6 +374,7 @@ class Kealoa_Admin {
             'repair_delete_puzzles' => $this->handle_repair_delete_puzzles(),
             'repair_delete_rounds' => $this->handle_repair_delete_rounds(),
             'repair_delete_orphans' => $this->handle_repair_delete_orphans(),
+            'repair_delete_clues' => $this->handle_repair_delete_clues(),
             'repair_clear_clue_givers' => $this->handle_repair_clear_clue_givers(),
             'repair_clear_editors' => $this->handle_repair_clear_editors(),
             'repair_renumber_games' => $this->handle_repair_renumber_games(),
@@ -2773,8 +2774,16 @@ class Kealoa_Admin {
                 'fields'      => ['id', 'round_id', 'clue_number', 'clue_text'],
             ],
             'orphan_clue_puzzles' => [
-                'label'       => 'Clues Referencing Missing Puzzles',
+                'label'       => 'Clue-Puzzle Links to Missing Puzzles',
                 'description' => 'Clue-puzzle links that reference puzzles which no longer exist.',
+                'action'      => 'repair_delete_orphans',
+                'table_key'   => 'clue_puzzles',
+                'columns'     => ['Link ID', 'Clue ID', 'Puzzle ID'],
+                'fields'      => ['id', 'clue_id', 'puzzle_id'],
+            ],
+            'orphan_clue_puzzle_clues' => [
+                'label'       => 'Clue-Puzzle Links to Missing Clues',
+                'description' => 'Clue-puzzle links that reference clues which no longer exist.',
                 'action'      => 'repair_delete_orphans',
                 'table_key'   => 'clue_puzzles',
                 'columns'     => ['Link ID', 'Clue ID', 'Puzzle ID'],
@@ -2861,6 +2870,37 @@ class Kealoa_Admin {
                 'no_selection' => true,
                 'columns'     => ['Expected', 'Actual', 'Issue'],
                 'fields'      => ['expected_game_number', 'actual_game_number', 'issue'],
+            ],
+            'clues_no_clue_puzzles' => [
+                'label'       => 'Clues Without Puzzle Links',
+                'description' => 'Clues that have no clue-puzzle entries at all (completely unlinked).',
+                'action'      => 'repair_delete_clues',
+                'columns'     => ['Clue ID', 'Round ID', 'Clue #', 'Correct Answer'],
+                'fields'      => ['id', 'round_id', 'clue_number', 'correct_answer'],
+            ],
+            'useless_clue_puzzles' => [
+                'label'       => 'Useless Clue-Puzzle Entries',
+                'description' => 'Clue-puzzle records with no puzzle link and no clue text (empty data).',
+                'action'      => 'repair_delete_orphans',
+                'table_key'   => 'clue_puzzles',
+                'columns'     => ['Link ID', 'Clue ID', 'Puzzle ID', 'Clue Text'],
+                'fields'      => ['id', 'clue_id', 'puzzle_id', 'clue_text'],
+            ],
+            'duplicate_clue_puzzles' => [
+                'label'       => 'Duplicate Clue-Puzzle Links',
+                'description' => 'Clue-puzzle pairs that appear more than once (potential data entry errors).',
+                'action'      => null,
+                'no_selection' => true,
+                'columns'     => ['Clue ID', 'Puzzle ID', 'Count'],
+                'fields'      => ['clue_id', 'puzzle_id', 'cnt'],
+            ],
+            'guesses_non_assigned_guessers' => [
+                'label'       => 'Guesses From Non-Assigned Guessers',
+                'description' => 'Guesses made by persons who are not listed as guessers for that round.',
+                'action'      => null,
+                'no_selection' => true,
+                'columns'     => ['Guess ID', 'Clue ID', 'Person ID', 'Word'],
+                'fields'      => ['id', 'clue_id', 'guesser_person_id', 'guessed_word'],
             ],
         ];
 
@@ -3042,6 +3082,24 @@ class Kealoa_Admin {
         $table_key = sanitize_text_field($_POST['table_key'] ?? '');
         $ids = $this->parse_selected_ids();
         $deleted = $this->db->delete_orphan_records($table_key, $ids);
+
+        Kealoa_Shortcodes::flush_all_caches();
+        wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $deleted));
+        exit;
+    }
+
+    /**
+     * Handle deletion of orphan clues (cascades to guesses and clue_puzzles).
+     */
+    private function handle_repair_delete_clues(): void {
+        $ids = $this->parse_selected_ids();
+        $deleted = 0;
+
+        foreach ($ids as $id) {
+            if ($this->db->delete_clue($id)) {
+                $deleted++;
+            }
+        }
 
         Kealoa_Shortcodes::flush_all_caches();
         wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $deleted));

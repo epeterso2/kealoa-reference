@@ -1309,6 +1309,12 @@ class Kealoa_DB {
                     ...$clue_ids
                 )
             );
+            $this->wpdb->query(
+                $this->wpdb->prepare(
+                    "DELETE FROM {$this->clue_puzzles_table} WHERE clue_id IN ($placeholders)",
+                    ...$clue_ids
+                )
+            );
         }
 
         $this->wpdb->delete($this->clues_table, ['round_id' => $id], ['%d']);
@@ -4705,6 +4711,57 @@ class Kealoa_DB {
         }
         if ($game_number_issues) {
             $issues['non_contiguous_game_numbers'] = $game_number_issues;
+        }
+
+        // 19. Clues with no clue-puzzle entries at all
+        $clues_no_cp = $this->wpdb->get_results(
+            "SELECT cl.id, cl.round_id, cl.clue_number, cl.correct_answer
+             FROM {$this->clues_table} cl
+             LEFT JOIN {$this->clue_puzzles_table} cp ON cp.clue_id = cl.id
+             WHERE cp.id IS NULL
+             ORDER BY cl.id"
+        );
+        if ($clues_no_cp) {
+            $issues['clues_no_clue_puzzles'] = $clues_no_cp;
+        }
+
+        // 20. Useless clue-puzzle entries (no puzzle link and no clue text)
+        $useless_cp = $this->wpdb->get_results(
+            "SELECT cp.id, cp.clue_id, cp.puzzle_id, cp.clue_text
+             FROM {$this->clue_puzzles_table} cp
+             WHERE cp.puzzle_id IS NULL
+               AND (cp.clue_text IS NULL OR cp.clue_text = '')
+             ORDER BY cp.id"
+        );
+        if ($useless_cp) {
+            $issues['useless_clue_puzzles'] = $useless_cp;
+        }
+
+        // 21. Duplicate clue-puzzle links (same clue_id + puzzle_id pair)
+        $dup_cp = $this->wpdb->get_results(
+            "SELECT cp.clue_id, cp.puzzle_id, COUNT(*) AS cnt
+             FROM {$this->clue_puzzles_table} cp
+             WHERE cp.puzzle_id IS NOT NULL
+             GROUP BY cp.clue_id, cp.puzzle_id
+             HAVING COUNT(*) > 1
+             ORDER BY cp.clue_id"
+        );
+        if ($dup_cp) {
+            $issues['duplicate_clue_puzzles'] = $dup_cp;
+        }
+
+        // 22. Guesses from persons not assigned as guessers for that round
+        $bad_guessers = $this->wpdb->get_results(
+            "SELECT g.id, g.clue_id, g.guesser_person_id, g.guessed_word
+             FROM {$this->guesses_table} g
+             JOIN {$this->clues_table} cl ON cl.id = g.clue_id
+             LEFT JOIN {$this->round_guessers_table} rg
+               ON rg.round_id = cl.round_id AND rg.person_id = g.guesser_person_id
+             WHERE rg.id IS NULL
+             ORDER BY g.id"
+        );
+        if ($bad_guessers) {
+            $issues['guesses_non_assigned_guessers'] = $bad_guessers;
         }
 
         return $issues;
