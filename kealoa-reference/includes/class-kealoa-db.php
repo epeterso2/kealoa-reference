@@ -2795,15 +2795,16 @@ class Kealoa_DB {
         $clause = $this->prepare_person_id_clause('g.guesser_person_id', $person_ids);
         // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $sql = "SELECT
-                c.puzzle_clue_direction as direction,
+                cp.puzzle_clue_direction as direction,
                 COUNT(*) as total_answered,
                 SUM(g.is_correct) as correct_count
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            INNER JOIN {$this->clue_puzzles_table} cp ON cp.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             WHERE {$clause}
-            GROUP BY c.puzzle_clue_direction
-            ORDER BY c.puzzle_clue_direction ASC";
+            GROUP BY cp.puzzle_clue_direction
+            ORDER BY cp.puzzle_clue_direction ASC";
 
         return $this->wpdb->get_results($sql);
     }
