@@ -21,14 +21,7 @@ if (!defined('ABSPATH')) {
 $db = new Kealoa_DB();
 
 // Get all round IDs that have at least one clue
-global $wpdb;
-$rounds_table = $wpdb->prefix . 'kealoa_rounds';
-$clues_table = $wpdb->prefix . 'kealoa_clues';
-$round_ids = $wpdb->get_col(
-    "SELECT DISTINCT r.id FROM {$rounds_table} r
-     INNER JOIN {$clues_table} c ON c.round_id = r.id
-     ORDER BY r.id"
-);
+$round_ids = $db->get_playable_round_ids();
 
 if (empty($round_ids)) {
     echo '<p class="kealoa-block-placeholder">' .

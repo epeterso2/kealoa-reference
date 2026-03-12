@@ -1035,6 +1035,20 @@ class Kealoa_DB {
     }
 
     /**
+     * Get IDs of all rounds that have at least one clue (playable rounds).
+     *
+     * @return int[] Array of round IDs.
+     */
+    public function get_playable_round_ids(): array {
+        $ids = $this->wpdb->get_col(
+            "SELECT DISTINCT r.id FROM {$this->rounds_table} r
+             INNER JOIN {$this->clues_table} c ON c.round_id = r.id
+             ORDER BY r.id"
+        );
+        return array_map('intval', $ids);
+    }
+
+    /**
      * Count total rounds
      */
     public function count_rounds(): int {
@@ -1659,42 +1673,18 @@ class Kealoa_DB {
         $guessed_word = strtoupper(sanitize_text_field($guessed_word));
         $is_correct = ($guessed_word === $correct_answer) ? 1 : 0;
 
-        // Check if guess exists
-        $existing = $this->wpdb->get_row(
+        // Upsert: leverages UNIQUE KEY idx_clue_guesser (clue_id, guesser_person_id)
+        $result = $this->wpdb->query(
             $this->wpdb->prepare(
-                "SELECT id FROM {$this->guesses_table}
-                WHERE clue_id = %d AND guesser_person_id = %d",
+                "INSERT INTO {$this->guesses_table} (clue_id, guesser_person_id, guessed_word, is_correct)
+                VALUES (%d, %d, %s, %d)
+                ON DUPLICATE KEY UPDATE guessed_word = VALUES(guessed_word), is_correct = VALUES(is_correct)",
                 $clue_id,
-                $guesser_person_id
+                $guesser_person_id,
+                $guessed_word,
+                $is_correct
             )
         );
-
-        if ($existing) {
-            $result = $this->wpdb->update(
-                $this->guesses_table,
-                [
-                    'guessed_word' => $guessed_word,
-                    'is_correct' => $is_correct,
-                ],
-                [
-                    'clue_id' => $clue_id,
-                    'guesser_person_id' => $guesser_person_id,
-                ],
-                ['%s', '%d'],
-                ['%d', '%d']
-            );
-        } else {
-            $result = $this->wpdb->insert(
-                $this->guesses_table,
-                [
-                    'clue_id' => $clue_id,
-                    'guesser_person_id' => $guesser_person_id,
-                    'guessed_word' => $guessed_word,
-                    'is_correct' => $is_correct,
-                ],
-                ['%d', '%d', '%s', '%d']
-            );
-        }
 
         return $result !== false;
     }
@@ -2362,45 +2352,25 @@ class Kealoa_DB {
      * @return array<int, string[]> Map of person_id => array of role strings.
      */
     public function get_all_person_roles(): array {
-        // Players
-        $player_ids = $this->wpdb->get_col(
-            "SELECT DISTINCT person_id FROM {$this->round_guessers_table}"
+        $rows = $this->wpdb->get_results(
+            "SELECT DISTINCT person_id, 'player' AS role FROM {$this->round_guessers_table}
+             UNION ALL
+             SELECT DISTINCT person_id, 'constructor' AS role FROM {$this->puzzle_constructors_table}
+             UNION ALL
+             SELECT DISTINCT editor_id AS person_id, 'editor' AS role FROM {$this->puzzles_table} WHERE editor_id IS NOT NULL
+             UNION ALL
+             SELECT DISTINCT clue_giver_id AS person_id, 'clue_giver' AS role FROM {$this->rounds_table}"
         );
-        // Constructors
-        $constructor_ids = $this->wpdb->get_col(
-            "SELECT DISTINCT person_id FROM {$this->puzzle_constructors_table}"
-        );
-        // Editors
-        $editor_ids = $this->wpdb->get_col(
-            "SELECT DISTINCT editor_id FROM {$this->puzzles_table} WHERE editor_id IS NOT NULL"
-        );
-        // Clue givers
-        $clue_giver_ids = $this->wpdb->get_col(
-            "SELECT DISTINCT clue_giver_id FROM {$this->rounds_table}"
-        );
-
-        $all_ids = array_unique(array_merge(
-            array_map('intval', $player_ids),
-            array_map('intval', $constructor_ids),
-            array_map('intval', $editor_ids),
-            array_map('intval', $clue_giver_ids)
-        ));
 
         $map = [];
-        foreach ($all_ids as $pid) {
-            $map[$pid] = [];
-        }
-        foreach ($player_ids as $id) {
-            $map[(int) $id][] = 'player';
-        }
-        foreach ($constructor_ids as $id) {
-            $map[(int) $id][] = 'constructor';
-        }
-        foreach ($editor_ids as $id) {
-            $map[(int) $id][] = 'editor';
-        }
-        foreach ($clue_giver_ids as $id) {
-            $map[(int) $id][] = 'clue_giver';
+        foreach ($rows as $row) {
+            $pid = (int) $row->person_id;
+            if (!isset($map[$pid])) {
+                $map[$pid] = [];
+            }
+            if (!in_array($row->role, $map[$pid], true)) {
+                $map[$pid][] = $row->role;
+            }
         }
         return $map;
     }
