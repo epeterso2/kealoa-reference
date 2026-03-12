@@ -1122,7 +1122,7 @@ class Kealoa_Shortcodes {
                         echo Kealoa_Formatter::format_list_with_and($word_links);
                         $round_type = Kealoa_Formatter::classify_kealoa_type($solutions);
                         if ($round_type !== '') {
-                            echo ' (' . esc_html(Kealoa_Formatter::format_kealoa_type_label($round_type)) . ')';
+                            echo ' (' . esc_html(Kealoa_Formatter::format_kealoa_type_label($round_type)) . ' KEALOA)';
                         }
                         ?></span>
                     </p>
