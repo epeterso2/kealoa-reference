@@ -2,7 +2,7 @@
 
 A WordPress plugin for managing and displaying KEALOA quiz game data from the [Fill Me In](https://bemoresmarter.libsyn.com) podcast.
 
-**Version:** 2.2.72 &bull; **DB Version:** 2.1.3 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+**Version:** 2.3.0 &bull; **DB Version:** 2.3.0 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 ---
 
@@ -76,9 +76,9 @@ The plugin adds a **KEALOA** top-level menu to the WordPress admin sidebar with 
 | Persons     | Manage persons — players, constructors, editors, and hosts in a unified list with photo support |
 | Aliases     | Manage person alias groups for matching alternate names during import |
 | Puzzles     | Browse, create, edit, and delete crossword puzzles with editor and constructor assignments |
-| Import      | Import data from CSV files or a ZIP archive; auto-populate editors from puzzle dates |
+| Import      | Import data from CSV files or a ZIP archive |
 | Export      | Export data as individual CSV files or a single ZIP archive |
-| Data Check  | 18 data consistency checks with repair tools for orphaned records |
+| Data Check  | 19 data consistency checks with repair tools for orphaned records and auto-populate editors |
 | Settings    | Plugin configuration (debug mode toggle, bug report button toggle) |
 
 ### Person Edit Form
@@ -89,13 +89,13 @@ The person edit form includes fields for name, nicknames, homepage URL, XWordInf
 
 On the frontend, a KEALOA dropdown in the WordPress admin toolbar provides quick links to all admin pages. When viewing a KEALOA virtual page (person, round, or puzzle), the default "Edit" link is overridden to point to the appropriate admin edit form.
 
-### Data Check (18 consistency checks)
+### Data Check (19 consistency checks)
 
 | Category | Checks |
 |---|---|
 | Orphaned records | Unreferenced puzzles, persons, puzzle-constructor links, clues, guesses, round-guesser links, round solutions |
 | Missing references | Clues pointing to missing rounds or puzzles; guesses pointing to missing clues or persons; rounds with missing clue givers; puzzles with missing editors |
-| Incomplete data | Rounds with no clues, no solution words, or no guessers |
+| Incomplete data | Rounds with no clues, no solution words, or no guessers; puzzles without editors (includes auto-populate button) |
 | Numbering | Non-contiguous game numbers |
 
 Repairable checks offer a "Delete Selected" button. Information-only checks display the data without repair options.
@@ -251,13 +251,14 @@ The plugin creates eight custom tables. All table names are prefixed with the Wo
 | `rounds` | Individual KEALOA game rounds with episode metadata |
 | `round_solutions` | The solution words for a round (ordered) |
 | `round_guessers` | The persons who played as guessers in a round |
-| `clues` | Individual clues used within a round, each linked to a specific crossword puzzle clue |
+| `clues` | Individual clues used within a round, each with correct answer |
+| `clue_puzzles` | Many-to-many join between `clues` and `puzzles` with per-puzzle clue text |
 | `guesses` | All guesses made by persons for each clue |
 
 ### Key Relationships
 
 - A **round** has many **clues**, many **solution words** (`round_solutions`), many **guessers** (`round_guessers`), and one **clue giver** (`clue_giver_id` → `persons`).
-- A **clue** belongs to both a **round** and a **puzzle**, referencing the specific crossword clue number and direction (Across/Down).
+- A **clue** belongs to a **round** and references one or more **puzzles** via the `clue_puzzles` junction table. Each puzzle reference includes the crossword clue number, direction (Across/Down), and the clue text as it appeared in that puzzle.
 - A **clue** has many **guesses**, each by a specific guesser.
 - A **puzzle** has one **editor** (via `editor_id` → `persons`) and zero or more **constructors** (via `puzzle_constructors`).
 - A **person** may hold any combination of the `player`, `constructor`, `editor`, and `clue_giver` (host) roles.
@@ -344,13 +345,22 @@ The plugin creates eight custom tables. All table names are prefixed with the Wo
 | `id` | `bigint(20) UNSIGNED AUTO_INCREMENT` | PK |
 | `round_id` | `bigint(20) UNSIGNED NOT NULL` | Indexed |
 | `clue_number` | `tinyint(3) UNSIGNED NOT NULL` | Indexed |
-| `puzzle_id` | `bigint(20) UNSIGNED DEFAULT NULL` | FK → `puzzles`, indexed |
-| `puzzle_clue_number` | `smallint(5) UNSIGNED DEFAULT NULL` | |
-| `puzzle_clue_direction` | `enum('A','D') DEFAULT NULL` | Across or Down |
-| `clue_text` | `text NOT NULL` | |
 | `correct_answer` | `varchar(100) NOT NULL` | |
 | `created_at` | `datetime` | |
 | `updated_at` | `datetime` | |
+
+#### `clue_puzzles`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `bigint(20) UNSIGNED AUTO_INCREMENT` | PK |
+| `clue_id` | `bigint(20) UNSIGNED NOT NULL` | FK → `clues`, indexed |
+| `puzzle_id` | `bigint(20) UNSIGNED NOT NULL` | FK → `puzzles`, indexed |
+| `puzzle_clue_number` | `smallint(5) UNSIGNED NOT NULL` | |
+| `puzzle_clue_direction` | `enum('A','D') NOT NULL` | Across or Down |
+| `clue_text` | `text NOT NULL` | Clue text as it appeared in this puzzle |
+| `sequence` | `tinyint(3) UNSIGNED DEFAULT 1` | Order of multiple puzzles per clue |
+| `created_at` | `datetime` | |
 
 #### `guesses`
 
@@ -376,7 +386,7 @@ The **Export** admin page generates individual CSV files or a single ZIP archive
 | Persons | `full_name`, `nicknames`, `home_page_url`, `image_url`, `hide_xwordinfo`, `xwordinfo_profile_name`, `xwordinfo_image_url`, `media_id` |
 | Puzzles | `publication_date`, `editor_name`, `constructors` |
 | Rounds | `game_number`, `round_date`, `round_number`, `episode_number`, `episode_id`, `episode_url`, `episode_start_seconds`, `clue_giver`, `guessers`, `solution_words`, `description`, `description2` |
-| Clues | `round_date`, `round_number`, `clue_number`, `puzzle_date`, `constructors`, `puzzle_clue_number`, `puzzle_clue_direction`, `clue_text`, `correct_answer` |
+| Clues | `round_date`, `round_number`, `clue_number`, `puzzle_date`, `constructors`, `puzzle_clue_number`, `puzzle_clue_direction`, `clue_text`, `correct_answer` (one row per puzzle reference) |
 | Guesses | `round_date`, `round_number`, `clue_number`, `guesser`, `guessed_word`, `is_correct` |
 
 ### Import
@@ -389,7 +399,7 @@ The **Import** admin page accepts individual CSV files or a ZIP archive. Seven i
 | Persons | `full_name` | All person profile fields |
 | Puzzles | `publication_date` | Auto-creates constructors; determines editors from historical date ranges |
 | Rounds | `round_date`, `episode_number`, `clue_giver` | Auto-creates persons; handles guessers and solution words |
-| Clues | `round_date`, `clue_text`, `correct_answer` | Rounds must exist; puzzles created if needed |
+| Clues | `round_date`, `clue_text`, `correct_answer` | Rounds must exist; puzzles created if needed; one row per puzzle reference |
 | Guesses | `round_date`, `clue_number`, `guesser`, `guessed_word` | `is_correct` is auto-calculated |
 | Round Data | `round_date`, `round_number`, `clue_number_in_round`, `correct_answer`, `player_name`, `guessed_answer` | All-in-one format (one row per guess); rounds must exist |
 
@@ -410,7 +420,7 @@ Downloadable templates are available on the Import admin page:
 | `persons.csv` | `full_name`, `nicknames`, `home_page_url`, `image_url`, `hide_xwordinfo`, `xwordinfo_profile_name`, `xwordinfo_image_url`, `media_id` |
 | `puzzles.csv` | `publication_date`, `editor_name`, `constructors` |
 | `rounds.csv` | `round_date`, `round_number`, `episode_number`, `episode_id`, `episode_url`, `episode_start_seconds`, `clue_giver`, `guessers`, `solution_words`, `description`, `description2` |
-| `clues.csv` | `round_date`, `round_number`, `clue_number`, `puzzle_date`, `constructors`, `puzzle_clue_number`, `puzzle_clue_direction`, `clue_text`, `correct_answer` |
+| `clues.csv` | `round_date`, `round_number`, `clue_number`, `puzzle_date`, `constructors`, `puzzle_clue_number`, `puzzle_clue_direction`, `clue_text`, `correct_answer` (one row per puzzle reference) |
 | `guesses.csv` | `round_date`, `round_number`, `clue_number`, `guesser`, `guessed_word`, `is_correct` |
 | `round_data.csv` | `round_date`, `round_number`, `clue_number_in_round`, `puzzle_date`, `constructor_name`, `clue_number`, `clue_direction`, `clue_text`, `correct_answer`, `player_name`, `guessed_answer` |
 

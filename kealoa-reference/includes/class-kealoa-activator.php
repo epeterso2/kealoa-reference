@@ -43,6 +43,16 @@ class Kealoa_Activator {
             self::migrate_from_v1();
         }
 
+        // Run v2.1→v2.2 migration (clue puzzle columns → clue_puzzles junction table)
+        if (version_compare($installed_version, '2.2.0', '<') && version_compare($installed_version, '2.0.0', '>=')) {
+            self::migrate_clue_puzzles();
+        }
+
+        // Run v2.2→v2.3 migration (move clue_text from clues to clue_puzzles)
+        if (version_compare($installed_version, '2.3.0', '<') && version_compare($installed_version, '2.2.0', '>=')) {
+            self::migrate_clue_text_to_puzzles();
+        }
+
         self::create_tables();
         self::backfill_game_numbers();
         self::set_default_options();
@@ -71,6 +81,7 @@ class Kealoa_Activator {
         $round_solutions_table = $wpdb->prefix . 'kealoa_round_solutions';
         $round_guessers_table = $wpdb->prefix . 'kealoa_round_guessers';
         $clues_table = $wpdb->prefix . 'kealoa_clues';
+        $clue_puzzles_table = $wpdb->prefix . 'kealoa_clue_puzzles';
         $guesses_table = $wpdb->prefix . 'kealoa_guesses';
 
         // SQL for persons table (unified: players, constructors, editors)
@@ -166,15 +177,25 @@ class Kealoa_Activator {
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             round_id bigint(20) UNSIGNED NOT NULL,
             clue_number tinyint(3) UNSIGNED NOT NULL,
-            puzzle_id bigint(20) UNSIGNED DEFAULT NULL,
-            puzzle_clue_number smallint(5) UNSIGNED DEFAULT NULL,
-            puzzle_clue_direction enum('A','D') DEFAULT NULL,
-            clue_text text NOT NULL,
             correct_answer varchar(100) NOT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            KEY idx_round_clue (round_id, clue_number),
+            KEY idx_round_clue (round_id, clue_number)
+        ) {$charset_collate};";
+
+        // SQL for clue_puzzles junction table (many-to-many between clues and puzzles)
+        $sql_clue_puzzles = "CREATE TABLE {$clue_puzzles_table} (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            clue_id bigint(20) UNSIGNED NOT NULL,
+            puzzle_id bigint(20) UNSIGNED NOT NULL,
+            puzzle_clue_number smallint(5) UNSIGNED DEFAULT NULL,
+            puzzle_clue_direction enum('A','D') DEFAULT NULL,
+            clue_text text NOT NULL,
+            display_order tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_clue_order (clue_id, display_order),
             KEY idx_puzzle_id (puzzle_id)
         ) {$charset_collate};";
 
@@ -201,11 +222,12 @@ class Kealoa_Activator {
         dbDelta($sql_round_solutions);
         dbDelta($sql_round_guessers);
         dbDelta($sql_clues);
+        dbDelta($sql_clue_puzzles);
         dbDelta($sql_guesses);
 
         // Drop superseded indexes that dbDelta won't remove
         $superseded = [
-            $clues_table           => ['idx_round_id', 'idx_clue_number'],
+            $clues_table           => ['idx_round_id', 'idx_clue_number', 'idx_puzzle_id'],
             $guesses_table         => ['idx_guesser_person_id', 'idx_is_correct'],
             $round_solutions_table => ['idx_round_id'],
         ];
@@ -217,6 +239,98 @@ class Kealoa_Activator {
                 }
             }
         }
+    }
+
+    /**
+     * Migrate puzzle references from clues table to clue_puzzles junction table.
+     *
+     * Moves puzzle_id, puzzle_clue_number, and puzzle_clue_direction from the
+     * clues table into the new clue_puzzles junction table, then drops those
+     * columns from clues.
+     */
+    private static function migrate_clue_puzzles(): void {
+        global $wpdb;
+
+        $clues_table = $wpdb->prefix . 'kealoa_clues';
+        $clue_puzzles_table = $wpdb->prefix . 'kealoa_clue_puzzles';
+
+        // Check if the old puzzle_id column still exists on clues
+        $columns = $wpdb->get_col("SHOW COLUMNS FROM {$clues_table}", 0);
+        if (!in_array('puzzle_id', $columns, true)) {
+            return; // Already migrated
+        }
+
+        // Create the clue_puzzles table first (needed before inserting)
+        $charset_collate = $wpdb->get_charset_collate();
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        dbDelta("CREATE TABLE {$clue_puzzles_table} (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            clue_id bigint(20) UNSIGNED NOT NULL,
+            puzzle_id bigint(20) UNSIGNED NOT NULL,
+            puzzle_clue_number smallint(5) UNSIGNED DEFAULT NULL,
+            puzzle_clue_direction enum('A','D') DEFAULT NULL,
+            clue_text text NOT NULL,
+            display_order tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_clue_order (clue_id, display_order),
+            KEY idx_puzzle_id (puzzle_id)
+        ) {$charset_collate};");
+
+        // Copy existing puzzle references to junction table with clue_text
+        $wpdb->query(
+            "INSERT INTO {$clue_puzzles_table} (clue_id, puzzle_id, puzzle_clue_number, puzzle_clue_direction, clue_text, display_order)
+             SELECT id, puzzle_id, puzzle_clue_number, puzzle_clue_direction, clue_text, 1
+             FROM {$clues_table}
+             WHERE puzzle_id IS NOT NULL"
+        );
+
+        // Drop the old columns from clues
+        $wpdb->query("ALTER TABLE {$clues_table} DROP COLUMN puzzle_id, DROP COLUMN puzzle_clue_number, DROP COLUMN puzzle_clue_direction, DROP COLUMN clue_text");
+    }
+
+    /**
+     * Migrate clue_text from clues table to clue_puzzles junction table.
+     *
+     * For databases at v2.2.0 (which already have clue_puzzles table without clue_text),
+     * add the clue_text column and copy the clue text from clues to each puzzle reference.
+     */
+    private static function migrate_clue_text_to_puzzles(): void {
+        global $wpdb;
+
+        $clues_table = $wpdb->prefix . 'kealoa_clues';
+        $clue_puzzles_table = $wpdb->prefix . 'kealoa_clue_puzzles';
+
+        // Check if clue_text column exists on clues table
+        $clues_columns = $wpdb->get_col("SHOW COLUMNS FROM {$clues_table}", 0);
+        if (!in_array('clue_text', $clues_columns, true)) {
+            return; // Already migrated
+        }
+
+        // Check if clue_text column already exists on clue_puzzles
+        $cp_columns = $wpdb->get_col("SHOW COLUMNS FROM {$clue_puzzles_table}", 0);
+        if (in_array('clue_text', $cp_columns, true)) {
+            // Column exists, just copy data and drop from clues
+            $wpdb->query(
+                "UPDATE {$clue_puzzles_table} cp
+                 INNER JOIN {$clues_table} c ON c.id = cp.clue_id
+                 SET cp.clue_text = c.clue_text
+                 WHERE cp.clue_text = '' OR cp.clue_text IS NULL"
+            );
+        } else {
+            // Add clue_text column to clue_puzzles
+            $wpdb->query("ALTER TABLE {$clue_puzzles_table} ADD COLUMN clue_text text NOT NULL AFTER puzzle_clue_direction");
+
+            // Copy clue_text from clues to all puzzle references
+            $wpdb->query(
+                "UPDATE {$clue_puzzles_table} cp
+                 INNER JOIN {$clues_table} c ON c.id = cp.clue_id
+                 SET cp.clue_text = c.clue_text"
+            );
+        }
+
+        // Drop clue_text from clues table
+        $wpdb->query("ALTER TABLE {$clues_table} DROP COLUMN clue_text");
     }
 
     /**

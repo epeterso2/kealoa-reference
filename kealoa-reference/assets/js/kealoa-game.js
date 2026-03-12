@@ -230,25 +230,51 @@
         }
 
         // Clue card
-        var dayOfWeek = getDayOfWeek(clue.puzzle_date);
-        var formattedDate = formatDate(clue.puzzle_date);
-
         var metaItems = [];
-        if (dayOfWeek && formattedDate) {
-            metaItems.push(el('span', { className: 'kealoa-game__clue-date', textContent: dayOfWeek + ', ' + formattedDate }));
+
+        if (clue.puzzles && clue.puzzles.length) {
+            clue.puzzles.forEach(function (pz) {
+                var dayOfWeek = getDayOfWeek(pz.puzzle_date);
+                var formattedDate = formatDate(pz.puzzle_date);
+                if (dayOfWeek && formattedDate) {
+                    metaItems.push(el('span', { className: 'kealoa-game__clue-date', textContent: dayOfWeek + ', ' + formattedDate }));
+                }
+                if (pz.constructors) {
+                    metaItems.push(el('span', { className: 'kealoa-game__clue-constructors', textContent: 'By: ' + pz.constructors }));
+                }
+                if (pz.editor) {
+                    metaItems.push(el('span', { className: 'kealoa-game__clue-editor', textContent: 'Ed: ' + pz.editor }));
+                }
+            });
+        } else {
+            var dayOfWeek = getDayOfWeek(clue.puzzle_date);
+            var formattedDate = formatDate(clue.puzzle_date);
+            if (dayOfWeek && formattedDate) {
+                metaItems.push(el('span', { className: 'kealoa-game__clue-date', textContent: dayOfWeek + ', ' + formattedDate }));
+            }
+            if (clue.constructors) {
+                metaItems.push(el('span', { className: 'kealoa-game__clue-constructors', textContent: 'By: ' + clue.constructors }));
+            }
+            if (clue.editor) {
+                metaItems.push(el('span', { className: 'kealoa-game__clue-editor', textContent: 'Ed: ' + clue.editor }));
+            }
         }
-        if (clue.constructors) {
-            metaItems.push(el('span', { className: 'kealoa-game__clue-constructors', textContent: 'By: ' + clue.constructors }));
-        }
-        if (clue.editor) {
-            metaItems.push(el('span', { className: 'kealoa-game__clue-editor', textContent: 'Ed: ' + clue.editor }));
+
+        // Build clue text display (may be multiple texts if multiple puzzles)
+        var clueTextContent;
+        if (clue.puzzles && clue.puzzles.length) {
+            var clueTexts = clue.puzzles.map(function (pz) { return pz.clue_text || ''; }).filter(function (t) { return t; });
+            clueTextContent = clueTexts.length ? clueTexts.join(' / ') : '(No clue text)';
+        } else {
+            // Backward compatibility
+            clueTextContent = clue.clue_text || '(No clue text)';
         }
 
         var clueCard = el('div', { className: 'kealoa-game__clue-card' }, [
             el('div', { className: 'kealoa-game__clue-meta' }, metaItems),
             el('div', { className: 'kealoa-game__clue-text' }, [
                 el('span', { className: 'kealoa-game__clue-label', textContent: 'Clue:' }),
-                el('span', { className: 'kealoa-game__clue-content', textContent: ' ' + clue.clue_text })
+                el('span', { className: 'kealoa-game__clue-content', textContent: ' ' + clueTextContent })
             ])
         ]);
 
@@ -320,8 +346,16 @@
         ]);
 
         // Show the clue again briefly
+        var displayClueText;
+        if (clue.puzzles && clue.puzzles.length) {
+            var texts = clue.puzzles.map(function (pz) { return pz.clue_text || ''; }).filter(function (t) { return t; });
+            displayClueText = texts.length ? texts.join(' / ') : '(No clue text)';
+        } else {
+            displayClueText = clue.clue_text || '(No clue text)';
+        }
+        
         var clueInfo = el('div', { className: 'kealoa-game__result-clue' }, [
-            el('p', { className: 'kealoa-game__result-clue-text', innerHTML: '<strong>Clue:</strong> ' + escapeHtml(clue.clue_text) }),
+            el('p', { className: 'kealoa-game__result-clue-text', innerHTML: '<strong>Clue:</strong> ' + escapeHtml(displayClueText) }),
             el('p', { className: 'kealoa-game__result-answer', innerHTML: '<strong>Correct Answer:</strong> ' + escapeHtml(clue.correct_answer) })
         ]);
 
@@ -526,25 +560,53 @@
             var clue = item.clue;
             var answer = item.answer;
 
-            // Format day abbreviation from puzzle_date
-            var dayAbbrev = '\u2014';
-            if (clue.puzzle_date) {
-                var d = new Date(clue.puzzle_date + 'T00:00:00');
-                dayAbbrev = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()] || '\u2014';
+            // Build puzzle info — support both old flat fields and new puzzles array
+            var puzzleSources = [];
+            if (clue.puzzles && clue.puzzles.length) {
+                clue.puzzles.forEach(function (pz) {
+                    puzzleSources.push({
+                        puzzle_date: pz.puzzle_date || null,
+                        constructors: pz.constructors || null,
+                        editor: pz.editor || null,
+                        puzzle_clue_number: pz.puzzle_clue_number || null,
+                        puzzle_clue_direction: pz.puzzle_clue_direction || null
+                    });
+                });
+            } else {
+                puzzleSources.push({
+                    puzzle_date: clue.puzzle_date || null,
+                    constructors: clue.constructors || null,
+                    editor: clue.editor || null,
+                    puzzle_clue_number: clue.puzzle_clue_number || null,
+                    puzzle_clue_direction: clue.puzzle_clue_direction || null
+                });
             }
 
-            // Format puzzle date as M/D/YYYY
-            var fmtDate = '\u2014';
-            if (clue.puzzle_date) {
-                var dp = new Date(clue.puzzle_date + 'T00:00:00');
-                fmtDate = (dp.getMonth() + 1) + '/' + dp.getDate() + '/' + dp.getFullYear();
-            }
+            // Format day abbreviation(s)
+            var dayParts = puzzleSources.map(function (ps) {
+                if (!ps.puzzle_date) return '\u2014';
+                var d = new Date(ps.puzzle_date + 'T00:00:00');
+                return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()] || '\u2014';
+            });
 
-            // Format clue ref (e.g. "42D")
-            var clueRef = '\u2014';
-            if (clue.puzzle_clue_number && clue.puzzle_clue_direction) {
-                clueRef = clue.puzzle_clue_number + clue.puzzle_clue_direction.toUpperCase();
-            }
+            // Format puzzle date(s) as M/D/YYYY
+            var dateParts = puzzleSources.map(function (ps) {
+                if (!ps.puzzle_date) return '\u2014';
+                var dp = new Date(ps.puzzle_date + 'T00:00:00');
+                return (dp.getMonth() + 1) + '/' + dp.getDate() + '/' + dp.getFullYear();
+            });
+
+            // Format clue ref(s) (e.g. "42D")
+            var refParts = puzzleSources.map(function (ps) {
+                if (ps.puzzle_clue_number && ps.puzzle_clue_direction) {
+                    return ps.puzzle_clue_number + ps.puzzle_clue_direction.toUpperCase();
+                }
+                return '\u2014';
+            });
+
+            var conParts = puzzleSources.map(function (ps) { return ps.constructors || '\u2014'; });
+            var edParts = puzzleSources.map(function (ps) { return ps.editor || '\u2014'; });
+            var clueParts = puzzleSources.map(function (ps) { return ps.clue_text || '\u2014'; });
 
             // Player result
             var resultIcon = answer.correct ? '\u2713' : '\u2717';
@@ -554,12 +616,12 @@
             reviewTbody.appendChild(
                 el('tr', {}, [
                     el('td', { className: 'kealoa-num', textContent: String(clue.clue_number || '') }),
-                    el('td', { textContent: dayAbbrev }),
-                    el('td', { textContent: fmtDate }),
-                    el('td', { textContent: clue.constructors || '\u2014' }),
-                    el('td', { textContent: clue.editor || '\u2014' }),
-                    el('td', { textContent: clueRef }),
-                    el('td', { className: 'kealoa-game__review-clue-text', textContent: clue.clue_text }),
+                    el('td', { innerHTML: dayParts.join('<br>') }),
+                    el('td', { innerHTML: dateParts.join('<br>') }),
+                    el('td', { innerHTML: conParts.join('<br>') }),
+                    el('td', { innerHTML: edParts.join('<br>') }),
+                    el('td', { innerHTML: refParts.join('<br>') }),
+                    el('td', { className: 'kealoa-game__review-clue-text', innerHTML: clueParts.join('<br>') }),
                     el('td', {}, [
                         el('strong', { className: 'kealoa-guess-correct', textContent: clue.correct_answer })
                     ]),

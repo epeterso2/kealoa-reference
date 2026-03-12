@@ -6,7 +6,7 @@
  * Plugin Name: KEALOA Reference
  * Plugin URI: https://github.com/epeterso2/kealoa-reference
  * Description: A comprehensive plugin for managing KEALOA quiz game data from the Fill Me In podcast, including rounds, clues, puzzles, and player statistics.
- * Version: 2.2.76
+ * Version: 2.3.0
  * Requires at least: 6.9
  * Requires PHP: 8.4
  * Author: Eric Peterson
@@ -33,11 +33,11 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('KEALOA_VERSION', '2.2.76');
+define('KEALOA_VERSION', '2.3.0');
 define('KEALOA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('KEALOA_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('KEALOA_PLUGIN_BASENAME', plugin_basename(__FILE__));
-define('KEALOA_DB_VERSION', '2.1.4');
+define('KEALOA_DB_VERSION', '2.3.0');
 
 /**
  * Check whether KEALOA debug mode is enabled.
@@ -357,18 +357,37 @@ function kealoa_rest_game_round(WP_REST_Request $request): WP_REST_Response {
     $guesser_ids = array_map(function ($g) {
         return (int) $g->id;
     }, $guessers);
+
+    // Bulk pre-fetch puzzle refs and constructors
+    $clue_ids_list = array_map(fn($c) => (int) $c->id, $clues_raw);
+    $bulk_clue_puzzles = !empty($clue_ids_list) ? $db->get_clue_puzzles_bulk($clue_ids_list) : [];
+    $all_puzzle_ids = [];
+    foreach ($bulk_clue_puzzles as $cps) {
+        foreach ($cps as $cp) {
+            $all_puzzle_ids[] = (int) $cp->puzzle_id;
+        }
+    }
+    $all_puzzle_ids = array_unique($all_puzzle_ids);
+    $bulk_constructors_map = !empty($all_puzzle_ids) ? $db->get_puzzle_constructors_bulk($all_puzzle_ids) : [];
+
     $clues = [];
 
     foreach ($clues_raw as $clue) {
-        // Build constructor string for the puzzle
-        $constructors = '';
-        if (!empty($clue->puzzle_id)) {
-            $puzzle_constructors = $db->get_puzzle_constructors((int) $clue->puzzle_id);
-            $names = array_map(function ($c) {
-                return $c->full_name;
-            }, $puzzle_constructors);
-            $constructors = implode(' & ', $names);
-        }
+        $clue_pzs = $bulk_clue_puzzles[(int) $clue->id] ?? [];
+
+        // Build puzzles array
+        $puzzles = array_map(function ($cp) use ($bulk_constructors_map) {
+            $pc = $bulk_constructors_map[(int) $cp->puzzle_id] ?? [];
+            $names = array_map(fn($c) => $c->full_name, $pc);
+            return [
+                'puzzle_date'           => $cp->puzzle_date ?? '',
+                'constructors'          => implode(' & ', $names),
+                'editor'                => $cp->editor_name ?? '',
+                'puzzle_clue_number'    => $cp->puzzle_clue_number ? (int) $cp->puzzle_clue_number : null,
+                'puzzle_clue_direction' => $cp->puzzle_clue_direction ?? null,
+                'clue_text'             => $cp->clue_text ?? '',
+            ];
+        }, $clue_pzs);
 
         // Get guesses for this clue, filtered to round guessers
         $guesses_raw = $db->get_clue_guesses((int) $clue->id);
@@ -384,15 +403,10 @@ function kealoa_rest_game_round(WP_REST_Request $request): WP_REST_Response {
         }
 
         $clues[] = [
-            'clue_number'            => (int) $clue->clue_number,
-            'puzzle_date'            => $clue->puzzle_date ?? '',
-            'constructors'           => $constructors,
-            'editor'                 => $clue->editor_name ?? '',
-            'puzzle_clue_number'     => $clue->puzzle_clue_number ? (int) $clue->puzzle_clue_number : null,
-            'puzzle_clue_direction'  => $clue->puzzle_clue_direction ?? null,
-            'clue_text'              => $clue->clue_text,
-            'correct_answer'         => $clue->correct_answer,
-            'guesses'                => $guesses,
+            'clue_number'    => (int) $clue->clue_number,
+            'correct_answer' => $clue->correct_answer,
+            'puzzles'        => $puzzles,
+            'guesses'        => $guesses,
         ];
     }
 

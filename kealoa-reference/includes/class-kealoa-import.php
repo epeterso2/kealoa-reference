@@ -503,10 +503,12 @@ class Kealoa_Import {
         $imported = 0;
         $skipped = 0;
         $errors = [];
-        
+
+        // Group rows by round+clue_number so multi-puzzle clues are handled together
+        $grouped = [];
         foreach ($rows as $index => $row) {
             $line = $index + 2;
-            
+
             $required = ['round_date', 'clue_text', 'correct_answer'];
             $missing = [];
             foreach ($required as $field) {
@@ -514,13 +516,13 @@ class Kealoa_Import {
                     $missing[] = $field;
                 }
             }
-            
+
             if (!empty($missing)) {
                 $errors[] = "Line {$line}: Missing required fields: " . implode(', ', $missing);
                 $skipped++;
                 continue;
             }
-            
+
             // Normalize dates
             $round_date = $this->normalize_date($row['round_date']);
             if (!$round_date) {
@@ -528,38 +530,75 @@ class Kealoa_Import {
                 $skipped++;
                 continue;
             }
-            
-            // Get round number (default to 1 if not specified)
+
             $round_number = (int) ($row['round_number'] ?? 1);
             if ($round_number < 1) {
                 $round_number = 1;
             }
-            
-            // Find the round
-            $round = $this->db->get_round_by_date_and_number($round_date, $round_number);
+
+            $clue_number = !empty($row['clue_number']) ? (int) $row['clue_number'] : ($index + 1);
+            $group_key = $round_date . '|' . $round_number . '|' . $clue_number;
+
+            if (!isset($grouped[$group_key])) {
+                $grouped[$group_key] = [
+                    'round_date' => $round_date,
+                    'round_number' => $round_number,
+                    'clue_number' => $clue_number,
+                    'correct_answer' => strtoupper($row['correct_answer']),
+                    'puzzle_rows' => [],
+                    'guesser_rows' => [],
+                    'lines' => [],
+                ];
+            }
+
+            $grouped[$group_key]['lines'][] = $line;
+
+            // Collect puzzle ref from this row (if present)
+            if (!empty($row['puzzle_date'])) {
+                $grouped[$group_key]['puzzle_rows'][] = [
+                    'puzzle_date' => $row['puzzle_date'],
+                    'constructors' => $row['constructors'] ?? ($row['constructor'] ?? ''),
+                    'puzzle_clue_number' => $row['puzzle_clue_number'] ?? '',
+                    'puzzle_clue_direction' => $row['puzzle_clue_direction'] ?? '',
+                    'clue_text' => $row['clue_text'] ?? '',
+                    'line' => $line,
+                ];
+            }
+
+            // Collect guesser from this row (if present and first row for this clue)
+            if (!empty($row['guesser']) && !empty($row['guess'])) {
+                $grouped[$group_key]['guesser_rows'][] = [
+                    'guesser' => $row['guesser'],
+                    'guess' => $row['guess'],
+                ];
+            }
+        }
+
+        // Process each clue group
+        foreach ($grouped as $group) {
+            $round = $this->db->get_round_by_date_and_number($group['round_date'], $group['round_number']);
             if (!$round) {
-                $errors[] = "Line {$line}: Round not found for date {$round_date} round #{$round_number}";
+                $errors[] = "Line {$group['lines'][0]}: Round not found for date {$group['round_date']} round #{$group['round_number']}";
                 $skipped++;
                 continue;
             }
-            
-            // Handle puzzle fields (optional - may be empty for word-only rounds)
-            $puzzle_id = null;
-            $puzzle_clue_number = null;
-            $puzzle_clue_direction = null;
-            
-            if (!empty($row['puzzle_date'])) {
-                $puzzle_date = $this->normalize_date($row['puzzle_date']);
+
+            // Build puzzle refs
+            $puzzle_refs = [];
+            $puzzle_error = false;
+            $display_order = 1;
+
+            foreach ($group['puzzle_rows'] as $pr) {
+                $puzzle_date = $this->normalize_date($pr['puzzle_date']);
                 if (!$puzzle_date) {
-                    $errors[] = "Line {$line}: Invalid puzzle_date format '{$row['puzzle_date']}'";
-                    $skipped++;
-                    continue;
+                    $errors[] = "Line {$pr['line']}: Invalid puzzle_date format '{$pr['puzzle_date']}'";
+                    $puzzle_error = true;
+                    break;
                 }
-                
+
                 // Find or create the puzzle
                 $puzzle = $this->db->get_puzzle_by_date($puzzle_date);
                 if (!$puzzle) {
-                    // Determine editor for new puzzle
                     $editor_name = Kealoa_DB::get_editor_for_date($puzzle_date);
                     $create_data = ['publication_date' => $puzzle_date];
                     if (!empty($editor_name)) {
@@ -570,26 +609,18 @@ class Kealoa_Import {
                     }
                     $new_puzzle_id = $this->db->create_puzzle($create_data);
                     if (!$new_puzzle_id) {
-                        $errors[] = "Line {$line}: Could not create puzzle for date {$puzzle_date}";
-                        $skipped++;
-                        continue;
+                        $errors[] = "Line {$pr['line']}: Could not create puzzle for date {$puzzle_date}";
+                        $puzzle_error = true;
+                        break;
                     }
                     $puzzle = $this->db->get_puzzle($new_puzzle_id);
                 }
-                $puzzle_id = (int) $puzzle->id;
-                
-                // Handle constructors if provided
-                $constructor_value = '';
-                if (isset($row['constructors']) && !empty(trim($row['constructors']))) {
-                    $constructor_value = trim($row['constructors']);
-                } elseif (isset($row['constructor']) && !empty(trim($row['constructor']))) {
-                    $constructor_value = trim($row['constructor']);
-                }
-                
+
+                // Handle constructors
+                $constructor_value = trim($pr['constructors']);
                 if (!empty($constructor_value)) {
                     $constructor_names = array_map('trim', preg_split('/,|\band\b/i', $constructor_value));
                     $person_ids = [];
-                    
                     foreach ($constructor_names as $name) {
                         if (empty($name)) {
                             continue;
@@ -599,49 +630,56 @@ class Kealoa_Import {
                             $person_ids[] = (int) $person->id;
                         }
                     }
-                    
                     if (!empty($person_ids)) {
                         $this->db->set_puzzle_constructors((int) $puzzle->id, $person_ids);
                     }
                 }
-                
-                // Handle puzzle clue direction
-                if (!empty($row['puzzle_clue_direction'])) {
-                    $direction = strtoupper(substr($row['puzzle_clue_direction'], 0, 1));
+
+                // Handle direction
+                $puzzle_clue_direction = null;
+                if (!empty($pr['puzzle_clue_direction'])) {
+                    $direction = strtoupper(substr($pr['puzzle_clue_direction'], 0, 1));
                     if (!in_array($direction, ['A', 'D'])) {
-                        $errors[] = "Line {$line}: Invalid direction '{$row['puzzle_clue_direction']}', must be A or D";
-                        $skipped++;
-                        continue;
+                        $errors[] = "Line {$pr['line']}: Invalid direction '{$pr['puzzle_clue_direction']}', must be A or D";
+                        $puzzle_error = true;
+                        break;
                     }
                     $puzzle_clue_direction = $direction;
                 }
-                
-                // Handle puzzle clue number
-                if (!empty($row['puzzle_clue_number'])) {
-                    $puzzle_clue_number = (int) $row['puzzle_clue_number'];
-                }
+
+                $puzzle_clue_number = !empty($pr['puzzle_clue_number']) ? (int) $pr['puzzle_clue_number'] : null;
+                $clue_text = trim($pr['clue_text'] ?? '');
+
+                $puzzle_refs[] = [
+                    'puzzle_id' => (int) $puzzle->id,
+                    'puzzle_clue_number' => $puzzle_clue_number,
+                    'puzzle_clue_direction' => $puzzle_clue_direction,
+                    'clue_text' => $clue_text,
+                    'display_order' => $display_order++,
+                ];
             }
-            
+
+            if ($puzzle_error) {
+                $skipped++;
+                continue;
+            }
+
             $clue_data = [
                 'round_id' => $round->id,
-                'puzzle_id' => $puzzle_id,
-                'clue_number' => !empty($row['clue_number']) ? (int) $row['clue_number'] : ($index + 1),
-                'puzzle_clue_number' => $puzzle_clue_number,
-                'puzzle_clue_direction' => $puzzle_clue_direction,
-                'clue_text' => $row['clue_text'],
-                'correct_answer' => strtoupper($row['correct_answer']),
+                'clue_number' => $group['clue_number'],
+                'correct_answer' => $group['correct_answer'],
             ];
-            
+
             // Check if clue already exists
             $existing_clues = $this->db->get_round_clues($round->id);
             $existing_clue = null;
             foreach ($existing_clues as $c) {
-                if ((int) $c->clue_number === (int) $row['clue_number']) {
+                if ((int) $c->clue_number === $group['clue_number']) {
                     $existing_clue = $c;
                     break;
                 }
             }
-            
+
             if ($existing_clue) {
                 if (!$overwrite) {
                     $skipped++;
@@ -649,29 +687,33 @@ class Kealoa_Import {
                 }
                 // Update existing clue
                 $clue_id = $this->db->update_clue((int) $existing_clue->id, $clue_data);
+                $actual_clue_id = (int) $existing_clue->id;
             } else {
                 // Create new clue
                 $clue_id = $this->db->create_clue($clue_data);
+                $actual_clue_id = $clue_id;
             }
-            
+
             if ($clue_id) {
+                // Set puzzle references
+                $this->db->set_clue_puzzles($actual_clue_id, $puzzle_refs);
+
                 $imported++;
-                
-                // Handle guesser/guess columns if present and both have values
-                if (!empty($row['guesser']) && !empty($row['guess'])) {
-                    $guesser = $this->find_or_create_person(trim($row['guesser']));
+
+                // Handle guesser/guess data
+                foreach ($group['guesser_rows'] as $gr) {
+                    $guesser = $this->find_or_create_person(trim($gr['guesser']));
                     if ($guesser) {
-                        $guessed_word = strtoupper(trim($row['guess']));
-                        $actual_clue_id = $existing_clue ? (int) $existing_clue->id : $clue_id;
+                        $guessed_word = strtoupper(trim($gr['guess']));
                         $this->db->set_guess($actual_clue_id, (int) $guesser->id, $guessed_word);
                     }
                 }
             } else {
-                $errors[] = "Line {$line}: Failed to insert clue";
+                $errors[] = "Line {$group['lines'][0]}: Failed to insert clue";
                 $skipped++;
             }
         }
-        
+
         return [
             'imported' => $imported,
             'skipped' => $skipped,
@@ -1182,26 +1224,27 @@ class Kealoa_Import {
             $clue_data = [
                 'correct_answer' => strtoupper($correct_answer_raw),
             ];
-            if ($puzzle_id !== null) {
-                $clue_data['puzzle_id'] = $puzzle_id;
-            }
-            if ($puzzle_clue_number_int !== null) {
-                $clue_data['puzzle_clue_number'] = $puzzle_clue_number_int;
-            }
-            if ($clue_direction !== null) {
-                $clue_data['puzzle_clue_direction'] = $clue_direction;
-            }
 
-            if ($clue_text_raw !== '') {
-                $clue_data['clue_text'] = $clue_text_raw;
+            // Build puzzle ref for set_clue_puzzles (clue_text is now per-puzzle)
+            $puzzle_refs = [];
+            if ($puzzle_id !== null && $clue_text_raw !== '') {
+                $ref = [
+                    'puzzle_id' => $puzzle_id,
+                    'clue_text' => $clue_text_raw,
+                    'display_order' => 1
+                ];
+                if ($puzzle_clue_number_int !== null) {
+                    $ref['puzzle_clue_number'] = $puzzle_clue_number_int;
+                }
+                if ($clue_direction !== null) {
+                    $ref['puzzle_clue_direction'] = $clue_direction;
+                }
+                $puzzle_refs[] = $ref;
             }
 
             if (!$existing_clue) {
                 $clue_data['round_id']    = $round_id;
                 $clue_data['clue_number'] = $clue_number_in_round;
-                if (!isset($clue_data['clue_text'])) {
-                    $clue_data['clue_text'] = '';
-                }
                 $new_clue_id = $this->db->create_clue($clue_data);
                 if (!$new_clue_id) {
                     $errors[] = "Line {$line}: Could not create clue {$clue_number_in_round} for round {$round_id}.";
@@ -1214,6 +1257,11 @@ class Kealoa_Import {
                 if ($overwrite) {
                     $this->db->update_clue($clue_id, $clue_data);
                 }
+            }
+
+            // Set puzzle references
+            if (!empty($puzzle_refs)) {
+                $this->db->set_clue_puzzles($clue_id, $puzzle_refs);
             }
 
             // --- Guess set ---

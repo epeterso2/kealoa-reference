@@ -242,7 +242,8 @@ class Kealoa_Export {
     }
 
     /**
-     * Write clues CSV (with puzzle date and constructors)
+     * Write clues CSV (with puzzle date and constructors).
+     * Multi-puzzle clues output one row per clue-puzzle combination.
      */
     private function write_clues($output): void {
         fputcsv($output, [
@@ -255,22 +256,54 @@ class Kealoa_Export {
 
         foreach ($rounds as $round) {
             $clues = $this->db->get_round_clues((int) $round->id);
+            $clue_ids = array_map(fn($c) => (int) $c->id, $clues);
+            $bulk_clue_puzzles = !empty($clue_ids) ? $this->db->get_clue_puzzles_bulk($clue_ids) : [];
+
+            // Collect all puzzle IDs for constructor bulk fetch
+            $all_puzzle_ids = [];
+            foreach ($bulk_clue_puzzles as $cps) {
+                foreach ($cps as $cp) {
+                    $all_puzzle_ids[] = (int) $cp->puzzle_id;
+                }
+            }
+            $all_puzzle_ids = array_unique($all_puzzle_ids);
+            $bulk_constructors_map = !empty($all_puzzle_ids) ? $this->db->get_puzzle_constructors_bulk($all_puzzle_ids) : [];
 
             foreach ($clues as $clue) {
-                $constructors = !empty($clue->puzzle_id) ? $this->db->get_puzzle_constructors((int) $clue->puzzle_id) : [];
-                $constructor_names = array_map(fn($c) => $c->full_name, $constructors);
+                $clue_pzs = $bulk_clue_puzzles[(int) $clue->id] ?? [];
 
-                fputcsv($output, [
-                    $round->round_date,
-                    $round->round_number,
-                    $clue->clue_number,
-                    $clue->puzzle_date ?? '',
-                    implode(', ', $constructor_names),
-                    $clue->puzzle_clue_number,
-                    $clue->puzzle_clue_direction,
-                    $clue->clue_text,
-                    $clue->correct_answer,
-                ]);
+                if (empty($clue_pzs)) {
+                    // No puzzle refs — output single row with empty puzzle fields
+                    fputcsv($output, [
+                        $round->round_date,
+                        $round->round_number,
+                        $clue->clue_number,
+                        '',
+                        '',
+                        '',
+                        '',
+                        '',
+                        $clue->correct_answer,
+                    ]);
+                } else {
+                    // One row per puzzle reference
+                    foreach ($clue_pzs as $cp) {
+                        $constructors = $bulk_constructors_map[(int) $cp->puzzle_id] ?? [];
+                        $constructor_names = array_map(fn($c) => $c->full_name, $constructors);
+
+                        fputcsv($output, [
+                            $round->round_date,
+                            $round->round_number,
+                            $clue->clue_number,
+                            $cp->puzzle_date ?? '',
+                            implode(', ', $constructor_names),
+                            $cp->puzzle_clue_number,
+                            $cp->puzzle_clue_direction,
+                            $cp->clue_text ?? '',
+                            $clue->correct_answer,
+                        ]);
+                    }
+                }
             }
         }
     }

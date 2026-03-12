@@ -28,6 +28,7 @@ global $wpdb;
 // Drop all custom tables (including legacy constructors table if still present)
 $tables = [
     $wpdb->prefix . 'kealoa_guesses',
+    $wpdb->prefix . 'kealoa_clue_puzzles',
     $wpdb->prefix . 'kealoa_clues',
     $wpdb->prefix . 'kealoa_round_guessers',
     $wpdb->prefix . 'kealoa_round_solutions',

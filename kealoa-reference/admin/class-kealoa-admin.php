@@ -377,6 +377,7 @@ class Kealoa_Admin {
             'repair_clear_clue_givers' => $this->handle_repair_clear_clue_givers(),
             'repair_clear_editors' => $this->handle_repair_clear_editors(),
             'repair_renumber_games' => $this->handle_repair_renumber_games(),
+            'auto_populate_editors' => $this->handle_auto_populate_editors(),
             'save_settings' => $this->handle_save_settings(),
             'create_alias' => $this->handle_create_alias(),
             'update_alias' => $this->handle_update_alias(),
@@ -600,21 +601,6 @@ class Kealoa_Admin {
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
-
-            <div class="kealoa-import-section">
-                <h2><?php esc_html_e('Puzzle Editors', 'kealoa-reference'); ?></h2>
-                <p><?php esc_html_e('Auto-populate puzzle editor names based on puzzle dates using historical NYT editor information.', 'kealoa-reference'); ?></p>
-
-                <form method="post" style="margin-top: 10px;">
-                    <?php wp_nonce_field('kealoa_admin_action', 'kealoa_nonce'); ?>
-                    <input type="hidden" name="kealoa_action" value="auto_populate_editors" />
-                    <input type="submit" class="button button-secondary" value="<?php esc_attr_e('Auto-Populate Editors', 'kealoa-reference'); ?>"
-                           onclick="return confirm('<?php esc_attr_e('This will overwrite all existing editor names based on puzzle dates. Continue?', 'kealoa-reference'); ?>');" />
-                    <p class="description" style="margin-top: 10px;">
-                        <?php esc_html_e('This will update editor names for all puzzles based on their puzzle dates. Existing editor names will be overwritten.', 'kealoa-reference'); ?>
-                    </p>
-                </form>
-            </div>
 
             <div class="kealoa-import-section" style="margin-top: 30px;">
                 <h2><?php esc_html_e('Import CSV File', 'kealoa-reference'); ?></h2>
@@ -1806,14 +1792,39 @@ class Kealoa_Admin {
                     <?php
                     $clue_ids = array_map(fn($c) => (int) $c->id, $clues);
                     $bulk_clue_guesses = $this->db->get_clue_guesses_bulk($clue_ids);
+                    $bulk_clue_puzzles = $this->db->get_clue_puzzles_bulk($clue_ids);
                     ?>
                     <?php foreach ($clues as $clue): ?>
-                        <?php $clue_guesses = $bulk_clue_guesses[(int) $clue->id] ?? []; ?>
+                        <?php
+                        $clue_guesses = $bulk_clue_guesses[(int) $clue->id] ?? [];
+                        $clue_pzs = $bulk_clue_puzzles[(int) $clue->id] ?? [];
+                        ?>
                         <tr>
                             <td><?php echo esc_html($clue->clue_number); ?></td>
-                            <td><?php echo Kealoa_Formatter::format_puzzle_date_link($clue->puzzle_date); ?></td>
-                            <td><?php echo esc_html(Kealoa_Formatter::format_clue_direction((int) $clue->puzzle_clue_number, $clue->puzzle_clue_direction)); ?></td>
-                            <td><?php echo esc_html($clue->clue_text); ?></td>
+                            <td><?php
+                                if (empty($clue_pzs)) {
+                                    echo '—';
+                                } else {
+                                    $dates = array_map(fn($cp) => Kealoa_Formatter::format_puzzle_date_link($cp->puzzle_date), $clue_pzs);
+                                    echo implode('<br>', $dates);
+                                }
+                            ?></td>
+                            <td><?php
+                                if (empty($clue_pzs)) {
+                                    echo '—';
+                                } else {
+                                    $dirs = array_map(fn($cp) => esc_html(Kealoa_Formatter::format_clue_direction((int) $cp->puzzle_clue_number, $cp->puzzle_clue_direction)), $clue_pzs);
+                                    echo implode('<br>', $dirs);
+                                }
+                            ?></td>
+                            <td><?php
+                                if (empty($clue_pzs)) {
+                                    echo '—';
+                                } else {
+                                    $texts = array_map(fn($cp) => esc_html($cp->clue_text ?? ''), $clue_pzs);
+                                    echo implode('<br>', $texts);
+                                }
+                            ?></td>
                             <td><strong><?php echo esc_html($clue->correct_answer); ?></strong></td>
                             <?php foreach ($guessers as $guesser): ?>
                                 <td>
@@ -1865,55 +1876,74 @@ class Kealoa_Admin {
                                value="<?php echo count($clues) + 1; ?>" />
                     </td>
                 </tr>
-                <tr>
-                    <th><label for="puzzle_date"><?php esc_html_e('NYT Puzzle Date', 'kealoa-reference'); ?></label></th>
-                    <td>
-                        <input type="date" name="puzzle_date" id="puzzle_date" class="regular-text" />
-                        <p class="description">
-                            <?php esc_html_e('If a puzzle with this date already exists, it will be used automatically.', 'kealoa-reference'); ?>
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <th><label for="puzzle_constructors"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></label></th>
-                    <td>
-                        <select name="puzzle_constructors[]" id="puzzle_constructors" multiple class="kealoa-multi-select" style="width: 100%; min-height: 120px;">
-                            <?php foreach ($all_constructors as $constructor): ?>
-                                <option value="<?php echo esc_attr($constructor->id); ?>">
-                                    <?php echo esc_html($constructor->full_name); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <p class="description">
-                            <?php esc_html_e('Hold Ctrl/Cmd to select multiple. Only used when creating a new puzzle.', 'kealoa-reference'); ?>
-                            <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons&action=add')); ?>" target="_blank">
-                                <?php esc_html_e('Add new person', 'kealoa-reference'); ?> &rarr;
-                            </a>
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <th><label for="puzzle_clue_number"><?php esc_html_e('Puzzle Clue Number', 'kealoa-reference'); ?></label></th>
-                    <td>
-                        <input type="number" name="puzzle_clue_number" id="puzzle_clue_number" min="1" />
-                    </td>
-                </tr>
-                <tr>
-                    <th><label for="puzzle_clue_direction"><?php esc_html_e('Direction', 'kealoa-reference'); ?></label></th>
-                    <td>
-                        <select name="puzzle_clue_direction" id="puzzle_clue_direction">
-                            <option value=""><?php esc_html_e('— None —', 'kealoa-reference'); ?></option>
-                            <option value="A"><?php esc_html_e('Across', 'kealoa-reference'); ?></option>
-                            <option value="D"><?php esc_html_e('Down', 'kealoa-reference'); ?></option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th><label for="clue_text"><?php esc_html_e('Clue Text', 'kealoa-reference'); ?> *</label></th>
-                    <td>
-                        <textarea name="clue_text" id="clue_text" rows="2" class="large-text" required></textarea>
-                    </td>
-                </tr>
+            </table>
+
+            <h3><?php esc_html_e('Puzzle References', 'kealoa-reference'); ?></h3>
+            <p class="description"><?php esc_html_e('Each clue can reference one or more puzzles. Click "Add Puzzle" to add a reference.', 'kealoa-reference'); ?></p>
+
+            <div id="kealoa-puzzle-groups">
+                <div class="kealoa-puzzle-group" data-index="0">
+                    <fieldset style="border:1px solid #ccd0d4; padding:10px 15px; margin-bottom:10px;">
+                        <legend style="font-weight:600;"><?php esc_html_e('Puzzle 1', 'kealoa-reference'); ?></legend>
+                        <table class="form-table" style="margin:0;">
+                            <tr>
+                                <th><label><?php esc_html_e('NYT Puzzle Date', 'kealoa-reference'); ?></label></th>
+                                <td>
+                                    <input type="date" name="puzzles[0][date]" class="regular-text kealoa-puzzle-date" />
+                                    <p class="description"><?php esc_html_e('If a puzzle with this date already exists, it will be used automatically.', 'kealoa-reference'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><label><?php esc_html_e('Constructors', 'kealoa-reference'); ?></label></th>
+                                <td>
+                                    <select name="puzzles[0][constructors][]" multiple class="kealoa-multi-select kealoa-puzzle-constructors" style="width: 100%; min-height: 120px;">
+                                        <?php foreach ($all_constructors as $constructor): ?>
+                                            <option value="<?php echo esc_attr($constructor->id); ?>">
+                                                <?php echo esc_html($constructor->full_name); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <p class="description">
+                                        <?php esc_html_e('Hold Ctrl/Cmd to select multiple. Only used when creating a new puzzle.', 'kealoa-reference'); ?>
+                                        <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons&action=add')); ?>" target="_blank">
+                                            <?php esc_html_e('Add new person', 'kealoa-reference'); ?> &rarr;
+                                        </a>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><label><?php esc_html_e('Puzzle Clue Number', 'kealoa-reference'); ?></label></th>
+                                <td>
+                                    <input type="number" name="puzzles[0][clue_number]" min="1" class="kealoa-puzzle-clue-number" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><label><?php esc_html_e('Direction', 'kealoa-reference'); ?></label></th>
+                                <td>
+                                    <select name="puzzles[0][direction]" class="kealoa-puzzle-direction">
+                                        <option value=""><?php esc_html_e('— None —', 'kealoa-reference'); ?></option>
+                                        <option value="A"><?php esc_html_e('Across', 'kealoa-reference'); ?></option>
+                                        <option value="D"><?php esc_html_e('Down', 'kealoa-reference'); ?></option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><label><?php esc_html_e('Clue Text', 'kealoa-reference'); ?> *</label></th>
+                                <td>
+                                    <textarea name="puzzles[0][clue_text]" rows="2" class="large-text kealoa-puzzle-clue-text" required></textarea>
+                                    <p class="description"><?php esc_html_e('The clue text as it appears in this puzzle.', 'kealoa-reference'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                        <p><button type="button" class="button kealoa-remove-puzzle"><?php esc_html_e('Remove Puzzle', 'kealoa-reference'); ?></button></p>
+                    </fieldset>
+                </div>
+            </div>
+            <p>
+                <button type="button" class="button kealoa-add-puzzle"><?php esc_html_e('Add Puzzle', 'kealoa-reference'); ?></button>
+            </p>
+
+            <table class="form-table">
                 <tr>
                     <th><label for="correct_answer"><?php esc_html_e('Correct Answer', 'kealoa-reference'); ?> *</label></th>
                     <td>
@@ -1973,10 +2003,12 @@ class Kealoa_Admin {
         $all_constructors = $this->db->get_persons_who_are_constructors();
         $clue_guesses = $this->db->get_clue_guesses($clue_id);
 
-        // Get the puzzle for this clue
-        $puzzle = $this->db->get_puzzle((int) $clue->puzzle_id);
-        $puzzle_constructors = $puzzle ? $this->db->get_puzzle_constructors((int) $puzzle->id) : [];
-        $puzzle_constructor_ids = array_map(fn($c) => (int) $c->id, $puzzle_constructors);
+        // Get puzzle references for this clue
+        $clue_puzzle_refs = $this->db->get_clue_puzzles($clue_id);
+        $clue_puzzle_constructor_map = [];
+        foreach ($clue_puzzle_refs as $cpRef) {
+            $clue_puzzle_constructor_map[(int) $cpRef->puzzle_id] = $this->db->get_puzzle_constructors((int) $cpRef->puzzle_id);
+        }
 
         // Build a map of guesser_id => guessed_word
         $guess_map = [];
@@ -2016,69 +2048,132 @@ class Kealoa_Admin {
                                value="<?php echo esc_attr($clue->clue_number); ?>" />
                     </td>
                 </tr>
-                <tr>
-                    <th><?php esc_html_e('Puzzle Details', 'kealoa-reference'); ?></th>
-                    <td>
-                        <button type="button" class="button kealoa-clear-puzzle-details">
-                            <?php esc_html_e('Clear Puzzle Details', 'kealoa-reference'); ?>
-                        </button>
-                        <p class="description">
-                            <?php esc_html_e('Clears the date, constructors, clue number, and direction below.', 'kealoa-reference'); ?>
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <th><label for="puzzle_date"><?php esc_html_e('NYT Puzzle Date', 'kealoa-reference'); ?></label></th>
-                    <td>
-                        <input type="date" name="puzzle_date" id="puzzle_date" class="regular-text"
-                               value="<?php echo esc_attr($puzzle->publication_date ?? ''); ?>" />
-                        <p class="description">
-                            <?php esc_html_e('If a puzzle with this date already exists, it will be used automatically.', 'kealoa-reference'); ?>
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <th><label for="puzzle_constructors"><?php esc_html_e('Constructors', 'kealoa-reference'); ?></label></th>
-                    <td>
-                        <select name="puzzle_constructors[]" id="puzzle_constructors" multiple class="kealoa-multi-select" style="width: 100%; min-height: 120px;">
-                            <?php foreach ($all_constructors as $constructor): ?>
-                                <option value="<?php echo esc_attr($constructor->id); ?>"
-                                    <?php echo in_array((int) $constructor->id, $puzzle_constructor_ids, true) ? 'selected' : ''; ?>>
-                                    <?php echo esc_html($constructor->full_name); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <p class="description">
-                            <?php esc_html_e('Hold Ctrl/Cmd to select multiple. Only used when creating a new puzzle.', 'kealoa-reference'); ?>
-                            <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons&action=add')); ?>" target="_blank">
-                                <?php esc_html_e('Add new person', 'kealoa-reference'); ?> &rarr;
-                            </a>
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <th><label for="puzzle_clue_number"><?php esc_html_e('Puzzle Clue Number', 'kealoa-reference'); ?></label></th>
-                    <td>
-                        <input type="number" name="puzzle_clue_number" id="puzzle_clue_number" min="1"
-                               value="<?php echo esc_attr($clue->puzzle_clue_number); ?>" />
-                    </td>
-                </tr>
-                <tr>
-                    <th><label for="puzzle_clue_direction"><?php esc_html_e('Direction', 'kealoa-reference'); ?></label></th>
-                    <td>
-                        <select name="puzzle_clue_direction" id="puzzle_clue_direction">
-                            <option value=""><?php esc_html_e('— None —', 'kealoa-reference'); ?></option>
-                            <option value="A" <?php selected($clue->puzzle_clue_direction, 'A'); ?>><?php esc_html_e('Across', 'kealoa-reference'); ?></option>
-                            <option value="D" <?php selected($clue->puzzle_clue_direction, 'D'); ?>><?php esc_html_e('Down', 'kealoa-reference'); ?></option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th><label for="clue_text"><?php esc_html_e('Clue Text', 'kealoa-reference'); ?> *</label></th>
-                    <td>
-                        <textarea name="clue_text" id="clue_text" rows="2" class="large-text" required><?php echo esc_textarea($clue->clue_text); ?></textarea>
-                    </td>
-                </tr>
+            </table>
+
+            <h3><?php esc_html_e('Puzzle References', 'kealoa-reference'); ?></h3>
+            <p class="description"><?php esc_html_e('Each clue can reference one or more puzzles. Click "Add Puzzle" to add a reference.', 'kealoa-reference'); ?></p>
+            <p><button type="button" class="button kealoa-clear-all-puzzles"><?php esc_html_e('Clear All Puzzles', 'kealoa-reference'); ?></button></p>
+
+            <div id="kealoa-puzzle-groups">
+                <?php if (empty($clue_puzzle_refs)): ?>
+                    <div class="kealoa-puzzle-group" data-index="0">
+                        <fieldset style="border:1px solid #ccd0d4; padding:10px 15px; margin-bottom:10px;">
+                            <legend style="font-weight:600;"><?php esc_html_e('Puzzle 1', 'kealoa-reference'); ?></legend>
+                            <table class="form-table" style="margin:0;">
+                                <tr>
+                                    <th><label><?php esc_html_e('NYT Puzzle Date', 'kealoa-reference'); ?></label></th>
+                                    <td>
+                                        <input type="date" name="puzzles[0][date]" class="regular-text kealoa-puzzle-date" />
+                                        <p class="description"><?php esc_html_e('If a puzzle with this date already exists, it will be used automatically.', 'kealoa-reference'); ?></p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th><label><?php esc_html_e('Constructors', 'kealoa-reference'); ?></label></th>
+                                    <td>
+                                        <select name="puzzles[0][constructors][]" multiple class="kealoa-multi-select kealoa-puzzle-constructors" style="width: 100%; min-height: 120px;">
+                                            <?php foreach ($all_constructors as $constructor): ?>
+                                                <option value="<?php echo esc_attr($constructor->id); ?>">
+                                                    <?php echo esc_html($constructor->full_name); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <p class="description">
+                                            <?php esc_html_e('Hold Ctrl/Cmd to select multiple. Only used when creating a new puzzle.', 'kealoa-reference'); ?>
+                                            <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons&action=add')); ?>" target="_blank">
+                                                <?php esc_html_e('Add new person', 'kealoa-reference'); ?> &rarr;
+                                            </a>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th><label><?php esc_html_e('Puzzle Clue Number', 'kealoa-reference'); ?></label></th>
+                                    <td><input type="number" name="puzzles[0][clue_number]" min="1" class="kealoa-puzzle-clue-number" /></td>
+                                </tr>
+                                <tr>
+                                    <th><label><?php esc_html_e('Direction', 'kealoa-reference'); ?></label></th>
+                                    <td>
+                                        <select name="puzzles[0][direction]" class="kealoa-puzzle-direction">
+                                            <option value=""><?php esc_html_e('— None —', 'kealoa-reference'); ?></option>
+                                            <option value="A"><?php esc_html_e('Across', 'kealoa-reference'); ?></option>
+                                            <option value="D"><?php esc_html_e('Down', 'kealoa-reference'); ?></option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p><button type="button" class="button kealoa-remove-puzzle"><?php esc_html_e('Remove Puzzle', 'kealoa-reference'); ?></button></p>
+                        </fieldset>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($clue_puzzle_refs as $idx => $cpRef): ?>
+                        <?php
+                        $cpConstructors = $clue_puzzle_constructor_map[(int) $cpRef->puzzle_id] ?? [];
+                        $cpConstructorIds = array_map(fn($c) => (int) $c->id, $cpConstructors);
+                        ?>
+                        <div class="kealoa-puzzle-group" data-index="<?php echo $idx; ?>">
+                            <fieldset style="border:1px solid #ccd0d4; padding:10px 15px; margin-bottom:10px;">
+                                <legend style="font-weight:600;"><?php printf(esc_html__('Puzzle %d', 'kealoa-reference'), $idx + 1); ?></legend>
+                                <table class="form-table" style="margin:0;">
+                                    <tr>
+                                        <th><label><?php esc_html_e('NYT Puzzle Date', 'kealoa-reference'); ?></label></th>
+                                        <td>
+                                            <input type="date" name="puzzles[<?php echo $idx; ?>][date]" class="regular-text kealoa-puzzle-date"
+                                                   value="<?php echo esc_attr($cpRef->puzzle_date ?? ''); ?>" />
+                                            <p class="description"><?php esc_html_e('If a puzzle with this date already exists, it will be used automatically.', 'kealoa-reference'); ?></p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th><label><?php esc_html_e('Constructors', 'kealoa-reference'); ?></label></th>
+                                        <td>
+                                            <select name="puzzles[<?php echo $idx; ?>][constructors][]" multiple class="kealoa-multi-select kealoa-puzzle-constructors" style="width: 100%; min-height: 120px;">
+                                                <?php foreach ($all_constructors as $constructor): ?>
+                                                    <option value="<?php echo esc_attr($constructor->id); ?>"
+                                                        <?php echo in_array((int) $constructor->id, $cpConstructorIds, true) ? 'selected' : ''; ?>>
+                                                        <?php echo esc_html($constructor->full_name); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <p class="description">
+                                                <?php esc_html_e('Hold Ctrl/Cmd to select multiple. Only used when creating a new puzzle.', 'kealoa-reference'); ?>
+                                                <a href="<?php echo esc_url(admin_url('admin.php?page=kealoa-persons&action=add')); ?>" target="_blank">
+                                                    <?php esc_html_e('Add new person', 'kealoa-reference'); ?> &rarr;
+                                                </a>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th><label><?php esc_html_e('Puzzle Clue Number', 'kealoa-reference'); ?></label></th>
+                                        <td><input type="number" name="puzzles[<?php echo $idx; ?>][clue_number]" min="1" class="kealoa-puzzle-clue-number"
+                                                   value="<?php echo esc_attr($cpRef->puzzle_clue_number ?? ''); ?>" /></td>
+                                    </tr>
+                                    <tr>
+                                        <th><label><?php esc_html_e('Direction', 'kealoa-reference'); ?></label></th>
+                                        <td>
+                                            <select name="puzzles[<?php echo $idx; ?>][direction]" class="kealoa-puzzle-direction">
+                                                <option value=""><?php esc_html_e('— None —', 'kealoa-reference'); ?></option>
+                                                <option value="A" <?php selected($cpRef->puzzle_clue_direction ?? '', 'A'); ?>><?php esc_html_e('Across', 'kealoa-reference'); ?></option>
+                                                <option value="D" <?php selected($cpRef->puzzle_clue_direction ?? '', 'D'); ?>><?php esc_html_e('Down', 'kealoa-reference'); ?></option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th><label><?php esc_html_e('Clue Text', 'kealoa-reference'); ?> *</label></th>
+                                        <td>
+                                            <textarea name="puzzles[<?php echo $idx; ?>][clue_text]" rows="2" class="large-text kealoa-puzzle-clue-text" required><?php echo esc_textarea($cpRef->clue_text ?? ''); ?></textarea>
+                                            <p class="description"><?php esc_html_e('The clue text as it appears in this puzzle.', 'kealoa-reference'); ?></p>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p><button type="button" class="button kealoa-remove-puzzle"><?php esc_html_e('Remove Puzzle', 'kealoa-reference'); ?></button></p>
+                            </fieldset>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+            <p>
+                <button type="button" class="button kealoa-add-puzzle"><?php esc_html_e('Add Puzzle', 'kealoa-reference'); ?></button>
+            </p>
+
+            <table class="form-table">
                 <tr>
                     <th><label for="correct_answer"><?php esc_html_e('Correct Answer', 'kealoa-reference'); ?> *</label></th>
                     <td>
@@ -2410,40 +2505,16 @@ class Kealoa_Admin {
     private function handle_create_clue(): void {
         $round_id = (int) ($_POST['round_id'] ?? 0);
 
-        // Get or create puzzle based on date
-        $puzzle_date = sanitize_text_field($_POST['puzzle_date'] ?? '');
-        $puzzle_id = 0;
-
-        if (!empty($puzzle_date)) {
-            // Check if puzzle already exists for this date
-            $existing_puzzle = $this->db->get_puzzle_by_date($puzzle_date);
-            if ($existing_puzzle) {
-                $puzzle_id = (int) $existing_puzzle->id;
-            } else {
-                // Create new puzzle
-                $puzzle_id = $this->db->create_puzzle([
-                    'publication_date' => $puzzle_date,
-                ]);
-
-                // Set constructors if provided
-                if ($puzzle_id && !empty($_POST['puzzle_constructors'])) {
-                    $constructor_ids = array_map('intval', $_POST['puzzle_constructors']);
-                    $this->db->set_puzzle_constructors($puzzle_id, $constructor_ids);
-                }
-            }
-        }
-
         $clue_id = $this->db->create_clue([
             'round_id' => $round_id,
             'clue_number' => $_POST['clue_number'] ?? 1,
-            'puzzle_id' => $puzzle_id ?: null,
-            'puzzle_clue_number' => !empty($_POST['puzzle_clue_number']) ? $_POST['puzzle_clue_number'] : null,
-            'puzzle_clue_direction' => !empty($_POST['puzzle_clue_direction']) ? $_POST['puzzle_clue_direction'] : null,
-            'clue_text' => $_POST['clue_text'] ?? '',
             'correct_answer' => $_POST['correct_answer'] ?? '',
         ]);
 
         if ($clue_id) {
+            // Process puzzle references
+            $this->save_clue_puzzle_refs($clue_id);
+
             // Save guesses
             $guesses = $_POST['guesses'] ?? [];
             foreach ($guesses as $guesser_id => $guessed_word) {
@@ -2473,37 +2544,13 @@ class Kealoa_Admin {
             return;
         }
 
-        // Get or create puzzle based on date (same logic as create_clue)
-        $puzzle_date = sanitize_text_field($_POST['puzzle_date'] ?? '');
-        $puzzle_id = 0;
-
-        if (!empty($puzzle_date)) {
-            // Check if puzzle already exists for this date
-            $existing_puzzle = $this->db->get_puzzle_by_date($puzzle_date);
-            if ($existing_puzzle) {
-                $puzzle_id = (int) $existing_puzzle->id;
-            } else {
-                // Create new puzzle
-                $puzzle_id = $this->db->create_puzzle([
-                    'publication_date' => $puzzle_date,
-                ]);
-
-                // Set constructors if provided
-                if ($puzzle_id && !empty($_POST['puzzle_constructors'])) {
-                    $constructor_ids = array_map('intval', $_POST['puzzle_constructors']);
-                    $this->db->set_puzzle_constructors($puzzle_id, $constructor_ids);
-                }
-            }
-        }
-
         $this->db->update_clue($clue_id, [
             'clue_number' => $_POST['clue_number'] ?? 1,
-            'puzzle_id' => $puzzle_id ?: null,
-            'puzzle_clue_number' => !empty($_POST['puzzle_clue_number']) ? $_POST['puzzle_clue_number'] : null,
-            'puzzle_clue_direction' => !empty($_POST['puzzle_clue_direction']) ? $_POST['puzzle_clue_direction'] : null,
-            'clue_text' => $_POST['clue_text'] ?? '',
             'correct_answer' => $_POST['correct_answer'] ?? '',
         ]);
+
+        // Process puzzle references
+        $this->save_clue_puzzle_refs($clue_id);
 
         // Update guesses
         $guesses = $_POST['guesses'] ?? [];
@@ -2518,6 +2565,52 @@ class Kealoa_Admin {
         Kealoa_Shortcodes::flush_all_caches();
         wp_redirect(admin_url('admin.php?page=kealoa-rounds&action=clues&id=' . $clue->round_id . '&message=clue_updated'));
         exit;
+    }
+
+    /**
+     * Process puzzle references from form POST data and save them for a clue.
+     * Shared by handle_create_clue and handle_update_clue.
+     */
+    private function save_clue_puzzle_refs(int $clue_id): void {
+        $puzzles_input = $_POST['puzzles'] ?? [];
+        $puzzle_refs = [];
+
+        foreach ($puzzles_input as $idx => $puzzle_data) {
+            $puzzle_date = sanitize_text_field($puzzle_data['date'] ?? '');
+            $clue_text = sanitize_textarea_field($puzzle_data['clue_text'] ?? '');
+            
+            if (empty($puzzle_date) || empty($clue_text)) {
+                continue;
+            }
+
+            // Get or create puzzle based on date
+            $existing_puzzle = $this->db->get_puzzle_by_date($puzzle_date);
+            if ($existing_puzzle) {
+                $puzzle_id = (int) $existing_puzzle->id;
+            } else {
+                $puzzle_id = $this->db->create_puzzle([
+                    'publication_date' => $puzzle_date,
+                ]);
+
+                // Set constructors if provided (only for newly created puzzles)
+                if ($puzzle_id && !empty($puzzle_data['constructors'])) {
+                    $constructor_ids = array_map('intval', $puzzle_data['constructors']);
+                    $this->db->set_puzzle_constructors($puzzle_id, $constructor_ids);
+                }
+            }
+
+            if ($puzzle_id) {
+                $puzzle_refs[] = [
+                    'puzzle_id' => $puzzle_id,
+                    'puzzle_clue_number' => !empty($puzzle_data['clue_number']) ? (int) $puzzle_data['clue_number'] : null,
+                    'puzzle_clue_direction' => !empty($puzzle_data['direction']) ? sanitize_text_field($puzzle_data['direction']) : null,
+                    'clue_text' => $clue_text,
+                    'display_order' => (int) $idx + 1,
+                ];
+            }
+        }
+
+        $this->db->set_clue_puzzles($clue_id, $puzzle_refs);
     }
 
     /**
@@ -2741,6 +2834,15 @@ class Kealoa_Admin {
                 'button_label' => 'Clear Selected',
                 'columns'     => ['Puzzle ID', 'Puzzle Date', 'Editor ID'],
                 'fields'      => ['id', 'publication_date', 'editor_id'],
+            ],
+            'puzzles_without_editors' => [
+                'label'       => 'Puzzles Without Editors',
+                'description' => 'Puzzles that have no editor assigned (NULL editor_id). Auto-populate will assign editors based on historical NYT editor date ranges.',
+                'action'      => 'auto_populate_editors',
+                'button_label' => 'Auto-Populate All',
+                'no_selection' => true,
+                'columns'     => ['Puzzle ID', 'Puzzle Date'],
+                'fields'      => ['id', 'publication_date'],
             ],
             'orphan_persons' => [
                 'label'       => 'Orphan Persons',
@@ -2977,6 +3079,17 @@ class Kealoa_Admin {
 
         Kealoa_Shortcodes::flush_all_caches();
         wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $renumbered));
+        exit;
+    }
+
+    /**
+     * Auto-populate editor IDs for all puzzles based on publication dates.
+     */
+    private function handle_auto_populate_editors(): void {
+        $updated = $this->db->auto_populate_editor_ids();
+
+        Kealoa_Shortcodes::flush_all_caches();
+        wp_redirect(admin_url('admin.php?page=kealoa-data-check&kealoa_repaired=' . $updated));
         exit;
     }
 
@@ -3411,26 +3524,41 @@ class Kealoa_Admin {
         // Build existing data map for pre-filling
         $clue_ids = array_map(fn($c) => (int) $c->id, $clues);
         $bulk_guesses = !empty($clue_ids) ? $this->db->get_clue_guesses_bulk($clue_ids) : [];
+        $bulk_clue_puzzles = !empty($clue_ids) ? $this->db->get_clue_puzzles_bulk($clue_ids) : [];
+
+        // Collect all puzzle IDs for constructor bulk fetch
+        $all_puzzle_ids = [];
+        foreach ($bulk_clue_puzzles as $cps) {
+            foreach ($cps as $cp) {
+                $all_puzzle_ids[] = (int) $cp->puzzle_id;
+            }
+        }
+        $all_puzzle_ids = array_unique($all_puzzle_ids);
+        $bulk_constructors_map = !empty($all_puzzle_ids) ? $this->db->get_puzzle_constructors_bulk($all_puzzle_ids) : [];
 
         $existing_data = [];
         foreach ($clues as $clue) {
             $cn = (int) $clue->clue_number;
+            $clue_pzs = $bulk_clue_puzzles[(int) $clue->id] ?? [];
+
+            // Use first puzzle ref for pre-fill display (Enter Round Data is a grid form)
+            $first_pz = $clue_pzs[0] ?? null;
+            $constructors = '';
+            if ($first_pz) {
+                $cons = $bulk_constructors_map[(int) $first_pz->puzzle_id] ?? [];
+                $names = array_map(fn($c) => $c->full_name, $cons);
+                $constructors = implode(', ', $names);
+            }
+
             $existing_data[$cn] = [
-                'puzzle_date' => $clue->puzzle_date ?? '',
-                'constructors' => '',
-                'puzzle_clue_number' => $clue->puzzle_clue_number ?? '',
-                'puzzle_clue_direction' => $clue->puzzle_clue_direction ?? '',
+                'puzzle_date' => $first_pz->puzzle_date ?? '',
+                'constructors' => $constructors,
+                'puzzle_clue_number' => $first_pz->puzzle_clue_number ?? '',
+                'puzzle_clue_direction' => $first_pz->puzzle_clue_direction ?? '',
                 'clue_text' => $clue->clue_text ?? '',
                 'correct_answer' => $clue->correct_answer ?? '',
                 'guesses' => [],
             ];
-
-            // Build constructor string
-            if (!empty($clue->puzzle_id)) {
-                $constructors = $this->db->get_puzzle_constructors((int) $clue->puzzle_id);
-                $names = array_map(fn($c) => $c->full_name, $constructors);
-                $existing_data[$cn]['constructors'] = implode(', ', $names);
-            }
 
             // Map guesses
             $clue_guesses = $bulk_guesses[(int) $clue->id] ?? [];
@@ -3764,23 +3892,6 @@ class Kealoa_Admin {
                 if ($existing_puzzle) {
                     // A puzzle already exists with this date — use it
                     $puzzle_id = (int) $existing_puzzle->id;
-                } elseif ($overwrite && $existing_clue && !empty($existing_clue->puzzle_id)) {
-                    // Date changed on an existing clue — update the existing puzzle's date
-                    $puzzle_id = (int) $existing_clue->puzzle_id;
-                    $update_data = ['publication_date' => $puzzle_date];
-                    $editor_name = Kealoa_DB::get_editor_for_date($puzzle_date);
-                    if (!empty($editor_name)) {
-                        $editor = $this->db->get_person_by_name($editor_name);
-                        if (!$editor) {
-                            $editor_id = $this->db->create_person(['full_name' => $editor_name]);
-                            if ($editor_id) {
-                                $update_data['editor_id'] = $editor_id;
-                            }
-                        } else {
-                            $update_data['editor_id'] = (int) $editor->id;
-                        }
-                    }
-                    $this->db->update_puzzle($puzzle_id, $update_data);
                 } else {
                     // No existing puzzle — create a new one
                     $create_data = ['publication_date' => $puzzle_date];
@@ -3834,26 +3945,28 @@ class Kealoa_Admin {
             $clue_data = [
                 'correct_answer' => $correct_answer,
             ];
-            if ($clue_text !== '') {
-                $clue_data['clue_text'] = $clue_text;
-            }
-            if ($puzzle_id !== null) {
-                $clue_data['puzzle_id'] = $puzzle_id;
-            }
-            if ($puzzle_clue_number !== '' && ctype_digit($puzzle_clue_number)) {
-                $clue_data['puzzle_clue_number'] = (int) $puzzle_clue_number;
-            }
-            if ($clue_direction !== '' && in_array($clue_direction, ['A', 'D'], true)) {
-                $clue_data['puzzle_clue_direction'] = $clue_direction;
+
+            // Build puzzle ref for set_clue_puzzles
+            $puzzle_refs = [];
+            if ($puzzle_id !== null && $clue_text !== '') {
+                $ref = [
+                    'puzzle_id' => $puzzle_id,
+                    'clue_text' => $clue_text,
+                    'display_order' => 1
+                ];
+                if ($puzzle_clue_number !== '' && ctype_digit($puzzle_clue_number)) {
+                    $ref['puzzle_clue_number'] = (int) $puzzle_clue_number;
+                }
+                if ($clue_direction !== '' && in_array($clue_direction, ['A', 'D'], true)) {
+                    $ref['puzzle_clue_direction'] = $clue_direction;
+                }
+                $puzzle_refs[] = $ref;
             }
 
             $clue_id = null;
             if (!$existing_clue) {
                 $clue_data['round_id'] = $round_id;
                 $clue_data['clue_number'] = $clue_number;
-                if (!isset($clue_data['clue_text'])) {
-                    $clue_data['clue_text'] = '';
-                }
                 $new_clue_id = $this->db->create_clue($clue_data);
                 if (!$new_clue_id) {
                     $errors[] = sprintf(
@@ -3869,6 +3982,11 @@ class Kealoa_Admin {
                 if ($overwrite) {
                     $this->db->update_clue($clue_id, $clue_data);
                 }
+            }
+
+            // Set puzzle references
+            if (!empty($puzzle_refs)) {
+                $this->db->set_clue_puzzles($clue_id, $puzzle_refs);
             }
 
             // --- Guesses ---

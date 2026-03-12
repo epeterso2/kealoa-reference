@@ -41,6 +41,7 @@ class Kealoa_DB {
     private string $round_solutions_table;
     private string $round_guessers_table;
     private string $clues_table;
+    private string $clue_puzzles_table;
     private string $guesses_table;
 
     /**
@@ -57,6 +58,7 @@ class Kealoa_DB {
         $this->round_solutions_table = $wpdb->prefix . 'kealoa_round_solutions';
         $this->round_guessers_table = $wpdb->prefix . 'kealoa_round_guessers';
         $this->clues_table = $wpdb->prefix . 'kealoa_clues';
+        $this->clue_puzzles_table = $wpdb->prefix . 'kealoa_clue_puzzles';
         $this->guesses_table = $wpdb->prefix . 'kealoa_guesses';
     }
 
@@ -743,10 +745,14 @@ class Kealoa_DB {
                 r.game_number as round_game_number,
                 r.round_date,
                 r.round_number,
-                r.episode_number
-            FROM {$this->clues_table} c
+                r.episode_number,
+                cp.puzzle_clue_number,
+                cp.puzzle_clue_direction,
+                cp.clue_text
+            FROM {$this->clue_puzzles_table} cp
+            INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id
             LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
-            WHERE c.puzzle_id = %d
+            WHERE cp.puzzle_id = %d
             ORDER BY r.round_date ASC, r.round_number ASC, c.clue_number ASC",
             $puzzle_id
         );
@@ -764,11 +770,12 @@ class Kealoa_DB {
                 p.full_name,
                 COUNT(g.id) as total_guesses,
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses
-            FROM {$this->guesses_table} g
-            INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
+            FROM {$this->clue_puzzles_table} cp
+            INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id
+            INNER JOIN {$this->guesses_table} g ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
             INNER JOIN {$this->persons_table} p ON g.guesser_person_id = p.id
-            WHERE c.puzzle_id = %d
+            WHERE cp.puzzle_id = %d
             GROUP BY p.id, p.full_name
             ORDER BY (COALESCE(SUM(g.is_correct), 0) / COUNT(g.id)) DESC, COUNT(g.id) DESC",
             $puzzle_id
@@ -789,15 +796,16 @@ class Kealoa_DB {
     public function get_puzzle_clue_stats(int $puzzle_id): array {
         $sql = $this->wpdb->prepare(
             "SELECT
-                c.puzzle_clue_number,
-                c.puzzle_clue_direction,
+                cp.puzzle_clue_number,
+                cp.puzzle_clue_direction,
                 COUNT(g.id) as total_guesses,
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses
-            FROM {$this->clues_table} c
+            FROM {$this->clue_puzzles_table} cp
+            INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
-            WHERE c.puzzle_id = %d
-            GROUP BY c.puzzle_clue_number, c.puzzle_clue_direction
-            ORDER BY c.puzzle_clue_number ASC, c.puzzle_clue_direction ASC",
+            WHERE cp.puzzle_id = %d
+            GROUP BY cp.puzzle_clue_number, cp.puzzle_clue_direction
+            ORDER BY cp.puzzle_clue_number ASC, cp.puzzle_clue_direction ASC",
             $puzzle_id
         );
 
@@ -826,13 +834,14 @@ class Kealoa_DB {
         }
         $in = $this->ids_in_clause($puzzle_ids);
         $sql = "SELECT
-                    c.puzzle_id,
+                    cp.puzzle_id,
                     COUNT(g.id) as total_guesses,
                     COALESCE(SUM(g.is_correct), 0) as correct_guesses
-                FROM {$this->clues_table} c
+                FROM {$this->clue_puzzles_table} cp
+                INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id
                 LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
-                WHERE c.puzzle_id IN ({$in})
-                GROUP BY c.puzzle_id";
+                WHERE cp.puzzle_id IN ({$in})
+                GROUP BY cp.puzzle_id";
         $rows = $this->wpdb->get_results($sql);
         foreach ($rows as $row) {
             $map[(int) $row->puzzle_id] = $row;
@@ -1041,9 +1050,9 @@ class Kealoa_DB {
                 (SELECT COUNT(*) FROM {$this->rounds_table}) as total_rounds,
                 (SELECT COUNT(DISTINCT person_id) FROM {$this->round_guessers_table}) as total_players,
                 (SELECT COUNT(*) FROM {$this->clues_table}) as total_clues,
-                (SELECT COUNT(DISTINCT puzzle_id) FROM {$this->clues_table} WHERE puzzle_id IS NOT NULL) as total_puzzles,
+                (SELECT COUNT(DISTINCT puzzle_id) FROM {$this->clue_puzzles_table}) as total_puzzles,
                 (SELECT COUNT(DISTINCT pc.person_id) FROM {$this->puzzle_constructors_table} pc
-                    WHERE pc.puzzle_id IN (SELECT DISTINCT puzzle_id FROM {$this->clues_table} WHERE puzzle_id IS NOT NULL)) as total_constructors,
+                    WHERE pc.puzzle_id IN (SELECT DISTINCT puzzle_id FROM {$this->clue_puzzles_table})) as total_constructors,
                 (SELECT COUNT(*) FROM {$this->guesses_table}) as total_guesses,
                 (SELECT COALESCE(SUM(is_correct), 0) FROM {$this->guesses_table}) as total_correct"
         );
@@ -1440,10 +1449,8 @@ class Kealoa_DB {
      */
     public function get_clue(int $id): ?object {
         $sql = $this->wpdb->prepare(
-            "SELECT c.*, pz.publication_date as puzzle_date, pz.editor_id, ed.full_name as editor_name
+            "SELECT c.*
             FROM {$this->clues_table} c
-            LEFT JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
-            LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             WHERE c.id = %d",
             $id
         );
@@ -1456,10 +1463,8 @@ class Kealoa_DB {
      */
     public function get_round_clues(int $round_id): array {
         $sql = $this->wpdb->prepare(
-            "SELECT c.*, pz.publication_date as puzzle_date, pz.editor_id, ed.full_name as editor_name
+            "SELECT c.*
             FROM {$this->clues_table} c
-            LEFT JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
-            LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             WHERE c.round_id = %d
             ORDER BY c.clue_number ASC",
             $round_id
@@ -1475,23 +1480,9 @@ class Kealoa_DB {
         $insert_data = [
             'round_id' => (int) $data['round_id'],
             'clue_number' => (int) $data['clue_number'],
-            'clue_text' => sanitize_textarea_field($data['clue_text']),
             'correct_answer' => strtoupper(sanitize_text_field($data['correct_answer'])),
         ];
-        $format = ['%d', '%d', '%s', '%s'];
-
-        if (!empty($data['puzzle_id'])) {
-            $insert_data['puzzle_id'] = (int) $data['puzzle_id'];
-            $format[] = '%d';
-        }
-        if (!empty($data['puzzle_clue_number'])) {
-            $insert_data['puzzle_clue_number'] = (int) $data['puzzle_clue_number'];
-            $format[] = '%d';
-        }
-        if (!empty($data['puzzle_clue_direction'])) {
-            $insert_data['puzzle_clue_direction'] = sanitize_text_field($data['puzzle_clue_direction']);
-            $format[] = '%s';
-        }
+        $format = ['%d', '%d', '%s'];
 
         $result = $this->wpdb->insert($this->clues_table, $insert_data, $format);
 
@@ -1508,22 +1499,6 @@ class Kealoa_DB {
         if (isset($data['clue_number'])) {
             $update_data['clue_number'] = (int) $data['clue_number'];
             $format[] = '%d';
-        }
-        if (array_key_exists('puzzle_id', $data)) {
-            $update_data['puzzle_id'] = !empty($data['puzzle_id']) ? (int) $data['puzzle_id'] : null;
-            $format[] = '%d';
-        }
-        if (array_key_exists('puzzle_clue_number', $data)) {
-            $update_data['puzzle_clue_number'] = !empty($data['puzzle_clue_number']) ? (int) $data['puzzle_clue_number'] : null;
-            $format[] = '%d';
-        }
-        if (array_key_exists('puzzle_clue_direction', $data)) {
-            $update_data['puzzle_clue_direction'] = !empty($data['puzzle_clue_direction']) ? sanitize_text_field($data['puzzle_clue_direction']) : null;
-            $format[] = '%s';
-        }
-        if (isset($data['clue_text'])) {
-            $update_data['clue_text'] = sanitize_textarea_field($data['clue_text']);
-            $format[] = '%s';
         }
         if (isset($data['correct_answer'])) {
             $update_data['correct_answer'] = strtoupper(sanitize_text_field($data['correct_answer']));
@@ -1552,6 +1527,9 @@ class Kealoa_DB {
         // Delete related guesses
         $this->wpdb->delete($this->guesses_table, ['clue_id' => $id], ['%d']);
 
+        // Delete related clue-puzzle links
+        $this->wpdb->delete($this->clue_puzzles_table, ['clue_id' => $id], ['%d']);
+
         $result = $this->wpdb->delete(
             $this->clues_table,
             ['id' => $id],
@@ -1559,6 +1537,86 @@ class Kealoa_DB {
         );
 
         return $result !== false;
+    }
+
+    // =========================================================================
+    // CLUE-PUZZLE LINKS
+    // =========================================================================
+
+    /**
+     * Get puzzle references for a single clue, ordered by display_order.
+     *
+     * @param int $clue_id The clue ID.
+     * @return array Array of objects with puzzle details.
+     */
+    public function get_clue_puzzles(int $clue_id): array {
+        $sql = $this->wpdb->prepare(
+            "SELECT cp.*, pz.publication_date AS puzzle_date, pz.editor_id, ed.full_name AS editor_name
+            FROM {$this->clue_puzzles_table} cp
+            INNER JOIN {$this->puzzles_table} pz ON pz.id = cp.puzzle_id
+            LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
+            WHERE cp.clue_id = %d
+            ORDER BY cp.display_order ASC",
+            $clue_id
+        );
+
+        return $this->wpdb->get_results($sql);
+    }
+
+    /**
+     * Replace all puzzle references for a clue.
+     *
+     * @param int   $clue_id The clue ID.
+     * @param array $puzzles Array of associative arrays with keys:
+     *                       puzzle_id, puzzle_clue_number, puzzle_clue_direction, clue_text.
+     */
+    public function set_clue_puzzles(int $clue_id, array $puzzles): void {
+        $this->wpdb->delete($this->clue_puzzles_table, ['clue_id' => $clue_id], ['%d']);
+
+        $order = 1;
+        foreach ($puzzles as $puzzle) {
+            $this->wpdb->insert(
+                $this->clue_puzzles_table,
+                [
+                    'clue_id'              => $clue_id,
+                    'puzzle_id'            => (int) $puzzle['puzzle_id'],
+                    'puzzle_clue_number'   => !empty($puzzle['puzzle_clue_number']) ? (int) $puzzle['puzzle_clue_number'] : null,
+                    'puzzle_clue_direction' => !empty($puzzle['puzzle_clue_direction']) ? sanitize_text_field($puzzle['puzzle_clue_direction']) : null,
+                    'clue_text'            => sanitize_textarea_field($puzzle['clue_text'] ?? ''),
+                    'display_order'        => $order,
+                ],
+                ['%d', '%d', '%d', '%s', '%s', '%d']
+            );
+            $order++;
+        }
+    }
+
+    /**
+     * Bulk-fetch puzzle references for multiple clues.
+     *
+     * @param int[] $clue_ids Array of clue IDs.
+     * @return array<int, array> Map of clue_id => array of puzzle-ref objects.
+     */
+    public function get_clue_puzzles_bulk(array $clue_ids): array {
+        $map = [];
+        foreach ($clue_ids as $cid) {
+            $map[(int) $cid] = [];
+        }
+        if (empty($clue_ids)) {
+            return $map;
+        }
+        $in = $this->ids_in_clause($clue_ids);
+        $sql = "SELECT cp.*, pz.publication_date AS puzzle_date, pz.editor_id, ed.full_name AS editor_name
+                FROM {$this->clue_puzzles_table} cp
+                INNER JOIN {$this->puzzles_table} pz ON pz.id = cp.puzzle_id
+                LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
+                WHERE cp.clue_id IN ({$in})
+                ORDER BY cp.clue_id ASC, cp.display_order ASC";
+        $rows = $this->wpdb->get_results($sql);
+        foreach ($rows as $row) {
+            $map[(int) $row->clue_id][] = $row;
+        }
+        return $map;
     }
 
     // =========================================================================
@@ -2263,11 +2321,12 @@ class Kealoa_DB {
         }
         $in = $this->ids_in_clause($round_ids);
         $sql = "SELECT c.round_id, DATEDIFF(r.round_date, p.publication_date) AS age_days
-                FROM {$this->clues_table} c
+                FROM {$this->clue_puzzles_table} cp
+                INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id
                 INNER JOIN {$this->rounds_table} r ON r.id = c.round_id
-                INNER JOIN {$this->puzzles_table} p ON p.id = c.puzzle_id
+                INNER JOIN {$this->puzzles_table} p ON p.id = cp.puzzle_id
                 WHERE c.round_id IN ({$in})
-                ORDER BY c.round_id, c.clue_number ASC";
+                ORDER BY c.round_id, c.clue_number ASC, cp.display_order ASC";
         $rows = $this->wpdb->get_results($sql);
 
         // Group ages by round_id
@@ -2438,11 +2497,12 @@ class Kealoa_DB {
     public function get_round_clue_age_stats(int $round_id): ?object {
         $sql = $this->wpdb->prepare(
             "SELECT DATEDIFF(r.round_date, p.publication_date) AS age_days
-             FROM {$this->clues_table} c
+             FROM {$this->clue_puzzles_table} cp
+             INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id
              INNER JOIN {$this->rounds_table} r ON r.id = c.round_id
-             INNER JOIN {$this->puzzles_table} p ON p.id = c.puzzle_id
+             INNER JOIN {$this->puzzles_table} p ON p.id = cp.puzzle_id
              WHERE c.round_id = %d
-             ORDER BY c.clue_number ASC",
+             ORDER BY c.clue_number ASC, cp.display_order ASC",
             $round_id
         );
         $rows = $this->wpdb->get_col($sql);
@@ -2490,9 +2550,10 @@ class Kealoa_DB {
                     AVG(DATEDIFF(r.round_date, p.publication_date)) AS avg_age,
                     MIN(DATEDIFF(r.round_date, p.publication_date)) AS min_age,
                     MAX(DATEDIFF(r.round_date, p.publication_date)) AS max_age
-                FROM {$this->clues_table} c
+                FROM {$this->clue_puzzles_table} cp
+                INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id
                 INNER JOIN {$this->rounds_table} r ON r.id = c.round_id
-                INNER JOIN {$this->puzzles_table} p ON p.id = c.puzzle_id
+                INNER JOIN {$this->puzzles_table} p ON p.id = cp.puzzle_id
                 WHERE 1=1
                 {$host_where}
                 GROUP BY c.clue_number
@@ -2513,8 +2574,9 @@ class Kealoa_DB {
             FROM {$this->rounds_table} r
             LEFT JOIN {$this->persons_table} p ON r.clue_giver_id = p.id
             WHERE NOT EXISTS (
-                SELECT 1 FROM {$this->clues_table} c
-                WHERE c.round_id = r.id AND c.puzzle_id IS NOT NULL
+                SELECT 1 FROM {$this->clue_puzzles_table} cp
+                INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id
+                WHERE c.round_id = r.id
             )
             ORDER BY r.round_date DESC, r.round_number ASC";
 
@@ -2759,7 +2821,8 @@ class Kealoa_DB {
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
-            INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
+            INNER JOIN {$this->clue_puzzles_table} cp ON cp.clue_id = c.id
+            INNER JOIN {$this->puzzles_table} pz ON cp.puzzle_id = pz.id
             WHERE {$clause}
             GROUP BY DAYOFWEEK(pz.publication_date)
             ORDER BY MOD(DAYOFWEEK(pz.publication_date) + 5, 7) ASC";
@@ -2780,7 +2843,8 @@ class Kealoa_DB {
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
-            INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
+            INNER JOIN {$this->clue_puzzles_table} cp ON cp.clue_id = c.id
+            INNER JOIN {$this->puzzles_table} pz ON cp.puzzle_id = pz.id
             WHERE {$clause}
             GROUP BY FLOOR(YEAR(pz.publication_date) / 10) * 10
             ORDER BY decade ASC";
@@ -2878,7 +2942,8 @@ class Kealoa_DB {
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
-            INNER JOIN {$this->puzzle_constructors_table} pc ON c.puzzle_id = pc.puzzle_id
+            INNER JOIN {$this->clue_puzzles_table} cp ON cp.clue_id = c.id
+            INNER JOIN {$this->puzzle_constructors_table} pc ON cp.puzzle_id = pc.puzzle_id
             INNER JOIN {$this->persons_table} con ON pc.person_id = con.id
             WHERE {$clause}
             GROUP BY con.id, con.full_name, con.xwordinfo_profile_name
@@ -2901,7 +2966,8 @@ class Kealoa_DB {
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
-            INNER JOIN {$this->puzzles_table} p ON c.puzzle_id = p.id
+            INNER JOIN {$this->clue_puzzles_table} cp ON cp.clue_id = c.id
+            INNER JOIN {$this->puzzles_table} p ON cp.puzzle_id = p.id
             LEFT JOIN {$this->persons_table} ed ON p.editor_id = ed.id
             WHERE {$clause}
             GROUP BY ed.id, ed.full_name
@@ -3022,7 +3088,8 @@ class Kealoa_DB {
                 GROUP_CONCAT(DISTINCT r.round_date ORDER BY r.round_date ASC, r.round_number ASC) as round_dates,
                 GROUP_CONCAT(DISTINCT r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers
             FROM {$this->puzzles_table} pz
-            INNER JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
+            INNER JOIN {$this->clue_puzzles_table} cp ON cp.puzzle_id = pz.id
+            INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id
             INNER JOIN {$this->rounds_table} r ON c.round_id = r.id
             INNER JOIN {$this->round_guessers_table} rg ON r.id = rg.round_id
             LEFT JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
@@ -3075,7 +3142,8 @@ class Kealoa_DB {
                 COUNT(g.id) as total_guesses
             FROM {$this->persons_table} p
             INNER JOIN {$this->puzzle_constructors_table} pc ON p.id = pc.person_id
-            LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id
+            LEFT JOIN {$this->clue_puzzles_table} cp ON cp.puzzle_id = pc.puzzle_id
+            LEFT JOIN {$this->clues_table} c ON c.id = cp.clue_id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
             GROUP BY p.id, p.full_name, p.xwordinfo_profile_name, p.xwordinfo_image_url
             ORDER BY p.full_name ASC";
@@ -3096,7 +3164,8 @@ class Kealoa_DB {
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses,
                 COUNT(g.id) as total_guesses
             FROM {$this->puzzle_constructors_table} pc
-            LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pc.puzzle_id
+            LEFT JOIN {$this->clue_puzzles_table} cp ON cp.puzzle_id = pc.puzzle_id
+            LEFT JOIN {$this->clues_table} c ON c.id = cp.clue_id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
             WHERE {$clause}";
 
@@ -3121,7 +3190,8 @@ class Kealoa_DB {
             FROM {$this->puzzles_table} pz
             INNER JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
             LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
-            LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
+            LEFT JOIN {$this->clue_puzzles_table} cp ON cp.puzzle_id = pz.id
+            LEFT JOIN {$this->clues_table} c ON c.id = cp.clue_id
             LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
             WHERE {$clause}
             GROUP BY pz.id, pz.publication_date, ed.full_name
@@ -3144,7 +3214,8 @@ class Kealoa_DB {
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
-            INNER JOIN {$this->puzzle_constructors_table} pc ON c.puzzle_id = pc.puzzle_id
+            INNER JOIN {$this->clue_puzzles_table} cp ON cp.clue_id = c.id
+            INNER JOIN {$this->puzzle_constructors_table} pc ON cp.puzzle_id = pc.puzzle_id
             INNER JOIN {$this->persons_table} p ON g.guesser_person_id = p.id
             WHERE {$clause}
             GROUP BY p.id, p.full_name
@@ -3169,7 +3240,8 @@ class Kealoa_DB {
             FROM {$this->puzzle_constructors_table} pc
             INNER JOIN {$this->puzzles_table} pz ON pc.puzzle_id = pz.id
             LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
-            LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
+            LEFT JOIN {$this->clue_puzzles_table} cp ON cp.puzzle_id = pz.id
+            LEFT JOIN {$this->clues_table} c ON c.id = cp.clue_id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
             WHERE {$clause}
             GROUP BY ed.id, ed.full_name
@@ -3247,7 +3319,8 @@ class Kealoa_DB {
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses
             FROM {$this->persons_table} ed
             INNER JOIN {$this->puzzles_table} p ON p.editor_id = ed.id
-            INNER JOIN {$this->clues_table} c ON c.puzzle_id = p.id
+            INNER JOIN {$this->clue_puzzles_table} cp ON cp.puzzle_id = p.id
+            INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id
             INNER JOIN {$this->guesses_table} g ON g.clue_id = c.id
             GROUP BY ed.id, ed.full_name
             ORDER BY ed.full_name ASC";
@@ -3269,7 +3342,8 @@ class Kealoa_DB {
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
             INNER JOIN {$this->round_guessers_table} rg ON rg.round_id = c.round_id AND rg.person_id = g.guesser_person_id
-            INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
+            INNER JOIN {$this->clue_puzzles_table} cp ON cp.clue_id = c.id
+            INNER JOIN {$this->puzzles_table} pz ON cp.puzzle_id = pz.id
             INNER JOIN {$this->persons_table} p ON g.guesser_person_id = p.id
             WHERE {$clause}
             GROUP BY p.id, p.full_name
@@ -3294,7 +3368,8 @@ class Kealoa_DB {
             FROM {$this->puzzles_table} pz
             INNER JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
             INNER JOIN {$this->persons_table} con ON pc.person_id = con.id
-            LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
+            LEFT JOIN {$this->clue_puzzles_table} cp ON cp.puzzle_id = pz.id
+            LEFT JOIN {$this->clues_table} c ON c.id = cp.clue_id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
             WHERE {$clause}
             GROUP BY con.id, con.full_name
@@ -3316,7 +3391,8 @@ class Kealoa_DB {
                 COALESCE(SUM(g.is_correct), 0) as correct_guesses,
                 COUNT(g.id) as total_guesses
             FROM {$this->puzzles_table} p
-            INNER JOIN {$this->clues_table} c ON c.puzzle_id = p.id
+            INNER JOIN {$this->clue_puzzles_table} cp ON cp.puzzle_id = p.id
+            INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
             WHERE {$clause}";
 
@@ -3341,7 +3417,8 @@ class Kealoa_DB {
             FROM {$this->puzzles_table} pz
             LEFT JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
             LEFT JOIN {$this->persons_table} con ON pc.person_id = con.id
-            LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
+            LEFT JOIN {$this->clue_puzzles_table} cp ON cp.puzzle_id = pz.id
+            LEFT JOIN {$this->clues_table} c ON c.id = cp.clue_id
             LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
             WHERE {$clause}
             GROUP BY pz.id, pz.publication_date
@@ -3506,7 +3583,8 @@ class Kealoa_DB {
                 COALESCE(SUM(CASE WHEN grg.id IS NOT NULL THEN g.is_correct END), 0) as correct_guesses
             FROM {$this->rounds_table} r
             LEFT JOIN {$this->clues_table} c ON c.round_id = r.id
-            LEFT JOIN {$this->puzzles_table} pz ON pz.id = c.puzzle_id
+            LEFT JOIN {$this->clue_puzzles_table} cp ON cp.clue_id = c.id
+            LEFT JOIN {$this->puzzles_table} pz ON pz.id = cp.puzzle_id
             LEFT JOIN {$this->guesses_table} g ON g.clue_id = c.id
             LEFT JOIN {$this->round_guessers_table} grg ON grg.round_id = r.id AND grg.person_id = g.guesser_person_id
             WHERE {$clause}
@@ -3831,7 +3909,8 @@ class Kealoa_DB {
             LEFT JOIN {$this->persons_table} ed ON pz.editor_id = ed.id
             LEFT JOIN {$this->puzzle_constructors_table} pc ON pz.id = pc.puzzle_id
             LEFT JOIN {$this->persons_table} con ON pc.person_id = con.id
-            LEFT JOIN {$this->clues_table} c ON c.puzzle_id = pz.id
+            LEFT JOIN {$this->clue_puzzles_table} cp ON cp.puzzle_id = pz.id
+            LEFT JOIN {$this->clues_table} c ON c.id = cp.clue_id
             LEFT JOIN {$this->rounds_table} r ON c.round_id = r.id
             GROUP BY pz.id, pz.publication_date, ed.full_name, ed.id
             ORDER BY pz.publication_date DESC";
@@ -3875,7 +3954,7 @@ class Kealoa_DB {
                     GROUP_CONCAT(r.round_date ORDER BY r.round_date ASC, r.round_number ASC) as round_dates,
                     GROUP_CONCAT(r.round_number ORDER BY r.round_date ASC, r.round_number ASC) as round_numbers,
                     GROUP_CONCAT(r.game_number ORDER BY r.round_date ASC, r.round_number ASC) as round_game_numbers
-                FROM (SELECT DISTINCT puzzle_id, round_id FROM {$this->clues_table}) dc
+                FROM (SELECT DISTINCT cp.puzzle_id, c.round_id FROM {$this->clue_puzzles_table} cp INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id) dc
                 INNER JOIN {$this->rounds_table} r ON r.id = dc.round_id
                 GROUP BY dc.puzzle_id
                 HAVING COUNT(dc.round_id) > 1
@@ -4229,8 +4308,9 @@ class Kealoa_DB {
             $this->wpdb->prepare(
                 "SELECT DISTINCT pz.id as puzzle_id, pz.publication_date, pz.editor_id
                 FROM {$this->clues_table} c
-                INNER JOIN {$this->puzzles_table} pz ON c.puzzle_id = pz.id
-                WHERE c.clue_text LIKE %s OR c.correct_answer LIKE %s
+                INNER JOIN {$this->clue_puzzles_table} cp ON cp.clue_id = c.id
+                INNER JOIN {$this->puzzles_table} pz ON cp.puzzle_id = pz.id
+                WHERE cp.clue_text LIKE %s OR c.correct_answer LIKE %s
                 ORDER BY pz.publication_date DESC",
                 $like,
                 $like
@@ -4323,7 +4403,8 @@ class Kealoa_DB {
                 $this->wpdb->prepare(
                     "SELECT DISTINCT cl.round_id
                     FROM {$this->puzzle_constructors_table} pc
-                    INNER JOIN {$this->clues_table} cl ON cl.puzzle_id = pc.puzzle_id
+                    INNER JOIN {$this->clue_puzzles_table} cp ON cp.puzzle_id = pc.puzzle_id
+                    INNER JOIN {$this->clues_table} cl ON cl.id = cp.clue_id
                     INNER JOIN {$this->rounds_table} r ON cl.round_id = r.id
                     WHERE pc.person_id IN ($placeholders)
                     ORDER BY r.round_date DESC, r.round_number ASC",
@@ -4355,7 +4436,8 @@ class Kealoa_DB {
                 $this->wpdb->prepare(
                     "SELECT DISTINCT cl.round_id
                     FROM {$this->puzzles_table} pz
-                    INNER JOIN {$this->clues_table} cl ON cl.puzzle_id = pz.id
+                    INNER JOIN {$this->clue_puzzles_table} cp ON cp.puzzle_id = pz.id
+                    INNER JOIN {$this->clues_table} cl ON cl.id = cp.clue_id
                     INNER JOIN {$this->rounds_table} r ON cl.round_id = r.id
                     WHERE pz.editor_id IN ($placeholders)
                     ORDER BY r.round_date DESC, r.round_number ASC",
@@ -4413,8 +4495,8 @@ class Kealoa_DB {
         $orphan_puzzles = $this->wpdb->get_results(
             "SELECT p.id, p.publication_date, p.editor_id
              FROM {$this->puzzles_table} p
-             LEFT JOIN {$this->clues_table} c ON c.puzzle_id = p.id
-             WHERE c.id IS NULL
+             LEFT JOIN {$this->clue_puzzles_table} cp ON cp.puzzle_id = p.id
+             WHERE cp.id IS NULL
              ORDER BY p.publication_date"
         );
         if ($orphan_puzzles) {
@@ -4481,7 +4563,7 @@ class Kealoa_DB {
 
         // 8. Clues referencing non-existent rounds
         $orphan_clue_rounds = $this->wpdb->get_results(
-            "SELECT cl.id, cl.round_id, cl.clue_number, cl.clue_text
+            "SELECT cl.id, cl.round_id, cl.clue_number, cl.correct_answer
              FROM {$this->clues_table} cl
              LEFT JOIN {$this->rounds_table} r ON r.id = cl.round_id
              WHERE r.id IS NULL"
@@ -4490,15 +4572,26 @@ class Kealoa_DB {
             $issues['orphan_clue_rounds'] = $orphan_clue_rounds;
         }
 
-        // 9. Clues referencing non-existent puzzles
+        // 9. Clue-puzzle links referencing non-existent puzzles
         $orphan_clue_puzzles = $this->wpdb->get_results(
-            "SELECT cl.id, cl.round_id, cl.clue_number, cl.puzzle_id
-             FROM {$this->clues_table} cl
-             LEFT JOIN {$this->puzzles_table} p ON p.id = cl.puzzle_id
-             WHERE cl.puzzle_id IS NOT NULL AND p.id IS NULL"
+            "SELECT cp.id, cp.clue_id, cp.puzzle_id
+             FROM {$this->clue_puzzles_table} cp
+             LEFT JOIN {$this->puzzles_table} p ON p.id = cp.puzzle_id
+             WHERE p.id IS NULL"
         );
         if ($orphan_clue_puzzles) {
             $issues['orphan_clue_puzzles'] = $orphan_clue_puzzles;
+        }
+
+        // 9b. Clue-puzzle links referencing non-existent clues
+        $orphan_cp_clues = $this->wpdb->get_results(
+            "SELECT cp.id, cp.clue_id, cp.puzzle_id
+             FROM {$this->clue_puzzles_table} cp
+             LEFT JOIN {$this->clues_table} cl ON cl.id = cp.clue_id
+             WHERE cl.id IS NULL"
+        );
+        if ($orphan_cp_clues) {
+            $issues['orphan_clue_puzzle_clues'] = $orphan_cp_clues;
         }
 
         // 10. Guesses referencing non-existent clues
@@ -4578,6 +4671,17 @@ class Kealoa_DB {
             $issues['orphan_puzzle_editors'] = $orphan_puzzle_editors;
         }
 
+        // 16b. Puzzles without editors (NULL editor_id)
+        $puzzles_without_editors = $this->wpdb->get_results(
+            "SELECT pz.id, pz.publication_date
+             FROM {$this->puzzles_table} pz
+             WHERE pz.editor_id IS NULL
+             ORDER BY pz.publication_date"
+        );
+        if ($puzzles_without_editors) {
+            $issues['puzzles_without_editors'] = $puzzles_without_editors;
+        }
+
         // 17. Orphan persons — not referenced by any role
         $orphan_persons = $this->wpdb->get_results(
             "SELECT p.id, p.full_name
@@ -4639,6 +4743,7 @@ class Kealoa_DB {
     public function delete_orphan_records(string $table_key, array $ids): int {
         $table_map = [
             'puzzle_constructors'  => $this->puzzle_constructors_table,
+            'clue_puzzles'         => $this->clue_puzzles_table,
             'clues'                => $this->clues_table,
             'guesses'              => $this->guesses_table,
             'round_guessers'       => $this->round_guessers_table,
@@ -4759,7 +4864,7 @@ class Kealoa_DB {
                     GROUP_CONCAT(r.round_date ORDER BY r.round_date ASC, r.round_number ASC) AS round_dates,
                     GROUP_CONCAT(r.round_number ORDER BY r.round_date ASC, r.round_number ASC) AS round_numbers,
                     GROUP_CONCAT(r.game_number ORDER BY r.round_date ASC, r.round_number ASC) AS round_game_numbers
-                FROM (SELECT DISTINCT puzzle_id, round_id FROM {$this->clues_table}) dc
+                FROM (SELECT DISTINCT cp.puzzle_id, c.round_id FROM {$this->clue_puzzles_table} cp INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id) dc
                 INNER JOIN {$this->rounds_table} r ON r.id = dc.round_id
                 GROUP BY dc.puzzle_id
             ) rd ON rd.puzzle_id = pz.id
@@ -4832,15 +4937,15 @@ class Kealoa_DB {
      */
     public function get_rounds_with_repeated_constructor(): array {
         $sql = "SELECT r.*, p.full_name AS constructor_name,
-                COUNT(DISTINCT c.puzzle_id) AS puzzle_count
+                COUNT(DISTINCT cp.puzzle_id) AS puzzle_count
             FROM {$this->rounds_table} r
             INNER JOIN {$this->clues_table} c ON c.round_id = r.id
-            INNER JOIN {$this->puzzle_constructors_table} pc ON pc.puzzle_id = c.puzzle_id
+            INNER JOIN {$this->clue_puzzles_table} cp ON cp.clue_id = c.id
+            INNER JOIN {$this->puzzle_constructors_table} pc ON pc.puzzle_id = cp.puzzle_id
             INNER JOIN {$this->persons_table} p ON p.id = pc.person_id
-            WHERE c.puzzle_id IS NOT NULL
             GROUP BY r.id, pc.person_id
-            HAVING COUNT(DISTINCT c.puzzle_id) > 1
-            ORDER BY COUNT(DISTINCT c.puzzle_id) DESC, r.round_date DESC, r.round_number ASC";
+            HAVING COUNT(DISTINCT cp.puzzle_id) > 1
+            ORDER BY COUNT(DISTINCT cp.puzzle_id) DESC, r.round_date DESC, r.round_number ASC";
 
         return $this->wpdb->get_results($sql);
     }

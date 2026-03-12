@@ -3,7 +3,7 @@
 Read-only REST API for KEALOA Reference data.
 
 **Base URL:** `/wp-json/kealoa/v1`
-**Version:** 2.2.72
+**Version:** 2.3.0
 
 All endpoints are publicly accessible (`permission_callback: __return_true`). All responses are JSON. Most endpoints use `GET`; the bug-report endpoint uses `POST`.
 
@@ -136,13 +136,17 @@ Returns the complete payload needed by the **KEALOA Play Game** Gutenberg block 
   "clues": [
     {
       "clue_number": 1,
-      "puzzle_date": "2024-01-10",
-      "constructors": "Amanda Chung & Karl Ni",
-      "editor": "Will Shortz",
-      "puzzle_clue_number": 42,
-      "puzzle_clue_direction": "A",
-      "clue_text": "Bamboo-eating bear",
       "correct_answer": "PANDA",
+      "puzzles": [
+        {
+          "puzzle_date": "2024-01-10",
+          "constructors": "Amanda Chung & Karl Ni",
+          "editor": "Will Shortz",
+          "puzzle_clue_number": 42,
+          "puzzle_clue_direction": "A",
+          "clue_text": "Bamboo-eating bear"
+        }
+      ],
       "guesses": [
         {
           "guesser_name": "Jane Doe",
@@ -273,14 +277,18 @@ Returns full detail for a single round, including all clues, all guesses, player
     {
       "id": 10,
       "clue_number": 1,
-      "puzzle_id": 5,
-      "puzzle_date": "2024-01-10",
-      "constructors": "Amanda Chung & Karl Ni",
-      "editor": "Will Shortz",
-      "puzzle_clue_number": 42,
-      "puzzle_clue_direction": "A",
-      "clue_text": "Bamboo-eating bear",
       "correct_answer": "PANDA",
+      "puzzles": [
+        {
+          "puzzle_id": 5,
+          "puzzle_date": "2024-01-10",
+          "constructors": "Amanda Chung & Karl Ni",
+          "editor": "Will Shortz",
+          "puzzle_clue_number": 42,
+          "puzzle_clue_direction": "A",
+          "clue_text": "Bamboo-eating bear"
+        }
+      ],
       "guesses": [
         {
           "guesser_name": "Jane Doe",
@@ -750,8 +758,8 @@ Returns full detail for a single puzzle, including all rounds that used clues fr
           "clue_number": 1,
           "puzzle_clue_number": 42,
           "puzzle_clue_direction": "A",
-          "clue_text": "Bamboo-eating bear",
           "correct_answer": "PANDA",
+          "clue_text": "Bamboo-eating bear",
           "guesses": [
             {
               "guesser_name": "Jane Doe",
@@ -790,7 +798,7 @@ Returns full detail for a single puzzle, including all rounds that used clues fr
 
 ### GET /clues/{id}
 
-Returns full detail for a single clue, including its puzzle context and all guesses.
+Returns full detail for a single clue, including its puzzle references and all guesses.
 
 **Path parameters:**
 
@@ -805,14 +813,18 @@ Returns full detail for a single clue, including its puzzle context and all gues
   "id": 10,
   "round_id": 1,
   "clue_number": 3,
-  "puzzle_id": 5,
-  "puzzle_date": "2024-01-10",
-  "constructors": "Amanda Chung & Karl Ni",
-  "editor": "Will Shortz",
-  "puzzle_clue_number": 42,
-  "puzzle_clue_direction": "A",
-  "clue_text": "Bamboo-eating bear",
   "correct_answer": "PANDA",
+  "puzzles": [
+    {
+      "puzzle_id": 5,
+      "puzzle_date": "2024-01-10",
+      "constructors": "Amanda Chung & Karl Ni",
+      "editor": "Will Shortz",
+      "puzzle_clue_number": 42,
+      "puzzle_clue_direction": "A",
+      "clue_text": "Bamboo-eating bear"
+    }
+  ],
   "guesses": [
     {
       "guesser_name": "Jane Doe",
@@ -828,7 +840,7 @@ Returns full detail for a single clue, including its puzzle context and all gues
 }
 ```
 
-Note: `constructors` and `editor` are plain string values (formatted display strings), not object arrays.
+Note: Each clue can reference multiple puzzles. The `puzzles` array contains one entry per puzzle reference. Each puzzle entry includes `clue_text` (the clue as it appeared in that specific puzzle), `constructors`, and `editor` as plain string values.
 
 **Response: 404 Not Found**
 

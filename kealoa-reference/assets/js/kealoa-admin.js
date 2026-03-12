@@ -351,13 +351,84 @@
         }
 
         /**
-         * Clear Puzzle Details button on clue edit form
+         * Puzzle group management for clue forms (multi-puzzle clues)
          */
-        $(document).on('click', '.kealoa-clear-puzzle-details', function () {
-            $('#puzzle_date').val('');
-            $('#puzzle_constructors').val([]).trigger('change');
-            $('#puzzle_clue_number').val('');
-            $('#puzzle_clue_direction').val('');
+
+        // Clear All Puzzles button
+        $(document).on('click', '.kealoa-clear-all-puzzles', function () {
+            $('#kealoa-puzzle-groups').empty();
+        });
+
+        // Add Puzzle button
+        $(document).on('click', '.kealoa-add-puzzle', function () {
+            var $container = $('#kealoa-puzzle-groups');
+            var nextIndex = $container.children('.kealoa-puzzle-group').length;
+
+            // Clone from the first group if available, otherwise build from scratch
+            var $firstGroup = $container.find('.kealoa-puzzle-group').first();
+            var $newGroup;
+
+            if ($firstGroup.length) {
+                $newGroup = $firstGroup.clone();
+                // Clear values
+                $newGroup.find('input').val('');
+                $newGroup.find('select').each(function () {
+                    if ($(this).prop('multiple')) {
+                        $(this).val([]);
+                    } else {
+                        $(this).val('');
+                    }
+                });
+            } else {
+                // Build a minimal template (reuses server-rendered structure)
+                $newGroup = $('<div class="kealoa-puzzle-group">' +
+                    '<fieldset style="border:1px solid #ccd0d4; padding:10px 15px; margin-bottom:10px;">' +
+                    '<legend style="font-weight:600;">Puzzle 1</legend>' +
+                    '<table class="form-table" style="margin:0;">' +
+                    '<tr><th><label>NYT Puzzle Date</label></th>' +
+                    '<td><input type="date" name="puzzles[0][date]" class="regular-text kealoa-puzzle-date" />' +
+                    '<p class="description">If a puzzle with this date already exists, it will be used automatically.</p></td></tr>' +
+                    '<tr><th><label>Constructors</label></th>' +
+                    '<td><select name="puzzles[0][constructors][]" multiple class="kealoa-multi-select kealoa-puzzle-constructors" style="width: 100%; min-height: 120px;">' +
+                    '</select><p class="description">Hold Ctrl/Cmd to select multiple. Only used when creating a new puzzle.</p></td></tr>' +
+                    '<tr><th><label>Puzzle Clue Number</label></th>' +
+                    '<td><input type="number" name="puzzles[0][clue_number]" min="1" class="kealoa-puzzle-clue-number" /></td></tr>' +
+                    '<tr><th><label>Direction</label></th>' +
+                    '<td><select name="puzzles[0][direction]" class="kealoa-puzzle-direction">' +
+                    '<option value="">— None —</option><option value="A">Across</option><option value="D">Down</option>' +
+                    '</select></td></tr>' +
+                    '<tr><th><label>Clue Text *</label></th>' +
+                    '<td><textarea name="puzzles[0][clue_text]" rows="2" class="large-text kealoa-puzzle-clue-text" required></textarea>' +
+                    '<p class="description">The clue text as it appears in this puzzle.</p></td></tr>' +
+                    '</table>' +
+                    '<p><button type="button" class="button kealoa-remove-puzzle">Remove Puzzle</button></p>' +
+                    '</fieldset></div>');
+            }
+
+            // Update data-index and field names
+            $newGroup.attr('data-index', nextIndex);
+            $newGroup.find('legend').text('Puzzle ' + (nextIndex + 1));
+            $newGroup.find('[name]').each(function () {
+                var name = $(this).attr('name');
+                $(this).attr('name', name.replace(/puzzles\[\d+\]/, 'puzzles[' + nextIndex + ']'));
+            });
+
+            $container.append($newGroup);
+        });
+
+        // Remove Puzzle button
+        $(document).on('click', '.kealoa-remove-puzzle', function () {
+            $(this).closest('.kealoa-puzzle-group').remove();
+
+            // Renumber remaining groups
+            $('#kealoa-puzzle-groups .kealoa-puzzle-group').each(function (idx) {
+                $(this).attr('data-index', idx);
+                $(this).find('legend').text('Puzzle ' + (idx + 1));
+                $(this).find('[name]').each(function () {
+                    var name = $(this).attr('name');
+                    $(this).attr('name', name.replace(/puzzles\[\d+\]/, 'puzzles[' + idx + ']'));
+                });
+            });
         });
 
         /**

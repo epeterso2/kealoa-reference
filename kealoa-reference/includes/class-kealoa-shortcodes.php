@@ -1472,10 +1472,17 @@ class Kealoa_Shortcodes {
 
             <?php if (!empty($clues)): ?>
                 <?php
-                // Bulk pre-fetch constructors and guesses for all clues
-                $clue_puzzle_ids = array_unique(array_filter(array_map(fn($c) => (int) $c->puzzle_id, $clues)));
+                // Bulk pre-fetch puzzle refs, constructors, and guesses for all clues
                 $clue_ids_list   = array_map(fn($c) => (int) $c->id, $clues);
-                $bulk_constructors_map = !empty($clue_puzzle_ids) ? $this->db->get_puzzle_constructors_bulk($clue_puzzle_ids) : [];
+                $bulk_clue_puzzles = $this->db->get_clue_puzzles_bulk($clue_ids_list);
+                $all_puzzle_ids  = [];
+                foreach ($bulk_clue_puzzles as $cps) {
+                    foreach ($cps as $cp) {
+                        $all_puzzle_ids[] = (int) $cp->puzzle_id;
+                    }
+                }
+                $all_puzzle_ids = array_unique($all_puzzle_ids);
+                $bulk_constructors_map = !empty($all_puzzle_ids) ? $this->db->get_puzzle_constructors_bulk($all_puzzle_ids) : [];
                 $bulk_guesses_map      = !empty($clue_ids_list) ? $this->db->get_clue_guesses_bulk($clue_ids_list) : [];
                 ?>
                 <div class="kealoa-clues-section">
@@ -1504,31 +1511,66 @@ class Kealoa_Shortcodes {
                         <tbody>
                             <?php foreach ($clues as $clue): ?>
                                 <?php
-                                $constructors = !empty($clue->puzzle_id) ? ($bulk_constructors_map[(int) $clue->puzzle_id] ?? []) : [];
+                                $clue_pzs = $bulk_clue_puzzles[(int) $clue->id] ?? [];
                                 $clue_guesses = $bulk_guesses_map[(int) $clue->id] ?? [];
                                 ?>
                                 <tr>
                                     <td class="kealoa-clue-number"><?php echo esc_html($clue->clue_number); ?></td>
-                                    <td class="kealoa-day-cell"><?php echo esc_html(Kealoa_Formatter::format_day_abbrev($clue->puzzle_date)); ?></td>
-                                    <td class="kealoa-puzzle-date">
-                                        <?php echo Kealoa_Formatter::format_puzzle_date_link($clue->puzzle_date); ?>
-                                    </td>
-                                    <td class="kealoa-constructors">
-                                        <?php echo Kealoa_Formatter::format_constructor_list($constructors); ?>
-                                    </td>
-                                    <td class="kealoa-editor">
-                                        <?php
-                                        if (!empty($clue->editor_id)) {
-                                            echo Kealoa_Formatter::format_editor_link((int) $clue->editor_id, $clue->editor_name);
+                                    <td class="kealoa-day-cell"><?php
+                                        if (!empty($clue_pzs)) {
+                                            echo implode('<br>', array_map(fn($cp) => esc_html(Kealoa_Formatter::format_day_abbrev($cp->puzzle_date)), $clue_pzs));
                                         } else {
                                             echo '—';
                                         }
-                                        ?>
-                                    </td>
-                                    <td class="kealoa-clue-ref">
-                                        <?php echo esc_html(Kealoa_Formatter::format_clue_direction((int) $clue->puzzle_clue_number, $clue->puzzle_clue_direction)); ?>
-                                    </td>
-                                    <td class="kealoa-clue-text"><?php echo esc_html($clue->clue_text); ?></td>
+                                    ?></td>
+                                    <td class="kealoa-puzzle-date"><?php
+                                        if (!empty($clue_pzs)) {
+                                            echo implode('<br>', array_map(fn($cp) => Kealoa_Formatter::format_puzzle_date_link($cp->puzzle_date), $clue_pzs));
+                                        } else {
+                                            echo '—';
+                                        }
+                                    ?></td>
+                                    <td class="kealoa-constructors"><?php
+                                        if (!empty($clue_pzs)) {
+                                            $con_lines = [];
+                                            foreach ($clue_pzs as $cp) {
+                                                $cons = $bulk_constructors_map[(int) $cp->puzzle_id] ?? [];
+                                                $con_lines[] = Kealoa_Formatter::format_constructor_list($cons);
+                                            }
+                                            echo implode('<br>', $con_lines);
+                                        } else {
+                                            echo '—';
+                                        }
+                                    ?></td>
+                                    <td class="kealoa-editor"><?php
+                                        if (!empty($clue_pzs)) {
+                                            $editor_lines = [];
+                                            foreach ($clue_pzs as $cp) {
+                                                if (!empty($cp->editor_id)) {
+                                                    $editor_lines[] = Kealoa_Formatter::format_editor_link((int) $cp->editor_id, $cp->editor_name);
+                                                } else {
+                                                    $editor_lines[] = '—';
+                                                }
+                                            }
+                                            echo implode('<br>', $editor_lines);
+                                        } else {
+                                            echo '—';
+                                        }
+                                    ?></td>
+                                    <td class="kealoa-clue-ref"><?php
+                                        if (!empty($clue_pzs)) {
+                                            echo implode('<br>', array_map(fn($cp) => esc_html(Kealoa_Formatter::format_clue_direction((int) $cp->puzzle_clue_number, $cp->puzzle_clue_direction)), $clue_pzs));
+                                        } else {
+                                            echo '—';
+                                        }
+                                    ?></td>
+                                    <td class="kealoa-clue-text"><?php
+                                        if (!empty($clue_pzs)) {
+                                            echo implode('<br>', array_map(fn($cp) => esc_html($cp->clue_text ?? ''), $clue_pzs));
+                                        } else {
+                                            echo '—';
+                                        }
+                                    ?></td>
                                     <td class="kealoa-correct-answer">
                                         <strong><?php echo esc_html($clue->correct_answer); ?></strong>
                                     </td>

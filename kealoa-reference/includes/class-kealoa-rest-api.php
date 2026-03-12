@@ -323,32 +323,45 @@ class Kealoa_REST_API {
         $prev            = $this->db->get_previous_round($id, $round);
         $next            = $this->db->get_next_round($id, $round);
 
-        // Bulk pre-fetch guesses and constructors for all clues
+        // Bulk pre-fetch guesses and puzzle refs for all clues
         $clue_ids = array_map(fn($c) => (int) $c->id, $clues_raw);
-        $puzzle_ids = array_unique(array_filter(array_map(fn($c) => (int) ($c->puzzle_id ?? 0), $clues_raw)));
         $bulk_guesses_map = !empty($clue_ids) ? $this->db->get_clue_guesses_bulk($clue_ids) : [];
-        $bulk_constructors_map = !empty($puzzle_ids) ? $this->db->get_puzzle_constructors_bulk($puzzle_ids) : [];
+        $bulk_clue_puzzles = !empty($clue_ids) ? $this->db->get_clue_puzzles_bulk($clue_ids) : [];
 
-        $clues = array_map(function ($c) use ($bulk_guesses_map, $bulk_constructors_map) {
-            $guesses = $bulk_guesses_map[(int) $c->id] ?? [];
-            $constructors = '';
-            if (!empty($c->puzzle_id)) {
-                $pc    = $bulk_constructors_map[(int) $c->puzzle_id] ?? [];
-                $names = array_map(fn($con) => $con->full_name, $pc);
-                $constructors = implode(' & ', $names);
+        // Collect all puzzle IDs for constructor bulk fetch
+        $all_puzzle_ids = [];
+        foreach ($bulk_clue_puzzles as $cps) {
+            foreach ($cps as $cp) {
+                $all_puzzle_ids[] = (int) $cp->puzzle_id;
             }
+        }
+        $all_puzzle_ids = array_unique($all_puzzle_ids);
+        $bulk_constructors_map = !empty($all_puzzle_ids) ? $this->db->get_puzzle_constructors_bulk($all_puzzle_ids) : [];
+
+        $clues = array_map(function ($c) use ($bulk_guesses_map, $bulk_clue_puzzles, $bulk_constructors_map) {
+            $guesses = $bulk_guesses_map[(int) $c->id] ?? [];
+            $clue_pzs = $bulk_clue_puzzles[(int) $c->id] ?? [];
+
+            $puzzles = array_map(function ($cp) use ($bulk_constructors_map) {
+                $pc = $bulk_constructors_map[(int) $cp->puzzle_id] ?? [];
+                $names = array_map(fn($con) => $con->full_name, $pc);
+                return [
+                    'puzzle_id'             => (int) $cp->puzzle_id,
+                    'puzzle_date'           => $cp->puzzle_date ?? '',
+                    'constructors'          => implode(' & ', $names),
+                    'editor'                => $cp->editor_name ?? '',
+                    'puzzle_clue_number'    => $cp->puzzle_clue_number ? (int) $cp->puzzle_clue_number : null,
+                    'puzzle_clue_direction' => $cp->puzzle_clue_direction ?? null,
+                    'clue_text'             => $cp->clue_text ?? '',
+                ];
+            }, $clue_pzs);
+
             return [
-                'id'                    => (int) $c->id,
-                'clue_number'           => (int) $c->clue_number,
-                'puzzle_id'             => $c->puzzle_id ? (int) $c->puzzle_id : null,
-                'puzzle_date'           => $c->puzzle_date ?? '',
-                'constructors'          => $constructors,
-                'editor'                => $c->editor_name ?? '',
-                'puzzle_clue_number'    => $c->puzzle_clue_number ? (int) $c->puzzle_clue_number : null,
-                'puzzle_clue_direction' => $c->puzzle_clue_direction ?? null,
-                'clue_text'             => $c->clue_text,
-                'correct_answer'        => $c->correct_answer,
-                'guesses'               => array_map(fn($g) => [
+                'id'             => (int) $c->id,
+                'clue_number'    => (int) $c->clue_number,
+                'correct_answer' => $c->correct_answer,
+                'puzzles'        => $puzzles,
+                'guesses'        => array_map(fn($g) => [
                     'guesser_name' => $g->guesser_name,
                     'guessed_word' => $g->guessed_word,
                     'is_correct'   => (bool) $g->is_correct,
@@ -776,27 +789,33 @@ class Kealoa_REST_API {
         }
 
         $guesses = $this->db->get_clue_guesses($id);
+        $clue_puzzle_refs = $this->db->get_clue_puzzles($id);
 
-        $constructors = '';
-        if (!empty($clue->puzzle_id)) {
-            $pc    = $this->db->get_puzzle_constructors((int) $clue->puzzle_id);
+        // Build puzzles array with constructors
+        $puzzle_ids = array_map(fn($cp) => (int) $cp->puzzle_id, $clue_puzzle_refs);
+        $bulk_constructors = !empty($puzzle_ids) ? $this->db->get_puzzle_constructors_bulk($puzzle_ids) : [];
+
+        $puzzles = array_map(function ($cp) use ($bulk_constructors) {
+            $pc = $bulk_constructors[(int) $cp->puzzle_id] ?? [];
             $names = array_map(fn($c) => $c->full_name, $pc);
-            $constructors = implode(' & ', $names);
-        }
+            return [
+                'puzzle_id'             => (int) $cp->puzzle_id,
+                'puzzle_date'           => $cp->puzzle_date ?? '',
+                'constructors'          => implode(' & ', $names),
+                'editor'                => $cp->editor_name ?? '',
+                'puzzle_clue_number'    => $cp->puzzle_clue_number ? (int) $cp->puzzle_clue_number : null,
+                'puzzle_clue_direction' => $cp->puzzle_clue_direction ?? null,
+                'clue_text'             => $cp->clue_text ?? '',
+            ];
+        }, $clue_puzzle_refs);
 
         return new WP_REST_Response([
-            'id'                    => (int) $clue->id,
-            'round_id'              => (int) $clue->round_id,
-            'clue_number'           => (int) $clue->clue_number,
-            'puzzle_id'             => $clue->puzzle_id ? (int) $clue->puzzle_id : null,
-            'puzzle_date'           => $clue->puzzle_date ?? '',
-            'constructors'          => $constructors,
-            'editor'                => $clue->editor_name ?? '',
-            'puzzle_clue_number'    => $clue->puzzle_clue_number ? (int) $clue->puzzle_clue_number : null,
-            'puzzle_clue_direction' => $clue->puzzle_clue_direction ?? null,
-            'clue_text'             => $clue->clue_text,
-            'correct_answer'        => $clue->correct_answer,
-            'guesses'               => array_map(fn($g) => [
+            'id'             => (int) $clue->id,
+            'round_id'       => (int) $clue->round_id,
+            'clue_number'    => (int) $clue->clue_number,
+            'correct_answer' => $clue->correct_answer,
+            'puzzles'        => $puzzles,
+            'guesses'        => array_map(fn($g) => [
                 'guesser_name' => $g->guesser_name,
                 'guessed_word' => $g->guessed_word,
                 'is_correct'   => (bool) $g->is_correct,
