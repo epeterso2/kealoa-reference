@@ -235,6 +235,7 @@
 }
 
 .kealoa-clues-table {
+    width: auto;
     font-size: 13px;
     table-layout: auto;
 }
