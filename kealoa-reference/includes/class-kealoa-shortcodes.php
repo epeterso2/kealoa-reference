@@ -844,8 +844,8 @@ class Kealoa_Shortcodes {
                     $np_rounds_per_date = $this->db->get_rounds_per_date_counts();
                     ?>
                     <div class="kealoa-curiosities-section">
-                    <h3><?php esc_html_e('Rounds Without Puzzles', 'kealoa-reference'); ?></h3>
-                    <p class="kealoa-section-description"><?php esc_html_e('These rounds have no clues linked to a crossword puzzle.', 'kealoa-reference'); ?></p>
+                    <h3><?php esc_html_e('Rounds with Text-Only Clues', 'kealoa-reference'); ?></h3>
+                    <p class="kealoa-section-description"><?php esc_html_e('These rounds have clues with text descriptions but no linked crossword puzzles.', 'kealoa-reference'); ?></p>
                     <div class="kealoa-puzzles-table-wrapper">
                         <div class="kealoa-table-scroll">
                             <table class="kealoa-table kealoa-rounds-table" id="kealoa-rounds-curiosities-no-puzzle-table">

@@ -2547,7 +2547,12 @@ class Kealoa_DB {
             WHERE NOT EXISTS (
                 SELECT 1 FROM {$this->clue_puzzles_table} cp
                 INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id
-                WHERE c.round_id = r.id
+                WHERE c.round_id = r.id AND cp.puzzle_id IS NOT NULL
+            )
+            AND EXISTS (
+                SELECT 1 FROM {$this->clue_puzzles_table} cp
+                INNER JOIN {$this->clues_table} c ON c.id = cp.clue_id
+                WHERE c.round_id = r.id AND cp.puzzle_id IS NULL
             )
             ORDER BY r.round_date DESC, r.round_number ASC";
 
