@@ -4554,7 +4554,7 @@ class Kealoa_DB {
             "SELECT cp.id, cp.clue_id, cp.puzzle_id
              FROM {$this->clue_puzzles_table} cp
              LEFT JOIN {$this->puzzles_table} p ON p.id = cp.puzzle_id
-             WHERE p.id IS NULL"
+             WHERE cp.puzzle_id IS NOT NULL AND p.id IS NULL"
         );
         if ($orphan_clue_puzzles) {
             $issues['orphan_clue_puzzles'] = $orphan_clue_puzzles;

@@ -2774,11 +2774,11 @@ class Kealoa_Admin {
             ],
             'orphan_clue_puzzles' => [
                 'label'       => 'Clues Referencing Missing Puzzles',
-                'description' => 'Clues that reference puzzles which no longer exist.',
+                'description' => 'Clue-puzzle links that reference puzzles which no longer exist.',
                 'action'      => 'repair_delete_orphans',
-                'table_key'   => 'clues',
-                'columns'     => ['Clue ID', 'Round ID', 'Clue #', 'Puzzle ID'],
-                'fields'      => ['id', 'round_id', 'clue_number', 'puzzle_id'],
+                'table_key'   => 'clue_puzzles',
+                'columns'     => ['Link ID', 'Clue ID', 'Puzzle ID'],
+                'fields'      => ['id', 'clue_id', 'puzzle_id'],
             ],
             'orphan_guess_clues' => [
                 'label'       => 'Guesses Referencing Missing Clues',

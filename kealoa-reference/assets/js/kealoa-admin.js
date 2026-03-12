@@ -509,6 +509,56 @@
             $('#kealoa-delete-alias-form').submit();
         });
 
+        // =================================================================
+        // DATA CHECK PAGE — select-all and repair button wiring
+        // =================================================================
+
+        // "Select All" checkbox toggles all items in the same group
+        $(document).on('change', '.kealoa-check-all', function () {
+            var group = $(this).data('group');
+            var checked = $(this).prop('checked');
+            $('.kealoa-check-item[data-group="' + group + '"]').prop('checked', checked);
+        });
+
+        // Uncheck "Select All" when any item is unchecked
+        $(document).on('change', '.kealoa-check-item', function () {
+            var group = $(this).data('group');
+            var allChecked = $('.kealoa-check-item[data-group="' + group + '"]').length ===
+                             $('.kealoa-check-item[data-group="' + group + '"]:checked').length;
+            $('.kealoa-check-all[data-group="' + group + '"]').prop('checked', allChecked);
+        });
+
+        // Populate hidden selected_ids field and confirm before submit
+        $(document).on('click', '.kealoa-repair-btn', function (e) {
+            var group = $(this).data('group');
+            var $hidden = $('.kealoa-selected-ids[data-group="' + group + '"]');
+
+            // For forms without selection (e.g. "Renumber All"), just confirm
+            if (!$hidden.length) {
+                if (!confirm('Are you sure you want to proceed?')) {
+                    e.preventDefault();
+                }
+                return;
+            }
+
+            var ids = [];
+            $('.kealoa-check-item[data-group="' + group + '"]:checked').each(function () {
+                ids.push($(this).val());
+            });
+
+            if (ids.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one record.');
+                return;
+            }
+
+            $hidden.val(ids.join(','));
+
+            if (!confirm('Are you sure you want to proceed with ' + ids.length + ' selected record(s)?')) {
+                e.preventDefault();
+            }
+        });
+
     });
 
 })(jQuery);
