@@ -830,7 +830,8 @@ class Kealoa_Shortcodes {
                 $rounds_with_unused_answers = $this->db->get_rounds_with_unused_answers();
                 $rounds_with_multiple_players = $this->db->get_rounds_with_multiple_players();
                 $rounds_with_repeated_constructor = $this->db->get_rounds_with_repeated_constructor();
-                $has_curiosities = !empty($rounds_without_puzzles) || !empty($rounds_with_unused_answers) || !empty($rounds_with_multiple_players) || !empty($rounds_with_repeated_constructor);
+                $rounds_hit_for_cycle = $this->db->get_rounds_hit_for_cycle();
+                $has_curiosities = !empty($rounds_without_puzzles) || !empty($rounds_with_unused_answers) || !empty($rounds_with_multiple_players) || !empty($rounds_with_repeated_constructor) || !empty($rounds_hit_for_cycle);
 
                 if (!$has_curiosities):
                 ?>
@@ -1049,6 +1050,62 @@ class Kealoa_Shortcodes {
                                             <?php echo Kealoa_Formatter::format_solution_words_link($gn, $solutions); ?>
                                         </td>
                                         <td><?php echo esc_html($round->constructor_name); ?></td>
+                                        <td><?php echo esc_html($round->puzzle_count); ?></td>
+                                        <td class="kealoa-description-cell">
+                                            <?php echo esc_html($round->description ?? ''); ?>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($rounds_hit_for_cycle)): ?>
+                    <?php
+                    // Bulk pre-fetch for hit-for-the-cycle rounds
+                    $hc_round_ids = array_map(fn($r) => (int) $r->id, $rounds_hit_for_cycle);
+                    $hc_solutions_map = $this->db->get_round_solutions_bulk($hc_round_ids);
+                    if (!isset($np_rounds_per_date)) {
+                        $np_rounds_per_date = $this->db->get_rounds_per_date_counts();
+                    }
+                    ?>
+                    <div class="kealoa-curiosities-section">
+                    <h3><?php esc_html_e('Hit for the Cycle', 'kealoa-reference'); ?></h3>
+                    <p class="kealoa-section-description"><?php esc_html_e('These rounds featured puzzles from every day of the week (Sunday through Saturday).', 'kealoa-reference'); ?></p>
+                    <div class="kealoa-puzzles-table-wrapper">
+                        <div class="kealoa-table-scroll">
+                            <table class="kealoa-table kealoa-rounds-table" id="kealoa-rounds-curiosities-hit-cycle-table">
+                                <thead>
+                                    <tr>
+                                        <th data-sort="date" data-default-sort="desc"><?php esc_html_e('Date', 'kealoa-reference'); ?></th>
+                                        <th data-sort="text"><?php esc_html_e('Solution Words', 'kealoa-reference'); ?></th>
+                                        <th data-sort="number"><?php esc_html_e('Puzzles', 'kealoa-reference'); ?></th>
+                                        <th data-sort="text"><?php esc_html_e('Description', 'kealoa-reference'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($rounds_hit_for_cycle as $round):
+                                        $rid = (int) $round->id;
+                                        $gn = (int) $round->game_number;
+                                        $solutions = $hc_solutions_map[$rid] ?? [];
+                                        $round_num = (int) ($round->round_number ?? 1);
+                                        $date_count = $np_rounds_per_date[$round->round_date] ?? 1;
+                                    ?>
+                                    <tr>
+                                        <td class="kealoa-date-cell" data-sort-value="<?php echo esc_attr(date('Ymd', strtotime($round->round_date)) * 100 + $round_num); ?>">
+                                            <?php
+                                            echo Kealoa_Formatter::format_round_date_link($gn, $round->round_date);
+                                            if ($date_count > 1) {
+                                                echo ' <span class="kealoa-round-number">(#' . esc_html($round_num) . ')</span>';
+                                            }
+                                            ?>
+                                        </td>
+                                        <td class="kealoa-solutions-cell">
+                                            <?php echo Kealoa_Formatter::format_solution_words_link($gn, $solutions); ?>
+                                        </td>
                                         <td><?php echo esc_html($round->puzzle_count); ?></td>
                                         <td class="kealoa-description-cell">
                                             <?php echo esc_html($round->description ?? ''); ?>

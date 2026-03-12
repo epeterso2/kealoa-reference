@@ -4983,4 +4983,24 @@ class Kealoa_DB {
 
         return $this->wpdb->get_results($sql);
     }
+
+    /**
+     * Get rounds that "hit for the cycle" — puzzles from all 7 days of the week.
+     *
+     * Returns round data plus the total number of distinct puzzles.
+     *
+     * @return array Array of objects with round fields + puzzle_count.
+     */
+    public function get_rounds_hit_for_cycle(): array {
+        $sql = "SELECT r.*, COUNT(DISTINCT pz.id) AS puzzle_count
+            FROM {$this->rounds_table} r
+            INNER JOIN {$this->clues_table} c ON c.round_id = r.id
+            INNER JOIN {$this->clue_puzzles_table} cp ON cp.clue_id = c.id
+            INNER JOIN {$this->puzzles_table} pz ON pz.id = cp.puzzle_id
+            GROUP BY r.id
+            HAVING COUNT(DISTINCT DAYOFWEEK(pz.publication_date)) = 7
+            ORDER BY r.round_date DESC, r.round_number ASC";
+
+        return $this->wpdb->get_results($sql);
+    }
 }
