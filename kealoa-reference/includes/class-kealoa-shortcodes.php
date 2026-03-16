@@ -1188,7 +1188,7 @@ class Kealoa_Shortcodes {
                         foreach ($solutions as $s) {
                             $word = $s->word;
                             $finder_word = str_replace(' ', '', $word);
-                            $word_links[] = '<a href="' . esc_url('https://xwordinfo.com/Finder?word=' . rawurlencode($finder_word)) . '" target="_blank" rel="noopener noreferrer">' . esc_html(strtoupper($word)) . '</a>';
+                            $word_links[] = '<a href="' . esc_url('https://www.xwordinfo.com/Finder?word=' . rawurlencode($finder_word)) . '" target="_blank" rel="noopener noreferrer">' . esc_html(strtoupper($word)) . '</a>';
                         }
                         echo Kealoa_Formatter::format_list_with_and($word_links);
                         $round_type = Kealoa_Formatter::classify_kealoa_type($solutions);
