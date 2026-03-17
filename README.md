@@ -2,7 +2,7 @@
 
 A WordPress plugin for managing and displaying KEALOA quiz game data from the [Fill Me In](https://bemoresmarter.libsyn.com) podcast.
 
-**Version:** 2.3.1 &bull; **DB Version:** 2.3.0 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+**Version:** 2.3.16 &bull; **DB Version:** 2.3.7 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 ---
 
@@ -109,10 +109,10 @@ All shortcode output is cached via WordPress transients (24-hour TTL) with a ver
 
 | Shortcode | Attributes | Description |
 |---|---|---|
-| `[kealoa_rounds_table]` | `limit`, `order` | Tabbed view: rounds table (sortable/filterable with KEALOA type column) and stats (overview grid, yearly stats, answer frequency matrices with aggregate "All" row) |
+| `[kealoa_rounds_table]` | `limit`, `order` | Tabbed view with four tabs: Rounds Played (sortable/filterable with KEALOA type column), Detailed Stats, Summary Stats (yearly breakdown, answer frequency matrices with aggregate "All" row), and Curiosities |
 | `[kealoa_round]` | `id` (required) | Round detail: meta, episode link, solution words with KEALOA type label, host, players with scores, person photos, alternation metric, evenness metric, average clue age, clue table with guesses, social sharing bar |
 | `[kealoa_rounds_stats]` | — | Statistics grid: total players, rounds, puzzles, constructors, clues, guesses, correct answers, accuracy |
-| `[kealoa_person]` | `id` (required) | Person profile with tabbed interface: achievement badges, role-specific statistics (player, constructor, editor, host with Rounds/Stats/Streaks subtabs), results by KEALOA type, alternation vs accuracy breakdown, round history with type column, co-players, performance charts, person images |
+| `[kealoa_person]` | `id` (required) | Person profile with tabbed interface: achievement badges, role-specific tabs (Player with Overall Stats/Rounds/Streaks/Puzzles/Puzzle Stats/By Constructor/By Editor subtabs; Host, Constructor, and Editor each with three subtabs), results by KEALOA type, alternation vs accuracy breakdown, round history, co-players, performance charts, person images |
 | `[kealoa_persons_table]` | — | Table of all players with rounds played, clues guessed, and accuracy |
 | `[kealoa_constructors_table]` | — | Table of all constructors with puzzle count and statistics |
 | `[kealoa_editors_table]` | — | Table of all editors with puzzle count and statistics |
@@ -120,13 +120,14 @@ All shortcode output is cached via WordPress transients (24-hour TTL) with a ver
 | `[kealoa_hosts_table]` | — | Table of all hosts with rounds, clues, players, and accuracy |
 | `[kealoa_puzzles_table]` | — | Tabbed view: all puzzles with dates, editors, constructors, and round details; curiosities tab (puzzles used in multiple rounds, rounds without puzzles) |
 | `[kealoa_puzzle]` | `date` (required, `YYYY-MM-DD`) | Puzzle detail: person images, clue details, and round information |
+| `[kealoa_predictions]` | — | Probability of answer words using Bayesian inference with Laplace smoothing for two-answer rounds |
 | `[kealoa_version]` | — | Plugin and database version numbers |
 
 ---
 
 ## Gutenberg Blocks
 
-The plugin registers 15 blocks under the `kealoa` namespace. Each block renders its content server-side via a PHP `render.php` file.
+The plugin registers 16 blocks under the `kealoa` namespace. Each block renders its content server-side via a PHP `render.php` file.
 
 | Block slug | Title | Icon | Description |
 |---|---|---|---|
@@ -136,9 +137,10 @@ The plugin registers 15 blocks under the `kealoa` namespace. Each block renders 
 | `editor-view` | KEALOA Editor View | `edit` | **Deprecated:** use Person View instead. Displays a person's KEALOA statistics and history |
 | `editors-table` | KEALOA Editors Table | `edit` | Table of all editors with statistics |
 | `hosts-table` | KEALOA Hosts Table | `microphone` | Table of all hosts with rounds, clues, players, and accuracy |
-| `person-view` | KEALOA Person View | `admin-users` | Person profile with achievement badges, statistics, host streaks table, round history, and performance metrics |
+| `person-view` | KEALOA Person View | `admin-users` | Person profile with achievement badges, role-specific subtabs (player, host, constructor, editor), round history, and performance metrics |
 | `persons-table` | KEALOA Players Table | `groups` | Table of all players with rounds played, clues guessed, and accuracy |
 | `play-game` | KEALOA Play Game | `games` | An interactive KEALOA game that lets visitors play a random round |
+| `predictions` | KEALOA Predictions | `chart-line` | Probability of answer words using Bayesian inference with Laplace smoothing for two-answer rounds |
 | `puzzle-view` | KEALOA Puzzle View | `grid-view` | Single puzzle with person images, clue details, and round information |
 | `puzzles-table` | KEALOA Puzzles Table | `grid-view` | Table of all puzzles with puzzle date, persons, editor, and round details |
 | `round-view` | KEALOA Round View | `media-document` | Single round with all clues, guesses, and results |
@@ -155,7 +157,7 @@ The plugin registers 15 blocks under the `kealoa` namespace. Each block renders 
 | `person-view` | `personId` | number | `0` |
 | `puzzle-view` | `puzzleDate` | string | `""` |
 | `round-view` | `roundId` | number | `0` |
-| `rounds-table` | `limit` | number | `50` |
+| `rounds-table` | `limit` | number | `0` |
 | `rounds-table` | `order` | string | `"DESC"` |
 
 ---
@@ -242,7 +244,7 @@ All list endpoints (`/rounds`, `/persons`, `/puzzles`) support pagination via qu
 
 ## Database Model
 
-The plugin creates eight custom tables. All table names are prefixed with the WordPress table prefix followed by `kealoa_` (e.g., `wp_kealoa_persons`).
+The plugin creates nine custom tables. All table names are prefixed with the WordPress table prefix followed by `kealoa_` (e.g., `wp_kealoa_persons`).
 
 | Table | Description |
 |---|---|
@@ -356,11 +358,11 @@ The plugin creates eight custom tables. All table names are prefixed with the Wo
 |---|---|---|
 | `id` | `bigint(20) UNSIGNED AUTO_INCREMENT` | PK |
 | `clue_id` | `bigint(20) UNSIGNED NOT NULL` | FK → `clues`, indexed |
-| `puzzle_id` | `bigint(20) UNSIGNED NOT NULL` | FK → `puzzles`, indexed |
+| `puzzle_id` | `bigint(20) UNSIGNED DEFAULT NULL` | FK → `puzzles`, indexed |
 | `puzzle_clue_number` | `smallint(5) UNSIGNED NOT NULL` | |
 | `puzzle_clue_direction` | `enum('A','D') NOT NULL` | Across or Down |
 | `clue_text` | `text NOT NULL` | Clue text as it appeared in this puzzle |
-| `sequence` | `tinyint(3) UNSIGNED DEFAULT 1` | Order of multiple puzzles per clue |
+| `display_order` | `tinyint(3) UNSIGNED DEFAULT 1` | Order of multiple puzzles per clue |
 | `created_at` | `datetime` | |
 
 #### `guesses`
@@ -478,8 +480,10 @@ Badges are computed by the `Kealoa_Badges` class based on the person's metrics. 
 | Constructor | Puzzles Used | Puzzles used as clues in rounds | count |
 | Constructor | Clues Used | Total clues sourced from constructor's puzzles | count |
 | Constructor | Constructor Accuracy | Correct guesses on constructor's clues | % |
+| Constructor | Hit for the Cycle | Times the constructor achieved a cycle | count |
 | Editor | Puzzles Edited | Puzzles edited that were used as clues | count |
 | Editor | Editor Accuracy | Correct guesses on editor's puzzles | % |
+| Editor | Hit for the Cycle | Times the editor achieved a cycle | count |
 
 ### Table Sorting
 
@@ -491,7 +495,7 @@ Rich filtering system with: text search (multi-column), exact-match select, mini
 
 ### Tabbed Navigation
 
-Nested tab UI with primary and secondary tabs. URL hash activation via `#kealoa-tab=primary&kealoa-subtab=secondary` for deep-linkable tab state. The Host primary tab has three subtabs: Rounds, Stats, and Streaks.
+Nested tab UI with primary and secondary tabs. URL hash activation via `#kealoa-tab=primary&kealoa-subtab=secondary` for deep-linkable tab state. The Player primary tab has seven subtabs: Overall Stats, Rounds, Streaks, Puzzles, Puzzle Stats, By Constructor, and By Editor. The Host, Constructor, and Editor primary tabs each have three subtabs.
 
 ### Interactive Game
 
@@ -584,7 +588,7 @@ kealoa-reference/
 │   │   ├── kealoa-game.css           Play-game interactive styles
 │   │   └── kealoa-palette.css        Color palette CSS custom properties
 │   ├── images/
-│   │   ├── badges/                   SVG badge icons (10 files; accuracy roles share one icon)
+│   │   ├── badges/                   SVG badge icons (11 files; accuracy and cycle roles share icons)
 │   │   └── bug-report.svg            Bug report button icon
 │   └── js/
 │       ├── blocks-editor.js          Gutenberg block editor registrations
@@ -601,6 +605,7 @@ kealoa-reference/
 │   ├── person-view/                  block.json + render.php
 │   ├── persons-table/                block.json + render.php
 │   ├── play-game/                    block.json + render.php
+│   ├── predictions/                  block.json + render.php
 │   ├── puzzle-view/                  block.json + render.php
 │   ├── puzzles-table/                block.json + render.php
 │   ├── round-view/                   block.json + render.php
