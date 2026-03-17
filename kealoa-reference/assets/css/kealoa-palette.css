@@ -39,7 +39,7 @@
 
 /* === GeneratePress Global Colors Mapping === */
 body { background-color: var(--cloud-white); color: var(--ash-dark); }
-a { color: var(--tropical-teal); }
+a { color: var(--deep-lagoon); }
 a:hover { color: var(--volcanic-ember); }
 .site-header { background: var(--driftwood-dark); }
 .main-navigation a { color: var(--pale-sand); }

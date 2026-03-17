@@ -155,7 +155,7 @@
 .kealoa-episode-link,
 .kealoa-xwordinfo-link,
 .kealoa-homepage-link {
-    color: var(--tropical-teal);
+    color: var(--deep-lagoon);
     text-decoration: underline;
     transition: color 0.2s ease;
 }
@@ -1686,7 +1686,7 @@
    ========================================================================== */
 
 .kealoa-round-picker-link {
-    color: var(--tropical-teal);
+    color: var(--deep-lagoon);
     cursor: pointer;
     text-decoration: underline;
     text-decoration-style: dotted;
@@ -1697,7 +1697,7 @@
 }
 
 .kealoa-year-tab-link {
-    color: var(--tropical-teal);
+    color: var(--deep-lagoon);
     cursor: pointer;
     text-decoration: underline;
     text-decoration-style: dotted;
