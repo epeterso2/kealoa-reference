@@ -2896,9 +2896,9 @@ class Kealoa_Admin {
             ],
             'guesses_non_assigned_guessers' => [
                 'label'       => 'Guesses From Non-Assigned Guessers',
-                'description' => 'Guesses made by persons who are not listed as guessers for that round.',
-                'action'      => null,
-                'no_selection' => true,
+                'description' => 'Guesses made by persons who are not listed as guessers for that round. These records may be left over from database migrations and refactoring.',
+                'action'      => 'repair_delete_orphans',
+                'table_key'   => 'guesses',
                 'columns'     => ['Guess ID', 'Clue ID', 'Person ID', 'Word'],
                 'fields'      => ['id', 'clue_id', 'guesser_person_id', 'guessed_word'],
             ],
