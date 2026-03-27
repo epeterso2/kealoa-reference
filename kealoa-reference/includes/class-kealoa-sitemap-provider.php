@@ -106,9 +106,13 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
 
         $urls = [];
         foreach ($rounds as $round) {
-            $urls[] = [
+            $entry = [
                 'loc' => home_url('/kealoa/round/' . ($round->game_number ?? $round->id) . '/'),
             ];
+            if (!empty($round->updated_at)) {
+                $entry['lastmod'] = gmdate('Y-m-d\TH:i:s+00:00', strtotime($round->updated_at));
+            }
+            $urls[] = $entry;
         }
         return $urls;
     }
@@ -125,9 +129,13 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
         $urls = [];
         foreach ($persons as $person) {
             $slug = str_replace(' ', '_', $person->full_name);
-            $urls[] = [
+            $entry = [
                 'loc' => home_url('/kealoa/person/' . urlencode($slug) . '/'),
             ];
+            if (!empty($person->updated_at)) {
+                $entry['lastmod'] = gmdate('Y-m-d\TH:i:s+00:00', strtotime($person->updated_at));
+            }
+            $urls[] = $entry;
         }
         return $urls;
     }
@@ -145,9 +153,13 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
 
         $urls = [];
         foreach ($puzzles as $puzzle) {
-            $urls[] = [
+            $entry = [
                 'loc' => home_url('/kealoa/puzzle/' . $puzzle->publication_date . '/'),
             ];
+            if (!empty($puzzle->updated_at)) {
+                $entry['lastmod'] = gmdate('Y-m-d\TH:i:s+00:00', strtotime($puzzle->updated_at));
+            }
+            $urls[] = $entry;
         }
         return $urls;
     }
@@ -175,5 +187,43 @@ class Kealoa_Sitemap_Provider extends WP_Sitemaps_Provider {
         }
 
         return $urls;
+    }
+
+    /**
+     * Return URLs for a single subtype.
+     *
+     * @param string $subtype One of 'rounds', 'persons', 'puzzles'.
+     * @param int    $limit   Maximum number of URLs.
+     * @param int    $offset  Starting offset.
+     * @return array<int, array{loc: string}>
+     */
+    public function get_subtype_urls(string $subtype, int $limit = 50000, int $offset = 0): array {
+        return match ($subtype) {
+            'rounds'  => $this->get_round_urls($limit, $offset),
+            'persons' => $this->get_person_urls($limit, $offset),
+            'puzzles' => $this->get_puzzle_urls($limit, $offset),
+            default   => [],
+        };
+    }
+
+    /**
+     * Return the most recent modification datetime for a subtype (W3C format).
+     *
+     * @param string $subtype One of 'rounds', 'persons', 'puzzles'.
+     * @return string|null
+     */
+    public function get_subtype_last_modified(string $subtype): ?string {
+        $raw = match ($subtype) {
+            'rounds'  => $this->db->get_rounds_last_modified(),
+            'persons' => $this->db->get_persons_last_modified(),
+            'puzzles' => $this->db->get_puzzles_last_modified(),
+            default   => null,
+        };
+
+        if (!$raw) {
+            return null;
+        }
+
+        return gmdate('Y-m-d\TH:i:s+00:00', strtotime($raw));
     }
 }

@@ -2,7 +2,7 @@
 
 A WordPress plugin for managing and displaying KEALOA quiz game data from the [Fill Me In](https://bemoresmarter.libsyn.com) podcast.
 
-**Version:** 2.3.16 &bull; **DB Version:** 2.3.7 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+**Version:** 2.3.18 &bull; **DB Version:** 2.3.7 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 ---
 
@@ -441,7 +441,7 @@ The plugin extends WordPress core search to include KEALOA entities. When a visi
 
 ## Sitemap Integration
 
-KEALOA URLs are automatically included in site sitemaps.
+KEALOA URLs are automatically included in site sitemaps. Every URL entry includes a `lastmod` timestamp derived from the entity's `updated_at` database column.
 
 ### WordPress Core Sitemaps
 
@@ -453,9 +453,34 @@ A custom `WP_Sitemaps_Provider` named `kealoa` registers three object subtypes:
 | `persons` | `/kealoa/person/{name}/` |
 | `puzzles` | `/kealoa/puzzle/{date}/` |
 
-### Yoast SEO
+Each URL entry includes a `lastmod` date from the record's `updated_at` column.
 
-When Yoast SEO is active, a `<sitemap>` entry for `/kealoa-sitemap.xml` is added to the Yoast sitemap index, with a custom `<urlset>` XML containing all KEALOA URLs.
+### Yoast SEO Sitemaps
+
+When Yoast SEO is active, KEALOA registers three separate sitemaps in the Yoast sitemap index — one per entity type:
+
+| Sitemap | Example URL |
+|---|---|
+| Rounds | `/kealoa-rounds-sitemap.xml` |
+| Persons | `/kealoa-persons-sitemap.xml` |
+| Puzzles | `/kealoa-puzzles-sitemap.xml` |
+
+Each sitemap is automatically paginated (e.g., `kealoa-rounds-sitemap2.xml`) when the entity count exceeds the per-sitemap URL limit (default 1 000). Sitemap index entries include the most recent `lastmod` for that entity type, and individual URL entries include per-record `lastmod` timestamps.
+
+### Yoast SEO Meta for Virtual Pages
+
+When Yoast SEO is active, KEALOA virtual pages (person, round, puzzle) receive full Yoast meta support:
+
+| Filter | Description |
+|---|---|
+| `wpseo_title` | Structured page title (entity + role/details + site name) |
+| `wpseo_metadesc` | Contextual meta description per entity type |
+| `wpseo_canonical` | Correct canonical URL for the virtual page |
+| `wpseo_opengraph_title` | OpenGraph title |
+| `wpseo_opengraph_desc` | OpenGraph description |
+| `wpseo_opengraph_url` | OpenGraph URL |
+| `wpseo_opengraph_type` | Set to `article` |
+| `wpseo_add_opengraph_images` | Person profile image (when available) |
 
 ---
 
@@ -623,8 +648,8 @@ kealoa-reference/
 │   ├── class-kealoa-import.php       CSV/ZIP import logic with date normalization
 │   ├── class-kealoa-rest-api.php     REST API route registrations and callbacks
 │   ├── class-kealoa-shortcodes.php   Shortcode registrations and render callbacks
-│   ├── class-kealoa-sitemap-provider.php  WordPress core sitemap provider
-│   └── class-kealoa-sitemap.php      Yoast sitemap integration
+│   ├── class-kealoa-sitemap-provider.php  WordPress core sitemap provider (with lastmod support)
+│   └── class-kealoa-sitemap.php      Yoast sitemap integration + virtual page SEO meta
 ├── languages/
 │   └── README.md                     Internationalization placeholder
 └── templates/

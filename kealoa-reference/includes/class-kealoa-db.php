@@ -1056,6 +1056,33 @@ class Kealoa_DB {
     }
 
     /**
+     * Return the most recent updated_at for rounds (W3C datetime or null).
+     */
+    public function get_rounds_last_modified(): ?string {
+        return $this->wpdb->get_var(
+            "SELECT MAX(updated_at) FROM {$this->rounds_table}"
+        );
+    }
+
+    /**
+     * Return the most recent updated_at for persons (W3C datetime or null).
+     */
+    public function get_persons_last_modified(): ?string {
+        return $this->wpdb->get_var(
+            "SELECT MAX(updated_at) FROM {$this->persons_table}"
+        );
+    }
+
+    /**
+     * Return the most recent updated_at for puzzles (W3C datetime or null).
+     */
+    public function get_puzzles_last_modified(): ?string {
+        return $this->wpdb->get_var(
+            "SELECT MAX(updated_at) FROM {$this->puzzles_table}"
+        );
+    }
+
+    /**
      * Get overview statistics for all rounds
      */
     public function get_rounds_overview_stats(): object {
