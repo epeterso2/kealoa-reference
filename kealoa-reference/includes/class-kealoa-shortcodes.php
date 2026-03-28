@@ -1977,7 +1977,7 @@ class Kealoa_Shortcodes {
             $badge_metrics['player_rounds']   = (int) $stats->rounds_played;
             $badge_metrics['player_accuracy'] = (float) $stats->overall_percentage;
             $badge_metrics['player_correct']  = (int) $stats->max_correct;
-            $badge_metrics['player_streak']   = (int) $stats->best_streak;
+            $badge_metrics['player_streak']   = $player_streaks ? (int) $player_streaks->best_correct_streak : 0;
         }
         if ($is_constructor && $constructor_stats) {
             $badge_metrics['constructor_puzzles']  = (int) $constructor_stats->puzzle_count;
