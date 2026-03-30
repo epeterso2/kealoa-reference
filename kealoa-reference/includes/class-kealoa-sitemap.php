@@ -247,10 +247,14 @@ function kealoa_build_yoast_meta(string $type, int $id): ?array {
             );
 
             $og_image = '';
-            if (!empty($person->image_url)) {
-                $og_image = $person->image_url;
-            } elseif (!empty($person->media_id)) {
-                $og_image = wp_get_attachment_url((int) $person->media_id) ?: '';
+            $person_media_id = (int) ($person->media_id ?? 0);
+            if ($person_media_id > 0) {
+                $og_image = wp_get_attachment_url($person_media_id) ?: '';
+            }
+            if (empty($og_image)) {
+                $og_image = !empty($person->xwordinfo_image_url)
+                    ? $person->xwordinfo_image_url
+                    : Kealoa_Formatter::xwordinfo_image_url_from_name($person->full_name);
             }
 
             return [
