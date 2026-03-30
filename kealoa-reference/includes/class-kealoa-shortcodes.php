@@ -1929,12 +1929,15 @@ class Kealoa_Shortcodes {
         // Pre-compute: rounds with best score overall
         $best_score_round_ids = $rounds_by_score[$stats->max_correct] ?? [];
 
-        // Pre-compute: rounds with best streak overall
+        // Pre-compute: rounds with best streak overall (cross-round streak, same as badge)
         $best_streak_round_ids = [];
-        foreach ($streak_per_round as $rid => $streak) {
-            if ($streak === $stats->best_streak) {
-                $best_streak_round_ids[] = $rid;
+        if ($player_streaks && !empty($player_streaks->streaks)) {
+            foreach ($player_streaks->streaks as $streak) {
+                if ($streak->type === 'correct' && $streak->length === $player_streaks->best_correct_streak) {
+                    $best_streak_round_ids = array_merge($best_streak_round_ids, $streak->round_ids);
+                }
             }
+            $best_streak_round_ids = array_unique($best_streak_round_ids);
         }
 
         // Pre-compute: rounds with best score per year
@@ -2131,7 +2134,7 @@ class Kealoa_Shortcodes {
                         <span class="kealoa-stat-label"><?php esc_html_e('Best Score', 'kealoa-reference'); ?></span>
                     </div>
                     <div class="kealoa-stat-card">
-                        <span class="kealoa-stat-value"><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($best_streak_round_ids); ?>"><?php echo esc_html($stats->best_streak); ?></a></span>
+                        <span class="kealoa-stat-value"><a class="kealoa-round-picker-link" data-rounds="<?php echo $build_picker_json($best_streak_round_ids); ?>"><?php echo esc_html($player_streaks ? $player_streaks->best_correct_streak : 0); ?></a></span>
                         <span class="kealoa-stat-label"><?php esc_html_e('Best Streak', 'kealoa-reference'); ?></span>
                     </div>
                 </div>
