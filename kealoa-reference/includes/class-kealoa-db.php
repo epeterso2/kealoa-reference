@@ -2912,25 +2912,25 @@ class Kealoa_DB {
 
         $rows = $this->wpdb->get_results($sql);
         $map = [];
-        $prev_round = null;
         $streak = 0;
+        $streak_round_ids = [];
 
         foreach ($rows as $row) {
             $year = (int) $row->year;
             $round_id = (int) $row->round_id;
 
-            if ($round_id !== $prev_round) {
-                $streak = 0;
-                $prev_round = $round_id;
-            }
-
             if ((int) $row->is_correct) {
                 $streak++;
-                if (!isset($map[$year]) || $streak > $map[$year]) {
-                    $map[$year] = $streak;
+                $streak_round_ids[$round_id] = true;
+                if (!isset($map[$year]) || $streak > $map[$year]['streak']) {
+                    $map[$year] = [
+                        'streak'    => $streak,
+                        'round_ids' => array_keys($streak_round_ids),
+                    ];
                 }
             } else {
                 $streak = 0;
+                $streak_round_ids = [];
             }
         }
 
@@ -4164,51 +4164,49 @@ class Kealoa_DB {
         $sql = "SELECT g.guesser_person_id, c.round_id, c.clue_number, g.is_correct
             FROM {$this->guesses_table} g
             INNER JOIN {$this->clues_table} c ON g.clue_id = c.id
-            ORDER BY g.guesser_person_id ASC, c.round_id ASC, c.clue_number ASC";
+            INNER JOIN {$this->rounds_table} r ON r.id = c.round_id
+            ORDER BY g.guesser_person_id ASC, r.round_date ASC, r.round_number ASC, c.clue_number ASC";
 
         $rows = $this->wpdb->get_results($sql);
 
-        $best = [];        // person_id => best streak length
-        $round_best = [];  // "person_id-round_id" => best streak in that round
+        $best = [];            // person_id => best streak length
+        $best_round_ids = [];  // person_id => [round_ids]
         $prev_person = null;
-        $prev_round = null;
         $streak = 0;
+        $streak_round_ids = [];
 
         foreach ($rows as $row) {
             $person_id = (int) $row->guesser_person_id;
             $round_id = (int) $row->round_id;
             $correct = (int) $row->is_correct;
 
-            if ($person_id !== $prev_person || $round_id !== $prev_round) {
+            if ($person_id !== $prev_person) {
                 $streak = 0;
+                $streak_round_ids = [];
                 $prev_person = $person_id;
-                $prev_round = $round_id;
             }
 
             if ($correct) {
                 $streak++;
+                $streak_round_ids[$round_id] = true;
                 if (!isset($best[$person_id]) || $streak > $best[$person_id]) {
                     $best[$person_id] = $streak;
-                }
-                $key = $person_id . '-' . $round_id;
-                if (!isset($round_best[$key]) || $streak > $round_best[$key]) {
-                    $round_best[$key] = $streak;
+                    $best_round_ids[$person_id] = array_keys($streak_round_ids);
+                } elseif ($streak === $best[$person_id]) {
+                    $best_round_ids[$person_id] = array_values(array_unique(
+                        array_merge($best_round_ids[$person_id], array_keys($streak_round_ids))
+                    ));
                 }
             } else {
                 $streak = 0;
+                $streak_round_ids = [];
             }
         }
 
         // Build combined map
         $map = [];
         foreach ($best as $person_id => $streak_val) {
-            $map[$person_id] = ['streak' => $streak_val, 'round_ids' => []];
-        }
-        foreach ($round_best as $key => $streak_val) {
-            [$person_id, $round_id] = array_map('intval', explode('-', $key));
-            if (isset($best[$person_id]) && $streak_val === $best[$person_id]) {
-                $map[$person_id]['round_ids'][] = $round_id;
-            }
+            $map[$person_id] = ['streak' => $streak_val, 'round_ids' => $best_round_ids[$person_id] ?? []];
         }
 
         return $map;

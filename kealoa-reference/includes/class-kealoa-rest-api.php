@@ -638,7 +638,12 @@ class Kealoa_REST_API {
         if (!$this->db->get_person($id)) {
             return new WP_REST_Response(['message' => 'Person not found.'], 404);
         }
-        return new WP_REST_Response($this->db->get_person_best_streaks_by_year($id), 200);
+        $data = $this->db->get_person_best_streaks_by_year($id);
+        $result = [];
+        foreach ($data as $year => $info) {
+            $result[$year] = $info['streak'];
+        }
+        return new WP_REST_Response($result, 200);
     }
 
     // =========================================================================

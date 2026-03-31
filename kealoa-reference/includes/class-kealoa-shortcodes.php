@@ -1955,13 +1955,8 @@ class Kealoa_Shortcodes {
 
         // Pre-compute: rounds with best streak per year
         $best_streak_rounds_by_year = [];
-        foreach ($best_streaks_by_year as $year => $best_streak) {
-            $best_streak_rounds_by_year[$year] = [];
-            foreach ($round_ids_by_year[$year] ?? [] as $rid) {
-                if (($streak_per_round[$rid] ?? 0) === $best_streak) {
-                    $best_streak_rounds_by_year[$year][] = $rid;
-                }
-            }
+        foreach ($best_streaks_by_year as $year => $data) {
+            $best_streak_rounds_by_year[$year] = $data['round_ids'];
         }
 
         // Compute achievement badges
@@ -2427,7 +2422,7 @@ class Kealoa_Shortcodes {
                                 $yr_round_ids = $round_ids_by_year[$yr] ?? [];
                                 $yr_best_score_ids = $best_score_rounds_by_year[$yr] ?? [];
                                 $yr_best_streak_ids = $best_streak_rounds_by_year[$yr] ?? [];
-                                $yr_best_streak_val = $best_streaks_by_year[$yr] ?? 0;
+                                $yr_best_streak_val = $best_streaks_by_year[$yr]['streak'] ?? 0;
                                 ?>
                                 <tr>
                                     <td><a class="kealoa-year-tab-link" data-year="<?php echo esc_attr($yr); ?>" data-tab-target="round" data-filter-target="kealoa-rh-year"><?php echo esc_html($yr); ?></a></td>
