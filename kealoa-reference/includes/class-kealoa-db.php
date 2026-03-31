@@ -2659,7 +2659,6 @@ class Kealoa_DB {
         $total_correct = 0;
         $per_round = []; // round_id => ['clue_count' => int, 'correct_count' => int]
         $best_streak = 0;
-        $prev_round = null;
         $streak = 0;
 
         foreach ($clue_rows as $row) {
@@ -2673,11 +2672,7 @@ class Kealoa_DB {
             $per_round[$rid]['clue_count']++;
             $per_round[$rid]['correct_count'] += $correct;
 
-            // Streak tracking (reset on new round)
-            if ($rid !== $prev_round) {
-                $streak = 0;
-                $prev_round = $rid;
-            }
+            // Streak tracking (spans across rounds)
             if ($correct) {
                 $streak++;
                 if ($streak > $best_streak) {

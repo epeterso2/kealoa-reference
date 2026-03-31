@@ -3,7 +3,7 @@
 Read-only REST API for KEALOA Reference data.
 
 **Base URL:** `/wp-json/kealoa/v1`
-**Version:** 2.3.18
+**Version:** 2.3.23
 
 All endpoints are publicly accessible (`permission_callback: __return_true`). All responses are JSON. Most endpoints use `GET`; the bug-report endpoint uses `POST`.
 
@@ -403,7 +403,7 @@ Returns the full profile for a single person including role-specific stats.
 ```
 
 Notes:
-- `stats` contains aggregate player stats; fields depend on data present.
+- `stats` contains aggregate player stats; fields depend on data present. The `best_streak` field represents the longest run of consecutive correct answers spanning across all rounds, not limited to a single round.
 - `constructor_stats` is only included when the person has the `constructor` role.
 - `editor_stats` is only included when the person has the `editor` role.
 - `clue_giver_stats` is only included when the person has the `clue_giver` role.
