@@ -2,7 +2,7 @@
 
 A WordPress plugin for managing and displaying KEALOA quiz game data from the [Fill Me In](https://bemoresmarter.libsyn.com) podcast.
 
-**Version:** 2.3.18 &bull; **DB Version:** 2.3.7 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+**Version:** 2.3.24 &bull; **DB Version:** 2.3.7 &bull; **License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 ---
 
@@ -211,6 +211,7 @@ All endpoints are publicly accessible (no authentication required). See [REST-AP
 | GET | `/search?q=...` | Full-text search across persons, rounds, and puzzles |
 | GET | `/leaderboard/scores` | All persons ranked by highest round score |
 | GET | `/leaderboard/streaks` | All persons ranked by longest correct-guess streak |
+| POST | `/bug-report` | Submit a bug report with screenshot |
 
 ### Pagination
 
